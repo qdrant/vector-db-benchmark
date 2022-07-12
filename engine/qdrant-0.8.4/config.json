@@ -1,0 +1,10 @@
+{
+  "server": {
+    "image": "qdrant/qdrant:v0.8.4",
+    "hostname": "qdrant_server"
+  },
+  "client": {
+    "dockerfile": "client.Dockerfile",
+    "main": "python cmd.py"
+  }
+}
