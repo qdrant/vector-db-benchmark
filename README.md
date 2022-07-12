@@ -134,4 +134,5 @@ load::time = 0.0052424
 5. Dataset should be also represented by a class instance: 
    - that will give a possibility to not assume the filenames in scenario
    - it will be easier to deal with paths
+   
    The dataset should also have a file-based config, like engine.
