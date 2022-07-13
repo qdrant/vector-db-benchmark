@@ -131,8 +131,4 @@ load::time = 0.0052424
    different datasets? For simpler cases that may work, but there might be some
    specific problems that won't be possible for each dataset.
 4. How do we handle engine errors? 
-5. Dataset should be also represented by a class instance: 
-   - that will give a possibility to not assume the filenames in scenario
-   - it will be easier to deal with paths
-   
-   The dataset should also have a file-based config, like engine.
+5. The dataset should also have a file-based config, like engine.

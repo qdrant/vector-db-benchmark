@@ -1,67 +1,37 @@
-import json
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Text, Union, Optional, Dict, List
+from typing import Text, Union, Optional, List, Generator
 
-from benchmark.backend import Backend, PathLike, Server, Client, Container
+from benchmark import BASE_DIRECTORY
+from benchmark.backend import Backend, Server, Client, Container
 from docker.models import containers
 
 import logging
 import docker
 
+from benchmark.engine import Engine, ContainerConf
+from benchmark.types import PathLike
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class DockerContainerConf:
-    engine: Text
-    image: Optional[Text] = None
-    dockerfile: Optional[Text] = None
-    environment: Optional[Dict[Text, Union[Text, int, bool]]] = None
-    main: Optional[Text] = None
-    hostname: Optional[Text] = None
-
-    @classmethod
-    def from_file(
-        cls, path: Text, engine: Text, container: Text = "server"
-    ) -> "DockerContainerConf":
-        with open(path, "r") as fp:
-            conf = json.load(fp)
-            return DockerContainerConf(engine=engine, **conf[container])
-
-    def dockerfile_path(self, root_dir: Path) -> Path:
-        """
-        Calculates the absolute path to the directory containing the dockerfile,
-        using given root directory as a base.
-        :param root_dir:
-        :return:
-        """
-        return root_dir / "engine" / self.engine
 
 
 class DockerContainer(Container):
     def __init__(
         self,
-        container_conf: DockerContainerConf,
+        container_conf: ContainerConf,
         docker_backend: "DockerBackend",
     ):
+        super().__init__()
         self.container_conf = container_conf
-        self.docker_backend = docker_backend
-        self.container: containers.Container = None
-        self.volumes = []
-
-    def mount(self, source: PathLike, target: PathLike):
-        self.volumes.append(f"{source}:{target}")
+        self._docker_backend = docker_backend
+        self._docker_container: containers.Container = None
 
     def run(self):
         # Build the dockerfile if it was provided as a container image. This is
         # typically done for the clients, as they may require some custom setup
         if self.container_conf.dockerfile is not None:
             dockerfile_path = self.container_conf.dockerfile_path(
-                self.docker_backend.root_dir
+                self._docker_backend.root_dir
             )
-            image, logs = self.docker_backend.docker_client.images.build(
+            image, logs = self._docker_backend.docker_client.images.build(
                 path=str(dockerfile_path),
                 dockerfile=self.container_conf.dockerfile,
             )
@@ -75,23 +45,30 @@ class DockerContainer(Container):
         # Create the container either using the image or dockerfile, if that was
         # provided. The dockerfile has a preference over the image name.
         logger.debug("Running a container using image %s", self.container_conf.image)
-        self.container = self.docker_backend.docker_client.containers.run(
+        self._docker_container = self._docker_backend.docker_client.containers.run(
             self.container_conf.image,
             detach=True,
             volumes=self.volumes,
             environment=self.container_conf.environment,
             hostname=self.container_conf.hostname,
-            network=self.docker_backend.network.name,
+            network=self._docker_backend.network.name,
         )
 
         # TODO: remove the image on exit
 
-    def logs(self):
-        for log_entry in self.container.logs(stream=True, follow=True):
+    def remove(self):
+        # Sometimes the container has been created but not launched, so the
+        # underlying Docker container won't be created
+        if self._docker_container is not None:
+            self._docker_container.stop()
+            self._docker_container.remove()
+
+    def logs(self) -> Generator[Union[Text, bytes], None, None]:
+        for log_entry in self._docker_container.logs(stream=True, follow=True):
             yield log_entry
 
     def is_ready(self) -> bool:
-        # TODO: implement the healthcheck
+        # TODO: implement the healthcheck, but probably on engine level
         return True
 
 
@@ -102,7 +79,7 @@ class DockerServer(Server, DockerContainer):
 class DockerClient(Client, DockerContainer):
     def load_data(self, filename: Text):
         command = f"{self.container_conf.main} load {filename}"
-        _, generator = self.container.exec_run(command, stream=True)
+        _, generator = self._docker_container.exec_run(command, stream=True)
         return generator
 
 
@@ -116,7 +93,7 @@ class DockerBackend(Backend):
 
     def __init__(
         self,
-        root_dir: Union[PathLike],
+        root_dir: Union[PathLike] = BASE_DIRECTORY,
         docker_client: Optional[docker.DockerClient] = None,
     ):
         super().__init__(root_dir)
@@ -137,32 +114,20 @@ class DockerBackend(Backend):
         # Kill all the containers on the context manager exit, so there are no
         # orphaned containers once the benchmark is finished
         for container in self.containers:
-            container.container.kill()
-
-        # Remove the data volume as well, so there won't be any volume left
-        # self.data_volume.remove()
+            container.remove()
 
         # Finally get rid of the network as well
         self.network.remove()
 
-    def initialize_server(self, engine: Text) -> Server:
-        server_conf = DockerContainerConf.from_file(
-            self.root_dir / "engine" / engine / "config.json",
-            engine=engine,
-            container="server",
-        )
+    def initialize_server(self, engine: Engine) -> Server:
+        server_conf = engine.get_config("server")
         logger.info("Initializing %s server: %s", engine, server_conf)
         server = DockerServer(server_conf, self)
         self.containers.append(server)
         return server
 
-    def initialize_client(self, engine: Text) -> Client:
-        # TODO: Create a docker volume so the data is available on client instances
-        client_conf = DockerContainerConf.from_file(
-            self.root_dir / "engine" / engine / "config.json",
-            engine=engine,
-            container="client",
-        )
+    def initialize_client(self, engine: Engine) -> Client:
+        client_conf = engine.get_config("client")
         logger.info("Initializing %s client: %s", engine, client_conf)
         client = DockerClient(client_conf, self)
         self.containers.append(client)

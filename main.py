@@ -1,7 +1,8 @@
 import logging
-from pathlib import Path
 
 from benchmark.backend.docker import DockerBackend
+from benchmark.dataset import Dataset
+from benchmark.engine import Engine
 from parser import parser
 from benchmark.scenario import Scenario
 
@@ -13,11 +14,12 @@ logging.basicConfig(level=logging.ERROR)
 # scenario decides how many instances of each type it requires.
 
 args = parser.parse_args()
-current_dir = Path(__file__).parent
-with DockerBackend(current_dir) as backend:
+with DockerBackend() as backend:
     try:
-        scenario = Scenario.from_string(args.scenario, backend)
-        results = scenario.execute(args.engine, args.dataset)
+        engine = Engine.from_name(args.engine)
+        dataset = Dataset.from_name(args.dataset)
+        scenario = Scenario.load_class(args.scenario)
+        results = scenario.execute(backend, engine, dataset)
 
         # Iterate and display all the metrics
         # TODO: make the KPI metrics more configurable
