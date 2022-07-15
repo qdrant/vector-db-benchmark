@@ -1,10 +1,12 @@
 import abc
 import tempfile
 from pathlib import Path
-from typing import Text, Union, Generator
+from typing import Text, Union, Generator, Optional
 
 from benchmark.engine import Engine
 from benchmark.types import PathLike
+
+LogsGenerator = Generator[Text, None, None]
 
 
 class Container(abc.ABC):
@@ -13,12 +15,13 @@ class Container(abc.ABC):
     server or client of the engine.
     """
 
-    def __init__(self):
+    def __init__(self, engine: Engine):
+        self.engine = engine
         self.volumes = []
 
     def mount(self, source: PathLike, target: PathLike):
         """
-        Add provided source path as a target in the container to be mounted
+        Add provided source root_dir as a target in the container to be mounted
         when .run method is called.
         :param source:
         :param target:
@@ -40,7 +43,7 @@ class Container(abc.ABC):
         """
         ...
 
-    def logs(self) -> Generator[Union[Text, bytes], None, None]:
+    def logs(self) -> Generator[Text, None, None]:
         """
         Iterate through all the logs produced by the container
         :return:
@@ -64,13 +67,16 @@ class Client(Container, abc.ABC):
     An abstract client of the selected engine.
     """
 
-    def load_data(self, filename: Text):
+    def load_data(self, filename: Text) -> LogsGenerator:
         """
         Loads the data with a provided filename into the selected search engine.
         This is engine-specific operation, that has the possibility to
-        :param filename: a relative path from the dataset directory
+        :param filename: a relative root_dir from the dataset directory
         :return:
         """
+        ...
+
+    def search(self, filename: Text) -> LogsGenerator:
         ...
 
 
@@ -95,4 +101,14 @@ class Backend:
         ...
 
     def initialize_client(self, engine: Engine) -> Client:
+        ...
+
+    def initialize(self, engine: Engine, container: Text) -> Container:
+        """
+        Create and configure the container of the selected engine. The container
+        has to be described in the engine configuration.
+        :param engine:
+        :param container:
+        :return:
+        """
         ...

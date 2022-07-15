@@ -1,7 +1,9 @@
 import sys
 import json
 import logging
+from typing import Text
 
+import typer
 from qdrant_client import QdrantClient
 from datetime import datetime
 
@@ -17,9 +19,13 @@ client.recreate_collection(
     distance="Cosine",
 )
 
-if sys.argv[1] == "load":
+app = typer.Typer()
+
+
+@app.command()
+def load(filename: Text):
     # Insert all the points one by one
-    with open(f"/dataset/{sys.argv[2]}", "r") as fp:
+    with open(f"/dataset/{filename}", "r") as fp:
         for i, line in enumerate(fp.readlines()):
             vector = json.loads(line)
             # Measure the time of each operation
@@ -29,6 +35,26 @@ if sys.argv[1] == "load":
                 points=Batch(ids=[i], vectors=[vector]),
             )
             time = datetime.now() - start
-            print(f"{sys.argv[1]}::time = {time.total_seconds()}")
-else:
-    print(f"Unknown command {sys.argv[1]}")
+            print(f"load::time = {time.total_seconds()}")
+
+
+@app.command()
+def search(filename: Text):
+    # Insert all the points one by one
+    with open(f"/dataset/{filename}", "r") as fp:
+        for i, line in enumerate(fp.readlines()):
+            vector = json.loads(line)
+            # Measure the time of each operation
+            start = datetime.now()
+            results = client.search(
+                collection_name="my_collection",
+                query_vector=vector
+            )
+            time = datetime.now() - start
+            print(f"search::time = {time.total_seconds()}")
+
+            # TODO: check some metrics of the results, like recall
+
+
+if __name__ == "__main__":
+    app()

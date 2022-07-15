@@ -84,7 +84,7 @@ Each client has to define a main script which takes some parameters and allow
 performing typical CRUD-like operations. For now there is only one operation 
 supported:
 
-- `load [path-to-file]`
+- `load [root_dir-to-file]`
 
 If the scenario attempts to load the data from a given file, then it will call
 the following command:

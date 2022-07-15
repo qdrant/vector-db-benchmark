@@ -1,0 +1,4 @@
+{
+  "load": ["vectors.jsonl"],
+  "search": []
+}

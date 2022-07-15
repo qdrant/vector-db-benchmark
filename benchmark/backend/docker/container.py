@@ -1,28 +1,25 @@
-from typing import Text, Union, Optional, List, Generator
-
-from benchmark import BASE_DIRECTORY
-from benchmark.backend import Backend, Server, Client, Container
-from docker.models import containers
-
 import logging
-import docker
+from typing import Generator, Text
 
-from benchmark.engine import Engine, ContainerConf
-from benchmark.types import PathLike
+from benchmark.backend import Container, Server, Client, LogsGenerator
+from benchmark.engine import ContainerConf, Engine
 
 logger = logging.getLogger(__name__)
 
 
 class DockerContainer(Container):
+
+    # TODO: container should definitely know the engine it works on
     def __init__(
         self,
+        engine: Engine,
         container_conf: ContainerConf,
         docker_backend: "DockerBackend",
     ):
-        super().__init__()
+        super().__init__(engine)
         self.container_conf = container_conf
         self._docker_backend = docker_backend
-        self._docker_container: containers.Container = None
+        self._docker_container = None
 
     def run(self):
         # Build the dockerfile if it was provided as a container image. This is
@@ -63,9 +60,9 @@ class DockerContainer(Container):
             self._docker_container.stop()
             self._docker_container.remove()
 
-    def logs(self) -> Generator[Union[Text, bytes], None, None]:
+    def logs(self) -> Generator[Text, None, None]:
         for log_entry in self._docker_container.logs(stream=True, follow=True):
-            yield log_entry
+            yield log_entry.decode("utf-8").strip("\r\n")
 
     def is_ready(self) -> bool:
         # TODO: implement the healthcheck, but probably on engine level
@@ -77,58 +74,22 @@ class DockerServer(Server, DockerContainer):
 
 
 class DockerClient(Client, DockerContainer):
-    def load_data(self, filename: Text):
+
+    def load_data(self, filename: Text) -> LogsGenerator:
         command = f"{self.container_conf.main} load {filename}"
         _, generator = self._docker_container.exec_run(command, stream=True)
-        return generator
+        for entry in generator:
+            entry_str = entry.decode("utf-8").strip("\r\n")
+            for line in entry_str.split("\n"):
+                yield line
 
+    def search(self, filename: Text) -> LogsGenerator:
+        return self.call_cmd("search", filename)
 
-class DockerBackend(Backend):
-    """
-    A Docker based backend for the benchmarks, using separate containers for
-    server and client/s.
-    """
-
-    NETWORK_NAME = "vector-benchmark"
-
-    def __init__(
-        self,
-        root_dir: Union[PathLike] = BASE_DIRECTORY,
-        docker_client: Optional[docker.DockerClient] = None,
-    ):
-        super().__init__(root_dir)
-        if docker_client is None:
-            docker_client = docker.from_env()
-        self.docker_client = docker_client
-        self.containers: List[DockerContainer] = []
-
-    def __enter__(self):
-        super().__enter__()
-        self.network = self.docker_client.networks.create(self.NETWORK_NAME)
-        # self.data_volume = self.docker_client.volumes.create()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        super().__exit__(exc_type, exc_val, exc_tb)
-
-        # Kill all the containers on the context manager exit, so there are no
-        # orphaned containers once the benchmark is finished
-        for container in self.containers:
-            container.remove()
-
-        # Finally get rid of the network as well
-        self.network.remove()
-
-    def initialize_server(self, engine: Engine) -> Server:
-        server_conf = engine.get_config("server")
-        logger.info("Initializing %s server: %s", engine, server_conf)
-        server = DockerServer(server_conf, self)
-        self.containers.append(server)
-        return server
-
-    def initialize_client(self, engine: Engine) -> Client:
-        client_conf = engine.get_config("client")
-        logger.info("Initializing %s client: %s", engine, client_conf)
-        client = DockerClient(client_conf, self)
-        self.containers.append(client)
-        return client
+    def call_cmd(self, cmd: Text, *args) -> LogsGenerator:
+        command = f"{self.container_conf.main} {cmd} {' '.join(args)}"
+        _, generator = self._docker_container.exec_run(command, stream=True)
+        for entry in generator:
+            entry_str = entry.decode("utf-8").strip("\r\n")
+            for line in entry_str.split("\n"):
+                yield line
