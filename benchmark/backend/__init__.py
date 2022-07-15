@@ -102,13 +102,3 @@ class Backend:
 
     def initialize_client(self, engine: Engine) -> Client:
         ...
-
-    def initialize(self, engine: Engine, container: Text) -> Container:
-        """
-        Create and configure the container of the selected engine. The container
-        has to be described in the engine configuration.
-        :param engine:
-        :param container:
-        :return:
-        """
-        ...

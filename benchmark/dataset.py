@@ -13,6 +13,7 @@ class PhaseConfig:
     files: Iterable[Text] = field(default_factory=list)
     engine: Dict[Any, Any] = field(default_factory=dict)
 
+
 @dataclass
 class DatasetConfig:
     load: PhaseConfig
