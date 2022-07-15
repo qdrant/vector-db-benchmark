@@ -52,7 +52,6 @@ def search(filename: Text):
             )
             time = datetime.now() - start
             print(f"search::time = {time.total_seconds()}")
-
             # TODO: check some metrics of the results, like recall
 
 

@@ -1,4 +1,5 @@
 import logging
+from enum import Enum
 from typing import Text, Callable
 
 import typer
@@ -11,13 +12,9 @@ from benchmark.engine import Engine
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-# Configure the main Typer app
+# Configure the main app. If a specific command requires subcommands, it can be
+# configured with: https://typer.tiangolo.com/tutorial/subcommands/single-file/
 app = typer.Typer()
-
-# If a specific command requires subcommands, it can be configured like:
-# https://typer.tiangolo.com/tutorial/subcommands/single-file/
-client_app = typer.Typer()
-app.add_typer(client_app, name="run-client")
 
 
 @app.command()
@@ -34,69 +31,48 @@ def run_server(
             print(log_entry)
 
 
-@client_app.command()
-def load(
+class ClientOperation(Enum):
+    LOAD = "load"
+    SEARCH = "search"
+
+
+@app.command()
+def run_client(
     engine_name: Text,
+    operation: ClientOperation,
     dataset_name: Text,
     container_name: Text = "client",
 ):
-    # Run the client process using selected backend and with a dataset mounted
+    # Load engine and dataset configuration from the .json config files
     engine = Engine.from_name(engine_name)
     dataset = Dataset.from_name(dataset_name)
+
+    # Run the client process using selected backend and with a dataset mounted
+    log_collector = LogCollector()
     with DockerBackend() as backend:
-        # TODO: get rid of hardcoded paths, make them configurable
+        # Mount selected dataset content
         client = backend.initialize_client(engine, container_name)
         client.mount(dataset.root_dir, "/dataset")
         client.run()
 
-        log_collector = LogCollector()
-
-        # TODO: select an operation to perform
-        # Load all the files marked for load and collect the logs
-        for filename in dataset.config.load:
-            logger.info("Loading file %s", filename)
-            logs = client.load_data(filename)
-            log_collector.append(logs)
+        if ClientOperation.LOAD == operation:
+            # Load all the files marked for load and collect the logs
+            for filename in dataset.config.load.files:
+                logger.info("Loading file %s", filename)
+                logs = client.load_data(filename)
+                log_collector.append(logs)
+        if ClientOperation.SEARCH == operation:
+            # Search the points from the selected files
+            for filename in dataset.config.search.files:
+                logger.info("Loading file %s", filename)
+                logs = client.load_data(filename)
+                log_collector.append(logs)
 
         # Iterate the kpi results and calculate statistics
-        # TODO: that should be flexible and configurable from outside
         for kpi, values in log_collector.collect().items():
             print(f"sum({kpi}) =", sum(values))
             print(f"count({kpi}) =", len(values))
             print(f"mean({kpi}) =", sum(values) / len(values))
-
-
-@client_app.command()
-def search(
-    engine_name: Text,
-    dataset_name: Text,
-    container_name: Text = "client",
-    operation: Text = "load",
-):
-    # Run the client process using selected backend and with a dataset mounted
-    engine = Engine.from_name(engine_name)
-    dataset = Dataset.from_name(dataset_name)
-    with DockerBackend() as backend:
-        # TODO: get rid of hardcoded paths, make them configurable
-        client = backend.initialize_client(engine, container_name)
-        client.mount(dataset.root_dir, "/dataset")
-        client.run()
-
-        log_collector = LogCollector()
-
-        # TODO: select an operation to perform
-        # Load all the files marked for load and collect the logs
-        for filename in dataset.config.load:
-            logger.info("Loading file %s", filename)
-            logs = client.search(filename)
-            log_collector.append(logs)
-
-        # Iterate the kpi results and calculate statistics
-        # TODO: that should be flexible and configurable from outside
-        for kpi, values in log_collector.collect().items():
-            logger.info("sum(%s) = %f", kpi, sum(values))
-            logger.info("count(%s) = %f", kpi, len(values))
-            logger.info("mean(%s) = %f", kpi, sum(values) / len(values))
 
 
 if __name__ == "__main__":

@@ -23,7 +23,7 @@ python main.py run-server qdrant-0.8.4
 Then, a client instance may be launched, or even several ones:
 
 ```shell
-python main.py run-client load qdrant-0.8.4 random-100
+python main.py run-client qdrant-0.8.4 load random-100
 ```
 
 - `qdrant-0.8.4` is an engine to launch
@@ -135,5 +135,4 @@ load::time = 0.0052424
 2. What should be the format supported in the datasets? JSON lines are cross
    language and platform, what makes them easy to be parsed to whatever format
    a specific engine support.
-3. How do we handle engine errors? 
-4. 
+3. How do we handle engine errors?

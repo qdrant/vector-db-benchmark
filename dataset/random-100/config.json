@@ -1,4 +1,12 @@
 {
-  "load": ["vectors.jsonl"],
-  "search": []
+  "load": {
+    "files": [
+      "vectors.jsonl"
+    ],
+    "engine": {}
+  },
+  "search": {
+    "files": [],
+    "engine": {}
+  }
 }
