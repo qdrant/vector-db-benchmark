@@ -7,32 +7,40 @@ about a specific thing, while not paying much attention to other aspects. This
 project is a general framework for benchmarking different engines under the 
 same hardware constraints, so you can choose what works best for you.
 
-Running any benchmark requires choosing an engine, a dataset and the scenario 
-against which it should be tested. 
+Running any benchmark requires choosing an engine, a dataset and defining the
+scenario against which it should be tested. A specific scenario may assume 
+running the server in a single or distributed mode, a different client
+implementation and the number of client instances.
 
 ## TL;DR
 
+First, we need to run the server instance:
+
 ```shell
-python main.py \
-  --engine qdrant-0.8.4 \
-  --scenario scenario.load.MeasureLoadTimeSingleClient \
-  --dataset random-100
+python main.py run-server qdrant-0.8.4
 ```
 
-Will execute the benchmark scenario enclosed in a 
-`scenario.load.MeasureLoadTimeSingleClient` class and use a `random-100` 
-dataset. All the operation will be launched on a `qdrant-0.8.4` engine.
+Then, a client instance may be launched, or even several ones:
+
+```shell
+python main.py run-client load qdrant-0.8.4 random-100
+```
+
+- `qdrant-0.8.4` is an engine to launch
+- `random-100` defines a dataset
 
 Expected output should look like following:
 
-```shell
-mean(load::time) = 0.0015927800000000007
+```text
+sum(load::time) = 0.22590500000000002
+count(load::time) = 100
+mean(load::time) = 0.0022590500000000003
 ```
 
 ### Backend
 
 A specific way of managing the containers. Right now only Docker, but might be 
-Docker Swarm or Kubernetes, so the benchmark is not executed on a single 
+Docker Swarm, SSH or Kubernetes, so the benchmark is not executed on a single 
 machine, but on several servers.
 
 ### Engine
@@ -81,10 +89,10 @@ in parallel and each of them might be using part of the data. The number of
 clients depends on the scenario.
 
 Each client has to define a main script which takes some parameters and allow 
-performing typical CRUD-like operations. For now there is only one operation 
-supported:
+performing typical CRUD-like operations:
 
-- `load [root_dir-to-file]`
+- `load [file]`
+- `search [file]`
 
 If the scenario attempts to load the data from a given file, then it will call
 the following command:
@@ -127,8 +135,5 @@ load::time = 0.0052424
 2. What should be the format supported in the datasets? JSON lines are cross
    language and platform, what makes them easy to be parsed to whatever format
    a specific engine support.
-3. Should the scenario be tightly-coupled with the dataset or allow using 
-   different datasets? For simpler cases that may work, but there might be some
-   specific problems that won't be possible for each dataset.
-4. How do we handle engine errors? 
-5. The dataset should also have a file-based config, like engine.
+3. How do we handle engine errors? 
+4. 

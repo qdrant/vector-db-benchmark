@@ -61,9 +61,9 @@ def load(
         # Iterate the kpi results and calculate statistics
         # TODO: that should be flexible and configurable from outside
         for kpi, values in log_collector.collect().items():
-            logger.info("sum(%s) = %f", kpi, sum(values))
-            logger.info("count(%s) = %f", kpi, len(values))
-            logger.info("mean(%s) = %f", kpi, sum(values) / len(values))
+            print(f"sum({kpi}) =", sum(values))
+            print(f"count({kpi}) =", len(values))
+            print(f"mean({kpi}) =", sum(values) / len(values))
 
 
 @client_app.command()
