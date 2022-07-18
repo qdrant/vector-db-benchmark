@@ -1,0 +1,15 @@
+{
+  "size": 100,
+  "load": {
+    "files": [
+      "train.jsonl"
+    ],
+    "engine": {}
+  },
+  "search": {
+    "files": [
+      "test.jsonl"
+    ],
+    "engine": {}
+  }
+}
