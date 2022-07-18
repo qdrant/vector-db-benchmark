@@ -1,5 +1,6 @@
 {
   "size": 100,
+  "distance": "Cosine",
   "load": {
     "files": [
       "train.jsonl"
