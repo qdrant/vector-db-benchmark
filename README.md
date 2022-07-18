@@ -81,6 +81,11 @@ Each engine has its own configuration defined in `config.json` file:
 - The `main` parameter points to a main client script which takes parameters.
   Those parameters define the operations to perform with a client library.
 
+##### Supported engines:
+
+- `qdrant-0.8.4`
+- `elasticsearch-8.3.1`
+
 #### Server
 
 The server is a process, or a bunch of processes, responsible for creating 
