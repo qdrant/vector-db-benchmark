@@ -1,16 +1,26 @@
 import json
 import logging
-from typing import Text, Any, Iterable, TextIO
-
-import typer
-from qdrant_client import QdrantClient
 from datetime import datetime
+from typing import TextIO, Iterable, Any, Text
 
-from qdrant_client.http.models import Batch
+import urllib3
+from elasticsearch import Elasticsearch, NotFoundError
+import config
+import typer
 
 logger = logging.getLogger(__name__)
 
-client = QdrantClient(host="qdrant_server")
+
+# That has to be done, so Elasticsearch client doesn't break on SSL
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+client = Elasticsearch(
+    f"http://{config.ELASTIC_HOST}:{config.ELASTIC_PORT}",
+    basic_auth=(config.ELASTIC_USER, config.ELASTIC_PASSWORD),
+    verify_certs=False,
+    request_timeout=90,
+    retry_on_timeout=True,
+)
 app = typer.Typer()
 
 
@@ -38,12 +48,29 @@ def configure(vector_size: int, distance: Text):
     :param distance:
     :return:
     """
+    # See: https://www.elastic.co/guide/en/elasticsearch/reference/current/dense-vector.html#dense-vector-params
+    mappings = {
+        "properties": {
+            "vector": {
+                "type": "dense_vector",
+                "dims": vector_size,
+                "index": True,
+                "similarity": distance.lower(),
+                "index_options": {
+                    "type": "hnsw",
+                    "m": 16,
+                    "ef_construction": 100,
+                },
+            }
+        }
+    }
+
     start = datetime.now()
-    client.recreate_collection(
-        collection_name="my_collection",
-        vector_size=vector_size,
-        distance=distance,
-    )
+    try:
+        client.indices.delete(index=config.ELASTIC_INDEX)
+    except NotFoundError:
+        pass
+    client.indices.create(index=config.ELASTIC_INDEX, mappings=mappings)
     time_spent = datetime.now() - start
     print(f"configure::latency = {time_spent.total_seconds()}")
 
@@ -56,11 +83,16 @@ def load(filename: Text, batch_size: int):
             # Generate the ids, as they're not provided
             start_id = batch_size * i
             ids = list(range(start_id, start_id + batch_size))
+            # Prepare a list of Elastic operations
+            operations = []
+            for vector_id, vector in zip(ids, batch):
+                operations.append({"index": {"_id": vector_id}})
+                operations.append({"vector": vector})
             # Measure the time of each operation
             start = datetime.now()
-            client.upsert(
-                collection_name="my_collection",
-                points=Batch(ids=ids, vectors=batch),
+            client.bulk(
+                index=config.ELASTIC_INDEX,
+                operations=operations,
             )
             time_spent = datetime.now() - start
             print(f"load::latency = {time_spent.total_seconds()}")
@@ -75,8 +107,15 @@ def search(filename: Text):
             vector = json.loads(line)
             # Measure the time of each operation
             start = datetime.now()
-            results = client.search(
-                collection_name="my_collection", query_vector=vector
+            # TODO: make k and num_candidates parameters
+            client.knn_search(
+                index=config.ELASTIC_INDEX,
+                knn={
+                    "field": "vector",
+                    "query_vector": vector,
+                    "k": 10,
+                    "num_candidates": 100,
+                },
             )
             time = datetime.now() - start
             print(f"search::latency = {time.total_seconds()}")
