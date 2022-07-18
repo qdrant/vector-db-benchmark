@@ -20,6 +20,12 @@ First, we need to run the server instance:
 python main.py run-server qdrant-0.8.4
 ```
 
+After launching it, we can configure the engine to accept loading the data:
+
+```shell
+python main.py run-client qdrant-0.8.4 configure random-100
+```
+
 Then, a client instance may be launched, or even several ones:
 
 ```shell

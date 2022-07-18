@@ -10,6 +10,8 @@ docker = "^5.0.3"
 qdrant-client = "^0.8.6"
 typer = "^0.6.1"
 jsons = "^1.6.3"
+h5py = "^3.7.0"
+track = "^1.2.0"
 
 [tool.poetry.dev-dependencies]
 

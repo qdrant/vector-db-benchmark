@@ -1,7 +1,7 @@
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Text, Iterable, Dict, Any, Optional
+from typing import Text, Dict, Any, Optional, List
 
 import jsons
 
@@ -10,7 +10,7 @@ from benchmark import BASE_DIRECTORY
 
 @dataclass
 class PhaseConfig:
-    files: Iterable[Text] = field(default_factory=list)
+    files: List[Text] = field(default_factory=list)
     engine: Dict[Any, Any] = field(default_factory=dict)
 
 

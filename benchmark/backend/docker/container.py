@@ -75,19 +75,17 @@ class DockerServer(Server, DockerContainer):
 
 class DockerClient(Client, DockerContainer):
 
-    def load_data(self, filename: Text) -> LogsGenerator:
-        command = f"{self.container_conf.main} load {filename}"
-        _, generator = self._docker_container.exec_run(command, stream=True)
-        for entry in generator:
-            entry_str = entry.decode("utf-8").strip("\r\n")
-            for line in entry_str.split("\n"):
-                yield line
+    def configure(self, vector_size: int, distance: Text) -> LogsGenerator:
+        return self.call_cmd("configure", vector_size, distance)
 
-    def search(self, filename: Text) -> LogsGenerator:
-        return self.call_cmd("search", filename)
+    def load_data(self, filename: Text, batch_size: int = 64) -> LogsGenerator:
+        return self.call_cmd("load", filename, batch_size)
+
+    def search(self, vectors_filename: Text) -> LogsGenerator:
+        return self.call_cmd("search", vectors_filename)
 
     def call_cmd(self, cmd: Text, *args) -> LogsGenerator:
-        command = f"{self.container_conf.main} {cmd} {' '.join(args)}"
+        command = f"{self.container_conf.main} {cmd} {' '.join(map(str, args))}"
         _, generator = self._docker_container.exec_run(command, stream=True)
         for entry in generator:
             entry_str = entry.decode("utf-8").strip("\r\n")
