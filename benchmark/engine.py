@@ -1,7 +1,7 @@
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Text, Optional, Dict, Union
+from typing import Dict, Optional, Text, Union
 
 from benchmark import BASE_DIRECTORY
 

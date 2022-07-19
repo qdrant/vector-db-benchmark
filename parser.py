@@ -6,18 +6,18 @@ parser.add_argument(
     "-e",
     required=True,
     help="An engine to be benchmarked. It has to match one of the directory "
-         "names in ./engine",
+    "names in ./engine",
 )
 parser.add_argument(
     "--scenario",
     "-s",
     required=True,
     help="A scenario class, that will execute all the benchmark steps. For "
-         "example `scenario.load.MeasureLoadTimeSingleClient`."
+    "example `scenario.load.MeasureLoadTimeSingleClient`.",
 )
 parser.add_argument(
     "--dataset",
     "-d",
     required=True,
-    help="A dataset name, matching one of the directories in ./dataset"
+    help="A dataset name, matching one of the directories in ./dataset",
 )

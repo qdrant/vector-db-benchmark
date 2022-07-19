@@ -1,13 +1,12 @@
-from typing import Text, Union, Optional, List, Generator
+import logging
+from typing import Generator, List, Optional, Text, Union
 
-from benchmark import BASE_DIRECTORY
-from benchmark.backend import Backend, Server, Client, Container
+import docker
 from docker.models import containers
 
-import logging
-import docker
-
-from benchmark.engine import Engine, ContainerConf
+from benchmark import BASE_DIRECTORY
+from benchmark.backend import Backend, Client, Container, Server
+from benchmark.engine import ContainerConf, Engine
 from benchmark.types import PathLike
 
 logger = logging.getLogger(__name__)

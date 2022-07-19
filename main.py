@@ -1,9 +1,9 @@
 import logging
+from parser import parser
 
 from benchmark.backend.docker import DockerBackend
 from benchmark.dataset import Dataset
 from benchmark.engine import Engine
-from parser import parser
 from benchmark.scenario import Scenario
 
 logger = logging.getLogger(__name__)

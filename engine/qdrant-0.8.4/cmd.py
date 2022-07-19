@@ -1,10 +1,9 @@
-import sys
 import json
 import logging
-
-from qdrant_client import QdrantClient
+import sys
 from datetime import datetime
 
+from qdrant_client import QdrantClient
 from qdrant_client.http.models import Batch
 
 logger = logging.getLogger(__name__)
