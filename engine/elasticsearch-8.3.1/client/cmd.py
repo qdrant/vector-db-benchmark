@@ -1,12 +1,12 @@
 import json
 import logging
 from datetime import datetime
-from typing import TextIO, Iterable, Any, Text
+from typing import Any, Iterable, Text, TextIO
 
-import urllib3
-from elasticsearch import Elasticsearch, NotFoundError
 import config
 import typer
+import urllib3
+from elasticsearch import Elasticsearch, NotFoundError
 
 logger = logging.getLogger(__name__)
 

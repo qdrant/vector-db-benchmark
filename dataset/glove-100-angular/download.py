@@ -5,7 +5,6 @@ from pathlib import Path
 
 import h5py
 
-
 ROOT_DIR = Path(__file__).parent
 URL = "http://ann-benchmarks.com/glove-100-angular.hdf5"
 

@@ -1,11 +1,10 @@
 import json
 import logging
-from typing import Text, Any, Iterable, TextIO
+from datetime import datetime
+from typing import Any, Iterable, Text, TextIO
 
 import typer
 from qdrant_client import QdrantClient
-from datetime import datetime
-
 from qdrant_client.http.models import Batch
 
 logger = logging.getLogger(__name__)

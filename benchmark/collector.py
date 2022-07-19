@@ -1,6 +1,6 @@
 import re
 from collections import defaultdict
-from typing import Generator, Tuple, Text, Dict, List
+from typing import Dict, List, Text
 
 from benchmark.backend import LogsGenerator
 

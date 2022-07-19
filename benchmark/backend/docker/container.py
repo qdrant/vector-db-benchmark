@@ -1,7 +1,7 @@
 import logging
 from typing import Generator, Text
 
-from benchmark.backend import Container, Server, Client, LogsGenerator
+from benchmark.backend import Client, Container, LogsGenerator, Server
 from benchmark.engine import ContainerConf, Engine
 
 logger = logging.getLogger(__name__)
@@ -74,7 +74,6 @@ class DockerServer(Server, DockerContainer):
 
 
 class DockerClient(Client, DockerContainer):
-
     def configure(self, vector_size: int, distance: Text) -> LogsGenerator:
         return self.call_cmd("configure", vector_size, distance)
 

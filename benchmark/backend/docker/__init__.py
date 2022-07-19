@@ -1,16 +1,15 @@
-from typing import Text, Union, Optional, List
-
-from benchmark import BASE_DIRECTORY
-from benchmark.backend import Backend, Server, Client
-
 import logging
+from typing import List, Optional, Text, Union
+
 import docker
 import docker.errors
 
+from benchmark import BASE_DIRECTORY
+from benchmark.backend import Backend, Client, Server
 from benchmark.backend.docker.container import (
+    DockerClient,
     DockerContainer,
     DockerServer,
-    DockerClient,
 )
 from benchmark.engine import Engine
 from benchmark.types import PathLike

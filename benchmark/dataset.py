@@ -1,7 +1,7 @@
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Text, Dict, Any, Optional, List
+from typing import Any, Dict, List, Optional, Text
 
 import jsons
 
@@ -42,8 +42,7 @@ class Dataset:
     def is_ready(self):
         root_dir = self.root_dir
         return all(
-            (root_dir / filename).exists()
-            for filename in self.config.load.files
+            (root_dir / filename).exists() for filename in self.config.load.files
         )
 
     def download(self):
@@ -51,8 +50,8 @@ class Dataset:
         Download the dataset and put it into the directory.
         :return:
         """
-        import sys
         import importlib
+        import sys
 
         sys.path.insert(0, str(self.root_dir))
         importlib.import_module("download")

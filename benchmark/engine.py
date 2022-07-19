@@ -2,10 +2,9 @@ import json
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Text, Optional, Dict, Union
+from typing import Dict, Optional, Text, Union
 
 from benchmark import BASE_DIRECTORY
-
 
 EnvironmentalVariables = Dict[Text, Union[Text, int, bool]]
 

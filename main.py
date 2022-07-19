@@ -1,7 +1,6 @@
 import logging
 from enum import Enum
-from pathlib import Path
-from typing import Text, Callable
+from typing import Text
 
 import typer
 
