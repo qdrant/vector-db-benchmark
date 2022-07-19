@@ -1,7 +1,7 @@
 import abc
 import tempfile
 from pathlib import Path
-from typing import Text, Union, Generator
+from typing import Generator, Text, Union
 
 from benchmark.engine import Engine
 from benchmark.types import PathLike

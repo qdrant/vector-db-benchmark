@@ -5,7 +5,6 @@ from benchmark import BASE_DIRECTORY
 
 
 class Dataset:
-
     @classmethod
     def from_name(cls, name: Text) -> "Dataset":
         # TODO: load dataset info from given path

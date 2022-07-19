@@ -1,7 +1,7 @@
 import importlib
 import re
 from collections import defaultdict
-from typing import Text, Union, Dict
+from typing import Dict, Text, Union
 
 from benchmark.backend import Backend
 from benchmark.dataset import Dataset

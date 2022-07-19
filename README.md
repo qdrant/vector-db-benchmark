@@ -1,14 +1,14 @@
 # vector-db-benchmark
 
 There are various vector search engines available, and each of them may offer
-a different set of features and efficiency. But how do we measure the 
-performance? There is no clear definition and in a specific case you may worry 
+a different set of features and efficiency. But how do we measure the
+performance? There is no clear definition and in a specific case you may worry
 about a specific thing, while not paying much attention to other aspects. This
-project is a general framework for benchmarking different engines under the 
+project is a general framework for benchmarking different engines under the
 same hardware constraints, so you can choose what works best for you.
 
-Running any benchmark requires choosing an engine, a dataset and the scenario 
-against which it should be tested. 
+Running any benchmark requires choosing an engine, a dataset and the scenario
+against which it should be tested.
 
 ## TL;DR
 
@@ -19,8 +19,8 @@ python main.py \
   --dataset random-100
 ```
 
-Will execute the benchmark scenario enclosed in a 
-`scenario.load.MeasureLoadTimeSingleClient` class and use a `random-100` 
+Will execute the benchmark scenario enclosed in a
+`scenario.load.MeasureLoadTimeSingleClient` class and use a `random-100`
 dataset. All the operation will be launched on a `qdrant-0.8.4` engine.
 
 Expected output should look like following:
@@ -31,14 +31,14 @@ mean(load::time) = 0.0015927800000000007
 
 ### Backend
 
-A specific way of managing the containers. Right now only Docker, but might be 
-Docker Swarm or Kubernetes, so the benchmark is not executed on a single 
+A specific way of managing the containers. Right now only Docker, but might be
+Docker Swarm or Kubernetes, so the benchmark is not executed on a single
 machine, but on several servers.
 
 ### Engine
 
 There are various vector search projects available. Some of them are just pure
-libraries (like FAISS or Annoy) and they offer great performance, but doesn't 
+libraries (like FAISS or Annoy) and they offer great performance, but doesn't
 fit well any production systems. Those could be also benchmarked, however the
 primary focus is on vector databases using client-server architecture.
 
@@ -69,19 +69,19 @@ Each engine has its own configuration defined in `config.json` file:
 
 #### Server
 
-The server is a process, or a bunch of processes, responsible for creating 
-vector indexes and handling all the user requests. It may be run on a single 
+The server is a process, or a bunch of processes, responsible for creating
+vector indexes and handling all the user requests. It may be run on a single
 machine, or in case of some engines using the distributed mode (**in the future**).
 
 #### Client
 
-A client process performing all the operations, as it would be typically done in 
+A client process performing all the operations, as it would be typically done in
 any client-server based communication. There might be several clients launched
-in parallel and each of them might be using part of the data. The number of 
+in parallel and each of them might be using part of the data. The number of
 clients depends on the scenario.
 
-Each client has to define a main script which takes some parameters and allow 
-performing typical CRUD-like operations. For now there is only one operation 
+Each client has to define a main script which takes some parameters and allow
+performing typical CRUD-like operations. For now there is only one operation
 supported:
 
 - `load [path-to-file]`
@@ -93,7 +93,7 @@ the following command:
 
 The main script has to handle the conversion and load operations.
 
-By introducing a main script, we can allow using different client libraries, if 
+By introducing a main script, we can allow using different client libraries, if
 available, so there is no assumption about the language used, as long as it can
 accept parameters.
 
@@ -113,7 +113,7 @@ All the displayed metrics should be printed in the following way:
 phase::kpi_name = 0.242142
 ```
 
-Where `0.242142` is a numerical value specific for the `kpi_name`. In the 
+Where `0.242142` is a numerical value specific for the `kpi_name`. In the
 simplest case that might be a time spent in a specific operation, like:
 
 ```
@@ -122,13 +122,13 @@ load::time = 0.0052424
 
 ## Open topics
 
-1. The list of supported KPIs should be still established and implemented by 
+1. The list of supported KPIs should be still established and implemented by
    every single engine, so can be tracked in all the benchmark scenarios.
 2. What should be the format supported in the datasets? JSON lines are cross
    language and platform, what makes them easy to be parsed to whatever format
    a specific engine support.
-3. Should the scenario be tightly-coupled with the dataset or allow using 
+3. Should the scenario be tightly-coupled with the dataset or allow using
    different datasets? For simpler cases that may work, but there might be some
    specific problems that won't be possible for each dataset.
-4. How do we handle engine errors? 
+4. How do we handle engine errors?
 5. The dataset should also have a file-based config, like engine.
