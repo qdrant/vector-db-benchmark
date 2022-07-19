@@ -8,8 +8,6 @@ logger = logging.getLogger(__name__)
 
 
 class DockerContainer(Container):
-
-    # TODO: container should definitely know the engine it works on
     def __init__(
         self,
         engine: Engine,
