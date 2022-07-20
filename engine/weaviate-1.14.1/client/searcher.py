@@ -10,9 +10,9 @@ class Querier:
     schema = None
 
     @classmethod
-    def init_client(cls, schema):
+    def init_client(cls, url, schema):
         cls.schema = schema
-        cls.client = Client("http://weaviate_server")
+        cls.client = Client(url)
 
     @classmethod
     def search_one(cls, vector):
@@ -30,14 +30,15 @@ class Querier:
 
 
 class Searcher:
-    def __init__(self, data, schema, data_converter=JSONFileConverter):
+    def __init__(self, url, data, schema, data_converter=JSONFileConverter):
         """
 
         :param data: benchmark data
         """
+        self._url = url
         self.schema = schema
         self.data = data_converter(data)
-        self.client = Client("http://weaviate_server")
+        self.client = Client(self._url)
 
     def search_one(self, vector):
         Querier.client = self.client
@@ -54,7 +55,7 @@ class Searcher:
             with Pool(
                 processes=parallel,
                 initializer=Querier.init_client,
-                initargs=(self.schema,),
+                initargs=(self._url, self.schema,),
             ) as pool:
                 for latency in pool.imap_unordered(
                     Querier.search_one,

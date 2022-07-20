@@ -7,8 +7,8 @@ class Uploader:
     client = None
 
     @classmethod
-    def init_client(cls):
-        cls.client = Client("http://weaviate_server")
+    def init_client(cls, url):
+        cls.client = Client(url)
 
     @classmethod
     def update(cls, batch: list):
