@@ -45,7 +45,7 @@ def configure(_, distance: Text):
             "efConstruction": 100,
             "maxConnections": 32,
             "vectorCacheMaxObjects": 1000000000,
-            "distance": distance,
+            "distance": distance.lower(),
         },
     }
 
