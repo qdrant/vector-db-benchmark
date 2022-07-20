@@ -3,7 +3,7 @@ import tempfile
 from pathlib import Path
 from typing import Generator, Optional, Text, Union
 
-from benchmark.engine import Engine
+from benchmark.engine import Engine, EnvironmentalVariables
 from benchmark.types import PathLike
 
 LogsGenerator = Generator[Text, None, None]
@@ -29,9 +29,11 @@ class Container(abc.ABC):
         """
         self.volumes.append(f"{source}:{target}")
 
-    def run(self):
+    def run(self, environment: Optional[EnvironmentalVariables] = None):
         """
-        Start the container using the backend
+        Start the container using the backend. If
+        :type environment: dictionary containing the environmental variables
+                           that will be provided to the container
         :return:
         """
         ...
@@ -101,8 +103,7 @@ class Backend:
     A base class for all the possible benchmark backends.
     """
 
-    def __init__(self, root_dir: Union[PathLike]):
-        self.root_dir = root_dir if isinstance(root_dir, Path) else Path(root_dir)
+    def __init__(self):
         self.temp_dir = None
 
     def __enter__(self):

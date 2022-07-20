@@ -1,8 +1,8 @@
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Dict, Optional, Text, Union
+from typing import Dict, List, Optional, Text, Union
 
 from benchmark import BASE_DIRECTORY
 
@@ -19,15 +19,15 @@ class ContainerConf:
     engine: Text
     image: Optional[Text] = None
     dockerfile: Optional[Text] = None
-    environment: Optional[EnvironmentalVariables] = None
+    environment: EnvironmentalVariables = field(default_factory=dict)
     main: Optional[Text] = None
     hostname: Optional[Text] = None
+    ports: List[int] = field(default_factory=list)
 
-    def dockerfile_path(self, root_dir: Path) -> Path:
+    def dockerfile_path(self) -> Path:
         """
         Calculates the absolute root_dir to the directory containing the dockerfile,
         using given root directory as a base.
-        :param root_dir:
         :return:
         """
         return BASE_DIRECTORY / "engine" / self.engine

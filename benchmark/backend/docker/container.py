@@ -1,8 +1,8 @@
 import logging
-from typing import Generator, Text
+from typing import Generator, Optional, Text
 
 from benchmark.backend import Client, Container, LogsGenerator, Server
-from benchmark.engine import ContainerConf, Engine
+from benchmark.engine import ContainerConf, Engine, EnvironmentalVariables
 
 logger = logging.getLogger(__name__)
 
@@ -19,23 +19,28 @@ class DockerContainer(Container):
         self._docker_backend = docker_backend
         self._docker_container = None
 
-    def run(self):
+    def run(self, environment: Optional[EnvironmentalVariables] = None):
+        if environment is None:
+            environment = {}
+
         # Build the dockerfile if it was provided as a container image. This is
         # typically done for the clients, as they may require some custom setup
         if self.container_conf.dockerfile is not None:
-            dockerfile_path = self.container_conf.dockerfile_path(
-                self._docker_backend.root_dir
-            )
+            dockerfile_path = self.container_conf.dockerfile_path()
             image, logs = self._docker_backend.docker_client.images.build(
                 path=str(dockerfile_path),
                 dockerfile=self.container_conf.dockerfile,
             )
-            self.container_conf.image = image.id
             logger.info(
                 "Built %s into a Docker image %s",
                 self.container_conf.dockerfile,
                 image.id,
             )
+            self.container_conf.image = image.id
+
+        # Environmental variables provided to run method directly has preference
+        # over the ones defined at container level
+        env_variables = self.container_conf.environment | environment
 
         # Create the container either using the image or dockerfile, if that was
         # provided. The dockerfile has a preference over the image name.
@@ -44,9 +49,10 @@ class DockerContainer(Container):
             self.container_conf.image,
             detach=True,
             volumes=self.volumes,
-            environment=self.container_conf.environment,
+            environment=env_variables,
             hostname=self.container_conf.hostname,
             network=self._docker_backend.network.name,
+            ports=dict.fromkeys(self.container_conf.ports, self.container_conf.ports),
         )
 
         # TODO: remove the image on exit
