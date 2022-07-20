@@ -60,7 +60,9 @@ def load(filename: Text, batch_size: int, parallel=4):
     # Insert all the points in batches of selected size
     with open(DATA_PATH / filename, "r") as fp:
         with Pool(
-            processes=int(parallel), initializer=Uploader.init_client, initargs=(SERVER_URL,)
+            processes=int(parallel),
+            initializer=Uploader.init_client,
+            initargs=(SERVER_URL,),
         ) as pool:
             res = pool.imap(
                 Uploader.update, iter_batches(JSONFileConverter(fp), batch_size)
