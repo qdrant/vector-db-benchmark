@@ -11,7 +11,6 @@ from uploader import Uploader
 from utils import JSONFileConverter, iter_batches
 from weaviate import Client
 
-
 logger = logging.getLogger(__name__)
 
 DATA_PATH = Path("/dataset")

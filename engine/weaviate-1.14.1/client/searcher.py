@@ -55,7 +55,10 @@ class Searcher:
             with Pool(
                 processes=parallel,
                 initializer=Querier.init_client,
-                initargs=(self._url, self.schema,),
+                initargs=(
+                    self._url,
+                    self.schema,
+                ),
             ) as pool:
                 for latency in pool.imap_unordered(
                     Querier.search_one,
