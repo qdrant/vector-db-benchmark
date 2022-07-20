@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from multiprocessing import Pool
 from pathlib import Path
@@ -9,6 +10,8 @@ from tqdm import tqdm
 from uploader import Uploader
 from utils import JSONFileConverter, iter_batches
 from weaviate import Client
+
+logger = logging.getLogger(__name__)
 
 DATA_PATH = Path("/dataset")
 SCHEMA = {
