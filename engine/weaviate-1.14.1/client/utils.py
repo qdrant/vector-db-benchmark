@@ -1,6 +1,6 @@
 import json
 import uuid
-from typing import Iterable, Any, TextIO, Union
+from typing import Any, Iterable, TextIO, Union
 
 
 class FileConverter:

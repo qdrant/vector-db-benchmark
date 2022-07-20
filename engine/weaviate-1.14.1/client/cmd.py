@@ -1,16 +1,14 @@
-from pathlib import Path
 from datetime import datetime
 from multiprocessing import Pool
+from pathlib import Path
 from typing import Text
 
 import typer
-from tqdm import tqdm
-from weaviate import Client
-
 from searcher import Searcher
+from tqdm import tqdm
 from uploader import Uploader
-from utils import iter_batches, JSONFileConverter
-
+from utils import JSONFileConverter, iter_batches
+from weaviate import Client
 
 DATA_PATH = Path("/dataset")
 SCHEMA = {

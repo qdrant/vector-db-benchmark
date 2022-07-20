@@ -1,9 +1,8 @@
 import time
 from multiprocessing import Pool
 
-from weaviate import Client
-
 from utils import JSONFileConverter
+from weaviate import Client
 
 
 class Querier:
