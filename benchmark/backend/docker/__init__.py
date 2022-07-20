@@ -62,14 +62,14 @@ class DockerBackend(Backend):
 
     def initialize_server(self, engine: Engine, container: Text = "server") -> Server:
         server_conf = engine.get_config(container)
-        logger.info("Initializing %s server: %s", engine, server_conf)
+        logger.info("Initializing server: %s", server_conf)
         server = DockerServer(engine, server_conf, self)
         self.containers.append(server)
         return server
 
     def initialize_client(self, engine: Engine, container: Text = "client") -> Client:
         client_conf = engine.get_config(container)
-        logger.info("Initializing %s client: %s", engine, client_conf)
+        logger.info("Initializing client: %s", client_conf)
         client = DockerClient(engine, client_conf, self)
         self.containers.append(client)
         return client

@@ -14,6 +14,7 @@ with tempfile.NamedTemporaryFile() as tmpfile:
     dataset = h5py.File(tmpfile.name)
 
     keys = ["train", "test"]
+    # there are 4 keys in the original file: train, test, neighbors, distances
     for key in keys:
         with open(str(ROOT_DIR / f"{key}.jsonl"), "w") as fp:
             fp.writelines(
