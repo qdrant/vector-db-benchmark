@@ -19,8 +19,3 @@ class DockerRemoteBackend(DockerBackend):
     def __init__(self, docker_host: Text):
         docker_client = docker.DockerClient(base_url=docker_host)
         super().__init__(docker_client)
-
-    def _create_network(self):
-        network = super(DockerRemoteBackend, self)._create_network()
-        # TODO:
-        return network
