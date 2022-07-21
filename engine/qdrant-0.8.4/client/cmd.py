@@ -57,7 +57,7 @@ def load(filename: Text, batch_size: int):
         for i, batch in enumerate(iter_batches(fp, batch_size)):
             # Generate the ids, as they're not provided
             start_id = batch_size * i
-            ids = list(range(start_id, start_id + batch_size))
+            ids = list(range(start_id, start_id + len(batch)))
             # Measure the time of each operation
             start = datetime.now()
             client.upsert(
