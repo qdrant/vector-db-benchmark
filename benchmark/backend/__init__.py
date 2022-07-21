@@ -1,12 +1,16 @@
 import abc
+import logging
 import tempfile
 from pathlib import Path
 from typing import Generator, Optional, Text, Union
 
+from benchmark.dataset import Dataset
 from benchmark.engine import Engine, EnvironmentalVariables
 from benchmark.types import PathLike
 
 LogsGenerator = Generator[Text, None, None]
+
+logger = logging.getLogger(__name__)
 
 
 class Container(abc.ABC):
@@ -15,8 +19,7 @@ class Container(abc.ABC):
     server or client of the engine.
     """
 
-    def __init__(self, engine: Engine):
-        self.engine = engine
+    def __init__(self):
         self.volumes = []
 
     def mount(self, source: PathLike, target: PathLike):
@@ -27,6 +30,7 @@ class Container(abc.ABC):
         :param target:
         :return:
         """
+        logger.info("Mounting host %s to guest %s", source, target)
         self.volumes.append(f"{source}:{target}")
 
     def run(self, environment: Optional[EnvironmentalVariables] = None):
@@ -118,4 +122,7 @@ class Backend:
         ...
 
     def initialize_client(self, engine: Engine) -> Client:
+        ...
+
+    def initialize_dataset(self, dataset: Dataset):
         ...

@@ -50,20 +50,16 @@ def run_client(
     # Run the client process using selected backend and with a dataset mounted
     log_collector = LogCollector()
     with run_backend(backend_type, docker_host=docker_host) as backend:
-        # Download the dataset if it's not present
-        # TODO: download the dataset on container level (remote issues)
-        if not dataset.is_ready():
-            logger.info("Downloading the dataset %s", dataset.name)
-            dataset.download()
-
         # Build environmental variables to be passed to client
         environment = {
             "SERVER_HOST": server_host,
         }
 
-        # Mount selected dataset content
+        # Perform the dataset preprocessing so all the clients may use it
+        backend.initialize_dataset(dataset)
+
+        # Run the client application
         client = backend.initialize_client(engine, container_name)
-        client.mount(dataset.root_dir, "/dataset")
         client.run(environment)
 
         if ClientOperation.CONFIGURE == operation:

@@ -10,11 +10,10 @@ logger = logging.getLogger(__name__)
 class DockerContainer(Container):
     def __init__(
         self,
-        engine: Engine,
         container_conf: ContainerConf,
         docker_backend: "DockerBackend",
     ):
-        super().__init__(engine)
+        super().__init__()
         self.container_conf = container_conf
         self._docker_backend = docker_backend
         self._docker_container = None
@@ -26,16 +25,7 @@ class DockerContainer(Container):
         # Build the dockerfile if it was provided as a container image. This is
         # typically done for the clients, as they may require some custom setup
         if self.container_conf.dockerfile is not None:
-            dockerfile_path = self.container_conf.dockerfile_path()
-            image, logs = self._docker_backend.docker_client.images.build(
-                path=str(dockerfile_path),
-                dockerfile=self.container_conf.dockerfile,
-            )
-            logger.info(
-                "Built %s into a Docker image %s",
-                self.container_conf.dockerfile,
-                image.id,
-            )
+            image = self._docker_backend.build_from_dockerfile(self.container_conf)
             self.container_conf.image = image.id
 
         # Environmental variables provided to run method directly has preference

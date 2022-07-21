@@ -10,7 +10,8 @@ from benchmark.backend.docker.container import (
     DockerContainer,
     DockerServer,
 )
-from benchmark.engine import Engine
+from benchmark.dataset import Dataset
+from benchmark.engine import ContainerConf, Engine
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +34,7 @@ class DockerBackend(Backend):
             docker_client = docker.from_env()
         self.docker_client = docker_client
         self.containers: List[DockerContainer] = []
+        self.dataset_volume = None
 
     def __enter__(self):
         super().__enter__()
@@ -56,16 +58,38 @@ class DockerBackend(Backend):
     def initialize_server(self, engine: Engine, container: Text = "server") -> Server:
         server_conf = engine.get_config(container)
         logger.info("Initializing %s server: %s", engine, server_conf)
-        server = DockerServer(engine, server_conf, self)
+        server = DockerServer(server_conf, self)
         self.containers.append(server)
         return server
 
     def initialize_client(self, engine: Engine, container: Text = "client") -> Client:
+        if self.dataset_volume is None:
+            raise ValueError(
+                "Dataset has not been initialized. Did you launch "
+                "initialize_dataset before?"
+            )
+
         client_conf = engine.get_config(container)
         logger.info("Initializing %s client: %s", engine, client_conf)
-        client = DockerClient(engine, client_conf, self)
+        client = DockerClient(client_conf, self)
+        client.mount(self.dataset_volume, "/dataset")
         self.containers.append(client)
         return client
+
+    def initialize_dataset(self, dataset: Dataset):
+        # Dataset might be downloaded using a temporary container, so it
+        # is available on all the client containers after
+        logger.info("Downloading the dataset %s", dataset.name)
+        container_conf = ContainerConf(
+            dataset=dataset.name,
+            dockerfile="Dockerfile",
+        )
+        client = DockerClient(container_conf, self)
+        client.mount(dataset.root_dir, "/dataset")
+        client.run()
+
+        # The dataset will be mounted from the local filesystem
+        self.dataset_volume = dataset.root_dir
 
     def _create_network(self):
         """
@@ -77,3 +101,15 @@ class DockerBackend(Backend):
             return self.docker_client.networks.get(self.NETWORK_NAME)
         except docker.errors.NotFound:
             return self.docker_client.networks.create(self.NETWORK_NAME)
+
+    def build_from_dockerfile(self, conf: ContainerConf):
+        image, logs = self.docker_client.images.build(
+            path=str(conf.dockerfile_path()),
+            dockerfile=conf.dockerfile,
+        )
+        logger.info(
+            "Built %s into a Docker image %s",
+            conf.dockerfile,
+            image.id,
+        )
+        return image

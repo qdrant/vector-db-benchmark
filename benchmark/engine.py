@@ -16,7 +16,8 @@ class ContainerRole(Enum):
 
 @dataclass
 class ContainerConf:
-    engine: Text
+    engine: Optional[Text] = None
+    dataset: Optional[Text] = None
     image: Optional[Text] = None
     dockerfile: Optional[Text] = None
     environment: EnvironmentalVariables = field(default_factory=dict)
@@ -30,7 +31,11 @@ class ContainerConf:
         using given root directory as a base.
         :return:
         """
-        return BASE_DIRECTORY / "engine" / self.engine
+        if self.engine is not None:
+            return BASE_DIRECTORY / "engine" / self.engine
+        if self.dataset is not None:
+            return BASE_DIRECTORY / "dataset" / self.dataset
+        raise ValueError("Either engine or dataset property has to be set")
 
 
 class Engine:
