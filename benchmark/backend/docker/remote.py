@@ -13,9 +13,6 @@ class DockerRemoteBackend(DockerBackend):
     the server ports to public, so all the clients may communicate with it.
     """
 
-    # TODO: override the networking stuff, so the ports are exposed
-    # TODO: make the name translation layer, so the hostnames are converted
-
     def __init__(self, docker_host: Text):
         docker_client = docker.DockerClient(base_url=docker_host)
         super().__init__(docker_client)
