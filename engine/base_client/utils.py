@@ -1,30 +1,20 @@
-import json
-from typing import Any, Iterable, TextIO, Union
+from typing import Any, Iterable
+
+from dataset_reader.base_reader import Record
 
 
-class FileConverter:
-    def __init__(self, fp: TextIO):
-        self._fp = fp
+def iter_batches(records: Iterable[Record], n: int) -> Iterable[Any]:
+    ids = []
+    vectors = []
+    metadata = []
 
-    def __iter__(self):
-        raise NotImplementedError()
+    for record in records:
+        ids.append(record.id)
+        vectors.append(record.vector)
+        metadata.append(record.metadata)
 
-
-class JSONFileConverter(FileConverter):
-    def __iter__(self):
-        for line in self._fp:
-            yield json.loads(line)
-
-
-def iter_batches(fp: Union[FileConverter, TextIO], n: int) -> Iterable[Any]:
-    batch = []
-    indices = []
-    for ind, line in enumerate(fp):
-        indices.append(ind)
-        batch.append(line)
-        if len(batch) >= n:
-            yield [indices, batch]
-            batch = []
-            indices = []
-    if len(indices) > 0:
-        yield [indices, batch]
+        if len(vectors) >= n:
+            yield [ids, vectors, metadata]
+            ids, vectors, metadata = [], [], []
+    if len(ids) > 0:
+        yield [ids, vectors, metadata]

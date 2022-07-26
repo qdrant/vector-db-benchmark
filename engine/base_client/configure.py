@@ -7,26 +7,20 @@ class BaseConfigurator:
     DEFAULT_CONFIG_PATH = Path("default.json")
     DISTANCE_MAPPING = {}
 
-    def __init__(self, collection_params: dict):
+    def __init__(self, collection_params: dict, connection_params: dict):
         self.collection_params = collection_params
+        self.connection_params = connection_params
 
-    def clean(self, collection_name):
+    def clean(self):
         raise NotImplementedError()
 
-    def recreate(
-        self, collection_name, ef_construction, max_connections, distance, vector_size
-    ):
+    def recreate(self, distance, vector_size, collection_params):
         raise NotImplementedError()
 
-    def configure(
-        self, collection_name, ef_construction, max_connections, distance, vector_size
-    ):
-        collection_name = collection_name.replace("-", "_").capitalize()
-        self.clean(collection_name)
+    def configure(self, distance, vector_size, collection_params):
+        self.clean()
         start = time.perf_counter()
-        self.recreate(
-            collection_name, ef_construction, max_connections, distance, vector_size
-        )
+        self.recreate(distance, vector_size, collection_params)
         return time.perf_counter() - start
 
     @classmethod
