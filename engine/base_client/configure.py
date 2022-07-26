@@ -7,6 +7,9 @@ class BaseConfigurator:
     DEFAULT_CONFIG_PATH = Path("default.json")
     DISTANCE_MAPPING = {}
 
+    def __init__(self, collection_params: dict):
+        self.collection_params = collection_params
+
     def clean(self, collection_name):
         raise NotImplementedError()
 
