@@ -16,7 +16,14 @@ class BaseUploader:
         raise NotImplementedError()
 
     @classmethod
-    def upload(cls, url, records: Iterable[Record], batch_size, parallel, connection_params):
+    def upload(
+        cls,
+        url: str,
+        records: Iterable[Record],
+        batch_size: int,
+        parallel: int,
+        connection_params: dict,
+    ) -> List[float]:
         latencies = []
 
         if parallel == 1:
@@ -38,16 +45,15 @@ class BaseUploader:
         return latencies
 
     @classmethod
-    def _upload_batch(cls, ids, vectors, metadata) -> float:
+    def _upload_batch(
+        cls, ids: List[int], vectors: List[list], metadata: List[Optional[dict]]
+    ) -> float:
         start = time.perf_counter()
         cls.upload_batch(ids, vectors, metadata)
         return time.perf_counter() - start
 
     @classmethod
     def upload_batch(
-            cls,
-            ids: List[int],
-            vectors: List[list],
-            metadata: List[Optional[dict]]
+        cls, ids: List[int], vectors: List[list], metadata: List[Optional[dict]]
     ):
         raise NotImplementedError()

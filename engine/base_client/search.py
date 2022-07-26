@@ -9,12 +9,12 @@ class BaseSearcher:
     MP_CONTEXT = None
 
     @classmethod
-    def init_client(cls, host, connection_params, search_params):
+    def init_client(cls, host: str, connection_params: dict, search_params: dict):
         cls.search_params = search_params
         raise NotImplementedError()
 
     @classmethod
-    def search_one(cls, vector, meta_conditions) -> List[Tuple[int, float]]:
+    def search_one(cls, vector: List[float], meta_conditions) -> List[Tuple[int, float]]:
         raise NotImplementedError()
 
     @classmethod
