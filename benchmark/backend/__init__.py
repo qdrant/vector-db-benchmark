@@ -73,31 +73,27 @@ class Client(Container, abc.ABC):
     An abstract client of the selected engine.
     """
 
-    def configure(self, vector_size: int, distance: Text) -> LogsGenerator:
+    def configure(
+        self, collection_name, ef_construction, max_connections, distance, vector_size
+    ) -> LogsGenerator:
         """
         Set up the engine before any data is being loaded. Should be executed
         once before any client loads it data.
-        :param vector_size:
-        :param distance:
-        :return:
         """
         ...
 
-    def load_data(self, filename: Text, batch_size: int = 64) -> LogsGenerator:
+    def load_data(
+        self, collection_name, filename, batch_size, parallel
+    ) -> LogsGenerator:
         """
         Load the data with a provided filename into the selected search engine.
         This is engine-specific operation, that has the possibility to
-        :param filename: a relative root_dir from the dataset directory
-        :param batch_size: number of vectors to store with a single call
-        :return:
         """
         ...
 
-    def search(self, vectors_filename: Text) -> LogsGenerator:
+    def search(self, collection_name, filename, ef, parallel) -> LogsGenerator:
         """
         Perform the search operation with vectors coming from the provided file.
-        :param vectors_filename:
-        :return:
         """
         ...
 

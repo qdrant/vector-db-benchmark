@@ -1,3 +1,4 @@
+import os
 import logging
 from typing import Optional, Text
 
@@ -42,6 +43,10 @@ def run_client(
     server_host: Optional[Text] = None,
     backend_type: BackendType = BackendType.LOCAL,
     docker_host: Optional[Text] = None,
+    ef: int = 100,
+    ef_construction: int = 100,
+    max_connections: int = 50,
+    parallel: int = 4,
 ):
     # Load engine and dataset configuration from the .json config files
     engine = Engine.from_name(engine_name)
@@ -65,7 +70,17 @@ def run_client(
         if ClientOperation.CONFIGURE == operation:
             # Load all the files marked for load and collect the logs
             logger.info("Configuring the engine: %s", dataset.config)
-            logs = client.configure(dataset.config.size, dataset.config.distance)
+            logs = client.configure(
+                dataset.name,
+                ef_construction,
+                max_connections,
+                dataset.config.distance,
+                dataset.config.vector_size,
+            )
+            logs = list(logs)
+            print(f'obtained logs are: ')
+            for line in logs:
+                print(line)
             log_collector.append(logs)
 
         if ClientOperation.LOAD == operation:
@@ -77,8 +92,13 @@ def run_client(
 
             # Load all the files marked for load and collect the logs
             for filename in dataset.config.load.files:
+                filename = os.path.join('/dataset', filename)
                 logger.info("Loading file %s", filename)
-                logs = client.load_data(filename, batch_size)
+                logs = client.load_data(dataset.name, filename, batch_size, parallel)
+                logs = list(logs)
+                print(f'obtained logs are: ')
+                for line in logs:
+                    print(line)
                 log_collector.append(logs)
 
         if ClientOperation.SEARCH == operation:
@@ -89,8 +109,13 @@ def run_client(
 
             # Search the points from the selected files
             for filename in dataset.config.search.files:
+                filename = os.path.join('/dataset', filename)
                 logger.info("Loading file %s", filename)
-                logs = client.search(filename)
+                logs = client.search(dataset.name, filename, ef, parallel)
+                logs = list(logs)
+                print(f'obtained logs are: ')
+                for line in logs:
+                    print(line)
                 log_collector.append(logs)
 
         # Iterate the kpi results and calculate statistics

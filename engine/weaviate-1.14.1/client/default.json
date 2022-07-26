@@ -1,0 +1,12 @@
+{
+  "class": "Bench",
+  "vectorizer": "none",
+  "properties": [],
+  "vectorIndexConfig": {
+    "ef": 100,
+    "efConstruction": 100,
+    "maxConnections": 32,
+    "vectorCacheMaxObjects": 1000000000,
+    "distance": "cosine"
+  }
+}
