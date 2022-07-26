@@ -39,9 +39,7 @@ class DockerRemoteBackend(DockerBackend):
         # Push the local image to the remote Docker
         logger.info("Pushing the local %s image to remote Docker", image.id)
         remote_image = self._push_image_to_remote(image)
-        logger.info(
-            "Local image %s loaded as remote image %s", image, remote_image
-        )
+        logger.info("Local image %s loaded as remote image %s", image, remote_image)
 
         # Finally, the temporary dataset container might be created and launched
         # to load the data to be then used by clients

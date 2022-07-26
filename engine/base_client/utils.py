@@ -1,5 +1,5 @@
-from typing import Union, TextIO, Iterable, Any
 import json
+from typing import Any, Iterable, TextIO, Union
 
 
 class FileConverter:

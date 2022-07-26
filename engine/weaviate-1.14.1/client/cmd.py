@@ -2,13 +2,12 @@ import os
 from typing import Text
 
 import typer
-
-from engine.base_client.client import BaseClient
-from engine.base_client.distances import Distance
 from configure import WeaviateConfigurator
 from search import WeaviateSearcher
 from upload import WeaviateUploader
 
+from engine.base_client.client import BaseClient
+from engine.base_client.distances import Distance
 
 SERVER_HOST = os.environ.get("SERVER_HOST", "weaviate_server")
 SERVER_PORT = int(os.environ.get("SERVER_PORT", 8080))
@@ -22,11 +21,11 @@ client = BaseClient(
 
 
 @app.command()
-def configure(
-    collection_name, ef_construction, max_connections, distance, vector_size
-):
+def configure(collection_name, ef_construction, max_connections, distance, vector_size):
     distance = Distance.from_name(distance)
-    client.configure(collection_name, ef_construction, max_connections, distance, vector_size)
+    client.configure(
+        collection_name, ef_construction, max_connections, distance, vector_size
+    )
 
 
 @app.command()

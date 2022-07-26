@@ -1,5 +1,5 @@
-import time
 import functools
+import time
 from multiprocessing import get_context
 
 from engine.base_client.utils import JSONFileConverter
@@ -28,7 +28,7 @@ class BaseSearcher:
     def search_all(cls, url, collection_name, filename, ef, parallel):
         cls.init_client(url, collection_name, ef=ef)
 
-        with open(filename, 'r') as fp:
+        with open(filename, "r") as fp:
             json_fp = JSONFileConverter(fp)
 
             if parallel == 1:
@@ -40,7 +40,10 @@ class BaseSearcher:
                 with ctx.Pool(
                     processes=parallel,
                     initializer=cls.init_client,
-                    initargs=(url, collection_name,),
+                    initargs=(
+                        url,
+                        collection_name,
+                    ),
                 ) as pool:
                     latencies = list(pool.imap_unordered(search_one, iterable=json_fp))
 

@@ -1,7 +1,7 @@
 import time
 from multiprocessing import get_context
 
-from engine.base_client.utils import iter_batches, JSONFileConverter
+from engine.base_client.utils import JSONFileConverter, iter_batches
 
 
 class BaseUploader:
@@ -29,9 +29,12 @@ class BaseUploader:
             else:
                 ctx = get_context(cls.MP_CONTEXT)
                 with ctx.Pool(
-                        processes=int(parallel),
-                        initializer=cls.init_client,
-                        initargs=(url, collection_name,),
+                    processes=int(parallel),
+                    initializer=cls.init_client,
+                    initargs=(
+                        url,
+                        collection_name,
+                    ),
                 ) as pool:
                     latencies = pool.imap(
                         cls._upload_batch, iter_batches(json_fp, batch_size)
@@ -48,4 +51,3 @@ class BaseUploader:
     @classmethod
     def upload_batch(cls, batch, ids) -> float:
         raise NotImplementedError()
-

@@ -6,7 +6,9 @@ class BaseClient:
         self.searcher = searcher
 
     def search_all(self, collection_name, filename, parallel):
-        latencies = self.searcher.search_all(self.url, collection_name, filename, parallel)
+        latencies = self.searcher.search_all(
+            self.url, collection_name, filename, parallel
+        )
         print(f"search::latency = {sum(latencies) / parallel}")
         return latencies
 
@@ -17,7 +19,9 @@ class BaseClient:
         print(f"upload::latency = {sum(latencies) / parallel}")
         return latencies
 
-    def configure(self, collection_name, ef_construction, max_connections, distance, vector_size):
+    def configure(
+        self, collection_name, ef_construction, max_connections, distance, vector_size
+    ):
         latency = self.configurator.configure(
             collection_name, ef_construction, max_connections, distance, vector_size
         )

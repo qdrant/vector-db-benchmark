@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 from typing import Optional, Text
 
 import typer
@@ -78,7 +78,7 @@ def run_client(
                 dataset.config.vector_size,
             )
             logs = list(logs)
-            print(f'obtained logs are: ')
+            print(f"obtained logs are: ")
             for line in logs:
                 print(line)
             log_collector.append(logs)
@@ -92,11 +92,11 @@ def run_client(
 
             # Load all the files marked for load and collect the logs
             for filename in dataset.config.load.files:
-                filename = os.path.join('/dataset', filename)
+                filename = os.path.join("/dataset", filename)
                 logger.info("Loading file %s", filename)
                 logs = client.load_data(dataset.name, filename, batch_size, parallel)
                 logs = list(logs)
-                print(f'obtained logs are: ')
+                print(f"obtained logs are: ")
                 for line in logs:
                     print(line)
                 log_collector.append(logs)
@@ -109,11 +109,11 @@ def run_client(
 
             # Search the points from the selected files
             for filename in dataset.config.search.files:
-                filename = os.path.join('/dataset', filename)
+                filename = os.path.join("/dataset", filename)
                 logger.info("Loading file %s", filename)
                 logs = client.search(dataset.name, filename, ef, parallel)
                 logs = list(logs)
-                print(f'obtained logs are: ')
+                print(f"obtained logs are: ")
                 for line in logs:
                     print(line)
                 log_collector.append(logs)

@@ -2,14 +2,16 @@ import logging
 from typing import Generator, Optional, Text
 
 from benchmark.backend import Client, Container, LogsGenerator, Server
-from benchmark.engine import ContainerConf,  EnvironmentalVariables
+from benchmark.engine import ContainerConf, EnvironmentalVariables
 
 logger = logging.getLogger(__name__)
 
 
 class DockerContainer(Container):
     def __init__(
-        self, container_conf: ContainerConf, docker_backend: "DockerBackend",
+        self,
+        container_conf: ContainerConf,
+        docker_backend: "DockerBackend",
     ):
         super().__init__()
         self.container_conf = container_conf
@@ -78,11 +80,19 @@ class DockerClient(Client, DockerContainer):
             vector_size,
         )
 
-    def load_data(self, collection_name, filename, batch_size, parallel) -> LogsGenerator:
+    def load_data(
+        self, collection_name, filename, batch_size, parallel
+    ) -> LogsGenerator:
         return self.call_cmd("load", collection_name, filename, batch_size, parallel)
 
     def search(self, collection_name, filename, ef, parallel) -> LogsGenerator:
-        return self.call_cmd("search", f"--collection_name {collection_name}", f"--filename {filename}", f"--ef {ef}", f"--parallel {parallel}")
+        return self.call_cmd(
+            "search",
+            f"--collection_name {collection_name}",
+            f"--filename {filename}",
+            f"--ef {ef}",
+            f"--parallel {parallel}",
+        )
 
     def call_cmd(self, cmd: Text, *args) -> LogsGenerator:
 

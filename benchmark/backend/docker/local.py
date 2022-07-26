@@ -1,11 +1,11 @@
-import os
 import logging
+import os
 from typing import List, Optional, Text
-
 
 import docker
 import docker.errors
 
+from benchmark import BASE_DIRECTORY
 from benchmark.backend import Backend, Client, Server
 from benchmark.backend.docker.container import (
     DockerClient,
@@ -13,7 +13,6 @@ from benchmark.backend.docker.container import (
     DockerServer,
 )
 from benchmark.dataset import Dataset
-from benchmark import BASE_DIRECTORY
 from benchmark.engine import ContainerConf, Engine
 
 logger = logging.getLogger(__name__)
