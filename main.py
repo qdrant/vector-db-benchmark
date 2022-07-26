@@ -1,10 +1,9 @@
 import logging
-from enum import Enum
-from typing import Text
+from typing import Optional, Text
 
 import typer
 
-from benchmark.backend.docker import DockerBackend
+from benchmark.cli import BackendType, ClientOperation, run_backend
 from benchmark.collector import LogCollector
 from benchmark.dataset import Dataset
 from benchmark.engine import Engine
@@ -21,20 +20,16 @@ app = typer.Typer()
 def run_server(
     engine_name: Text,
     container_name: Text = "server",
+    backend_type: BackendType = BackendType.LOCAL,
+    docker_host: Optional[Text] = None,
 ):
     # Run the server process using selected backend
     engine = Engine.from_name(engine_name)
-    with DockerBackend() as backend:
+    with run_backend(backend_type, docker_host=docker_host) as backend:
         server = backend.initialize_server(engine, container_name)
         server.run()
         for log_entry in server.logs():
             print(log_entry)
-
-
-class ClientOperation(Enum):
-    LOAD = "load"
-    SEARCH = "search"
-    CONFIGURE = "configure"
 
 
 @app.command()
@@ -44,6 +39,9 @@ def run_client(
     dataset_name: Text,
     container_name: Text = "client",
     batch_size: int = 64,
+    server_host: Optional[Text] = None,
+    backend_type: BackendType = BackendType.LOCAL,
+    docker_host: Optional[Text] = None,
 ):
     # Load engine and dataset configuration from the .json config files
     engine = Engine.from_name(engine_name)
@@ -51,16 +49,18 @@ def run_client(
 
     # Run the client process using selected backend and with a dataset mounted
     log_collector = LogCollector()
-    with DockerBackend() as backend:
-        # Download the dataset if it's not present
-        if not dataset.is_ready():
-            logger.info("Downloading the dataset %s", dataset.name)
-            dataset.download()
+    with run_backend(backend_type, docker_host=docker_host) as backend:
+        # Build environmental variables to be passed to client
+        environment = {
+            "SERVER_HOST": server_host,
+        }
 
-        # Mount selected dataset content
+        # Perform the dataset preprocessing so all the clients may use it
+        backend.initialize_dataset(dataset)
+
+        # Run the client application
         client = backend.initialize_client(engine, container_name)
-        client.mount(dataset.root_dir, "/dataset")
-        client.run()
+        client.run(environment)
 
         if ClientOperation.CONFIGURE == operation:
             # Load all the files marked for load and collect the logs
@@ -94,6 +94,7 @@ def run_client(
                 log_collector.append(logs)
 
         # Iterate the kpi results and calculate statistics
+        logger.info("Starting log aggregation of client outputs")
         for kpi, values in log_collector.collect().items():
             print(f"sum({kpi}) =", sum(values))
             print(f"count({kpi}) =", len(values))

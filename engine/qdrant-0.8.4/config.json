@@ -1,7 +1,10 @@
 {
   "server": {
     "image": "qdrant/qdrant:v0.8.4",
-    "hostname": "qdrant_server"
+    "hostname": "qdrant_server",
+    "ports": [
+      6333
+    ]
   },
   "client": {
     "dockerfile": "client.Dockerfile",

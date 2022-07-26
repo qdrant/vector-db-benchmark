@@ -38,20 +38,3 @@ class Dataset:
     @property
     def root_dir(self) -> Path:
         return BASE_DIRECTORY / "dataset" / self.name
-
-    def is_ready(self):
-        root_dir = self.root_dir
-        return all(
-            (root_dir / filename).exists() for filename in self.config.load.files
-        )
-
-    def download(self):
-        """
-        Download the dataset and put it into the directory.
-        :return:
-        """
-        import importlib
-        import sys
-
-        sys.path.insert(0, str(self.root_dir))
-        importlib.import_module("download")
