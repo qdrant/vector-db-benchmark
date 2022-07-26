@@ -1,0 +1,27 @@
+[
+  {
+    "name": "qdrant-default",
+    "engine": "qdrant",
+    "service_params": {},
+    "collection_params": {},
+    "search_params": {}
+  },
+  {
+    "name": "qdrant-m-32",
+    "engine": "qdrant",
+    "service_params": {},
+    "collection_params": {
+      "m": 32
+    },
+    "search_params": {}
+  },
+  {
+    "name": "qdrant-m-64",
+    "engine": "qdrant",
+    "service_params": {},
+    "collection_params": {
+      "m": 64
+    },
+    "search_params": {}
+  }
+]
