@@ -11,7 +11,13 @@ class H5Reader(BaseReader):
         self.path = path
 
     def read_queries(self) -> Iterator[Query]:
-        pass
+        data = h5py.File(self.path)
+        for vector, expected_result in zip(data['test'], data['neighbors']):
+            yield Query(
+                vector=vector.tolist(),
+                meta_conditions=None,
+                expected_result=expected_result.tolist(),
+            )
 
     def read_data(self) -> Iterator[Record]:
         data = h5py.File(self.path)
@@ -37,4 +43,7 @@ if __name__ == '__main__':
 
     test_path = os.path.join(DATASET_DIR, 'glove-100-angular', 'glove-100-angular.hdf5')
     record = next(H5Reader(test_path).read_data())
-    print(record)
+    print(record, end='\n\n')
+
+    query = next(H5Reader(test_path).read_queries())
+    print(query)
