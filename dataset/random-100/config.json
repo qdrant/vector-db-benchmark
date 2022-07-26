@@ -1,5 +1,5 @@
 {
-  "size": 100,
+  "vector_size": 100,
   "distance": "Cosine",
   "load": {
     "files": [

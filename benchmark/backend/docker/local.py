@@ -1,9 +1,11 @@
 import logging
+import os
 from typing import List, Optional, Text
 
 import docker
 import docker.errors
 
+from benchmark import BASE_DIRECTORY
 from benchmark.backend import Backend, Client, Server
 from benchmark.backend.docker.container import (
     DockerClient,
@@ -103,10 +105,16 @@ class DockerBackend(Backend):
             return self.docker_client.networks.create(self.NETWORK_NAME)
 
     def build_from_dockerfile(self, conf: ContainerConf):
-        image, logs = self.docker_client.images.build(
-            path=str(conf.dockerfile_path()),
-            dockerfile=conf.dockerfile,
-        )
+        if conf.dataset:
+            image, logs = self.docker_client.images.build(
+                path=str(conf.dockerfile_path()),
+                dockerfile=conf.dockerfile,
+            )
+        else:
+            image, logs = self.docker_client.images.build(
+                path=str(BASE_DIRECTORY / "engine"),
+                dockerfile=os.path.join(conf.engine, conf.dockerfile),
+            )
         logger.info(
             "Built %s into a Docker image %s",
             conf.dockerfile,

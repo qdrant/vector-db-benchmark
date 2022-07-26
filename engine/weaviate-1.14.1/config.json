@@ -1,0 +1,22 @@
+{
+  "server": {
+    "image": "semitechnologies/weaviate:1.14.1",
+    "hostname": "weaviate_server",
+    "environment": {
+      "QUERY_DEFAULTS_LIMIT": 10,
+      "AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED": "true",
+      "PERSISTENCE_DATA_PATH": "/var/lib/weaviate",
+      "DEFAULT_VECTORIZER_MODULE": "none",
+      "ENABLE_MODULES": "",
+      "CLUSTER_HOSTNAME": "node1"
+    },
+    "ports": [
+      8080
+    ],
+    "main":  "--host 0.0.0.0 --port 8080 --scheme http"
+  },
+  "client": {
+    "dockerfile": "client.Dockerfile",
+    "main": "python cmd.py"
+  }
+}

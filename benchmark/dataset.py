@@ -16,7 +16,7 @@ class PhaseConfig:
 
 @dataclass
 class DatasetConfig:
-    size: int
+    vector_size: int
     distance: Text
     load: PhaseConfig
     search: PhaseConfig
