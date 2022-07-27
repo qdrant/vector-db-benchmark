@@ -19,14 +19,15 @@ class QdrantUploader(BaseUploader):
 
     @classmethod
     def upload_batch(
-            cls,
-            ids: List[int],
-            vectors: List[list],
-            metadata: Optional[List[dict]]
+        cls, ids: List[int], vectors: List[list], metadata: Optional[List[dict]]
     ):
         cls.client.upsert(
             collection_name=QDRANT_COLLECTION_NAME,
-            points=Batch(ids=ids, vectors=vectors, payloads=[payload or {} for payload in metadata]),
+            points=Batch(
+                ids=ids,
+                vectors=vectors,
+                payloads=[payload or {} for payload in metadata],
+            ),
         )
 
     @classmethod

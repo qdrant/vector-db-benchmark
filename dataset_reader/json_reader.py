@@ -6,10 +6,10 @@ import json
 from dataset_reader.base_reader import BaseReader, Record, Query
 
 
-VECTORS_FILE = 'vectors.jsonl'
-PAYLOADS_FILE = 'payloads.jsonl'
-QUERIES_FILE = 'queries.jsonl'
-NEIGHBOURS_FILE = 'neighbours.jsonl'
+VECTORS_FILE = "vectors.jsonl"
+PAYLOADS_FILE = "payloads.jsonl"
+QUERIES_FILE = "queries.jsonl"
+NEIGHBOURS_FILE = "neighbours.jsonl"
 
 
 class JSONReader(BaseReader):
@@ -48,12 +48,16 @@ class JSONReader(BaseReader):
                 yield line
 
     def read_queries(self) -> Iterator[Query]:
-        for idx, (vector, neighbours) in enumerate(zip(self.read_query_vectors(), self.read_neighbours())):
+        for idx, (vector, neighbours) in enumerate(
+            zip(self.read_query_vectors(), self.read_neighbours())
+        ):
             # ToDo: add meta_conditions
             yield Query(vector=vector, meta_conditions=None, expected_result=neighbours)
 
     def read_data(self) -> Iterator[Record]:
-        for idx, (vector, payload) in enumerate(zip(self.read_vectors(), self.read_payloads())):
+        for idx, (vector, payload) in enumerate(
+            zip(self.read_vectors(), self.read_payloads())
+        ):
             yield Record(id=idx, vector=vector, metadata=payload)
 
 

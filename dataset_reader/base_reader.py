@@ -18,7 +18,6 @@ class Query:
 
 
 class BaseReader:
-
     def read_data(self) -> Iterator[Record]:
         raise NotImplementedError()
 

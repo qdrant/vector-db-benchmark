@@ -1,9 +1,18 @@
 from abc import ABC
 from typing import List, Type
 
-from engine.base_client.client import BaseClient, BaseConfigurator, BaseSearcher, BaseUploader
+from engine.base_client.client import (
+    BaseClient,
+    BaseConfigurator,
+    BaseSearcher,
+    BaseUploader,
+)
 from engine.clients.qdrant import QdrantConfigurator, QdrantUploader, QdrantSearcher
-from engine.clients.weaviate import WeaviateConfigurator, WeaviateUploader, WeaviateSearcher
+from engine.clients.weaviate import (
+    WeaviateConfigurator,
+    WeaviateUploader,
+    WeaviateSearcher,
+)
 
 
 ENGINE_CONFIGURATORS = {

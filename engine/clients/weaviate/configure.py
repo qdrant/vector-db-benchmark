@@ -24,17 +24,19 @@ class WeaviateConfigurator(BaseConfigurator):
                 self.client.schema.delete_class(WEAVIATE_CLASS_NAME)
 
     def recreate(
-            self, distance, vector_size, collection_params,
+        self, distance, vector_size, collection_params,
     ):
-        self.client.schema.create_class({
-            "class": WEAVIATE_CLASS_NAME,
-            "vectorizer": "none",
-            "properties": [],
-            "vectorIndexConfig": {
-                **{
-                    "vectorCacheMaxObjects": 1000000000,
-                    "distance": self.DISTANCE_MAPPING.get(distance),
+        self.client.schema.create_class(
+            {
+                "class": WEAVIATE_CLASS_NAME,
+                "vectorizer": "none",
+                "properties": [],
+                "vectorIndexConfig": {
+                    **{
+                        "vectorCacheMaxObjects": 1000000000,
+                        "distance": self.DISTANCE_MAPPING.get(distance),
+                    },
+                    **collection_params["vectorIndexConfig"],
                 },
-                **collection_params["vectorIndexConfig"]
-            },
-        })
+            }
+        )

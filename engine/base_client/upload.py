@@ -21,14 +21,11 @@ class BaseUploader:
     def init_client(cls, host, connection_params: dict, upload_params: dict):
         raise NotImplementedError()
 
-    def upload(
-        self,
-        records: Iterable[Record],
-    ) -> dict:
+    def upload(self, records: Iterable[Record],) -> dict:
         latencies = []
         start = time.perf_counter()
-        parallel = self.upload_params.pop('parallel', 1)
-        batch_size = self.upload_params.pop('batch_size', 64)
+        parallel = self.upload_params.pop("parallel", 1)
+        batch_size = self.upload_params.pop("batch_size", 64)
 
         if parallel == 1:
             self.init_client(self.host, self.connection_params, self.upload_params)
@@ -43,7 +40,8 @@ class BaseUploader:
                 initargs=(self.host, self.connection_params, self.upload_params),
             ) as pool:
                 latencies = pool.imap(
-                    self.__class__._upload_batch, iter_batches(tqdm.tqdm(records), batch_size)
+                    self.__class__._upload_batch,
+                    iter_batches(tqdm.tqdm(records), batch_size),
                 )
 
         upload_time = time.perf_counter() - start

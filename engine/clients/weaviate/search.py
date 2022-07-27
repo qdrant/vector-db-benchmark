@@ -30,12 +30,12 @@ class WeaviateSearcher(BaseSearcher):
             .with_near_vector(near_vector)
             .with_limit(top)
             .do()
-        )['data']['Get'][WEAVIATE_CLASS_NAME]
+        )["data"]["Get"][WEAVIATE_CLASS_NAME]
 
         id_score_pairs: List[Tuple[int, float]] = []
         for obj in res:
-            description = obj['_additional']
-            score = description['certainty']
-            id_ = uuid.UUID(hex=description['id']).int
+            description = obj["_additional"]
+            score = description["certainty"]
+            id_ = uuid.UUID(hex=description["id"]).int
             id_score_pairs.append((id_, score))
         return id_score_pairs

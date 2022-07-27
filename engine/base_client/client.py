@@ -14,27 +14,28 @@ RESULTS_DIR.mkdir(exist_ok=True)
 
 class BaseClient:
     def __init__(
-            self,
-            name: str,  # name of the experiment
-            configurator: BaseConfigurator,
-            uploader: BaseUploader,
-            searchers: List[BaseSearcher],
+        self,
+        name: str,  # name of the experiment
+        configurator: BaseConfigurator,
+        uploader: BaseUploader,
+        searchers: List[BaseSearcher],
     ):
         self.name = name
         self.configurator = configurator
         self.uploader = uploader
         self.searchers = searchers
 
-    def save_search_results(self, dataset_name: str, results: dict, search_id: int, search_params: dict):
+    def save_search_results(
+        self, dataset_name: str, results: dict, search_id: int, search_params: dict
+    ):
         now = datetime.now()
         timestamp = now.strftime("%Y-%m-%d-%H-%M-%S")
-        experiments_file = f"{self.name}-{dataset_name}-search-{search_id}-{timestamp}.json"
+        experiments_file = (
+            f"{self.name}-{dataset_name}-search-{search_id}-{timestamp}.json"
+        )
         with open(RESULTS_DIR / experiments_file, "w") as out:
             out.write(
-                json.dumps({
-                    "params": search_params,
-                    "results": results
-                }, indent=2)
+                json.dumps({"params": search_params, "results": results}, indent=2)
             )
 
     def save_upload_results(self, dataset_name: str, results: dict):
@@ -42,15 +43,12 @@ class BaseClient:
         timestamp = now.strftime("%Y-%m-%d-%H-%M-%S")
         experiments_file = f"{self.name}-{dataset_name}-upload-{timestamp}.json"
         with open(RESULTS_DIR / experiments_file, "w") as out:
-            out.write(
-                json.dumps(results, indent=2)
-            )
+            out.write(json.dumps(results, indent=2))
 
     def run_experiment(self, dataset: Dataset):
         print("Experiment stage: Configure")
         self.configurator.configure(
-            distance=dataset.config.distance,
-            vector_size=dataset.config.vector_size,
+            distance=dataset.config.distance, vector_size=dataset.config.vector_size,
         )
 
         reader = dataset.get_reader()
@@ -63,8 +61,5 @@ class BaseClient:
             search_params = {**searcher.search_params}
             search_stats = searcher.search_all(reader.read_queries())
             self.save_search_results(
-                dataset.config.name,
-                search_stats,
-                search_id,
-                search_params
+                dataset.config.name, search_stats, search_id, search_params
             )

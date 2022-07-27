@@ -21,10 +21,7 @@ class WeaviateUploader(BaseUploader):
 
     @classmethod
     def upload_batch(
-            cls,
-            ids: List[int],
-            vectors: List[list],
-            metadata: List[Optional[dict]]
+        cls, ids: List[int], vectors: List[list], metadata: List[Optional[dict]]
     ):
         for id_, vector, data_object in zip(ids, vectors, metadata):
             cls.client.batch.add_data_object(

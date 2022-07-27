@@ -33,7 +33,9 @@ class BaseSearcher:
     def _search_one(cls, query, top: Optional[int] = None):
         if top is None:
             top = (
-                len(query.expected_result) if query.expected_result is not None else DEFAULT_TOP
+                len(query.expected_result)
+                if query.expected_result is not None
+                else DEFAULT_TOP
             )
 
         start = time.perf_counter()
