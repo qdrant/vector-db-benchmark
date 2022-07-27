@@ -5,9 +5,8 @@ import os
 
 import typer
 
-from benchmark import DATASETS_DIR
+from benchmark import DATASETS_DIR, ROOT_DIR
 from benchmark.dataset import Dataset
-from benchmark.settings import ROOT_DIR
 from engine.clients.client_factory import ClientFactory
 
 

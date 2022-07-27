@@ -9,7 +9,6 @@ from engine.clients.qdrant.configure import QdrantConfigurator
 from engine.clients.qdrant.search import QdrantSearcher
 from engine.clients.qdrant.upload import QdrantUploader
 
-
 ENGINE_CONFIGURATORS = {
     "qdrant": QdrantConfigurator,
 }
@@ -31,8 +30,8 @@ class ClientFactory(ABC):
         engine_configurator_class = ENGINE_CONFIGURATORS[experiment["engine"]]
         engine_configurator = engine_configurator_class(
             self.host,
-            experiment.get("collection_params", {}),
-            experiment.get("connection_params", {}),
+            collection_params={**experiment.get("collection_params", {})},
+            connection_params={**experiment.get("connection_params", {})},
         )
         return engine_configurator
 
@@ -40,8 +39,8 @@ class ClientFactory(ABC):
         engine_uploader_class = ENGINE_UPLOADERS[experiment["engine"]]
         engine_uploader = engine_uploader_class(
             self.host,
-            experiment.get("connection_params", {}),
-            experiment.get("upload_params", {}),
+            connection_params={**experiment.get("connection_params", {})},
+            upload_params={**experiment.get("upload_params", {})},
         )
         return engine_uploader
 
@@ -51,7 +50,7 @@ class ClientFactory(ABC):
         engine_searchers = [
             engine_searcher_class(
                 self.host,
-                connection_params=experiment.get("connection_params", {}),
+                connection_params={**experiment.get("connection_params", {})},
                 search_params=search_params,
             )
             for search_params in experiment.get("search_params", [{}])

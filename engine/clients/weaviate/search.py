@@ -1,28 +1,37 @@
 from typing import Optional, Tuple, List
 
-from qdrant_client import QdrantClient
-from qdrant_client.http import models as rest
+from weaviate import Client
 
 from engine.base_client.search import BaseSearcher
 from engine.clients.qdrant import QDRANT_COLLECTION_NAME
+from engine.clients.weaviate import WEAVIATE_DEFAULT_PORT
 
 
 class QdrantSearcher(BaseSearcher):
     search_params = {}
-    client: QdrantClient = None
+    client: Client = None
 
     @classmethod
     def init_client(cls, host, connection_params: dict, search_params: dict):
-        cls.client: QdrantClient = QdrantClient(host, **connection_params)
+        url = f"http://{host}:{connection_params.pop('port', WEAVIATE_DEFAULT_PORT)}"
+        cls.client = Client(url, **connection_params)
         cls.search_params = search_params
 
     @classmethod
-    def conditions_to_filter(cls, _meta_conditions) -> Optional[rest.Filter]:
+    def conditions_to_filter(cls, _meta_conditions):
         # ToDo: implement
         return None
 
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
+        top = 10
+        near_vector = {"vector": vector}
+        res = (
+            cls.client.query.get(cls.collection, ["_additional {id certainty}"])
+            .with_near_vector(near_vector)
+            .with_limit(top)
+            .do()
+        )
         res = cls.client.search(
             collection_name=QDRANT_COLLECTION_NAME,
             query_vector=vector,

@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List
 
 from benchmark.dataset import Dataset
-from benchmark.settings import ROOT_DIR
+from benchmark import ROOT_DIR
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.search import BaseSearcher
 from engine.base_client.upload import BaseUploader

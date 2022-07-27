@@ -1,0 +1,20 @@
+[
+  {
+    "name": "weaviate-default",
+    "engine": "weaviate",
+    "connection_params": {},
+    "collection_params": {
+      "vectorIndexConfig": {
+        "ef": 100,
+        "efConstruction": 100,
+        "maxConnections": 16
+      }
+    },
+    "search_params": [
+      {"parallel":  1},
+      {"parallel":  2},
+      {"parallel":  4},
+      {"parallel":  100}
+    ]
+  }
+]

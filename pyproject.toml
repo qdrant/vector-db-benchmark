@@ -11,7 +11,7 @@ qdrant-client = "^0.8.7"
 typer = "^0.6.1"
 jsons = "^1.6.3"
 h5py = "^3.7.0"
-paramiko = "^2.11.0"
+weaviate-client = "^3.6.0"
 
 
 [tool.poetry.dev-dependencies]

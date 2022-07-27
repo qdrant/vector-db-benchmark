@@ -54,6 +54,8 @@ class BaseSearcher:
         parallel = self.search_params.pop("parallel", 1)
         top = self.search_params.pop("top", None)
 
+        self.setup_search()
+
         search_one = functools.partial(self.__class__._search_one, top=top)
 
         if parallel == 1:
@@ -88,3 +90,6 @@ class BaseSearcher:
 
     def set_process_start_method(self, start_method):
         self.MP_CONTEXT = start_method
+
+    def setup_search(self):
+        pass
