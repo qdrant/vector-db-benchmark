@@ -1,9 +1,10 @@
+import uuid
 from typing import Optional, List
 
 from weaviate import Client
 
 from engine.base_client.upload import BaseUploader
-from engine.clients.weaviate import WEAVIATE_DEFAULT_PORT
+from engine.clients.weaviate.config import WEAVIATE_CLASS_NAME, WEAVIATE_DEFAULT_PORT
 
 
 class WeaviateUploader(BaseUploader):
@@ -23,7 +24,13 @@ class WeaviateUploader(BaseUploader):
             cls,
             ids: List[int],
             vectors: List[list],
-            metadata: Optional[List[dict]]
+            metadata: List[Optional[dict]]
     ):
-        ...
-
+        for id_, vector, data_object in zip(ids, vectors, metadata):
+            cls.client.batch.add_data_object(
+                data_object=data_object,
+                class_name=WEAVIATE_CLASS_NAME,
+                uuid=uuid.UUID(int=id_).hex,
+                vector=vector,
+            )
+        cls.client.batch.create_objects()

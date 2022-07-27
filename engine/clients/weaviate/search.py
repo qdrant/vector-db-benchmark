@@ -1,13 +1,13 @@
-from typing import Optional, Tuple, List
+import uuid
+from typing import Tuple, List
 
 from weaviate import Client
 
 from engine.base_client.search import BaseSearcher
-from engine.clients.qdrant import QDRANT_COLLECTION_NAME
-from engine.clients.weaviate import WEAVIATE_DEFAULT_PORT
+from engine.clients.weaviate.config import WEAVIATE_CLASS_NAME, WEAVIATE_DEFAULT_PORT
 
 
-class QdrantSearcher(BaseSearcher):
+class WeaviateSearcher(BaseSearcher):
     search_params = {}
     client: Client = None
 
@@ -24,20 +24,18 @@ class QdrantSearcher(BaseSearcher):
 
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
-        top = 10
         near_vector = {"vector": vector}
         res = (
-            cls.client.query.get(cls.collection, ["_additional {id certainty}"])
+            cls.client.query.get(WEAVIATE_CLASS_NAME, ["_additional {id certainty}"])
             .with_near_vector(near_vector)
             .with_limit(top)
             .do()
-        )
-        # res = cls.client.search(
-        #     collection_name=QDRANT_COLLECTION_NAME,
-        #     query_vector=vector,
-        #     query_filter=cls.conditions_to_filter(meta_conditions),
-        #     limit=top,
-        #     **cls.search_params
-        # )
+        )['data']['Get'][WEAVIATE_CLASS_NAME]
 
-        return [(hit.id, hit.score) for hit in res]
+        id_score_pairs: List[Tuple[int, float]] = []
+        for obj in res:
+            description = obj['_additional']
+            score = description['certainty']
+            id_ = uuid.UUID(hex=description['id']).int
+            id_score_pairs.append((id_, score))
+        return id_score_pairs

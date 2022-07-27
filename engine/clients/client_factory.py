@@ -1,24 +1,24 @@
 from abc import ABC
 from typing import List, Type
 
-from engine.base_client.client import BaseClient
-from engine.base_client.configure import BaseConfigurator
-from engine.base_client.search import BaseSearcher
-from engine.base_client.upload import BaseUploader
-from engine.clients.qdrant.configure import QdrantConfigurator
-from engine.clients.qdrant.search import QdrantSearcher
-from engine.clients.qdrant.upload import QdrantUploader
+from engine.base_client.client import BaseClient, BaseConfigurator, BaseSearcher, BaseUploader
+from engine.clients.qdrant import QdrantConfigurator, QdrantUploader, QdrantSearcher
+from engine.clients.weaviate import WeaviateConfigurator, WeaviateUploader, WeaviateSearcher
+
 
 ENGINE_CONFIGURATORS = {
     "qdrant": QdrantConfigurator,
+    "weaviate": WeaviateConfigurator,
 }
 
 ENGINE_UPLOADERS = {
     "qdrant": QdrantUploader,
+    "weaviate": WeaviateUploader,
 }
 
 ENGINE_SEARCHERS = {
     "qdrant": QdrantSearcher,
+    "weaviate": WeaviateSearcher,
 }
 
 
@@ -45,7 +45,9 @@ class ClientFactory(ABC):
         return engine_uploader
 
     def _create_searchers(self, experiment) -> List[BaseSearcher]:
-        engine_searcher_class: Type[BaseSearcher] = ENGINE_SEARCHERS[experiment["engine"]]
+        engine_searcher_class: Type[BaseSearcher] = ENGINE_SEARCHERS[
+            experiment["engine"]
+        ]
 
         engine_searchers = [
             engine_searcher_class(

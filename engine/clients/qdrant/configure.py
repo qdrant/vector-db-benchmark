@@ -3,7 +3,7 @@ from qdrant_client.http import models as rest
 
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
-from engine.clients.qdrant import QDRANT_COLLECTION_NAME
+from engine.clients.qdrant.config import QDRANT_COLLECTION_NAME
 
 
 class QdrantConfigurator(BaseConfigurator):

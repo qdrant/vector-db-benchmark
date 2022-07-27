@@ -1,4 +1,3 @@
----
 version: '3.4'
 services:
   weaviate:
@@ -11,7 +10,7 @@ services:
     - http
     image: semitechnologies/weaviate:1.14.1
     ports:
-    - 8090:8090
+    - "8090:8090"
     volumes:
       - ./data/storage:/var/lib/weaviate
     environment:
