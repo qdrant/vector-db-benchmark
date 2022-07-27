@@ -1,4 +1,5 @@
 import os
+import shutil
 from dataclasses import dataclass
 from typing import Optional
 import tarfile
@@ -49,7 +50,8 @@ class Dataset:
             else:
                 print(f"Moving: {tmp_path} -> {target_path}")
                 (DATASETS_DIR / self.config.path).parent.mkdir(exist_ok=True)
-                os.rename(tmp_path, target_path)
+                shutil.copy2(tmp_path, target_path)
+                os.remove(tmp_path)
 
     def get_reader(self) -> BaseReader:
         reader_class = READER_TYPE[self.config.type]

@@ -2,6 +2,8 @@ import time
 from multiprocessing import get_context
 from typing import List, Optional, Iterable
 
+import tqdm
+
 from dataset_reader.base_reader import Record
 from engine.base_client.utils import iter_batches
 
@@ -30,7 +32,7 @@ class BaseUploader:
 
         if parallel == 1:
             self.init_client(self.host, self.connection_params, self.upload_params)
-            for ids, vectors, metadata in iter_batches(records, batch_size):
+            for ids, vectors, metadata in iter_batches(tqdm.tqdm(records), batch_size):
                 latencies.append(self._upload_batch(ids, vectors, metadata))
 
         else:
@@ -41,15 +43,22 @@ class BaseUploader:
                 initargs=(self.host, self.connection_params, self.upload_params),
             ) as pool:
                 latencies = pool.imap(
-                    self.__class__._upload_batch, iter_batches(records, batch_size)
+                    self.__class__._upload_batch, iter_batches(tqdm.tqdm(records), batch_size)
                 )
+
+        upload_time = time.perf_counter() - start
+
+        print("Upload time: {}".format(upload_time))
 
         post_upload_stats = self.post_upload()
 
+        total_time = time.perf_counter() - start
+
         return {
-            "latencies": latencies,
             "post_upload": post_upload_stats,
-            "total_time": time.perf_counter() - start
+            "upload_time": upload_time,
+            "total_time": total_time,
+            "latencies": latencies,
         }
 
     @classmethod

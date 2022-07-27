@@ -42,21 +42,5 @@
       {"parallel":  4},
       {"parallel":  100}
     ]
-  },
-  {
-    "name": "qdrant-distributed-3-node",
-    "engine": "qdrant-distributed",
-    "connection_params": {},
-    "collection_params": {
-      "hnsw_config": {
-        "m": 64
-      }
-    },
-    "search_params": [
-      {"parallel":  1},
-      {"parallel":  2},
-      {"parallel":  4},
-      {"parallel":  100}
-    ]
   }
 ]

@@ -47,15 +47,18 @@ class BaseClient:
             )
 
     def run_experiment(self, dataset: Dataset):
+        print("Experiment stage: Configure")
         self.configurator.configure(
             distance=dataset.config.distance,
             vector_size=dataset.config.vector_size,
         )
 
         reader = dataset.get_reader()
+        print("Experiment stage: Upload")
         upload_stats = self.uploader.upload(reader.read_data())
         self.save_upload_results(dataset.config.name, upload_stats)
 
+        print("Experiment stage: Search")
         for search_id, searcher in enumerate(self.searchers):
             search_params = {**searcher.search_params}
             search_stats = searcher.search_all(reader.read_queries())

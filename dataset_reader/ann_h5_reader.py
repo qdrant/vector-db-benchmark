@@ -12,11 +12,12 @@ class AnnH5Reader(BaseReader):
 
     def read_queries(self) -> Iterator[Query]:
         data = h5py.File(self.path)
-        for vector, expected_result in zip(data['test'], data['neighbors']):
+        for vector, expected_result, expected_scores in zip(data['test'], data['neighbors'], data['distances']):
             yield Query(
                 vector=vector.tolist(),
                 meta_conditions=None,
                 expected_result=expected_result.tolist(),
+                expected_scores=expected_scores.tolist()
             )
 
     def read_data(self) -> Iterator[Record]:

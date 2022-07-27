@@ -14,6 +14,7 @@ class Query:
     vector: List[float]
     meta_conditions: Optional[dict]
     expected_result: Optional[List[int]]
+    expected_scores: Optional[List[float]] = None
 
 
 class BaseReader:
