@@ -32,12 +32,12 @@ class QdrantSearcher(BaseSearcher):
             .with_limit(top)
             .do()
         )
-        res = cls.client.search(
-            collection_name=QDRANT_COLLECTION_NAME,
-            query_vector=vector,
-            query_filter=cls.conditions_to_filter(meta_conditions),
-            limit=top,
-            **cls.search_params
-        )
+        # res = cls.client.search(
+        #     collection_name=QDRANT_COLLECTION_NAME,
+        #     query_vector=vector,
+        #     query_filter=cls.conditions_to_filter(meta_conditions),
+        #     limit=top,
+        #     **cls.search_params
+        # )
 
         return [(hit.id, hit.score) for hit in res]
