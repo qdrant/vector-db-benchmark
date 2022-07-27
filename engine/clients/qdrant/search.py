@@ -22,11 +22,12 @@ class QdrantSearcher(BaseSearcher):
         return None
 
     @classmethod
-    def search_one(cls, vector, meta_conditions) -> List[Tuple[int, float]]:
+    def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
         res = cls.client.search(
             collection_name=QDRANT_COLLECTION_NAME,
             query_vector=vector,
             query_filter=cls.conditions_to_filter(meta_conditions),
+            limit=top,
             **cls.search_params
         )
 

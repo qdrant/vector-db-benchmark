@@ -1,4 +1,5 @@
 from abc import ABC
+from typing import List, Type
 
 from engine.base_client.client import BaseClient
 from engine.base_client.configure import BaseConfigurator
@@ -44,19 +45,24 @@ class ClientFactory(ABC):
         )
         return engine_uploader
 
-    def _create_searcher(self, experiment) -> BaseSearcher:
-        engine_searcher_class = ENGINE_SEARCHERS[experiment["engine"]]
-        engine_searcher = engine_searcher_class(
-            self.host,
-            experiment.get("connection_params", {}),
-            experiment.get("search_params", {}),
-        )
-        return engine_searcher
+    def _create_searchers(self, experiment) -> List[BaseSearcher]:
+        engine_searcher_class: Type[BaseSearcher] = ENGINE_SEARCHERS[experiment["engine"]]
+
+        engine_searchers = [
+            engine_searcher_class(
+                self.host,
+                connection_params=experiment.get("connection_params", {}),
+                search_params=search_params,
+            )
+            for search_params in experiment.get("search_params", [{}])
+        ]
+
+        return engine_searchers
 
     def build_client(self, experiment):
         return BaseClient(
             name=experiment["name"],
             configurator=self._create_configurator(experiment),
             uploader=self._create_uploader(experiment),
-            searcher=self._create_searcher(experiment),
+            searchers=self._create_searchers(experiment),
         )

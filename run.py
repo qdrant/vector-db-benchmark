@@ -60,7 +60,7 @@ def run(engines: str = "*", datasets: str = "*", host: str = "localhost"):
     for engine_name, engine_config in selected_engines.items():
         for dataset_name, dataset_config in selected_datasets.items():
             print(f"Running experiment: {engine_name} - {dataset_name}")
-            client = ClientFactory(host).build_client(host)
+            client = ClientFactory(host).build_client(engine_config)
             dataset = Dataset(dataset_config)
             dataset.download()
             client.run_experiment(dataset)

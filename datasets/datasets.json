@@ -2,7 +2,7 @@
   {
     "name": "glove-25-angular",
     "vector_size": 25,
-    "distance": "Cosine",
+    "distance": "cosine",
     "type": "h5",
     "path": "glove-25-angular/glove-25-angular.hdf5",
     "link": "http://ann-benchmarks.com/glove-25-angular.hdf5"
@@ -10,7 +10,7 @@
   {
     "name": "glove-100-angular",
     "vector_size": 100,
-    "distance": "Cosine",
+    "distance": "cosine",
     "type": "h5",
     "path": "glove-100-angular/glove-100-angular.hdf5",
     "link": "http://ann-benchmarks.com/glove-100-angular.hdf5"
@@ -18,7 +18,7 @@
   {
     "name": "random-100",
     "vector_size": 100,
-    "distance": "Cosine",
+    "distance": "cosine",
     "type": "jsonl",
     "path": "random-100/"
   }

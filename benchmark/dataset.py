@@ -53,7 +53,7 @@ class Dataset:
 
     def get_reader(self) -> BaseReader:
         reader_class = READER_TYPE[self.config.type]
-        return reader_class(self.config.path)
+        return reader_class(DATASETS_DIR / self.config.path)
 
 
 if __name__ == "__main__":

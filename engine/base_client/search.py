@@ -58,7 +58,7 @@ class BaseSearcher:
 
         if parallel == 1:
             self.init_client(self.host, self.connection_params, self.search_params)
-            precisions, latencies = list(zip([search_one(query) for query in queries]))
+            precisions, latencies = list(zip(*[search_one(query) for query in queries]))
         else:
             ctx = get_context(self.MP_CONTEXT)
 
