@@ -5,7 +5,7 @@ import h5py
 from dataset_reader.base_reader import BaseReader, Record, Query
 
 
-class H5Reader(BaseReader):
+class AnnH5Reader(BaseReader):
 
     def __init__(self, path):
         self.path = path
@@ -42,8 +42,8 @@ if __name__ == '__main__':
     # `distances` - float - distances for nearest neighbors for test vectors
 
     test_path = os.path.join(DATASET_DIR, 'glove-100-angular', 'glove-100-angular.hdf5')
-    record = next(H5Reader(test_path).read_data())
+    record = next(AnnH5Reader(test_path).read_data())
     print(record, end='\n\n')
 
-    query = next(H5Reader(test_path).read_queries())
+    query = next(AnnH5Reader(test_path).read_queries())
     print(query)

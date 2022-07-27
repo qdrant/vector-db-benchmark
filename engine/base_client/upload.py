@@ -10,39 +10,47 @@ class BaseUploader:
     MP_CONTEXT = None
     client = None
 
+    def __init__(self, host, connection_params, upload_params):
+        self.host = host
+        self.connection_params = connection_params
+        self.upload_params = upload_params
+
     @classmethod
-    def init_client(cls, host, connection_params: dict):
-        cls.client = ...
+    def init_client(cls, host, connection_params: dict, upload_params: dict):
         raise NotImplementedError()
 
-    @classmethod
     def upload(
-        cls,
-        url: str,
+        self,
         records: Iterable[Record],
-        batch_size: int,
-        parallel: int,
-        connection_params: dict,
-    ) -> List[float]:
+    ) -> dict:
         latencies = []
+        start = time.perf_counter()
+        parallel = self.upload_params.pop('parallel', 1)
+        batch_size = self.upload_params.pop('batch_size', 64)
 
         if parallel == 1:
-            cls.init_client(url, connection_params)
+            self.init_client(self.host, self.connection_params, self.upload_params)
             for ids, vectors, metadata in iter_batches(records, batch_size):
-                latencies.append(cls.upload_batch(ids, vectors, metadata))
+                latencies.append(self._upload_batch(ids, vectors, metadata))
 
         else:
-            ctx = get_context(cls.MP_CONTEXT)
+            ctx = get_context(self.MP_CONTEXT)
             with ctx.Pool(
                 processes=int(parallel),
-                initializer=cls.init_client,
-                initargs=(url, connection_params),
+                initializer=self.__class__.init_client,
+                initargs=(self.host, self.connection_params, self.upload_params),
             ) as pool:
                 latencies = pool.imap(
-                    cls._upload_batch, iter_batches(records, batch_size)
+                    self.__class__._upload_batch, iter_batches(records, batch_size)
                 )
 
-        return latencies
+        post_upload_stats = self.post_upload()
+
+        return {
+            "latencies": latencies,
+            "post_upload": post_upload_stats,
+            "total_time": time.perf_counter() - start
+        }
 
     @classmethod
     def _upload_batch(
@@ -53,7 +61,14 @@ class BaseUploader:
         return time.perf_counter() - start
 
     @classmethod
+    def post_upload(cls):
+        return {}
+
+    @classmethod
     def upload_batch(
         cls, ids: List[int], vectors: List[list], metadata: List[Optional[dict]]
     ):
         raise NotImplementedError()
+
+    def set_process_start_method(self, start_method):
+        self.MP_CONTEXT = start_method

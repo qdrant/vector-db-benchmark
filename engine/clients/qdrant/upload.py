@@ -9,12 +9,12 @@ from engine.clients.qdrant.config import QDRANT_COLLECTION_NAME
 
 class QdrantUploader(BaseUploader):
     client = None
+    upload_params = {}
 
     @classmethod
-    def init_client(cls, host, connection_params):
-        cls.client = QdrantClient(
-            host=host, prefer_grpc=connection_params.get("prefer_grpc", True)
-        )
+    def init_client(cls, host, connection_params, upload_params):
+        cls.client = QdrantClient(host=host, **connection_params)
+        cls.upload_params = upload_params
 
     @classmethod
     def upload_batch(

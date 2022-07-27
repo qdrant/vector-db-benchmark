@@ -1,40 +1,71 @@
-import json
-from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Text
+import os
+from dataclasses import dataclass
+from typing import Optional
+import tarfile
 
-import jsons
+import urllib.request
 
-from benchmark import BASE_DIRECTORY
-
-
-@dataclass
-class PhaseConfig:
-    files: List[Text] = field(default_factory=list)
-    engine: Dict[Any, Any] = field(default_factory=dict)
+from benchmark import DATASETS_DIR
+from dataset_reader.ann_h5_reader import AnnH5Reader
+from dataset_reader.base_reader import BaseReader
+from dataset_reader.json_reader import JSONReader
 
 
 @dataclass
 class DatasetConfig:
     vector_size: int
-    distance: Text
-    load: PhaseConfig
-    search: PhaseConfig
-    url: Optional[Text]
+    distance: str
+    name: str
+    type: str
+    path: str
+    link: Optional[str] = None
+
+
+READER_TYPE = {"h5": AnnH5Reader, "jsonl": JSONReader}
 
 
 class Dataset:
-    @classmethod
-    def from_name(cls, name: Text) -> "Dataset":
-        config_path = BASE_DIRECTORY / "dataset" / name / "config.json"
-        with open(config_path, "r") as fp:
-            config = jsons.load(json.load(fp), DatasetConfig)
-        return Dataset(name, config)
+    def __init__(self, config: dict):
+        self.config = DatasetConfig(**config)
 
-    def __init__(self, name: Text, config: DatasetConfig):
-        self.name = name
-        self.config = config
+    def download(self):
+        target_path = DATASETS_DIR / self.config.path
 
-    @property
-    def root_dir(self) -> Path:
-        return BASE_DIRECTORY / "dataset" / self.name
+        if target_path.exists():
+            print(f"{target_path} already exists")
+            return
+
+        if self.config.link:
+            print(f"Downloading {self.config.link}...")
+            tmp_path, _ = urllib.request.urlretrieve(self.config.link)
+
+            if tmp_path.endswith(".tgz") or tmp_path.endswith(".tar.gz"):
+                print(f"Extracting: {tmp_path} -> {target_path}")
+                (DATASETS_DIR / self.config.path).mkdir(exist_ok=True)
+                file = tarfile.open(tmp_path)
+                file.extractall(target_path)
+                file.close()
+                os.remove(tmp_path)
+            else:
+                print(f"Moving: {tmp_path} -> {target_path}")
+                (DATASETS_DIR / self.config.path).parent.mkdir(exist_ok=True)
+                os.rename(tmp_path, target_path)
+
+    def get_reader(self) -> BaseReader:
+        reader_class = READER_TYPE[self.config.type]
+        return reader_class(self.config.path)
+
+
+if __name__ == "__main__":
+    dataset = Dataset(
+        {
+            "name": "glove-25-angular",
+            "vector_size": 25,
+            "distance": "Cosine",
+            "type": "h5",
+            "path": "glove-25-angular/glove-25-angular.hdf5",
+            "link": "http://ann-benchmarks.com/glove-25-angular.hdf5",
+        }
+    )
+
+    dataset.download()

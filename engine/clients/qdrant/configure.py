@@ -13,14 +13,10 @@ class QdrantConfigurator(BaseConfigurator):
         Distance.DOT: rest.Distance.DOT,
     }
 
-    def __init__(self, host, port, collection_params: dict, connection_params: dict):
-        super().__init__(collection_params, connection_params)
+    def __init__(self, host, collection_params: dict, connection_params: dict):
+        super().__init__(host, collection_params, connection_params)
 
-        self.client = QdrantClient(
-            host=host,
-            port=port,
-            prefer_grpc=self.connection_params.get("prefer_grpc", True),
-        )
+        self.client = QdrantClient(host=host, **connection_params)
 
     def clean(self):
         self.client.delete_collection(collection_name=QDRANT_COLLECTION_NAME)

@@ -4,28 +4,59 @@
     "engine": "qdrant",
     "connection_params": {},
     "collection_params": {},
-    "search_params": {}
+    "search_params": [
+      {"parallel":  1},
+      {"parallel":  2},
+      {"parallel":  4},
+      {"parallel":  100}
+    ]
   },
   {
     "name": "qdrant-m-32",
     "engine": "qdrant",
     "connection_params": {},
     "collection_params": {
-      "hnsw_config": {"m": 32}
+      "hnsw_config": {
+        "m": 32
+      }
     },
-    "search_params": {
-      "top": 10
-    }
+    "search_params": [
+      {"parallel":  1},
+      {"parallel":  2},
+      {"parallel":  4},
+      {"parallel":  100}
+    ]
   },
   {
     "name": "qdrant-m-64",
     "engine": "qdrant",
     "connection_params": {},
     "collection_params": {
-      "hnsw_config": {"m": 64}
+      "hnsw_config": {
+        "m": 64
+      }
     },
-    "search_params": {
-      "top": 10
-    }
+    "search_params": [
+      {"parallel":  1},
+      {"parallel":  2},
+      {"parallel":  4},
+      {"parallel":  100}
+    ]
+  },
+  {
+    "name": "qdrant-distributed-3-node",
+    "engine": "qdrant-distributed",
+    "connection_params": {},
+    "collection_params": {
+      "hnsw_config": {
+        "m": 64
+      }
+    },
+    "search_params": [
+      {"parallel":  1},
+      {"parallel":  2},
+      {"parallel":  4},
+      {"parallel":  100}
+    ]
   }
 ]
