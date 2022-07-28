@@ -23,3 +23,6 @@ class BaseReader:
 
     def read_queries(self) -> Iterator[Query]:
         raise NotImplementedError()
+
+    def prefetch(self, vector, *items) -> List:
+        raise NotImplementedError()

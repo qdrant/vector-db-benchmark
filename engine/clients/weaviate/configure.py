@@ -24,7 +24,10 @@ class WeaviateConfigurator(BaseConfigurator):
                 self.client.schema.delete_class(WEAVIATE_CLASS_NAME)
 
     def recreate(
-        self, distance, vector_size, collection_params,
+        self,
+        distance,
+        vector_size,
+        collection_params,
     ):
         self.client.schema.create_class(
             {

@@ -1,12 +1,11 @@
-import time
 import functools
+import time
 from multiprocessing import get_context
-from typing import List, Tuple, Iterable, Optional
+from typing import Iterable, List, Optional, Tuple
 
 import numpy as np
 
 from dataset_reader.base_reader import Query
-
 
 DEFAULT_TOP = 10
 
@@ -50,12 +49,15 @@ class BaseSearcher:
         return precision, end - start
 
     def search_all(
-        self, queries: Iterable[Query],
+        self,
+        queries: Iterable[Query],
     ):
         start = time.perf_counter()
         parallel = self.search_params.pop("parallel", 1)
         top = self.search_params.pop("top", None)
 
+        # setup_search may require initialized client
+        self.init_client(self.host, self.connection_params, self.search_params)
         self.setup_search()
 
         search_one = functools.partial(self.__class__._search_one, top=top)

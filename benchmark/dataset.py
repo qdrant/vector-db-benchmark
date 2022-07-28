@@ -1,10 +1,9 @@
 import os
 import shutil
+import tarfile
+import urllib.request
 from dataclasses import dataclass
 from typing import Optional
-import tarfile
-
-import urllib.request
 
 from benchmark import DATASETS_DIR
 from dataset_reader.ann_h5_reader import AnnH5Reader
@@ -53,9 +52,9 @@ class Dataset:
                 shutil.copy2(tmp_path, target_path)
                 os.remove(tmp_path)
 
-    def get_reader(self) -> BaseReader:
+    def get_reader(self, normalize: bool) -> BaseReader:
         reader_class = READER_TYPE[self.config.type]
-        return reader_class(DATASETS_DIR / self.config.path)
+        return reader_class(DATASETS_DIR / self.config.path, normalize=normalize)
 
 
 if __name__ == "__main__":

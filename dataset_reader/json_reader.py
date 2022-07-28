@@ -1,10 +1,10 @@
+import json
 from pathlib import Path
 from typing import Iterator, List, Optional
 
-import json
+import numpy as np
 
-from dataset_reader.base_reader import BaseReader, Record, Query
-
+from dataset_reader.base_reader import BaseReader, Query, Record
 
 VECTORS_FILE = "vectors.jsonl"
 PAYLOADS_FILE = "payloads.jsonl"
@@ -13,8 +13,9 @@ NEIGHBOURS_FILE = "neighbours.jsonl"
 
 
 class JSONReader(BaseReader):
-    def __init__(self, path: Path):
+    def __init__(self, path: Path, normalize=False):
         self.path = path
+        self.normalize = normalize
 
     def read_payloads(self) -> Iterator[dict]:
         if not (self.path / PAYLOADS_FILE).exists():
@@ -28,8 +29,10 @@ class JSONReader(BaseReader):
     def read_vectors(self) -> Iterator[List[float]]:
         with open(self.path / VECTORS_FILE, "r") as json_fp:
             for json_line in json_fp:
-                line = json.loads(json_line)
-                yield line
+                vector = json.loads(json_line)
+                if self.normalize:
+                    vector = vector / np.linalg.norm(vector)
+                yield vector
 
     def read_neighbours(self) -> Iterator[Optional[List[int]]]:
         if not (self.path / NEIGHBOURS_FILE).exists():
@@ -44,14 +47,17 @@ class JSONReader(BaseReader):
     def read_query_vectors(self) -> Iterator[List[float]]:
         with open(self.path / QUERIES_FILE, "r") as json_fp:
             for json_line in json_fp:
-                line = json.loads(json_line)
-                yield line
+                vector = json.loads(json_line)
+                if self.normalize:
+                    vector /= np.linalg.norm(vector)
+                yield vector
 
     def read_queries(self) -> Iterator[Query]:
         for idx, (vector, neighbours) in enumerate(
             zip(self.read_query_vectors(), self.read_neighbours())
         ):
             # ToDo: add meta_conditions
+
             yield Query(vector=vector, meta_conditions=None, expected_result=neighbours)
 
     def read_data(self) -> Iterator[Record]:

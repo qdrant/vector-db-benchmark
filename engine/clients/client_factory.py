@@ -7,27 +7,30 @@ from engine.base_client.client import (
     BaseSearcher,
     BaseUploader,
 )
-from engine.clients.qdrant import QdrantConfigurator, QdrantUploader, QdrantSearcher
+from engine.clients.milvus import MilvusConfigurator, MilvusSearcher, MilvusUploader
+from engine.clients.qdrant import QdrantConfigurator, QdrantSearcher, QdrantUploader
 from engine.clients.weaviate import (
     WeaviateConfigurator,
-    WeaviateUploader,
     WeaviateSearcher,
+    WeaviateUploader,
 )
-
 
 ENGINE_CONFIGURATORS = {
     "qdrant": QdrantConfigurator,
     "weaviate": WeaviateConfigurator,
+    "milvus": MilvusConfigurator,
 }
 
 ENGINE_UPLOADERS = {
     "qdrant": QdrantUploader,
     "weaviate": WeaviateUploader,
+    "milvus": MilvusUploader,
 }
 
 ENGINE_SEARCHERS = {
     "qdrant": QdrantSearcher,
     "weaviate": WeaviateSearcher,
+    "milvus": MilvusSearcher,
 }
 
 

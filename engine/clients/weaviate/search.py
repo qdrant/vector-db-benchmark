@@ -1,5 +1,5 @@
 import uuid
-from typing import Tuple, List
+from typing import List, Tuple
 
 from weaviate import Client
 
@@ -26,7 +26,7 @@ class WeaviateSearcher(BaseSearcher):
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
         near_vector = {"vector": vector}
         res = (
-            cls.client.query.get(WEAVIATE_CLASS_NAME, ["_additional {id certainty}"])
+            cls.client.query.get(WEAVIATE_CLASS_NAME, ["_additional {id distance}"])
             .with_near_vector(near_vector)
             .with_limit(top)
             .do()
@@ -35,7 +35,10 @@ class WeaviateSearcher(BaseSearcher):
         id_score_pairs: List[Tuple[int, float]] = []
         for obj in res:
             description = obj["_additional"]
-            score = description["certainty"]
+            score = description["distance"]
             id_ = uuid.UUID(hex=description["id"]).int
             id_score_pairs.append((id_, score))
         return id_score_pairs
+
+    def setup_search(self):
+        self.client.schema.update_config(WEAVIATE_CLASS_NAME, self.search_params)
