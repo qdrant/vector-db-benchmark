@@ -12,6 +12,7 @@ typer = "^0.6.1"
 jsons = "^1.6.3"
 h5py = "^3.7.0"
 weaviate-client = "^3.6.0"
+elasticsearch = "^8.3.1"
 
 
 [tool.poetry.dev-dependencies]

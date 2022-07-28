@@ -1,0 +1,19 @@
+[
+  {
+    "name": "elastic-default",
+    "engine": "elastic",
+    "connection_params": {},
+    "collection_params": {
+      "index_options": {
+        "m": 16,
+        "ef_construction": 100
+      }
+    },
+    "search_params": [
+      { "parallel": 1 },
+      { "parallel": 2 },
+      { "parallel": 4 },
+      { "parallel": 100 }
+    ]
+  }
+]
