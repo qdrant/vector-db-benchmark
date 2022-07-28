@@ -13,6 +13,7 @@ jsons = "^1.6.3"
 h5py = "^3.7.0"
 weaviate-client = "^3.6.0"
 elasticsearch = "^8.3.1"
+pymilvus = "^2.1.0"
 
 
 [tool.poetry.dev-dependencies]
