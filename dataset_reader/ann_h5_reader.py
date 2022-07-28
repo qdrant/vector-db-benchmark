@@ -1,10 +1,10 @@
-from typing import Iterator, Iterable, Any
+from typing import Any, Iterable, Iterator
 
 import h5py
 import numpy as np
 
 from benchmark import DATASETS_DIR
-from dataset_reader.base_reader import BaseReader, Record, Query
+from dataset_reader.base_reader import BaseReader, Query, Record
 
 
 class AnnH5Reader(BaseReader):
@@ -54,5 +54,3 @@ if __name__ == "__main__":
 
     query = next(AnnH5Reader(test_path).read_queries())
     print(query)
-
-

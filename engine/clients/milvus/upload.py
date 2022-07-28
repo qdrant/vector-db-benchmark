@@ -1,12 +1,12 @@
-from typing import Optional, List
+from typing import List, Optional
 
 from pymilvus import Collection, connections
 
 from engine.base_client.upload import BaseUploader
 from engine.clients.milvus.config import (
     MILVUS_COLLECTION_NAME,
-    MILVUS_DEFAULT_PORT,
     MILVUS_DEFAULT_ALIAS,
+    MILVUS_DEFAULT_PORT,
 )
 
 

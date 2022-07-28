@@ -1,5 +1,5 @@
 import uuid
-from typing import Tuple, List
+from typing import List, Tuple
 
 from weaviate import Client
 

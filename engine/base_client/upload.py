@@ -1,6 +1,6 @@
 import time
 from multiprocessing import get_context
-from typing import List, Optional, Iterable
+from typing import Iterable, List, Optional
 
 import tqdm
 
@@ -21,7 +21,10 @@ class BaseUploader:
     def init_client(cls, host, connection_params: dict, upload_params: dict):
         raise NotImplementedError()
 
-    def upload(self, records: Iterable[Record],) -> dict:
+    def upload(
+        self,
+        records: Iterable[Record],
+    ) -> dict:
         latencies = []
         start = time.perf_counter()
         parallel = self.upload_params.pop("parallel", 1)

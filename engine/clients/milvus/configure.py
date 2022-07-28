@@ -1,15 +1,14 @@
 import pymilvus.client.exceptions as milvus_exceptions
+from pymilvus import Collection, CollectionSchema, DataType, FieldSchema, connections
 from pymilvus.orm import utility
 
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
 from engine.clients.milvus.config import (
     MILVUS_COLLECTION_NAME,
-    MILVUS_DEFAULT_PORT,
     MILVUS_DEFAULT_ALIAS,
+    MILVUS_DEFAULT_PORT,
 )
-
-from pymilvus import connections, DataType, FieldSchema, CollectionSchema, Collection
 
 
 class MilvusConfigurator(BaseConfigurator):
@@ -39,18 +38,29 @@ class MilvusConfigurator(BaseConfigurator):
             pass
 
     def recreate(
-        self, distance, vector_size, collection_params,
+        self,
+        distance,
+        vector_size,
+        collection_params,
     ):
-        idx = FieldSchema(name="id", dtype=DataType.INT64, is_primary=True,)
+        idx = FieldSchema(
+            name="id",
+            dtype=DataType.INT64,
+            is_primary=True,
+        )
         vector = FieldSchema(
-            name="vector", dtype=DataType.FLOAT_VECTOR, dim=vector_size,
+            name="vector",
+            dtype=DataType.FLOAT_VECTOR,
+            dim=vector_size,
         )
         schema = CollectionSchema(
             fields=[idx, vector], description=MILVUS_COLLECTION_NAME
         )
 
         collection = Collection(
-            name=MILVUS_COLLECTION_NAME, schema=schema, using=MILVUS_DEFAULT_ALIAS,
+            name=MILVUS_COLLECTION_NAME,
+            schema=schema,
+            using=MILVUS_DEFAULT_ALIAS,
         )
 
         for index in collection.indexes:

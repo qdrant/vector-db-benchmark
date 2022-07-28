@@ -1,10 +1,9 @@
 import os
 import shutil
+import tarfile
+import urllib.request
 from dataclasses import dataclass
 from typing import Optional
-import tarfile
-
-import urllib.request
 
 from benchmark import DATASETS_DIR
 from dataset_reader.ann_h5_reader import AnnH5Reader

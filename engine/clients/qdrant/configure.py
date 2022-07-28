@@ -22,7 +22,10 @@ class QdrantConfigurator(BaseConfigurator):
         self.client.delete_collection(collection_name=QDRANT_COLLECTION_NAME)
 
     def recreate(
-        self, distance, vector_size, collection_params,
+        self,
+        distance,
+        vector_size,
+        collection_params,
     ):
         self.client.recreate_collection(
             collection_name=QDRANT_COLLECTION_NAME,

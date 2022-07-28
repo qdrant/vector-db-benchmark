@@ -1,11 +1,11 @@
-from typing import Tuple, List
+from typing import List, Tuple
 
-from pymilvus import connections, Collection
+from pymilvus import Collection, connections
 
 from engine.base_client.search import BaseSearcher
 from engine.clients.milvus.config import (
-    MILVUS_DEFAULT_ALIAS,
     MILVUS_COLLECTION_NAME,
+    MILVUS_DEFAULT_ALIAS,
     MILVUS_DEFAULT_PORT,
 )
 
@@ -34,7 +34,10 @@ class MilvusSearcher(BaseSearcher):
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
         res = cls.collection.search(
-            data=[vector], anns_field="vector", param=cls.search_params, limit=top,
+            data=[vector],
+            anns_field="vector",
+            param=cls.search_params,
+            limit=top,
         )
 
         return list(zip(res[0].ids, res[0].distances))

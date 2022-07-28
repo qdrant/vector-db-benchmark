@@ -1,12 +1,10 @@
+import json
 from pathlib import Path
 from typing import Iterator, List, Optional
 
-import json
-
 import numpy as np
 
-from dataset_reader.base_reader import BaseReader, Record, Query
-
+from dataset_reader.base_reader import BaseReader, Query, Record
 
 VECTORS_FILE = "vectors.jsonl"
 PAYLOADS_FILE = "payloads.jsonl"

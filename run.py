@@ -9,7 +9,6 @@ from benchmark import DATASETS_DIR, ROOT_DIR
 from benchmark.dataset import Dataset
 from engine.clients.client_factory import ClientFactory
 
-
 app = typer.Typer()
 
 

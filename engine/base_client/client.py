@@ -2,8 +2,8 @@ import json
 from datetime import datetime
 from typing import List
 
-from benchmark.dataset import Dataset
 from benchmark import ROOT_DIR
+from benchmark.dataset import Dataset
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.search import BaseSearcher
 from engine.base_client.upload import BaseUploader
@@ -48,10 +48,11 @@ class BaseClient:
     def run_experiment(self, dataset: Dataset):
         print("Experiment stage: Configure")
         execution_params = self.configurator.configure(
-            distance=dataset.config.distance, vector_size=dataset.config.vector_size,
+            distance=dataset.config.distance,
+            vector_size=dataset.config.vector_size,
         )
 
-        reader = dataset.get_reader(execution_params.get('normalize', False))
+        reader = dataset.get_reader(execution_params.get("normalize", False))
         print("Experiment stage: Upload")
         upload_stats = self.uploader.upload(reader.read_data())
         self.save_upload_results(dataset.config.name, upload_stats)
