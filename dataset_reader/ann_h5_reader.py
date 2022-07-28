@@ -1,20 +1,25 @@
-from typing import Iterator
+from typing import Iterator, Iterable, Any
 
 import h5py
+import numpy as np
 
 from benchmark import DATASETS_DIR
 from dataset_reader.base_reader import BaseReader, Record, Query
 
 
 class AnnH5Reader(BaseReader):
-    def __init__(self, path):
+    def __init__(self, path, normalize=False):
         self.path = path
+        self.normalize = normalize
 
     def read_queries(self) -> Iterator[Query]:
         data = h5py.File(self.path)
+
         for vector, expected_result, expected_scores in zip(
             data["test"], data["neighbors"], data["distances"]
         ):
+            if self.normalize:
+                vector /= np.linalg.norm(vector)
             yield Query(
                 vector=vector.tolist(),
                 meta_conditions=None,
@@ -26,6 +31,8 @@ class AnnH5Reader(BaseReader):
         data = h5py.File(self.path)
 
         for idx, vector in enumerate(data["train"]):
+            if self.normalize:
+                vector /= np.linalg.norm(vector)
             yield Record(id=idx, vector=vector.tolist(), metadata=None)
 
 
@@ -47,3 +54,5 @@ if __name__ == "__main__":
 
     query = next(AnnH5Reader(test_path).read_queries())
     print(query)
+
+

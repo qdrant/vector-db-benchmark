@@ -47,11 +47,11 @@ class BaseClient:
 
     def run_experiment(self, dataset: Dataset):
         print("Experiment stage: Configure")
-        self.configurator.configure(
+        execution_params = self.configurator.configure(
             distance=dataset.config.distance, vector_size=dataset.config.vector_size,
         )
 
-        reader = dataset.get_reader()
+        reader = dataset.get_reader(execution_params.get('normalize', False))
         print("Experiment stage: Upload")
         upload_stats = self.uploader.upload(reader.read_data())
         self.save_upload_results(dataset.config.name, upload_stats)
@@ -63,3 +63,4 @@ class BaseClient:
             self.save_search_results(
                 dataset.config.name, search_stats, search_id, search_params
             )
+        print("Experiment stage: Done")

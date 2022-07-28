@@ -56,6 +56,8 @@ class BaseSearcher:
         parallel = self.search_params.pop("parallel", 1)
         top = self.search_params.pop("top", None)
 
+        # setup_search may require initialized client
+        self.init_client(self.host, self.connection_params, self.search_params)
         self.setup_search()
 
         search_one = functools.partial(self.__class__._search_one, top=top)

@@ -1,4 +1,4 @@
-import time
+from typing import Optional
 
 
 class BaseConfigurator:
@@ -15,8 +15,6 @@ class BaseConfigurator:
     def recreate(self, distance, vector_size, collection_params):
         raise NotImplementedError()
 
-    def configure(self, distance, vector_size):
+    def configure(self, distance, vector_size) -> Optional[dict]:
         self.clean()
-        start = time.perf_counter()
-        self.recreate(distance, vector_size, self.collection_params)
-        return time.perf_counter() - start
+        return self.recreate(distance, vector_size, self.collection_params) or {}

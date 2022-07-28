@@ -13,21 +13,25 @@ from engine.clients.weaviate import (
     WeaviateUploader,
     WeaviateSearcher,
 )
+from engine.clients.milvus import MilvusConfigurator, MilvusUploader, MilvusSearcher
 
 
 ENGINE_CONFIGURATORS = {
     "qdrant": QdrantConfigurator,
     "weaviate": WeaviateConfigurator,
+    "milvus": MilvusConfigurator,
 }
 
 ENGINE_UPLOADERS = {
     "qdrant": QdrantUploader,
     "weaviate": WeaviateUploader,
+    "milvus": MilvusUploader,
 }
 
 ENGINE_SEARCHERS = {
     "qdrant": QdrantSearcher,
     "weaviate": WeaviateSearcher,
+    "milvus": MilvusSearcher,
 }
 
 

@@ -53,9 +53,9 @@ class Dataset:
                 shutil.copy2(tmp_path, target_path)
                 os.remove(tmp_path)
 
-    def get_reader(self) -> BaseReader:
+    def get_reader(self, normalize: bool) -> BaseReader:
         reader_class = READER_TYPE[self.config.type]
-        return reader_class(DATASETS_DIR / self.config.path)
+        return reader_class(DATASETS_DIR / self.config.path, normalize=normalize)
 
 
 if __name__ == "__main__":
