@@ -7,25 +7,25 @@ from engine.clients.elasticsearch import ELASTIC_USER, ELASTIC_PASSWORD, ELASTIC
 
 class ElasticConfigurator(BaseConfigurator):
     DISTANCE_MAPPING = {
-        Distance.L2_SQUARED: "l2_norm",
+        Distance.L2: "l2_norm",
         Distance.COSINE: "cosine",
         Distance.DOT: "dot_product",
     }
 
     def __init__(self, host, collection_params: dict, connection_params: dict):
         super().__init__(host, collection_params, connection_params)
-
+        init_params = {
+            **{
+                "verify_certs": False,
+                "request_timeout": 90,
+                "retry_on_timeout": True,
+            },
+            **connection_params
+        }
         self.client = Elasticsearch(
             f"http://{host}:{ELASTIC_PORT}",
             basic_auth=(ELASTIC_USER, ELASTIC_PASSWORD),
-            **{
-                **{
-                    "verify_certs": False,
-                    "request_timeout": 90,
-                    "retry_on_timeout": True,
-                },
-                **connection_params
-            }
+            **init_params
         )
 
     def clean(self):

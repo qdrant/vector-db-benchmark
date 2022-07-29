@@ -13,23 +13,24 @@ class ElasticUploader(BaseUploader):
 
     @classmethod
     def init_client(cls, host, connection_params, upload_params):
+        init_params = {
+            **{
+                "verify_certs": False,
+                "request_timeout": 90,
+                "retry_on_timeout": True,
+            },
+            **connection_params
+        }
         cls.client: Elasticsearch = Elasticsearch(
             f"http://{host}:{ELASTIC_PORT}",
             basic_auth=(ELASTIC_USER, ELASTIC_PASSWORD),
-            **{
-                **{
-                    "verify_certs": False,
-                    "request_timeout": 90,
-                    "retry_on_timeout": True,
-                },
-                **connection_params
-            }
+            **init_params
         )
         cls.upload_params = upload_params
 
     @classmethod
     def upload_batch(
-        cls, ids: List[int], vectors: List[list], metadata: Optional[List[dict]]
+            cls, ids: List[int], vectors: List[list], metadata: Optional[List[dict]]
     ):
         operations = []
         for idx, vector in zip(ids, vectors):

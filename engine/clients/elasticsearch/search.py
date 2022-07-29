@@ -13,17 +13,18 @@ class ElasticSearcher(BaseSearcher):
 
     @classmethod
     def init_client(cls, host, connection_params: dict, search_params: dict):
+        init_params = {
+            **{
+                "verify_certs": False,
+                "request_timeout": 90,
+                "retry_on_timeout": True,
+            },
+            **connection_params
+        }
         cls.client: Elasticsearch = Elasticsearch(
             f"http://{host}:{ELASTIC_PORT}",
             basic_auth=(ELASTIC_USER, ELASTIC_PASSWORD),
-            **{
-                **{
-                    "verify_certs": False,
-                    "request_timeout": 90,
-                    "retry_on_timeout": True,
-                },
-                **connection_params
-            }
+            **init_params
         )
         cls.search_params = search_params
 
@@ -34,7 +35,7 @@ class ElasticSearcher(BaseSearcher):
             knn={
                 "field": "vector",
                 "query_vector": vector,
-                "k": 10,
+                "k": top,
                 **{
                     "num_candidates": 100,
                     **cls.search_params
