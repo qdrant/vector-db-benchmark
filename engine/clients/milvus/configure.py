@@ -18,13 +18,6 @@ from engine.clients.milvus.config import (
 
 
 class MilvusConfigurator(BaseConfigurator):
-    DISTANCE_MAPPING = {
-        Distance.L2: "L2",
-        Distance.DOT: "IP",
-        # Milvus does not support cosine. Cosine is equal to IP of normalized vectors
-        Distance.COSINE: "Cosine"
-        # Jaccard, Tanimoto, Hamming distance, Superstructure and Substructure are also available
-    }
 
     def __init__(self, host, collection_params: dict, connection_params: dict):
         super().__init__(host, collection_params, connection_params)
@@ -72,6 +65,4 @@ class MilvusConfigurator(BaseConfigurator):
         for index in collection.indexes:
             index.drop()
 
-        resolved_distance = self.DISTANCE_MAPPING.get(distance)
-
-        return {"normalize": resolved_distance == "Cosine"}
+        return {"normalize": distance == Distance.COSINE}

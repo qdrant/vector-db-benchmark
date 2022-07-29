@@ -3,12 +3,7 @@
     "name": "milvus-default",
     "engine": "milvus",
     "connection_params": {},
-    "collection_params": {
-      "params": {
-        "efConstruction": 100,
-        "M": 16
-      }
-    },
+    "collection_params": {},
     "search_params": [
       {
         "parallel": 1,
@@ -36,7 +31,11 @@
       }
     ],
     "upload_params": {
-      "parallel": 16
+      "parallel": 16,
+      "index_params": {
+        "efConstruction": 100,
+        "M": 16
+      }
     }
   }
 ]

@@ -21,11 +21,12 @@ class BaseUploader:
         return None
 
     @classmethod
-    def init_client(cls, host, connection_params: dict, upload_params: dict):
+    def init_client(cls, host, distance, connection_params: dict, upload_params: dict):
         raise NotImplementedError()
 
     def upload(
             self,
+            distance,
             records: Iterable[Record],
     ) -> dict:
         latencies = []
@@ -33,7 +34,7 @@ class BaseUploader:
         parallel = self.upload_params.pop("parallel", 1)
         batch_size = self.upload_params.pop("batch_size", 64)
 
-        self.init_client(self.host, self.connection_params, self.upload_params)
+        self.init_client(self.host, distance, self.connection_params, self.upload_params)
 
         if parallel == 1:
             for batch in iter_batches(tqdm.tqdm(records), batch_size):
@@ -43,7 +44,7 @@ class BaseUploader:
             with ctx.Pool(
                     processes=int(parallel),
                     initializer=self.__class__.init_client,
-                    initargs=(self.host, self.connection_params, self.upload_params),
+                    initargs=(self.host, distance, self.connection_params, self.upload_params),
             ) as pool:
                 latencies = list(pool.imap(
                     self.__class__._upload_batch,
@@ -54,7 +55,7 @@ class BaseUploader:
 
         print("Upload time: {}".format(upload_time))
 
-        post_upload_stats = self.post_upload()
+        post_upload_stats = self.post_upload(distance)
 
         total_time = time.perf_counter() - start
 
@@ -75,7 +76,7 @@ class BaseUploader:
         return time.perf_counter() - start
 
     @classmethod
-    def post_upload(cls):
+    def post_upload(cls, distance):
         return {}
 
     @classmethod

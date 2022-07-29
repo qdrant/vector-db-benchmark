@@ -28,7 +28,7 @@ class ElasticSearcher(BaseSearcher):
         return 'forkserver' if 'forkserver' in mp.get_all_start_methods() else 'spawn'
 
     @classmethod
-    def init_client(cls, host, connection_params: dict, search_params: dict):
+    def init_client(cls, host, distance, connection_params: dict, search_params: dict):
         init_params = {
             **{
                 "verify_certs": False,

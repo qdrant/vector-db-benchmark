@@ -7,7 +7,7 @@ from engine.base_client.upload import BaseUploader
 from engine.clients.milvus.config import (
     MILVUS_COLLECTION_NAME,
     MILVUS_DEFAULT_ALIAS,
-    MILVUS_DEFAULT_PORT,
+    MILVUS_DEFAULT_PORT, DISTANCE_MAPPING,
 )
 
 
@@ -15,13 +15,14 @@ class MilvusUploader(BaseUploader):
     client = None
     upload_params = {}
     collection: Collection = None
+    distance: str = None
 
     @classmethod
     def get_mp_start_method(cls):
         return 'forkserver' if 'forkserver' in mp.get_all_start_methods() else 'spawn'
 
     @classmethod
-    def init_client(cls, host, connection_params, upload_params):
+    def init_client(cls, host, distance, connection_params, upload_params):
         cls.client = connections.connect(
             alias=MILVUS_DEFAULT_ALIAS,
             host=host,
@@ -30,6 +31,7 @@ class MilvusUploader(BaseUploader):
         )
         cls.collection = Collection(MILVUS_COLLECTION_NAME, using=MILVUS_DEFAULT_ALIAS)
         cls.upload_params = upload_params
+        cls.distance = DISTANCE_MAPPING[distance]
 
     @classmethod
     def upload_batch(
@@ -38,13 +40,12 @@ class MilvusUploader(BaseUploader):
         cls.collection.insert([ids, vectors])
 
     @classmethod
-    def post_upload(cls):
+    def post_upload(cls, distance):
         index_params = {
-            "metric_type": "IP",
+            "metric_type": cls.distance,
             "index_type": "HNSW",
             "params": {
-                "efConstruction": 100,
-                "M": 16
+                **cls.upload_params.get('index_params', {})
             }
         }
 

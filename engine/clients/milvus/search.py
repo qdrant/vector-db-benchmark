@@ -7,7 +7,7 @@ from engine.base_client.search import BaseSearcher
 from engine.clients.milvus.config import (
     MILVUS_COLLECTION_NAME,
     MILVUS_DEFAULT_ALIAS,
-    MILVUS_DEFAULT_PORT,
+    MILVUS_DEFAULT_PORT, DISTANCE_MAPPING,
 )
 
 
@@ -15,9 +15,10 @@ class MilvusSearcher(BaseSearcher):
     search_params = {}
     client: connections = None
     collection: Collection = None
+    distance: str = None
 
     @classmethod
-    def init_client(cls, host, connection_params: dict, search_params: dict):
+    def init_client(cls, host, distance, connection_params: dict, search_params: dict):
         cls.client = connections.connect(
             alias=MILVUS_DEFAULT_ALIAS,
             host=host,
@@ -26,6 +27,7 @@ class MilvusSearcher(BaseSearcher):
         )
         cls.collection = Collection(MILVUS_COLLECTION_NAME, using=MILVUS_DEFAULT_ALIAS)
         cls.search_params = search_params
+        cls.distance = DISTANCE_MAPPING[distance]
 
     @classmethod
     def get_mp_start_method(cls):
@@ -42,7 +44,7 @@ class MilvusSearcher(BaseSearcher):
             data=[vector],
             anns_field="vector",
             param={
-                "metric_type": "IP",
+                "metric_type": cls.distance,
                 **cls.search_params
             },
             limit=top,

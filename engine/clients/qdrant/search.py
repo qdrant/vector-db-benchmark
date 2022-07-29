@@ -12,7 +12,7 @@ class QdrantSearcher(BaseSearcher):
     client: QdrantClient = None
 
     @classmethod
-    def init_client(cls, host, connection_params: dict, search_params: dict):
+    def init_client(cls, host, distance, connection_params: dict, search_params: dict):
         cls.client: QdrantClient = QdrantClient(host, **connection_params)
         cls.search_params = search_params
 

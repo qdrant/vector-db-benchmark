@@ -12,7 +12,7 @@ class WeaviateUploader(BaseUploader):
     upload_params = {}
 
     @classmethod
-    def init_client(cls, host, connection_params, upload_params):
+    def init_client(cls, host, distance, connection_params, upload_params):
         url = f"http://{host}:{connection_params.pop('port', WEAVIATE_DEFAULT_PORT)}"
         cls.client = Client(url, **connection_params)
 

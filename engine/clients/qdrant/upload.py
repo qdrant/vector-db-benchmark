@@ -13,7 +13,7 @@ class QdrantUploader(BaseUploader):
     upload_params = {}
 
     @classmethod
-    def init_client(cls, host, connection_params, upload_params):
+    def init_client(cls, host, distance, connection_params, upload_params):
         cls.client = QdrantClient(host=host, **connection_params)
         cls.upload_params = upload_params
 
@@ -31,7 +31,7 @@ class QdrantUploader(BaseUploader):
         )
 
     @classmethod
-    def post_upload(cls):
+    def post_upload(cls, _distance):
         cls.wait_collection_green()
         return {}
 

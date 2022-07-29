@@ -54,13 +54,16 @@ class BaseClient:
 
         reader = dataset.get_reader(execution_params.get("normalize", False))
         print("Experiment stage: Upload")
-        upload_stats = self.uploader.upload(reader.read_data())
+        upload_stats = self.uploader.upload(
+            distance=dataset.config.distance,
+            records=reader.read_data()
+        )
         self.save_upload_results(dataset.config.name, upload_stats)
 
         print("Experiment stage: Search")
         for search_id, searcher in enumerate(self.searchers):
             search_params = {**searcher.search_params}
-            search_stats = searcher.search_all(reader.read_queries())
+            search_stats = searcher.search_all(dataset.config.distance, reader.read_queries())
             self.save_search_results(
                 dataset.config.name, search_stats, search_id, search_params
             )

@@ -28,7 +28,7 @@ class ElasticUploader(BaseUploader):
         return 'forkserver' if 'forkserver' in mp.get_all_start_methods() else 'spawn'
 
     @classmethod
-    def init_client(cls, host, connection_params, upload_params):
+    def init_client(cls, host, distance, connection_params, upload_params):
         init_params = {
             **{
                 "verify_certs": False,
@@ -61,6 +61,6 @@ class ElasticUploader(BaseUploader):
         )
 
     @classmethod
-    def post_upload(cls):
+    def post_upload(cls, _distance):
         cls.client.indices.forcemerge(index=ELASTIC_INDEX, wait_for_completion=True)
         return {}
