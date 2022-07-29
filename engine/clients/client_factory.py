@@ -7,6 +7,9 @@ from engine.base_client.client import (
     BaseSearcher,
     BaseUploader,
 )
+from engine.clients.elasticsearch.configure import ElasticConfigurator
+from engine.clients.elasticsearch.search import ElasticSearcher
+from engine.clients.elasticsearch.upload import ElasticUploader
 from engine.clients.milvus import MilvusConfigurator, MilvusSearcher, MilvusUploader
 from engine.clients.qdrant import QdrantConfigurator, QdrantSearcher, QdrantUploader
 from engine.clients.weaviate import (
@@ -19,18 +22,21 @@ ENGINE_CONFIGURATORS = {
     "qdrant": QdrantConfigurator,
     "weaviate": WeaviateConfigurator,
     "milvus": MilvusConfigurator,
+    "elastic": ElasticConfigurator,
 }
 
 ENGINE_UPLOADERS = {
     "qdrant": QdrantUploader,
     "weaviate": WeaviateUploader,
     "milvus": MilvusUploader,
+    "elastic": ElasticUploader,
 }
 
 ENGINE_SEARCHERS = {
     "qdrant": QdrantSearcher,
     "weaviate": WeaviateSearcher,
     "milvus": MilvusSearcher,
+    "elastic": ElasticSearcher,
 }
 
 

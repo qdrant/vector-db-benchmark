@@ -1,5 +1,11 @@
-import pymilvus.client.exceptions as milvus_exceptions
-from pymilvus import Collection, CollectionSchema, DataType, FieldSchema, connections
+from pymilvus import (
+    Collection,
+    CollectionSchema,
+    DataType,
+    FieldSchema,
+    MilvusException,
+    connections,
+)
 from pymilvus.orm import utility
 
 from engine.base_client.configure import BaseConfigurator
@@ -34,7 +40,7 @@ class MilvusConfigurator(BaseConfigurator):
         try:
             utility.drop_collection(MILVUS_COLLECTION_NAME, using=MILVUS_DEFAULT_ALIAS)
             utility.has_collection(MILVUS_COLLECTION_NAME, using=MILVUS_DEFAULT_ALIAS)
-        except milvus_exceptions.BaseException:
+        except MilvusException:
             pass
 
     def recreate(

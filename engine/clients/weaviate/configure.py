@@ -7,7 +7,7 @@ from engine.clients.weaviate.config import WEAVIATE_CLASS_NAME, WEAVIATE_DEFAULT
 
 class WeaviateConfigurator(BaseConfigurator):
     DISTANCE_MAPPING = {
-        Distance.L2_SQUARED: "l2-squared",
+        Distance.L2: "l2-squared",
         Distance.COSINE: "cosine",
         Distance.DOT: "dot",
     }

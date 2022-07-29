@@ -4,7 +4,6 @@ from enum import Enum
 class Distance(str, Enum):
     DOT = "dot"
     COSINE = "cosine"
-    L2_SQUARED = "l2-squared"
     L2 = "l2"
 
     @classmethod

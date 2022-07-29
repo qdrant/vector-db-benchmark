@@ -8,7 +8,7 @@ from engine.clients.qdrant.config import QDRANT_COLLECTION_NAME
 
 class QdrantConfigurator(BaseConfigurator):
     DISTANCE_MAPPING = {
-        Distance.L2_SQUARED: rest.Distance.EUCLID,
+        Distance.L2: rest.Distance.EUCLID,
         Distance.COSINE: rest.Distance.COSINE,
         Distance.DOT: rest.Distance.DOT,
     }
