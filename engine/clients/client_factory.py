@@ -7,11 +7,11 @@ from engine.base_client.client import (
     BaseSearcher,
     BaseUploader,
 )
-from engine.clients.milvus import MilvusConfigurator, MilvusSearcher, MilvusUploader
 from engine.clients.elasticsearch.configure import ElasticConfigurator
 from engine.clients.elasticsearch.search import ElasticSearcher
 from engine.clients.elasticsearch.upload import ElasticUploader
-from engine.clients.qdrant import QdrantConfigurator, QdrantUploader, QdrantSearcher
+from engine.clients.milvus import MilvusConfigurator, MilvusSearcher, MilvusUploader
+from engine.clients.qdrant import QdrantConfigurator, QdrantSearcher, QdrantUploader
 from engine.clients.weaviate import (
     WeaviateConfigurator,
     WeaviateSearcher,

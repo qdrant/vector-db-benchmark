@@ -1,10 +1,15 @@
 import uuid
-from typing import Tuple, List
+from typing import List, Tuple
 
 from elasticsearch import Elasticsearch
 
 from engine.base_client.search import BaseSearcher
-from engine.clients.elasticsearch import ELASTIC_PORT, ELASTIC_USER, ELASTIC_PASSWORD, ELASTIC_INDEX
+from engine.clients.elasticsearch import (
+    ELASTIC_INDEX,
+    ELASTIC_PASSWORD,
+    ELASTIC_PORT,
+    ELASTIC_USER,
+)
 
 
 class ElasticSearcher(BaseSearcher):
@@ -19,12 +24,12 @@ class ElasticSearcher(BaseSearcher):
                 "request_timeout": 90,
                 "retry_on_timeout": True,
             },
-            **connection_params
+            **connection_params,
         }
         cls.client: Elasticsearch = Elasticsearch(
             f"http://{host}:{ELASTIC_PORT}",
             basic_auth=(ELASTIC_USER, ELASTIC_PASSWORD),
-            **init_params
+            **init_params,
         )
         cls.search_params = search_params
 
@@ -36,10 +41,10 @@ class ElasticSearcher(BaseSearcher):
                 "field": "vector",
                 "query_vector": vector,
                 "k": top,
-                **{
-                    "num_candidates": 100,
-                    **cls.search_params
-                }
+                **{"num_candidates": 100, **cls.search_params},
             },
         )
-        return [(uuid.UUID(hex=hit["_id"]).int, hit["_score"]) for hit in res["hits"]["hits"]]
+        return [
+            (uuid.UUID(hex=hit["_id"]).int, hit["_score"])
+            for hit in res["hits"]["hits"]
+        ]

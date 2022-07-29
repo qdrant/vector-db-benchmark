@@ -1,4 +1,11 @@
-from pymilvus import Collection, CollectionSchema, DataType, FieldSchema, connections, MilvusException
+from pymilvus import (
+    Collection,
+    CollectionSchema,
+    DataType,
+    FieldSchema,
+    MilvusException,
+    connections,
+)
 from pymilvus.orm import utility
 
 from engine.base_client.configure import BaseConfigurator

@@ -2,7 +2,12 @@ from elasticsearch import Elasticsearch, NotFoundError
 
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
-from engine.clients.elasticsearch import ELASTIC_USER, ELASTIC_PASSWORD, ELASTIC_PORT, ELASTIC_INDEX
+from engine.clients.elasticsearch import (
+    ELASTIC_INDEX,
+    ELASTIC_PASSWORD,
+    ELASTIC_PORT,
+    ELASTIC_USER,
+)
 
 
 class ElasticConfigurator(BaseConfigurator):
@@ -20,12 +25,12 @@ class ElasticConfigurator(BaseConfigurator):
                 "request_timeout": 90,
                 "retry_on_timeout": True,
             },
-            **connection_params
+            **connection_params,
         }
         self.client = Elasticsearch(
             f"http://{host}:{ELASTIC_PORT}",
             basic_auth=(ELASTIC_USER, ELASTIC_PASSWORD),
-            **init_params
+            **init_params,
         )
 
     def clean(self):
@@ -35,7 +40,10 @@ class ElasticConfigurator(BaseConfigurator):
             pass
 
     def recreate(
-            self, distance, vector_size, collection_params,
+        self,
+        distance,
+        vector_size,
+        collection_params,
     ):
         self.client.indices.create(
             index=ELASTIC_INDEX,
@@ -56,5 +64,5 @@ class ElasticConfigurator(BaseConfigurator):
                         },
                     }
                 }
-            }
+            },
         )
