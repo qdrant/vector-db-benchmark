@@ -2,7 +2,9 @@
   {
     "name": "elastic-default",
     "engine": "elastic",
-    "connection_params": {},
+    "connection_params": {
+      "request_timeout": 1000
+    },
     "collection_params": {
       "index_options": {
         "m": 16,
@@ -14,6 +16,9 @@
       { "parallel": 2 },
       { "parallel": 4 },
       { "parallel": 100 }
-    ]
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
   }
 ]

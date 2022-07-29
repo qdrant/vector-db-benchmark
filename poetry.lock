@@ -460,21 +460,28 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "qdrant-client"
-version = "0.8.7"
+version = "0.8.8"
 description = "Client library for the Qdrant vector search engine"
 category = "main"
 optional = false
 python-versions = ">=3.7,<4.0"
+develop = false
 
 [package.dependencies]
 betterproto = "2.0.0b4"
-grpcio = ">=1.46.0,<2.0.0"
-httpx = ">=0.23.0,<0.24.0"
-loguru = ">=0.5.3,<0.6.0"
-numpy = ">=1.21,<2.0"
-pydantic = ">=1.8,<2.0"
-tqdm = ">=4.56.0,<5.0.0"
-typing-extensions = ">=3.10.0,<4.0.0"
+grpcio = "^1.46.0"
+httpx = "^0.23.0"
+loguru = "^0.5.3"
+numpy = "^1.21"
+pydantic = "^1.8"
+tqdm = "^4.56.0"
+typing-extensions = "^3.10.0"
+
+[package.source]
+type = "git"
+url = "https://github.com/qdrant/qdrant_client.git"
+reference = "master"
+resolved_reference = "094f261d72d478977f1a81fb8ff6b2601d869c72"
 
 [[package]]
 name = "requests"
@@ -678,7 +685,7 @@ dev = ["pytest (>=4.6.2)", "black (>=19.3b0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "893e8e73bd222da2b1f39a322e99f93baa268b1845b9ce50101b852a3ee11117"
+content-hash = "e6cebc1f0b970fd1acf88a9e48219c8fe1aa85b0e27aabf5d7141cf7bfcd69c9"
 
 [metadata.files]
 anyio = [
@@ -1118,10 +1125,7 @@ pyyaml = [
     {file = "PyYAML-6.0-cp39-cp39-win_amd64.whl", hash = "sha256:b3d267842bf12586ba6c734f89d1f5b871df0273157918b0ccefa29deb05c21c"},
     {file = "PyYAML-6.0.tar.gz", hash = "sha256:68fb519c14306fec9720a2a5b45bc9f0c8d1b9c72adf45c37baedfcd949c35a2"},
 ]
-qdrant-client = [
-    {file = "qdrant_client-0.8.7-py3-none-any.whl", hash = "sha256:2b58551743b403ecd038cfef3895f8215d78d05a38a34ec00d60e980f0a18a47"},
-    {file = "qdrant_client-0.8.7.tar.gz", hash = "sha256:709b359c4e0bf546063b8ec6a9e9a54cff07ce27f1f8921ba3bf4bf798add511"},
-]
+qdrant-client = []
 requests = [
     {file = "requests-2.27.1-py2.py3-none-any.whl", hash = "sha256:f22fa1e554c9ddfd16e6e41ac79759e17be9e492b3587efa038054674760e72d"},
     {file = "requests-2.27.1.tar.gz", hash = "sha256:68d7c56fd5a8999887728ef304a6d12edc7be74f1cfa47714fc8b414525c9a61"},

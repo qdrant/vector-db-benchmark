@@ -27,38 +27,16 @@
         "params": {
           "ef": 100
         }
-      }
-    ]
-  },
-    {
-    "name": "milvus-m-32",
-    "engine": "milvus",
-    "connection_params": {},
-    "collection_params": {
-      "params": {
-        "efConstruction": 100,
-        "M": 32
-      }
-    },
-    "search_params": [
-      {
-        "parallel": 1,
-        "params": {
-          "ef": 100
-        }
       },
       {
-        "parallel": 2,
-        "params": {
-          "ef": 100
-        }
-      },
-      {
-        "parallel": 4,
+        "parallel": 100,
         "params": {
           "ef": 100
         }
       }
-    ]
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
   }
 ]

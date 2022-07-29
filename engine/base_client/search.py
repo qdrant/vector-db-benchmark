@@ -4,6 +4,7 @@ from multiprocessing import get_context
 from typing import Iterable, List, Optional, Tuple
 
 import numpy as np
+import tqdm
 
 from dataset_reader.base_reader import Query
 
@@ -21,6 +22,10 @@ class BaseSearcher:
     @classmethod
     def init_client(cls, host: str, connection_params: dict, search_params: dict):
         raise NotImplementedError()
+
+    @classmethod
+    def get_mp_start_method(cls):
+        return None
 
     @classmethod
     def search_one(
@@ -63,10 +68,9 @@ class BaseSearcher:
         search_one = functools.partial(self.__class__._search_one, top=top)
 
         if parallel == 1:
-            self.init_client(self.host, self.connection_params, self.search_params)
-            precisions, latencies = list(zip(*[search_one(query) for query in queries]))
+            precisions, latencies = list(zip(*[search_one(query) for query in tqdm.tqdm(queries)]))
         else:
-            ctx = get_context(self.MP_CONTEXT)
+            ctx = get_context(self.get_mp_start_method())
 
             with ctx.Pool(
                 processes=parallel,
@@ -74,7 +78,7 @@ class BaseSearcher:
                 initargs=(self.host, self.connection_params, self.search_params),
             ) as pool:
                 precisions, latencies = list(
-                    zip(*pool.imap_unordered(search_one, iterable=queries))
+                    zip(*pool.imap_unordered(search_one, iterable=tqdm.tqdm(queries)))
                 )
 
         total_time = time.perf_counter() - start
@@ -92,8 +96,8 @@ class BaseSearcher:
             "latencies": latencies,
         }
 
-    def set_process_start_method(self, start_method):
-        self.MP_CONTEXT = start_method
-
     def setup_search(self):
+        pass
+
+    def post_search(self):
         pass

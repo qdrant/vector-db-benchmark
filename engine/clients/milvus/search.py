@@ -1,3 +1,4 @@
+import multiprocessing as mp
 from typing import List, Tuple
 
 from pymilvus import Collection, connections
@@ -27,6 +28,10 @@ class MilvusSearcher(BaseSearcher):
         cls.search_params = search_params
 
     @classmethod
+    def get_mp_start_method(cls):
+        return 'forkserver' if 'forkserver' in mp.get_all_start_methods() else 'spawn'
+
+    @classmethod
     def conditions_to_filter(cls, _meta_conditions):
         # ToDo: implement
         return None
@@ -36,8 +41,12 @@ class MilvusSearcher(BaseSearcher):
         res = cls.collection.search(
             data=[vector],
             anns_field="vector",
-            param=cls.search_params,
+            param={
+                "metric_type": "IP",
+                **cls.search_params
+            },
             limit=top,
+
         )
 
         return list(zip(res[0].ids, res[0].distances))

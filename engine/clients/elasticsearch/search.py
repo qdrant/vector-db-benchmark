@@ -1,5 +1,6 @@
 import uuid
 from typing import List, Tuple
+import multiprocessing as mp
 
 from elasticsearch import Elasticsearch
 
@@ -12,9 +13,19 @@ from engine.clients.elasticsearch import (
 )
 
 
+class ClosableElastic(Elasticsearch):
+
+    def __del__(self):
+        self.close()
+
+
 class ElasticSearcher(BaseSearcher):
     search_params = {}
     client: Elasticsearch = None
+
+    @classmethod
+    def get_mp_start_method(cls):
+        return 'forkserver' if 'forkserver' in mp.get_all_start_methods() else 'spawn'
 
     @classmethod
     def init_client(cls, host, connection_params: dict, search_params: dict):

@@ -3,44 +3,27 @@
     "name": "qdrant-default",
     "engine": "qdrant",
     "connection_params": {},
-    "collection_params": {},
-    "search_params": [
-      {"parallel":  1},
-      {"parallel":  2},
-      {"parallel":  4},
-      {"parallel":  100}
-    ]
-  },
-  {
-    "name": "qdrant-m-32",
-    "engine": "qdrant",
-    "connection_params": {},
     "collection_params": {
       "hnsw_config": {
-        "m": 32
+        "m": 16
       }
     },
     "search_params": [
-      {"parallel":  1},
-      {"parallel":  2},
-      {"parallel":  4},
-      {"parallel":  100}
-    ]
-  },
-  {
-    "name": "qdrant-m-64",
-    "engine": "qdrant",
-    "connection_params": {},
-    "collection_params": {
-      "hnsw_config": {
-        "m": 64
+      {
+        "parallel": 1
+      },
+      {
+        "parallel": 2
+      },
+      {
+        "parallel": 4
+      },
+      {
+        "parallel": 100
       }
-    },
-    "search_params": [
-      {"parallel":  1},
-      {"parallel":  2},
-      {"parallel":  4},
-      {"parallel":  100}
-    ]
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
   }
 ]

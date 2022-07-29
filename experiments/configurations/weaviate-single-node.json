@@ -2,7 +2,9 @@
   {
     "name": "weaviate-default",
     "engine": "weaviate",
-    "connection_params": {},
+    "connection_params": {
+      "timeout_config": 1000
+    },
     "collection_params": {
       "vectorIndexConfig": {
         "ef": 100,
@@ -11,10 +13,22 @@
       }
     },
     "search_params": [
-      {"parallel":  1},
-      {"parallel":  2},
-      {"parallel":  4},
-      {"parallel":  100}
-    ]
+      {
+        "parallel": 1
+      },
+      {
+        "parallel": 2
+      },
+      {
+        "parallel": 4
+      },
+      {
+        "parallel": 100
+      }
+    ],
+    "upload_params": {
+      "batch_size": 10000,
+      "parallel": 2
+    }
   }
 ]

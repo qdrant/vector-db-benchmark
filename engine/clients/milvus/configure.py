@@ -73,17 +73,5 @@ class MilvusConfigurator(BaseConfigurator):
             index.drop()
 
         resolved_distance = self.DISTANCE_MAPPING.get(distance)
-        metric_type = (
-            resolved_distance
-            if resolved_distance != "Cosine"
-            else self.DISTANCE_MAPPING.get(Distance.DOT)
-        )
-        index_params = {
-            "metric_type": metric_type,
-            "index_type": collection_params.pop("index_type", "HNSW"),
-            **collection_params,
-        }
-
-        collection.create_index(field_name="vector", index_params=index_params)
 
         return {"normalize": resolved_distance == "Cosine"}

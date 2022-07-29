@@ -25,7 +25,7 @@ class WeaviateUploader(BaseUploader):
     ):
         for id_, vector, data_object in zip(ids, vectors, metadata):
             cls.client.batch.add_data_object(
-                data_object=data_object,
+                data_object=data_object or {},
                 class_name=WEAVIATE_CLASS_NAME,
                 uuid=uuid.UUID(int=id_).hex,
                 vector=vector,

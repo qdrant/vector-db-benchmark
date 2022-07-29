@@ -1,3 +1,4 @@
+import multiprocessing as mp
 from typing import List, Optional
 
 from pymilvus import Collection, connections
@@ -14,6 +15,10 @@ class MilvusUploader(BaseUploader):
     client = None
     upload_params = {}
     collection: Collection = None
+
+    @classmethod
+    def get_mp_start_method(cls):
+        return 'forkserver' if 'forkserver' in mp.get_all_start_methods() else 'spawn'
 
     @classmethod
     def init_client(cls, host, connection_params, upload_params):
@@ -34,5 +39,16 @@ class MilvusUploader(BaseUploader):
 
     @classmethod
     def post_upload(cls):
+        index_params = {
+            "metric_type": "IP",
+            "index_type": "HNSW",
+            "params": {
+                "efConstruction": 100,
+                "M": 16
+            }
+        }
+
+        cls.collection.create_index(field_name="vector", index_params=index_params)
+
         cls.collection.load()
         return {}

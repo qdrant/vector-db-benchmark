@@ -1,4 +1,5 @@
 import uuid
+import multiprocessing as mp
 from typing import List, Optional
 
 from elasticsearch import Elasticsearch
@@ -12,9 +13,19 @@ from engine.clients.elasticsearch import (
 )
 
 
+class ClosableElastic(Elasticsearch):
+
+    def __del__(self):
+        self.close()
+
+
 class ElasticUploader(BaseUploader):
-    client = None
+    client: Elasticsearch = None
     upload_params = {}
+
+    @classmethod
+    def get_mp_start_method(cls):
+        return 'forkserver' if 'forkserver' in mp.get_all_start_methods() else 'spawn'
 
     @classmethod
     def init_client(cls, host, connection_params, upload_params):
@@ -26,7 +37,7 @@ class ElasticUploader(BaseUploader):
             },
             **connection_params,
         }
-        cls.client: Elasticsearch = Elasticsearch(
+        cls.client = Elasticsearch(
             f"http://{host}:{ELASTIC_PORT}",
             basic_auth=(ELASTIC_USER, ELASTIC_PASSWORD),
             **init_params,
