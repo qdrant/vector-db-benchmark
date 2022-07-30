@@ -38,12 +38,16 @@ class BaseClient:
                 json.dumps({"params": search_params, "results": results}, indent=2)
             )
 
-    def save_upload_results(self, dataset_name: str, results: dict):
+    def save_upload_results(self, dataset_name: str, results: dict, upload_params: dict):
         now = datetime.now()
         timestamp = now.strftime("%Y-%m-%d-%H-%M-%S")
         experiments_file = f"{self.name}-{dataset_name}-upload-{timestamp}.json"
         with open(RESULTS_DIR / experiments_file, "w") as out:
-            out.write(json.dumps(results, indent=2))
+            upload_stats = {
+                "params": upload_params,
+                "results": results,
+            }
+            out.write(json.dumps(upload_stats, indent=2))
 
     def run_experiment(self, dataset: Dataset):
         print("Experiment stage: Configure")
@@ -58,7 +62,10 @@ class BaseClient:
             distance=dataset.config.distance,
             records=reader.read_data()
         )
-        self.save_upload_results(dataset.config.name, upload_stats)
+        self.save_upload_results(dataset.config.name, upload_stats, upload_params={
+            **self.uploader.upload_params,
+            **self.configurator.collection_params
+        })
 
         print("Experiment stage: Search")
         for search_id, searcher in enumerate(self.searchers):

@@ -14,7 +14,7 @@ class QdrantUploader(BaseUploader):
 
     @classmethod
     def init_client(cls, host, distance, connection_params, upload_params):
-        cls.client = QdrantClient(host=host, **connection_params)
+        cls.client = QdrantClient(host=host, prefer_grpc=True, **connection_params)
         cls.upload_params = upload_params
 
     @classmethod

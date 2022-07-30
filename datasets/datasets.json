@@ -16,6 +16,30 @@
     "link": "http://ann-benchmarks.com/glove-100-angular.hdf5"
   },
   {
+    "name": "deep-image-96-angular",
+    "vector_size": 96,
+    "distance": "cosine",
+    "type": "h5",
+    "path": "deep-image-96-angular/deep-image-96-angular.hdf5",
+    "link": "http://ann-benchmarks.com/deep-image-96-angular.hdf5"
+  },
+  {
+    "name": "gist-960-euclidean",
+    "vector_size": 960,
+    "distance": "l2",
+    "type": "h5",
+    "path": "gist-960-euclidean/gist-960-euclidean.hdf5",
+    "link": "http://ann-benchmarks.com/gist-960-euclidean.hdf5"
+  },
+  {
+    "name": "gist-960-angular",
+    "vector_size": 960,
+    "distance": "cosine",
+    "type": "h5",
+    "path": "gist-960-angular/gist-960-angular.hdf5",
+    "link": "http://ann-benchmarks.com/gist-960-euclidean.hdf5"
+  },
+  {
     "name": "random-100",
     "vector_size": 100,
     "distance": "cosine",
