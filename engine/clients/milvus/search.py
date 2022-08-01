@@ -40,15 +40,21 @@ class MilvusSearcher(BaseSearcher):
 
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
-        res = cls.collection.search(
-            data=[vector],
-            anns_field="vector",
-            param={
-                "metric_type": cls.distance,
-                **cls.search_params
-            },
-            limit=top,
+        param = {
+            "metric_type": cls.distance,
+            "params": cls.search_params['params']
+        }
+        try:
+            res = cls.collection.search(
+                data=[vector],
+                anns_field="vector",
+                param=param,
+                limit=top,
+            )
+        except Exception as e:
+            import ipdb; ipdb.set_trace()
+            print("param: ", param)
 
-        )
+            raise e
 
         return list(zip(res[0].ids, res[0].distances))

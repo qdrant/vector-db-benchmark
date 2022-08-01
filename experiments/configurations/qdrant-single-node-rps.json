@@ -4,7 +4,7 @@
     "engine": "qdrant",
     "connection_params": {},
     "collection_params": {
-      "optimizers_config": { "max_segment_size": 10000000, "memmap_threshold":10000000, "default_segment_number":2 },
+      "optimizers_config": { "max_segment_size": 1000000, "memmap_threshold":10000000, "default_segment_number":2 },
       "hnsw_config": { "m": 16, "ef_construct": 128 }
     },
     "search_params": [
@@ -20,7 +20,7 @@
     "engine": "qdrant",
     "connection_params": {},
     "collection_params": {
-      "optimizers_config": { "max_segment_size": 10000000, "memmap_threshold": 10000000, "default_segment_number": 2 },
+      "optimizers_config": { "max_segment_size": 1000000, "memmap_threshold": 10000000, "default_segment_number": 2 },
       "hnsw_config": { "m": 32, "ef_construct": 128 }
     },
     "search_params": [
@@ -36,7 +36,7 @@
     "engine": "qdrant",
     "connection_params": {},
     "collection_params": {
-      "optimizers_config": { "max_segment_size": 10000000, "memmap_threshold": 10000000, "default_segment_number": 2 },
+      "optimizers_config": { "max_segment_size": 1000000, "memmap_threshold": 10000000, "default_segment_number": 2 },
       "hnsw_config": { "m": 32, "ef_construct": 256 }
     },
     "search_params": [
@@ -52,7 +52,7 @@
     "engine": "qdrant",
     "connection_params": {},
     "collection_params": {
-      "optimizers_config": { "max_segment_size": 10000000, "memmap_threshold": 10000000, "default_segment_number": 2 },
+      "optimizers_config": { "max_segment_size": 1000000, "memmap_threshold": 10000000, "default_segment_number": 2 },
       "hnsw_config": { "m": 32, "ef_construct": 512 }
     },
     "search_params": [
@@ -68,7 +68,7 @@
     "engine": "qdrant",
     "connection_params": {},
     "collection_params": {
-      "optimizers_config": { "max_segment_size": 10000000, "memmap_threshold": 10000000, "default_segment_number": 2 },
+      "optimizers_config": { "max_segment_size": 1000000, "memmap_threshold": 10000000, "default_segment_number": 2 },
       "hnsw_config": { "m": 64, "ef_construct": 256 }
     },
     "search_params": [
@@ -84,7 +84,7 @@
     "engine": "qdrant",
     "connection_params": {},
     "collection_params": {
-      "optimizers_config": { "max_segment_size": 10000000, "memmap_threshold": 10000000, "default_segment_number": 2 },
+      "optimizers_config": { "max_segment_size": 1000000, "memmap_threshold": 10000000, "default_segment_number": 2 },
       "hnsw_config": { "m": 64, "ef_construct": 512 }
     },
     "search_params": [

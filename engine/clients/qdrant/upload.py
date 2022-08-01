@@ -33,6 +33,8 @@ class QdrantUploader(BaseUploader):
     @classmethod
     def post_upload(cls, _distance):
         cls.wait_collection_green()
+        time.sleep(1.0)
+        cls.wait_collection_green()
         return {}
 
     @classmethod

@@ -34,7 +34,7 @@
   {
     "name": "gist-960-angular",
     "vector_size": 960,
-    "distance": "cosine",
+    "distance": "dot",
     "type": "h5",
     "path": "gist-960-angular/gist-960-angular.hdf5",
     "link": "http://ann-benchmarks.com/gist-960-euclidean.hdf5"
@@ -43,6 +43,13 @@
     "name": "random-100",
     "vector_size": 100,
     "distance": "cosine",
+    "type": "jsonl",
+    "path": "random-100/"
+  },
+  {
+    "name": "random-100-euclidean",
+    "vector_size": 100,
+    "distance": "l2",
     "type": "jsonl",
     "path": "random-100/"
   }
