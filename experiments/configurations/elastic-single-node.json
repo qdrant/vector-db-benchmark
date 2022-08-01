@@ -7,11 +7,11 @@
     },
     "collection_params": { "index_options": { "m": 16, "ef_construction": 100 } },
     "search_params": [
-      { "parallel": 1, "num_candidates": 64 }, { "parallel": 1, "num_candidates": 128 }, { "parallel": 1, "num_candidates": 256 }, { "parallel": 1, "num_candidates": 512 },
-      { "parallel": 2, "num_candidates": 64 }, { "parallel": 2, "num_candidates": 128 }, { "parallel": 2, "num_candidates": 256 }, { "parallel": 2, "num_candidates": 512 },
-      { "parallel": 4, "num_candidates": 64 }, { "parallel": 4, "num_candidates": 128 }, { "parallel": 4, "num_candidates": 256 }, { "parallel": 4, "num_candidates": 512 },
-      { "parallel": 8, "num_candidates": 64 }, { "parallel": 8, "num_candidates": 128 }, { "parallel": 8, "num_candidates": 256 }, { "parallel": 8, "num_candidates": 512 },
-      { "parallel": 100, "num_candidates": 64 }, { "parallel": 100, "num_candidates": 128 }, { "parallel": 100, "num_candidates": 256 }, { "parallel": 100, "num_candidates": 512 }
+      { "parallel": 1, "num_candidates": 128 }, { "parallel": 1, "num_candidates": 256 }, { "parallel": 1, "num_candidates": 512 },
+      { "parallel": 2, "num_candidates": 128 }, { "parallel": 2, "num_candidates": 256 }, { "parallel": 2, "num_candidates": 512 },
+      { "parallel": 4, "num_candidates": 128 }, { "parallel": 4, "num_candidates": 256 }, { "parallel": 4, "num_candidates": 512 },
+      { "parallel": 8, "num_candidates": 128 }, { "parallel": 8, "num_candidates": 256 }, { "parallel": 8, "num_candidates": 512 },
+      { "parallel": 100, "num_candidates": 128 }, { "parallel": 100, "num_candidates": 256 }, { "parallel": 100, "num_candidates": 512 }
     ],
     "upload_params": { "parallel": 16 }
   },
@@ -23,11 +23,11 @@
     },
     "collection_params": { "index_options": { "m": 16, "ef_construction": 128 } },
     "search_params": [
-      { "parallel": 1, "num_candidates": 64 }, { "parallel": 1, "num_candidates": 128 }, { "parallel": 1, "num_candidates": 256 }, { "parallel": 1, "num_candidates": 512 },
-      { "parallel": 2, "num_candidates": 64 }, { "parallel": 2, "num_candidates": 128 }, { "parallel": 2, "num_candidates": 256 }, { "parallel": 2, "num_candidates": 512 },
-      { "parallel": 4, "num_candidates": 64 }, { "parallel": 4, "num_candidates": 128 }, { "parallel": 4, "num_candidates": 256 }, { "parallel": 4, "num_candidates": 512 },
-      { "parallel": 8, "num_candidates": 64 }, { "parallel": 8, "num_candidates": 128 }, { "parallel": 8, "num_candidates": 256 }, { "parallel": 8, "num_candidates": 512 },
-      { "parallel": 100, "num_candidates": 64 }, { "parallel": 100, "num_candidates": 128 }, { "parallel": 100, "num_candidates": 256 }, { "parallel": 100, "num_candidates": 512 }
+      { "parallel": 1, "num_candidates": 128 }, { "parallel": 1, "num_candidates": 256 }, { "parallel": 1, "num_candidates": 512 },
+      { "parallel": 2, "num_candidates": 128 }, { "parallel": 2, "num_candidates": 256 }, { "parallel": 2, "num_candidates": 512 },
+      { "parallel": 4, "num_candidates": 128 }, { "parallel": 4, "num_candidates": 256 }, { "parallel": 4, "num_candidates": 512 },
+      { "parallel": 8, "num_candidates": 128 }, { "parallel": 8, "num_candidates": 256 }, { "parallel": 8, "num_candidates": 512 },
+      { "parallel": 100, "num_candidates": 128 }, { "parallel": 100, "num_candidates": 256 }, { "parallel": 100, "num_candidates": 512 }
     ],
     "upload_params": { "parallel": 16 }
   },
@@ -39,11 +39,11 @@
     },
     "collection_params": { "index_options": { "m": 32, "ef_construction": 128 } },
     "search_params": [
-      { "parallel": 1, "num_candidates": 64 }, { "parallel": 1, "num_candidates": 128 }, { "parallel": 1, "num_candidates": 256 }, { "parallel": 1, "num_candidates": 512 },
-      { "parallel": 2, "num_candidates": 64 }, { "parallel": 2, "num_candidates": 128 }, { "parallel": 2, "num_candidates": 256 }, { "parallel": 2, "num_candidates": 512 },
-      { "parallel": 4, "num_candidates": 64 }, { "parallel": 4, "num_candidates": 128 }, { "parallel": 4, "num_candidates": 256 }, { "parallel": 4, "num_candidates": 512 },
-      { "parallel": 8, "num_candidates": 64 }, { "parallel": 8, "num_candidates": 128 }, { "parallel": 8, "num_candidates": 256 }, { "parallel": 8, "num_candidates": 512 },
-      { "parallel": 100, "num_candidates": 64 }, { "parallel": 100, "num_candidates": 128 }, { "parallel": 100, "num_candidates": 256 }, { "parallel": 100, "num_candidates": 512 }
+      { "parallel": 1, "num_candidates": 128 }, { "parallel": 1, "num_candidates": 256 }, { "parallel": 1, "num_candidates": 512 },
+      { "parallel": 2, "num_candidates": 128 }, { "parallel": 2, "num_candidates": 256 }, { "parallel": 2, "num_candidates": 512 },
+      { "parallel": 4, "num_candidates": 128 }, { "parallel": 4, "num_candidates": 256 }, { "parallel": 4, "num_candidates": 512 },
+      { "parallel": 8, "num_candidates": 128 }, { "parallel": 8, "num_candidates": 256 }, { "parallel": 8, "num_candidates": 512 },
+      { "parallel": 100, "num_candidates": 128 }, { "parallel": 100, "num_candidates": 256 }, { "parallel": 100, "num_candidates": 512 }
     ],
     "upload_params": { "parallel": 16 }
   },
@@ -55,11 +55,11 @@
     },
     "collection_params": { "index_options": { "m": 32, "ef_construction": 256 } },
     "search_params": [
-      { "parallel": 1, "num_candidates": 64 }, { "parallel": 1, "num_candidates": 128 }, { "parallel": 1, "num_candidates": 256 }, { "parallel": 1, "num_candidates": 512 },
-      { "parallel": 2, "num_candidates": 64 }, { "parallel": 2, "num_candidates": 128 }, { "parallel": 2, "num_candidates": 256 }, { "parallel": 2, "num_candidates": 512 },
-      { "parallel": 4, "num_candidates": 64 }, { "parallel": 4, "num_candidates": 128 }, { "parallel": 4, "num_candidates": 256 }, { "parallel": 4, "num_candidates": 512 },
-      { "parallel": 8, "num_candidates": 64 }, { "parallel": 8, "num_candidates": 128 }, { "parallel": 8, "num_candidates": 256 }, { "parallel": 8, "num_candidates": 512 },
-      { "parallel": 100, "num_candidates": 64 }, { "parallel": 100, "num_candidates": 128 }, { "parallel": 100, "num_candidates": 256 }, { "parallel": 100, "num_candidates": 512 }
+      { "parallel": 1, "num_candidates": 128 }, { "parallel": 1, "num_candidates": 256 }, { "parallel": 1, "num_candidates": 512 },
+      { "parallel": 2, "num_candidates": 128 }, { "parallel": 2, "num_candidates": 256 }, { "parallel": 2, "num_candidates": 512 },
+      { "parallel": 4, "num_candidates": 128 }, { "parallel": 4, "num_candidates": 256 }, { "parallel": 4, "num_candidates": 512 },
+      { "parallel": 8, "num_candidates": 128 }, { "parallel": 8, "num_candidates": 256 }, { "parallel": 8, "num_candidates": 512 },
+      { "parallel": 100, "num_candidates": 128 }, { "parallel": 100, "num_candidates": 256 }, { "parallel": 100, "num_candidates": 512 }
     ],
     "upload_params": { "parallel": 16 }
   },
@@ -71,11 +71,11 @@
     },
     "collection_params": { "index_options": { "m": 32, "ef_construction": 512 } },
     "search_params": [
-      { "parallel": 1, "num_candidates": 64 }, { "parallel": 1, "num_candidates": 128 }, { "parallel": 1, "num_candidates": 256 }, { "parallel": 1, "num_candidates": 512 },
-      { "parallel": 2, "num_candidates": 64 }, { "parallel": 2, "num_candidates": 128 }, { "parallel": 2, "num_candidates": 256 }, { "parallel": 2, "num_candidates": 512 },
-      { "parallel": 4, "num_candidates": 64 }, { "parallel": 4, "num_candidates": 128 }, { "parallel": 4, "num_candidates": 256 }, { "parallel": 4, "num_candidates": 512 },
-      { "parallel": 8, "num_candidates": 64 }, { "parallel": 8, "num_candidates": 128 }, { "parallel": 8, "num_candidates": 256 }, { "parallel": 8, "num_candidates": 512 },
-      { "parallel": 100, "num_candidates": 64 }, { "parallel": 100, "num_candidates": 128 }, { "parallel": 100, "num_candidates": 256 }, { "parallel": 100, "num_candidates": 512 }
+      { "parallel": 1, "num_candidates": 128 }, { "parallel": 1, "num_candidates": 256 }, { "parallel": 1, "num_candidates": 512 },
+      { "parallel": 2, "num_candidates": 128 }, { "parallel": 2, "num_candidates": 256 }, { "parallel": 2, "num_candidates": 512 },
+      { "parallel": 4, "num_candidates": 128 }, { "parallel": 4, "num_candidates": 256 }, { "parallel": 4, "num_candidates": 512 },
+      { "parallel": 8, "num_candidates": 128 }, { "parallel": 8, "num_candidates": 256 }, { "parallel": 8, "num_candidates": 512 },
+      { "parallel": 100, "num_candidates": 128 }, { "parallel": 100, "num_candidates": 256 }, { "parallel": 100, "num_candidates": 512 }
     ],
     "upload_params": { "parallel": 16 }
   },
@@ -87,11 +87,11 @@
     },
     "collection_params": { "index_options": { "m": 64, "ef_construction": 256 } },
     "search_params": [
-      { "parallel": 1, "num_candidates": 64 }, { "parallel": 1, "num_candidates": 128 }, { "parallel": 1, "num_candidates": 256 }, { "parallel": 1, "num_candidates": 512 },
-      { "parallel": 2, "num_candidates": 64 }, { "parallel": 2, "num_candidates": 128 }, { "parallel": 2, "num_candidates": 256 }, { "parallel": 2, "num_candidates": 512 },
-      { "parallel": 4, "num_candidates": 64 }, { "parallel": 4, "num_candidates": 128 }, { "parallel": 4, "num_candidates": 256 }, { "parallel": 4, "num_candidates": 512 },
-      { "parallel": 8, "num_candidates": 64 }, { "parallel": 8, "num_candidates": 128 }, { "parallel": 8, "num_candidates": 256 }, { "parallel": 8, "num_candidates": 512 },
-      { "parallel": 100, "num_candidates": 64 }, { "parallel": 100, "num_candidates": 128 }, { "parallel": 100, "num_candidates": 256 }, { "parallel": 100, "num_candidates": 512 }
+      { "parallel": 1, "num_candidates": 128 }, { "parallel": 1, "num_candidates": 256 }, { "parallel": 1, "num_candidates": 512 },
+      { "parallel": 2, "num_candidates": 128 }, { "parallel": 2, "num_candidates": 256 }, { "parallel": 2, "num_candidates": 512 },
+      { "parallel": 4, "num_candidates": 128 }, { "parallel": 4, "num_candidates": 256 }, { "parallel": 4, "num_candidates": 512 },
+      { "parallel": 8, "num_candidates": 128 }, { "parallel": 8, "num_candidates": 256 }, { "parallel": 8, "num_candidates": 512 },
+      { "parallel": 100, "num_candidates": 128 }, { "parallel": 100, "num_candidates": 256 }, { "parallel": 100, "num_candidates": 512 }
     ],
     "upload_params": { "parallel": 16 }
   },
@@ -103,11 +103,11 @@
     },
     "collection_params": { "index_options": { "m": 64, "ef_construction": 512 } },
     "search_params": [
-      { "parallel": 1, "num_candidates": 64 }, { "parallel": 1, "num_candidates": 128 }, { "parallel": 1, "num_candidates": 256 }, { "parallel": 1, "num_candidates": 512 },
-      { "parallel": 2, "num_candidates": 64 }, { "parallel": 2, "num_candidates": 128 }, { "parallel": 2, "num_candidates": 256 }, { "parallel": 2, "num_candidates": 512 },
-      { "parallel": 4, "num_candidates": 64 }, { "parallel": 4, "num_candidates": 128 }, { "parallel": 4, "num_candidates": 256 }, { "parallel": 4, "num_candidates": 512 },
-      { "parallel": 8, "num_candidates": 64 }, { "parallel": 8, "num_candidates": 128 }, { "parallel": 8, "num_candidates": 256 }, { "parallel": 8, "num_candidates": 512 },
-      { "parallel": 100, "num_candidates": 64 }, { "parallel": 100, "num_candidates": 128 }, { "parallel": 100, "num_candidates": 256 }, { "parallel": 100, "num_candidates": 512 }
+      { "parallel": 1, "num_candidates": 128 }, { "parallel": 1, "num_candidates": 256 }, { "parallel": 1, "num_candidates": 512 },
+      { "parallel": 2, "num_candidates": 128 }, { "parallel": 2, "num_candidates": 256 }, { "parallel": 2, "num_candidates": 512 },
+      { "parallel": 4, "num_candidates": 128 }, { "parallel": 4, "num_candidates": 256 }, { "parallel": 4, "num_candidates": 512 },
+      { "parallel": 8, "num_candidates": 128 }, { "parallel": 8, "num_candidates": 256 }, { "parallel": 8, "num_candidates": 512 },
+      { "parallel": 100, "num_candidates": 128 }, { "parallel": 100, "num_candidates": 256 }, { "parallel": 100, "num_candidates": 512 }
     ],
     "upload_params": { "parallel": 16 }
   }

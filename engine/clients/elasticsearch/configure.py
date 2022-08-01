@@ -1,5 +1,6 @@
 from elasticsearch import Elasticsearch, NotFoundError
 
+from engine.base_client import IncompatibilityError
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
 from engine.clients.elasticsearch import (
@@ -45,6 +46,9 @@ class ElasticConfigurator(BaseConfigurator):
         vector_size,
         collection_params,
     ):
+        if distance == Distance.DOT:
+            raise IncompatibilityError
+
         self.client.indices.create(
             index=ELASTIC_INDEX,
             mappings={

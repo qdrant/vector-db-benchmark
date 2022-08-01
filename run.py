@@ -7,6 +7,7 @@ import typer
 
 from benchmark import DATASETS_DIR, ROOT_DIR
 from benchmark.dataset import Dataset
+from engine.base_client import IncompatibilityError
 from engine.clients.client_factory import ClientFactory
 
 app = typer.Typer()
@@ -61,7 +62,11 @@ def run(engines: str = "*", datasets: str = "*", host: str = "localhost"):
             client = ClientFactory(host).build_client(engine_config)
             dataset = Dataset(dataset_config)
             dataset.download()
-            client.run_experiment(dataset)
+            try:
+                client.run_experiment(dataset)
+            except IncompatibilityError as e:
+                print(f"Skipping {engine_name} - {dataset_name}, incompatible params")
+                continue
 
 
 if __name__ == "__main__":
