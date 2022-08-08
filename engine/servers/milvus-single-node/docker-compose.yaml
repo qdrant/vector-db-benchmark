@@ -34,13 +34,15 @@ services:
     environment:
       ETCD_ENDPOINTS: etcd:2379
       MINIO_ADDRESS: minio:9000
-    volumes:
-      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/milvus:/var/lib/milvus
     ports:
       - "19530:19530"
     depends_on:
       - "etcd"
       - "minio"
+    deploy:
+      resources:
+        limits:
+          memory: 25Gb
 
 networks:
   default:

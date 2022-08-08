@@ -4,3 +4,7 @@ services:
   qdrant_bench:
     image: qdrant/qdrant:v0.8.6
     network_mode: host
+    deploy:
+      resources:
+        limits:
+          memory: 25Gb

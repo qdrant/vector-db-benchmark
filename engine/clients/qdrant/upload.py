@@ -33,17 +33,20 @@ class QdrantUploader(BaseUploader):
     @classmethod
     def post_upload(cls, _distance):
         cls.wait_collection_green()
-        time.sleep(1.0)
-        cls.wait_collection_green()
         return {}
 
     @classmethod
     def wait_collection_green(cls):
-        wait_time = 1.0
+        wait_time = 5.0
         total = 0
-        collection_info = cls.client.get_collection(QDRANT_COLLECTION_NAME)
-        while collection_info.status != CollectionStatus.GREEN:
+        while True:
             time.sleep(wait_time)
             total += wait_time
             collection_info = cls.client.get_collection(QDRANT_COLLECTION_NAME)
+            if collection_info.status != CollectionStatus.GREEN:
+                continue
+            time.sleep(wait_time)
+            collection_info = cls.client.get_collection(QDRANT_COLLECTION_NAME)
+            if collection_info.status == CollectionStatus.GREEN:
+                break
         return total

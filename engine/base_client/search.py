@@ -85,9 +85,9 @@ class BaseSearcher:
         total_time = time.perf_counter() - start
         return {
             "total_time": total_time,
-            "mean_time": np.std(latencies),
+            "mean_time": np.mean(latencies),
             "mean_precisions": np.mean(precisions),
-            "std_time": np.mean(latencies),
+            "std_time": np.std(latencies),
             "min_time": np.min(latencies),
             "max_time": np.max(latencies),
             "rps": len(latencies) / total_time,

@@ -3,7 +3,7 @@
     "name": "elastic-default",
     "engine": "elastic",
     "connection_params": {
-      "request_timeout": 1000
+      "request_timeout": 10000
     },
     "collection_params": { "index_options": { "m": 16, "ef_construction": 100 } },
     "search_params": [
@@ -19,7 +19,7 @@
     "name": "elastic-m-16-ef-128",
     "engine": "elastic",
     "connection_params": {
-      "request_timeout": 1000
+      "request_timeout": 10000
     },
     "collection_params": { "index_options": { "m": 16, "ef_construction": 128 } },
     "search_params": [
@@ -35,7 +35,7 @@
     "name": "elastic-m-32-ef-128",
     "engine": "elastic",
     "connection_params": {
-      "request_timeout": 1000
+      "request_timeout": 10000
     },
     "collection_params": { "index_options": { "m": 32, "ef_construction": 128 } },
     "search_params": [
@@ -51,7 +51,7 @@
     "name": "elastic-m-32-ef-256",
     "engine": "elastic",
     "connection_params": {
-      "request_timeout": 1000
+      "request_timeout": 10000
     },
     "collection_params": { "index_options": { "m": 32, "ef_construction": 256 } },
     "search_params": [
@@ -67,7 +67,7 @@
     "name": "elastic-m-32-ef-512",
     "engine": "elastic",
     "connection_params": {
-      "request_timeout": 1000
+      "request_timeout": 10000
     },
     "collection_params": { "index_options": { "m": 32, "ef_construction": 512 } },
     "search_params": [
@@ -83,7 +83,7 @@
     "name": "elastic-m-64-ef-256",
     "engine": "elastic",
     "connection_params": {
-      "request_timeout": 1000
+      "request_timeout": 10000
     },
     "collection_params": { "index_options": { "m": 64, "ef_construction": 256 } },
     "search_params": [
@@ -99,7 +99,7 @@
     "name": "elastic-m-64-ef-512",
     "engine": "elastic",
     "connection_params": {
-      "request_timeout": 1000
+      "request_timeout": 10000
     },
     "collection_params": { "index_options": { "m": 64, "ef_construction": 512 } },
     "search_params": [
