@@ -21,12 +21,11 @@ function run_exp() {
 }
 
 
-#run_exp "qdrant-single-node" 'qdrant-*'
-#run_exp "weaviate-single-node" 'weaviate-m-*'
-#run_exp "milvus-single-node" 'milvus-m-*'
+run_exp "qdrant-single-node" 'qdrant-*'
+run_exp "weaviate-single-node" 'weaviate-m-*'
+run_exp "milvus-single-node" 'milvus-m-*'
 run_exp "elasticsearch-single-node" 'elastic-m-*'
-
-#run_exp "redis-single-node" 'redis-m-*'
+run_exp "redis-single-node" 'redis-m-*'
 
 # Extra: qdrant configured to tune RPS
 
