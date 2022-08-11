@@ -4,6 +4,7 @@ import numpy as np
 import redis
 
 from engine.base_client.upload import BaseUploader
+from engine.clients.redis.config import REDIS_PORT
 
 
 class RedisUploader(BaseUploader):
@@ -12,7 +13,7 @@ class RedisUploader(BaseUploader):
 
     @classmethod
     def init_client(cls, host, distance, connection_params, upload_params):
-        cls.client = redis.Redis(host=host, port=6379, db=0)
+        cls.client = redis.Redis(host=host, port=REDIS_PORT, db=0)
         cls.upload_params = upload_params
 
     @classmethod

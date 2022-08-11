@@ -4,4 +4,4 @@ services:
   redis:
     image: redislabs/redisearch:2.4.13
     ports:
-      - '6379:6379'
+      - '6380:6379'

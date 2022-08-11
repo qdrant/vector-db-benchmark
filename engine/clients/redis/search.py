@@ -5,6 +5,7 @@ import redis
 from redis.commands.search.query import Query
 
 from engine.base_client.search import BaseSearcher
+from engine.clients.redis.config import REDIS_PORT
 
 
 class RedisSearcher(BaseSearcher):
@@ -13,7 +14,7 @@ class RedisSearcher(BaseSearcher):
 
     @classmethod
     def init_client(cls, host, distance, connection_params: dict, search_params: dict):
-        cls.client = redis.Redis(host=host, port=6379, db=0)
+        cls.client = redis.Redis(host=host, port=REDIS_PORT, db=0)
         cls.search_params = search_params
 
     @classmethod

@@ -3,6 +3,7 @@ from redis.commands.search.field import VectorField
 
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
+from engine.clients.redis.config import REDIS_PORT
 
 
 class RedisConfigurator(BaseConfigurator):
@@ -15,7 +16,7 @@ class RedisConfigurator(BaseConfigurator):
     def __init__(self, host, collection_params: dict, connection_params: dict):
         super().__init__(host, collection_params, connection_params)
 
-        self.client = redis.Redis(host=host, port=6379, db=0)
+        self.client = redis.Redis(host=host, port=REDIS_PORT, db=0)
 
     def clean(self):
         index = self.client.ft()

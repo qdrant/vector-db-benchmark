@@ -12,9 +12,9 @@ from engine.clients.elasticsearch.search import ElasticSearcher
 from engine.clients.elasticsearch.upload import ElasticUploader
 from engine.clients.milvus import MilvusConfigurator, MilvusSearcher, MilvusUploader
 from engine.clients.qdrant import QdrantConfigurator, QdrantSearcher, QdrantUploader
-from engine.clients.redis_single_node.configure import RedisConfigurator
-from engine.clients.redis_single_node.search import RedisSearcher
-from engine.clients.redis_single_node.upload import RedisUploader
+from engine.clients.redis.configure import RedisConfigurator
+from engine.clients.redis.search import RedisSearcher
+from engine.clients.redis.upload import RedisUploader
 from engine.clients.weaviate import (
     WeaviateConfigurator,
     WeaviateSearcher,
