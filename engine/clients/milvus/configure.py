@@ -65,4 +65,5 @@ class MilvusConfigurator(BaseConfigurator):
         for index in collection.indexes:
             index.drop()
 
+    def execution_params(self, distance, vector_size):
         return {"normalize": distance == Distance.COSINE}

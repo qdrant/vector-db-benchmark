@@ -11,7 +11,7 @@ app = typer.Typer()
 
 
 @app.command()
-def run(engines: str = "*", datasets: str = "*", host: str = "localhost"):
+def run(engines: str = "*", datasets: str = "*", host: str = "localhost", skip_upload: bool = False):
     """
     Example:
         python3 run --engines *-m-16-* --datasets glove-*
@@ -37,7 +37,7 @@ def run(engines: str = "*", datasets: str = "*", host: str = "localhost"):
             dataset = Dataset(dataset_config)
             dataset.download()
             try:
-                client.run_experiment(dataset)
+                client.run_experiment(dataset, skip_upload)
             except IncompatibilityError as e:
                 print(f"Skipping {engine_name} - {dataset_name}, incompatible params")
                 continue

@@ -14,11 +14,11 @@ RESULTS_DIR.mkdir(exist_ok=True)
 
 class BaseClient:
     def __init__(
-        self,
-        name: str,  # name of the experiment
-        configurator: BaseConfigurator,
-        uploader: BaseUploader,
-        searchers: List[BaseSearcher],
+            self,
+            name: str,  # name of the experiment
+            configurator: BaseConfigurator,
+            uploader: BaseUploader,
+            searchers: List[BaseSearcher],
     ):
         self.name = name
         self.configurator = configurator
@@ -26,7 +26,7 @@ class BaseClient:
         self.searchers = searchers
 
     def save_search_results(
-        self, dataset_name: str, results: dict, search_id: int, search_params: dict
+            self, dataset_name: str, results: dict, search_id: int, search_params: dict
     ):
         now = datetime.now()
         timestamp = now.strftime("%Y-%m-%d-%H-%M-%S")
@@ -49,23 +49,29 @@ class BaseClient:
             }
             out.write(json.dumps(upload_stats, indent=2))
 
-    def run_experiment(self, dataset: Dataset):
-        print("Experiment stage: Configure")
-        execution_params = self.configurator.configure(
+    def run_experiment(self, dataset: Dataset, skip_upload: bool = False):
+        execution_params = self.configurator.execution_params(
             distance=dataset.config.distance,
-            vector_size=dataset.config.vector_size,
-        )
+            vector_size=dataset.config.vector_size)
 
         reader = dataset.get_reader(execution_params.get("normalize", False))
-        print("Experiment stage: Upload")
-        upload_stats = self.uploader.upload(
-            distance=dataset.config.distance,
-            records=reader.read_data()
-        )
-        self.save_upload_results(dataset.config.name, upload_stats, upload_params={
-            **self.uploader.upload_params,
-            **self.configurator.collection_params
-        })
+
+        if not skip_upload:
+            print("Experiment stage: Configure")
+            self.configurator.configure(
+                distance=dataset.config.distance,
+                vector_size=dataset.config.vector_size,
+            )
+
+            print("Experiment stage: Upload")
+            upload_stats = self.uploader.upload(
+                distance=dataset.config.distance,
+                records=reader.read_data()
+            )
+            self.save_upload_results(dataset.config.name, upload_stats, upload_params={
+                **self.uploader.upload_params,
+                **self.configurator.collection_params
+            })
 
         print("Experiment stage: Search")
         for search_id, searcher in enumerate(self.searchers):

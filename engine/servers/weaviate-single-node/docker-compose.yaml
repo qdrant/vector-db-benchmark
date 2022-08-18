@@ -18,7 +18,9 @@ services:
       DEFAULT_VECTORIZER_MODULE: 'none'
       ENABLE_MODULES: ''
       CLUSTER_HOSTNAME: 'node1'
+      GOMEMLIMIT: 25GiB
+      GOGC: 50
     deploy:
       resources:
         limits:
-          memory: 25Gb
+          memory: 27Gb

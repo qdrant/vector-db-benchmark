@@ -18,3 +18,6 @@ class BaseConfigurator:
     def configure(self, distance, vector_size) -> Optional[dict]:
         self.clean()
         return self.recreate(distance, vector_size, self.collection_params) or {}
+
+    def execution_params(self, distance, vector_size) -> dict:
+        return {}
