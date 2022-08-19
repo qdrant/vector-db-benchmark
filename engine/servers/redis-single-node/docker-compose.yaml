@@ -5,3 +5,7 @@ services:
     image: redislabs/redisearch:2.4.13
     ports:
       - '6380:6379'
+    deploy:
+      resources:
+        limits:
+          memory: 25Gb
