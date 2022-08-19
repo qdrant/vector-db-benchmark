@@ -50,12 +50,12 @@ Options:
 ```
 
 Command allows you to specify wildcards for engines and datasets.
-Results of the benchmarks are stored in the [results](./results/) directory.
+Results of the benchmarks are stored in the `./results/` directory.
 
 ## How to update benchmark parameters?
 
 Each engine has a configuration file, which is used to define the parameters for the benchmark.
-Configuration files are located in the [configuration](./engine/configurations/) directory.
+Configuration files are located in the [configuration](./experiments/configurations/) directory.
 
 Each step in the benchmark process is using a dedicated configuration's path:
 
@@ -68,7 +68,7 @@ Exact values of the parameters are individual for each engine.
 
 ## How to register a dataset?
 
-Datasets are configured in the [datasets/datasets.json](./datasets//datasets.json) file.
+Datasets are configured in the [datasets/datasets.json](./datasets/datasets.json) file.
 Framework will automatically download the dataset and store it in the [datasets](./datasets/) directory.
 
 ## How to implement a new engine?
