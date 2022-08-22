@@ -32,6 +32,15 @@ Containers are expected to expose all necessary ports, so the client can connect
 
 ### Run the client
 
+Install dependencies:
+
+```bash
+pip install poetry
+poetry install
+```
+
+Run the benchmark:
+
 ```bash
 Usage: run.py [OPTIONS]
 
