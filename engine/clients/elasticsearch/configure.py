@@ -36,7 +36,9 @@ class ElasticConfigurator(BaseConfigurator):
 
     def clean(self):
         try:
-            self.client.indices.delete(index=ELASTIC_INDEX, timeout="5m", master_timeout="5m")
+            self.client.indices.delete(
+                index=ELASTIC_INDEX, timeout="5m", master_timeout="5m"
+            )
         except NotFoundError:
             pass
 
