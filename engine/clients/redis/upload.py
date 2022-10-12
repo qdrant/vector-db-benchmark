@@ -27,14 +27,12 @@ class RedisUploader(BaseUploader):
             vec = vectors[i]
             meta = metadata[i] if metadata else {}
             meta = meta or {}
-            cls.client.hset(str(idx), mapping={
-                "vector": np.array(vec).astype(np.float32).tobytes(),
-                **meta
-            })
+            cls.client.hset(
+                str(idx),
+                mapping={"vector": np.array(vec).astype(np.float32).tobytes(), **meta},
+            )
         p.execute()
 
     @classmethod
     def post_upload(cls, _distance):
         return {}
-
-

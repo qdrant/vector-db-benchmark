@@ -2,7 +2,7 @@ import fnmatch
 
 import typer
 
-from benchmark.config_read import read_engine_configs, read_dataset_config
+from benchmark.config_read import read_dataset_config, read_engine_configs
 from benchmark.dataset import Dataset
 from engine.base_client import IncompatibilityError
 from engine.clients.client_factory import ClientFactory
@@ -11,7 +11,12 @@ app = typer.Typer()
 
 
 @app.command()
-def run(engines: str = "*", datasets: str = "*", host: str = "localhost", skip_upload: bool = False):
+def run(
+    engines: str = "*",
+    datasets: str = "*",
+    host: str = "localhost",
+    skip_upload: bool = False,
+):
     """
     Example:
         python3 run --engines *-m-16-* --datasets glove-*

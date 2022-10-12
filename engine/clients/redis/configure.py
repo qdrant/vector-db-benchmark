@@ -34,18 +34,20 @@ class RedisConfigurator(BaseConfigurator):
         self.clean()
         index = self.client.ft()
         index.create_index(
-            fields=[VectorField(
-                name="vector",
-                algorithm="HNSW",
-                attributes={
-                    "TYPE": "FLOAT32",
-                    "DIM": vector_size,
-                    "DISTANCE_METRIC": self.DISTANCE_MAPPING[distance],
-                    **self.collection_params.get('hnsw_config', {}),
-                }
-            )]
+            fields=[
+                VectorField(
+                    name="vector",
+                    algorithm="HNSW",
+                    attributes={
+                        "TYPE": "FLOAT32",
+                        "DIM": vector_size,
+                        "DISTANCE_METRIC": self.DISTANCE_MAPPING[distance],
+                        **self.collection_params.get("hnsw_config", {}),
+                    },
+                )
+            ]
         )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

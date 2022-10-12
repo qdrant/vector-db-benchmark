@@ -19,15 +19,17 @@ class RedisSearcher(BaseSearcher):
 
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
-        q = Query(f'*=>[KNN $K @vector $vec_param EF_RUNTIME $EF AS vector_score]') \
-            .sort_by('vector_score') \
-            .paging(0, top) \
-            .return_fields('vector_score') \
+        q = (
+            Query(f"*=>[KNN $K @vector $vec_param EF_RUNTIME $EF AS vector_score]")
+            .sort_by("vector_score")
+            .paging(0, top)
+            .return_fields("vector_score")
             .dialect(2)
+        )
         params_dict = {
             "vec_param": np.array(vector).astype(np.float32).tobytes(),
             "K": top,
-            "EF": cls.search_params['search_params']["ef"],
+            "EF": cls.search_params["search_params"]["ef"],
         }
 
         results = cls.client.ft().search(q, query_params=params_dict)

@@ -20,7 +20,9 @@ class BaseSearcher:
         self.search_params = search_params
 
     @classmethod
-    def init_client(cls, host: str, distance, connection_params: dict, search_params: dict):
+    def init_client(
+        cls, host: str, distance, connection_params: dict, search_params: dict
+    ):
         raise NotImplementedError()
 
     @classmethod
@@ -63,20 +65,29 @@ class BaseSearcher:
         top = self.search_params.pop("top", None)
 
         # setup_search may require initialized client
-        self.init_client(self.host, distance, self.connection_params, self.search_params)
+        self.init_client(
+            self.host, distance, self.connection_params, self.search_params
+        )
         self.setup_search()
 
         search_one = functools.partial(self.__class__._search_one, top=top)
 
         if parallel == 1:
-            precisions, latencies = list(zip(*[search_one(query) for query in tqdm.tqdm(queries)]))
+            precisions, latencies = list(
+                zip(*[search_one(query) for query in tqdm.tqdm(queries)])
+            )
         else:
             ctx = get_context(self.get_mp_start_method())
 
             with ctx.Pool(
                 processes=parallel,
                 initializer=self.__class__.init_client,
-                initargs=(self.host, distance, self.connection_params, self.search_params),
+                initargs=(
+                    self.host,
+                    distance,
+                    self.connection_params,
+                    self.search_params,
+                ),
             ) as pool:
                 precisions, latencies = list(
                     zip(*pool.imap_unordered(search_one, iterable=tqdm.tqdm(queries)))
