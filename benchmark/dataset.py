@@ -9,6 +9,7 @@ from benchmark import DATASETS_DIR
 from dataset_reader.ann_h5_reader import AnnH5Reader
 from dataset_reader.base_reader import BaseReader
 from dataset_reader.json_reader import JSONReader
+from dataset_reader.tar_compound_reader import TarCompoundReader
 
 
 @dataclass
@@ -21,7 +22,7 @@ class DatasetConfig:
     link: Optional[str] = None
 
 
-READER_TYPE = {"h5": AnnH5Reader, "jsonl": JSONReader}
+READER_TYPE = {"h5": AnnH5Reader, "jsonl": JSONReader, "tar": TarCompoundReader}
 
 
 class Dataset:

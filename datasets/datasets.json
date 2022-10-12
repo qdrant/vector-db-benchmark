@@ -40,6 +40,14 @@
     "link": "http://ann-benchmarks.com/gist-960-euclidean.hdf5"
   },
   {
+    "name": "h-and-m-2048-angular",
+    "vector_size": 2048,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "h-and-m-2048-angular/hnm.tgz",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/hnm.tgz"
+  },
+  {
     "name": "random-100",
     "vector_size": 100,
     "distance": "cosine",
