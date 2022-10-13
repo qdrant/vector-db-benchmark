@@ -18,6 +18,7 @@ class QdrantConfigurator(BaseConfigurator):
         "keyword": rest.PayloadSchemaType.KEYWORD,
         "text": rest.PayloadSchemaType.KEYWORD,  # TODO: should be full-text
         "float": rest.PayloadSchemaType.FLOAT,
+        "geo": rest.PayloadSchemaType.GEO,
     }
 
     def __init__(self, host, collection_params: dict, connection_params: dict):
