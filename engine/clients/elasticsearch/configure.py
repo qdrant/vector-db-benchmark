@@ -1,5 +1,6 @@
 from elasticsearch import Elasticsearch, NotFoundError
 
+from benchmark.dataset import Dataset
 from engine.base_client import IncompatibilityError
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
@@ -42,13 +43,8 @@ class ElasticConfigurator(BaseConfigurator):
         except NotFoundError:
             pass
 
-    def recreate(
-        self,
-        distance,
-        vector_size,
-        collection_params,
-    ):
-        if distance == Distance.DOT:
+    def recreate(self, dataset: Dataset, collection_params):
+        if dataset.config.distance == Distance.DOT:
             raise IncompatibilityError
 
         self.client.indices.create(
@@ -57,9 +53,9 @@ class ElasticConfigurator(BaseConfigurator):
                 "properties": {
                     "vector": {
                         "type": "dense_vector",
-                        "dims": vector_size,
+                        "dims": dataset.config.vector_size,
                         "index": True,
-                        "similarity": self.DISTANCE_MAPPING[distance],
+                        "similarity": self.DISTANCE_MAPPING[dataset.config.distance],
                         "index_options": {
                             **{
                                 "type": "hnsw",

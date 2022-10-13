@@ -2,8 +2,8 @@ import os
 import shutil
 import tarfile
 import urllib.request
-from dataclasses import dataclass
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import Dict, Optional
 
 from benchmark import DATASETS_DIR
 from dataset_reader.ann_h5_reader import AnnH5Reader
@@ -20,6 +20,7 @@ class DatasetConfig:
     type: str
     path: str
     link: Optional[str] = None
+    schema: Optional[Dict[str, str]] = field(default_factory=dict)
 
 
 READER_TYPE = {"h5": AnnH5Reader, "jsonl": JSONReader, "tar": TarCompoundReader}

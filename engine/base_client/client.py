@@ -60,10 +60,7 @@ class BaseClient:
 
         if not skip_upload:
             print("Experiment stage: Configure")
-            self.configurator.configure(
-                distance=dataset.config.distance,
-                vector_size=dataset.config.vector_size,
-            )
+            self.configurator.configure(dataset)
 
             print("Experiment stage: Upload")
             upload_stats = self.uploader.upload(

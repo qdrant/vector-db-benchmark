@@ -1,6 +1,7 @@
 import redis
 from redis.commands.search.field import VectorField
 
+from benchmark.dataset import Dataset
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
 from engine.clients.redis.config import REDIS_PORT
@@ -25,12 +26,7 @@ class RedisConfigurator(BaseConfigurator):
         except redis.ResponseError as e:
             print(e)
 
-    def recreate(
-        self,
-        distance,
-        vector_size,
-        collection_params,
-    ):
+    def recreate(self, dataset: Dataset, collection_params):
         self.clean()
         index = self.client.ft()
         index.create_index(
@@ -40,8 +36,10 @@ class RedisConfigurator(BaseConfigurator):
                     algorithm="HNSW",
                     attributes={
                         "TYPE": "FLOAT32",
-                        "DIM": vector_size,
-                        "DISTANCE_METRIC": self.DISTANCE_MAPPING[distance],
+                        "DIM": dataset.config.vector_size,
+                        "DISTANCE_METRIC": self.DISTANCE_MAPPING[
+                            dataset.config.distance
+                        ],
                         **self.collection_params.get("hnsw_config", {}),
                     },
                 )

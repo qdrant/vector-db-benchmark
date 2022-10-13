@@ -1,5 +1,6 @@
 from weaviate import Client
 
+from benchmark.dataset import Dataset
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
 from engine.clients.weaviate.config import WEAVIATE_CLASS_NAME, WEAVIATE_DEFAULT_PORT
@@ -23,12 +24,7 @@ class WeaviateConfigurator(BaseConfigurator):
             if cl["class"] == WEAVIATE_CLASS_NAME:
                 self.client.schema.delete_class(WEAVIATE_CLASS_NAME)
 
-    def recreate(
-        self,
-        distance,
-        vector_size,
-        collection_params,
-    ):
+    def recreate(self, dataset: Dataset, collection_params):
         self.client.schema.create_class(
             {
                 "class": WEAVIATE_CLASS_NAME,
@@ -37,7 +33,7 @@ class WeaviateConfigurator(BaseConfigurator):
                 "vectorIndexConfig": {
                     **{
                         "vectorCacheMaxObjects": 1000000000,
-                        "distance": self.DISTANCE_MAPPING.get(distance),
+                        "distance": self.DISTANCE_MAPPING.get(dataset.config.distance),
                     },
                     **collection_params["vectorIndexConfig"],
                 },

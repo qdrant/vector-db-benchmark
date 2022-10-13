@@ -8,6 +8,7 @@ from pymilvus import (
 )
 from pymilvus.orm import utility
 
+from benchmark.dataset import Dataset
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
 from engine.clients.milvus.config import (
@@ -35,12 +36,7 @@ class MilvusConfigurator(BaseConfigurator):
         except MilvusException:
             pass
 
-    def recreate(
-        self,
-        distance,
-        vector_size,
-        collection_params,
-    ):
+    def recreate(self, dataset: Dataset, collection_params):
         idx = FieldSchema(
             name="id",
             dtype=DataType.INT64,
@@ -49,7 +45,7 @@ class MilvusConfigurator(BaseConfigurator):
         vector = FieldSchema(
             name="vector",
             dtype=DataType.FLOAT_VECTOR,
-            dim=vector_size,
+            dim=dataset.config.vector_size,
         )
         schema = CollectionSchema(
             fields=[idx, vector], description=MILVUS_COLLECTION_NAME
