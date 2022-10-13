@@ -46,6 +46,8 @@ class ElasticSearcher(BaseSearcher):
 
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
+        # TODO: use additional filters according to
+        #       https://www.elastic.co/guide/en/elasticsearch/reference/master/knn-search.html#knn-search-filter-example
         res = cls.client.knn_search(
             index=ELASTIC_INDEX,
             knn={

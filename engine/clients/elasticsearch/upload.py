@@ -48,12 +48,13 @@ class ElasticUploader(BaseUploader):
     def upload_batch(
         cls, ids: List[int], vectors: List[list], metadata: Optional[List[dict]]
     ):
+        if metadata is None:
+            metadata = [{}] * len(vectors)
         operations = []
-        for idx, vector in zip(ids, vectors):
+        for idx, vector, payload in zip(ids, vectors, metadata):
             vector_id = uuid.UUID(int=idx).hex
-
             operations.append({"index": {"_id": vector_id}})
-            operations.append({"vector": vector})
+            operations.append({"vector": vector, **payload})
 
         cls.client.bulk(
             index=ELASTIC_INDEX,

@@ -20,7 +20,6 @@ class RedisUploader(BaseUploader):
     def upload_batch(
         cls, ids: List[int], vectors: List[list], metadata: Optional[List[dict]]
     ):
-
         p = cls.client.pipeline(transaction=False)
         for i in range(len(ids)):
             idx = ids[i]

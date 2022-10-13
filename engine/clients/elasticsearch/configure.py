@@ -66,7 +66,8 @@ class ElasticConfigurator(BaseConfigurator):
                             },
                             **collection_params.get("index_options"),
                         },
-                    }
+                    },
+                    # TODO: add all the fields from payload as well
                 }
             },
         )

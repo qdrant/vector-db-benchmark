@@ -37,6 +37,7 @@ class MilvusUploader(BaseUploader):
     def upload_batch(
         cls, ids: List[int], vectors: List[list], metadata: Optional[List[dict]]
     ):
+        # TODO: use metadata and upload to the index
         cls.collection.insert([ids, vectors])
 
     @classmethod
