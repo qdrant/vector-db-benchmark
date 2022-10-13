@@ -5,9 +5,10 @@ from pymilvus import Collection, connections
 
 from engine.base_client.search import BaseSearcher
 from engine.clients.milvus.config import (
+    DISTANCE_MAPPING,
     MILVUS_COLLECTION_NAME,
     MILVUS_DEFAULT_ALIAS,
-    MILVUS_DEFAULT_PORT, DISTANCE_MAPPING,
+    MILVUS_DEFAULT_PORT,
 )
 
 
@@ -31,7 +32,7 @@ class MilvusSearcher(BaseSearcher):
 
     @classmethod
     def get_mp_start_method(cls):
-        return 'forkserver' if 'forkserver' in mp.get_all_start_methods() else 'spawn'
+        return "forkserver" if "forkserver" in mp.get_all_start_methods() else "spawn"
 
     @classmethod
     def conditions_to_filter(cls, _meta_conditions):
@@ -40,10 +41,7 @@ class MilvusSearcher(BaseSearcher):
 
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
-        param = {
-            "metric_type": cls.distance,
-            "params": cls.search_params['params']
-        }
+        param = {"metric_type": cls.distance, "params": cls.search_params["params"]}
         try:
             res = cls.collection.search(
                 data=[vector],
@@ -52,7 +50,9 @@ class MilvusSearcher(BaseSearcher):
                 limit=top,
             )
         except Exception as e:
-            import ipdb; ipdb.set_trace()
+            import ipdb
+
+            ipdb.set_trace()
             print("param: ", param)
 
             raise e

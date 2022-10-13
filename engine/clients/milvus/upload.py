@@ -5,9 +5,10 @@ from pymilvus import Collection, connections
 
 from engine.base_client.upload import BaseUploader
 from engine.clients.milvus.config import (
+    DISTANCE_MAPPING,
     MILVUS_COLLECTION_NAME,
     MILVUS_DEFAULT_ALIAS,
-    MILVUS_DEFAULT_PORT, DISTANCE_MAPPING,
+    MILVUS_DEFAULT_PORT,
 )
 
 
@@ -19,7 +20,7 @@ class MilvusUploader(BaseUploader):
 
     @classmethod
     def get_mp_start_method(cls):
-        return 'forkserver' if 'forkserver' in mp.get_all_start_methods() else 'spawn'
+        return "forkserver" if "forkserver" in mp.get_all_start_methods() else "spawn"
 
     @classmethod
     def init_client(cls, host, distance, connection_params, upload_params):
@@ -45,9 +46,7 @@ class MilvusUploader(BaseUploader):
         index_params = {
             "metric_type": cls.distance,
             "index_type": "HNSW",
-            "params": {
-                **cls.upload_params.get('index_params', {})
-            }
+            "params": {**cls.upload_params.get("index_params", {})},
         }
 
         cls.collection.create_index(field_name="vector", index_params=index_params)

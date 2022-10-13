@@ -25,16 +25,18 @@ class BaseUploader:
         raise NotImplementedError()
 
     def upload(
-            self,
-            distance,
-            records: Iterable[Record],
+        self,
+        distance,
+        records: Iterable[Record],
     ) -> dict:
         latencies = []
         start = time.perf_counter()
         parallel = self.upload_params.pop("parallel", 1)
         batch_size = self.upload_params.pop("batch_size", 64)
 
-        self.init_client(self.host, distance, self.connection_params, self.upload_params)
+        self.init_client(
+            self.host, distance, self.connection_params, self.upload_params
+        )
 
         if parallel == 1:
             for batch in iter_batches(tqdm.tqdm(records), batch_size):
@@ -42,14 +44,21 @@ class BaseUploader:
         else:
             ctx = get_context(self.get_mp_start_method())
             with ctx.Pool(
-                    processes=int(parallel),
-                    initializer=self.__class__.init_client,
-                    initargs=(self.host, distance, self.connection_params, self.upload_params),
+                processes=int(parallel),
+                initializer=self.__class__.init_client,
+                initargs=(
+                    self.host,
+                    distance,
+                    self.connection_params,
+                    self.upload_params,
+                ),
             ) as pool:
-                latencies = list(pool.imap(
-                    self.__class__._upload_batch,
-                    iter_batches(tqdm.tqdm(records), batch_size),
-                ))
+                latencies = list(
+                    pool.imap(
+                        self.__class__._upload_batch,
+                        iter_batches(tqdm.tqdm(records), batch_size),
+                    )
+                )
 
         upload_time = time.perf_counter() - start
 
@@ -68,7 +77,7 @@ class BaseUploader:
 
     @classmethod
     def _upload_batch(
-            cls, batch: Tuple[List[int], List[list], List[Optional[dict]]]
+        cls, batch: Tuple[List[int], List[list], List[Optional[dict]]]
     ) -> float:
         ids, vectors, metadata = batch
         start = time.perf_counter()
@@ -81,6 +90,6 @@ class BaseUploader:
 
     @classmethod
     def upload_batch(
-            cls, ids: List[int], vectors: List[list], metadata: List[Optional[dict]]
+        cls, ids: List[int], vectors: List[list], metadata: List[Optional[dict]]
     ):
         raise NotImplementedError()
