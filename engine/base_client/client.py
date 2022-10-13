@@ -14,11 +14,11 @@ RESULTS_DIR.mkdir(exist_ok=True)
 
 class BaseClient:
     def __init__(
-            self,
-            name: str,  # name of the experiment
-            configurator: BaseConfigurator,
-            uploader: BaseUploader,
-            searchers: List[BaseSearcher],
+        self,
+        name: str,  # name of the experiment
+        configurator: BaseConfigurator,
+        uploader: BaseUploader,
+        searchers: List[BaseSearcher],
     ):
         self.name = name
         self.configurator = configurator
@@ -26,7 +26,7 @@ class BaseClient:
         self.searchers = searchers
 
     def save_search_results(
-            self, dataset_name: str, results: dict, search_id: int, search_params: dict
+        self, dataset_name: str, results: dict, search_id: int, search_params: dict
     ):
         now = datetime.now()
         timestamp = now.strftime("%Y-%m-%d-%H-%M-%S")
@@ -38,7 +38,9 @@ class BaseClient:
                 json.dumps({"params": search_params, "results": results}, indent=2)
             )
 
-    def save_upload_results(self, dataset_name: str, results: dict, upload_params: dict):
+    def save_upload_results(
+        self, dataset_name: str, results: dict, upload_params: dict
+    ):
         now = datetime.now()
         timestamp = now.strftime("%Y-%m-%d-%H-%M-%S")
         experiments_file = f"{self.name}-{dataset_name}-upload-{timestamp}.json"
@@ -51,8 +53,8 @@ class BaseClient:
 
     def run_experiment(self, dataset: Dataset, skip_upload: bool = False):
         execution_params = self.configurator.execution_params(
-            distance=dataset.config.distance,
-            vector_size=dataset.config.vector_size)
+            distance=dataset.config.distance, vector_size=dataset.config.vector_size
+        )
 
         reader = dataset.get_reader(execution_params.get("normalize", False))
 
@@ -65,18 +67,23 @@ class BaseClient:
 
             print("Experiment stage: Upload")
             upload_stats = self.uploader.upload(
-                distance=dataset.config.distance,
-                records=reader.read_data()
+                distance=dataset.config.distance, records=reader.read_data()
             )
-            self.save_upload_results(dataset.config.name, upload_stats, upload_params={
-                **self.uploader.upload_params,
-                **self.configurator.collection_params
-            })
+            self.save_upload_results(
+                dataset.config.name,
+                upload_stats,
+                upload_params={
+                    **self.uploader.upload_params,
+                    **self.configurator.collection_params,
+                },
+            )
 
         print("Experiment stage: Search")
         for search_id, searcher in enumerate(self.searchers):
             search_params = {**searcher.search_params}
-            search_stats = searcher.search_all(dataset.config.distance, reader.read_queries())
+            search_stats = searcher.search_all(
+                dataset.config.distance, reader.read_queries()
+            )
             self.save_search_results(
                 dataset.config.name, search_stats, search_id, search_params
             )

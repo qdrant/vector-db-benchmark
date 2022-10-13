@@ -2,7 +2,7 @@ import glob
 import json
 import os
 
-from benchmark import ROOT_DIR, DATASETS_DIR
+from benchmark import DATASETS_DIR, ROOT_DIR
 
 
 def read_engine_configs() -> dict:
