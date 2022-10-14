@@ -11,6 +11,7 @@ from engine.clients.elasticsearch import (
     ELASTIC_PORT,
     ELASTIC_USER,
 )
+from engine.clients.elasticsearch.parser import ElasticConditionParser
 
 
 class ClosableElastic(Elasticsearch):
@@ -21,6 +22,7 @@ class ClosableElastic(Elasticsearch):
 class ElasticSearcher(BaseSearcher):
     search_params = {}
     client: Elasticsearch = None
+    parser = ElasticConditionParser()
 
     @classmethod
     def get_mp_start_method(cls):
@@ -45,9 +47,7 @@ class ElasticSearcher(BaseSearcher):
 
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
-        # TODO: use additional filters according to
-        #       https://www.elastic.co/guide/en/elasticsearch/reference/master/knn-search.html#knn-search-filter-example
-        res = cls.client.knn_search(
+        res = cls.client.search(
             index=ELASTIC_INDEX,
             knn={
                 "field": "vector",
@@ -55,6 +55,7 @@ class ElasticSearcher(BaseSearcher):
                 "k": top,
                 **{"num_candidates": 100, **cls.search_params},
             },
+            query=cls.parser.parse(meta_conditions),
         )
         return [
             (uuid.UUID(hex=hit["_id"]).int, hit["_score"])

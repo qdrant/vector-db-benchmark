@@ -5,13 +5,13 @@ from qdrant_client.http import models as rest
 
 from engine.base_client.search import BaseSearcher
 from engine.clients.qdrant.config import QDRANT_COLLECTION_NAME
-from engine.clients.qdrant.parser import ConditionParser
+from engine.clients.qdrant.parser import QdrantConditionParser
 
 
 class QdrantSearcher(BaseSearcher):
     search_params = {}
     client: QdrantClient = None
-    parser = ConditionParser()
+    parser = QdrantConditionParser()
 
     @classmethod
     def init_client(cls, host, distance, connection_params: dict, search_params: dict):
@@ -20,6 +20,7 @@ class QdrantSearcher(BaseSearcher):
 
     @classmethod
     def conditions_to_filter(cls, _meta_conditions) -> Optional[rest.Filter]:
+        # TODO: call parser directly instead
         return cls.parser.parse(_meta_conditions)
 
     @classmethod

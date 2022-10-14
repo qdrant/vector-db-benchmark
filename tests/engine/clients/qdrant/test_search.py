@@ -52,3 +52,42 @@ def test_conditions_to_filter_converts_multiple_or_statements():
     assert (
         rest.FieldCondition(key="a", match=rest.MatchValue(value=2)) == second_condition
     )
+
+
+def test_conditions_to_filter_converts_geo_statement():
+    conditions = {
+        "and": [
+            {
+                "a": {
+                    "geo": {
+                        "lon": 116.93930970419757,
+                        "lat": -52.30987113579712,
+                        "radius": 326341,
+                    }
+                }
+            }
+        ]
+    }
+    qdrant_filter = QdrantSearcher.conditions_to_filter(conditions)
+
+    assert qdrant_filter is not None
+    assert qdrant_filter.should is None
+    assert qdrant_filter.must is not None
+    assert qdrant_filter.must_not is None
+    assert 1 == len(qdrant_filter.must)
+    assert 1 == len(qdrant_filter.must)
+    condition = qdrant_filter.must[0]
+    assert isinstance(condition, rest.FieldCondition)
+    assert (
+        rest.FieldCondition(
+            key="a",
+            geo_radius=rest.GeoRadius(
+                center=rest.GeoPoint(
+                    lon=116.93930970419757,
+                    lat=-52.30987113579712,
+                ),
+                radius=326341,
+            ),
+        )
+        == condition
+    )

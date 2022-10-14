@@ -395,7 +395,7 @@ python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*
 
 [[package]]
 name = "numpy"
-version = "1.23.3"
+version = "1.23.4"
 description = "NumPy is the fundamental package for array computing with Python."
 category = "main"
 optional = false
@@ -833,7 +833,7 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "aa76ddc69ad90a515ffa4056a66b0a3909a8fb47373e55f1f83ca188ff904f93"
+content-hash = "ad4b83125b6c91a1559c703cd778e330c99a22feccc3bff3cb73b8a71a026355"
 
 [metadata.files]
 anyio = []

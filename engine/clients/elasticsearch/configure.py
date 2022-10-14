@@ -18,6 +18,10 @@ class ElasticConfigurator(BaseConfigurator):
         Distance.COSINE: "cosine",
         Distance.DOT: "dot_product",
     }
+    INDEX_TYPE_MAPPING = {
+        "int": "long",
+        "geo": "geo_point",
+    }
 
     def __init__(self, host, collection_params: dict, connection_params: dict):
         super().__init__(host, collection_params, connection_params)
@@ -65,7 +69,18 @@ class ElasticConfigurator(BaseConfigurator):
                             **collection_params.get("index_options"),
                         },
                     },
-                    # TODO: add all the fields from payload as well
+                    **self._prepare_fields_config(dataset),
                 }
             },
         )
+
+    def _prepare_fields_config(self, dataset: Dataset):
+        return {
+            field_name: {
+                # The mapping is used only for several types, as some of them
+                # overlap with the ones used internally.
+                "type": self.INDEX_TYPE_MAPPING.get(field_type, field_type),
+                "index": True,
+            }
+            for field_name, field_type in dataset.config.schema.items()
+        }
