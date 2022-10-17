@@ -32,13 +32,15 @@ class QdrantConfigurator(BaseConfigurator):
     def recreate(self, dataset: Dataset, collection_params):
         self.client.recreate_collection(
             collection_name=QDRANT_COLLECTION_NAME,
-            vector_size=dataset.config.vector_size,
-            distance=self.DISTANCE_MAPPING.get(dataset.config.distance),
+            vectors_config=rest.VectorParams(
+                vector_size=dataset.config.vector_size,
+                distance=self.DISTANCE_MAPPING.get(dataset.config.distance),
+            ),
             **self.collection_params
         )
         for field_name, field_type in dataset.config.schema.items():
             self.client.create_payload_index(
                 collection_name=QDRANT_COLLECTION_NAME,
                 field_name=field_name,
-                field_type=self.INDEX_TYPE_MAPPING.get(field_type),
+                field_schema=self.INDEX_TYPE_MAPPING.get(field_type),
             )

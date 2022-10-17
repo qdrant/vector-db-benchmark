@@ -6,8 +6,7 @@ authors = ["Kacper Łukawski <kacper.lukawski@qdrant.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-docker = "^5.0.3"
-qdrant-client = "0.8.6"
+qdrant-client = "0.10.3"
 typer = "^0.6.1"
 jsons = "^1.6.3"
 h5py = "^3.7.0"
