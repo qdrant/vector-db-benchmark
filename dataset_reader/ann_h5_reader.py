@@ -1,4 +1,4 @@
-from typing import Any, Iterable, Iterator
+from typing import Iterator
 
 import h5py
 import numpy as np

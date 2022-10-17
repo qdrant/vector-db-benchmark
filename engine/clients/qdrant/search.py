@@ -1,8 +1,6 @@
-import multiprocessing
 from typing import List, Optional, Tuple
 
-import httpx
-from qdrant_client import QdrantClient, grpc
+from qdrant_client import QdrantClient
 from qdrant_client.http import models as rest
 
 from engine.base_client.search import BaseSearcher
