@@ -16,7 +16,7 @@ class QdrantConfigurator(BaseConfigurator):
     INDEX_TYPE_MAPPING = {
         "int": rest.PayloadSchemaType.INTEGER,
         "keyword": rest.PayloadSchemaType.KEYWORD,
-        "text": rest.PayloadSchemaType.KEYWORD,  # TODO: should be full-text
+        "text": rest.PayloadSchemaType.TEXT,
         "float": rest.PayloadSchemaType.FLOAT,
         "geo": rest.PayloadSchemaType.GEO,
     }

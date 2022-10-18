@@ -10,6 +10,7 @@ from engine.clients.milvus.config import (
     MILVUS_DEFAULT_ALIAS,
     MILVUS_DEFAULT_PORT,
 )
+from engine.clients.milvus.parser import MilvusConditionParser
 
 
 class MilvusSearcher(BaseSearcher):
@@ -17,6 +18,7 @@ class MilvusSearcher(BaseSearcher):
     client: connections = None
     collection: Collection = None
     distance: str = None
+    parser = MilvusConditionParser()
 
     @classmethod
     def init_client(cls, host, distance, connection_params: dict, search_params: dict):
@@ -36,8 +38,7 @@ class MilvusSearcher(BaseSearcher):
 
     @classmethod
     def conditions_to_filter(cls, _meta_conditions):
-        # ToDo: implement
-        return None
+        return cls.parser.parse(_meta_conditions)
 
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
@@ -48,6 +49,7 @@ class MilvusSearcher(BaseSearcher):
                 anns_field="vector",
                 param=param,
                 limit=top,
+                expr=cls.conditions_to_filter(meta_conditions),
             )
         except Exception as e:
             import ipdb

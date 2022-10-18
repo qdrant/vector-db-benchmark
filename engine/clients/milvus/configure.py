@@ -6,12 +6,16 @@ from pymilvus import (
     MilvusException,
     connections,
 )
+from pymilvus.exceptions import DataTypeNotSupportException
 from pymilvus.orm import utility
 
 from benchmark.dataset import Dataset
+from engine.base_client import IncompatibilityError
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
 from engine.clients.milvus.config import (
+    DTYPE_EXTRAS,
+    DTYPE_MAPPING,
     MILVUS_COLLECTION_NAME,
     MILVUS_DEFAULT_ALIAS,
     MILVUS_DEFAULT_PORT,
@@ -25,7 +29,7 @@ class MilvusConfigurator(BaseConfigurator):
             alias=MILVUS_DEFAULT_ALIAS,
             host=host,
             port=str(connection_params.pop("port", MILVUS_DEFAULT_PORT)),
-            **connection_params
+            **connection_params,
         )
         print("established connection")
 
@@ -47,9 +51,18 @@ class MilvusConfigurator(BaseConfigurator):
             dtype=DataType.FLOAT_VECTOR,
             dim=dataset.config.vector_size,
         )
-        schema = CollectionSchema(
-            fields=[idx, vector], description=MILVUS_COLLECTION_NAME
-        )
+        fields = [idx, vector]
+        for field_name, field_type in dataset.config.schema.items():
+            try:
+                field_schema = FieldSchema(
+                    name=field_name,
+                    dtype=DTYPE_MAPPING.get(field_type),
+                    **DTYPE_EXTRAS.get(field_type, {}),
+                )
+                fields.append(field_schema)
+            except DataTypeNotSupportException as e:
+                raise IncompatibilityError(e)
+        schema = CollectionSchema(fields=fields, description=MILVUS_COLLECTION_NAME)
 
         collection = Collection(
             name=MILVUS_COLLECTION_NAME,
