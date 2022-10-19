@@ -6,11 +6,13 @@ from redis.commands.search.query import Query
 
 from engine.base_client.search import BaseSearcher
 from engine.clients.redis.config import REDIS_PORT
+from engine.clients.redis.parser import RedisConditionParser
 
 
 class RedisSearcher(BaseSearcher):
     search_params = {}
     client = None
+    parser = RedisConditionParser()
 
     @classmethod
     def init_client(cls, host, distance, connection_params: dict, search_params: dict):
@@ -19,8 +21,11 @@ class RedisSearcher(BaseSearcher):
 
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
+        prefilter_condition, params = cls.parser.parse(meta_conditions)
         q = (
-            Query(f"*=>[KNN $K @vector $vec_param EF_RUNTIME $EF AS vector_score]")
+            Query(
+                f"{prefilter_condition}=>[KNN $K @vector $vec_param EF_RUNTIME $EF AS vector_score]"
+            )
             .sort_by("vector_score")
             .paging(0, top)
             .return_fields("vector_score")
@@ -30,6 +35,7 @@ class RedisSearcher(BaseSearcher):
             "vec_param": np.array(vector).astype(np.float32).tobytes(),
             "K": top,
             "EF": cls.search_params["search_params"]["ef"],
+            **params,
         }
 
         results = cls.client.ft().search(q, query_params=params_dict)

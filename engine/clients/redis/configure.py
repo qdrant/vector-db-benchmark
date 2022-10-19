@@ -4,7 +4,7 @@ from redis.commands.search.field import VectorField
 from benchmark.dataset import Dataset
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
-from engine.clients.redis.config import REDIS_PORT
+from engine.clients.redis.config import FIELD_MAPPING, REDIS_PORT
 
 
 class RedisConfigurator(BaseConfigurator):
@@ -28,8 +28,14 @@ class RedisConfigurator(BaseConfigurator):
 
     def recreate(self, dataset: Dataset, collection_params):
         self.clean()
-        index = self.client.ft()
-        index.create_index(
+        search_namespace = self.client.ft()
+        payload_fields = [
+            FIELD_MAPPING[field_type](
+                name=field_name,
+            )
+            for field_name, field_type in dataset.config.schema.items()
+        ]
+        search_namespace.create_index(
             fields=[
                 VectorField(
                     name="vector",
@@ -44,6 +50,7 @@ class RedisConfigurator(BaseConfigurator):
                     },
                 )
             ]
+            + payload_fields
         )
 
 
