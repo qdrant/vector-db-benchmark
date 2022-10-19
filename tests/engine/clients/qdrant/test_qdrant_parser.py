@@ -1,22 +1,25 @@
 from qdrant_client.http import models as rest
 
-from engine.clients.qdrant.search import QdrantSearcher
+from engine.clients.qdrant.parser import QdrantConditionParser
 
 
-def test_conditions_to_filter_returns_none_on_none():
-    qdrant_filter = QdrantSearcher.conditions_to_filter(None)
+def test_parse_returns_none_on_none():
+    parser = QdrantConditionParser()
+    qdrant_filter = parser.parse(None)
     assert qdrant_filter is None
 
 
-def test_conditions_to_filter_returns_none_on_empty():
+def test_parse_returns_none_on_empty():
     conditions = {}
-    qdrant_filter = QdrantSearcher.conditions_to_filter(conditions)
+    parser = QdrantConditionParser()
+    qdrant_filter = parser.parse(conditions)
     assert qdrant_filter is None
 
 
-def test_conditions_to_filter_converts_exact_match():
+def test_parse_converts_exact_match():
     conditions = {"and": [{"product_group_name": {"match": {"value": "Shoes"}}}]}
-    qdrant_filter = QdrantSearcher.conditions_to_filter(conditions)
+    parser = QdrantConditionParser()
+    qdrant_filter = parser.parse(conditions)
 
     assert qdrant_filter is not None
     assert qdrant_filter.should is None
@@ -33,11 +36,12 @@ def test_conditions_to_filter_converts_exact_match():
     )
 
 
-def test_conditions_to_filter_converts_multiple_or_statements():
+def test_parse_converts_multiple_or_statements():
     conditions = {
         "or": [{"a": {"match": {"value": 80}}}, {"a": {"match": {"value": 2}}}]
     }
-    qdrant_filter = QdrantSearcher.conditions_to_filter(conditions)
+    parser = QdrantConditionParser()
+    qdrant_filter = parser.parse(conditions)
 
     assert qdrant_filter is not None
     assert qdrant_filter.should is not None
@@ -54,7 +58,7 @@ def test_conditions_to_filter_converts_multiple_or_statements():
     )
 
 
-def test_conditions_to_filter_converts_geo_statement():
+def test_parse_converts_geo_statement():
     conditions = {
         "and": [
             {
@@ -68,7 +72,8 @@ def test_conditions_to_filter_converts_geo_statement():
             }
         ]
     }
-    qdrant_filter = QdrantSearcher.conditions_to_filter(conditions)
+    parser = QdrantConditionParser()
+    qdrant_filter = parser.parse(conditions)
 
     assert qdrant_filter is not None
     assert qdrant_filter.should is None
