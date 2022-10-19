@@ -3,7 +3,11 @@ from weaviate import Client
 from benchmark.dataset import Dataset
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
-from engine.clients.weaviate.config import WEAVIATE_CLASS_NAME, WEAVIATE_DEFAULT_PORT
+from engine.clients.weaviate.config import (
+    FIELD_TYPE_MAPPING,
+    WEAVIATE_CLASS_NAME,
+    WEAVIATE_DEFAULT_PORT,
+)
 
 
 class WeaviateConfigurator(BaseConfigurator):
@@ -29,7 +33,16 @@ class WeaviateConfigurator(BaseConfigurator):
             {
                 "class": WEAVIATE_CLASS_NAME,
                 "vectorizer": "none",
-                "properties": [],
+                "properties": [
+                    {
+                        "name": field_name,
+                        "dataType": [
+                            FIELD_TYPE_MAPPING[field_type],
+                        ],
+                        "indexInverted": True,
+                    }
+                    for field_name, field_type in dataset.config.schema.items()
+                ],
                 "vectorIndexConfig": {
                     **{
                         "vectorCacheMaxObjects": 1000000000,

@@ -5,11 +5,13 @@ from weaviate import Client
 
 from engine.base_client.search import BaseSearcher
 from engine.clients.weaviate.config import WEAVIATE_CLASS_NAME, WEAVIATE_DEFAULT_PORT
+from engine.clients.weaviate.parser import WeaviateConditionParser
 
 
 class WeaviateSearcher(BaseSearcher):
     search_params = {}
     client: Client = None
+    parser = WeaviateConditionParser()
 
     @classmethod
     def init_client(cls, host, distance, connection_params: dict, search_params: dict):
@@ -19,8 +21,7 @@ class WeaviateSearcher(BaseSearcher):
 
     @classmethod
     def conditions_to_filter(cls, _meta_conditions):
-        # ToDo: implement
-        return None
+        return cls.parser.parse(_meta_conditions)
 
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
@@ -28,6 +29,7 @@ class WeaviateSearcher(BaseSearcher):
         res = (
             cls.client.query.get(WEAVIATE_CLASS_NAME, ["_additional {id distance}"])
             .with_near_vector(near_vector)
+            .with_where(cls.conditions_to_filter(meta_conditions))
             .with_limit(top)
             .do()
         )["data"]["Get"][WEAVIATE_CLASS_NAME]
