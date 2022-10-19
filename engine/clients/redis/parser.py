@@ -47,21 +47,27 @@ class RedisConditionParser(BaseConditionParser):
         lte: Optional[FieldValue],
         gte: Optional[FieldValue],
     ) -> Any:
-        if lt is not None and lte is not None:
-            max_val = max([lt, lte])
-            if max_val == lt:
-                lte = None
-            else:
-                lt = None
-        if gt is not None and gte is not None:
-            min_val = min([lt, lte])
-            if min_val == gt:
-                gte = None
-            else:
-                gt = None
-        left_bound = (f"({lt}" if lt is not None else lte) or "-inf"
-        right_bound = (f"({gt}" if gt is not None else gte) or "+inf"
-        return f"@{field_name}:[{left_bound} {right_bound}]", {}
+        param_prefix = f"{field_name}_{self.counter}"
+        self.counter += 1
+        params = {
+            f"{param_prefix}_lt": lt,
+            f"{param_prefix}_lte": lte,
+            f"{param_prefix}_gt": gt,
+            f"{param_prefix}_gte": gte,
+        }
+        filters = [
+            ("-inf", f"(${param_prefix}_lt") if lt is not None else None,
+            ("-inf", f"${param_prefix}_lte") if lte is not None else None,
+            (f"${param_prefix}_gte", "+inf") if gte is not None else None,
+            (f"(${param_prefix}_gt", "+inf") if gt is not None else None,
+        ]
+        clauses = []
+        for filter_entry in filters:
+            if filter_entry is None:
+                continue
+            left, right = filter_entry
+            clauses.append(f"@{field_name}:[{left} {right}]")
+        return "(" + " ".join(clauses) + ")", params
 
     def build_geo_filter(
         self, field_name: Text, lat: float, lon: float, radius: float
