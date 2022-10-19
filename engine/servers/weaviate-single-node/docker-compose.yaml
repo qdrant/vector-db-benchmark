@@ -8,7 +8,7 @@ services:
     - '8090'
     - --scheme
     - http
-    image: semitechnologies/weaviate:1.14.1
+    image: semitechnologies/weaviate:1.15.4
     ports:
     - "8090:8090"
     environment:
