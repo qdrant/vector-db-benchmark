@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
   redis:
-    image: redislabs/redisearch:2.4.13
+    image: redislabs/redisearch:2.4.15
     ports:
       - '6380:6379'
     deploy:
