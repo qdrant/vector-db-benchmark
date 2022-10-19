@@ -67,7 +67,7 @@ class RedisConditionParser(BaseConditionParser):
                 continue
             left, right = filter_entry
             clauses.append(f"@{field_name}:[{left} {right}]")
-        return "(" + " ".join(clauses) + ")", params
+        return " ".join(clauses), params
 
     def build_geo_filter(
         self, field_name: Text, lat: float, lon: float, radius: float

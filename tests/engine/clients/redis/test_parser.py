@@ -35,6 +35,27 @@ def test_parse_converts_multiple_or_statements():
     assert 2 in params.values()
 
 
+def test_parse_converts_range_statement():
+    conditions = {
+        "and": [
+            {
+                "a": {
+                    "range": {
+                        "lt": 10,
+                        "gt": -5,
+                    }
+                }
+            }
+        ]
+    }
+    parser = RedisConditionParser()
+    redis_filter, params = parser.parse(conditions)
+
+    assert "(@a:[-inf ($a_0_lt] @a:[($a_0_gt +inf])" == redis_filter
+    assert 10 == params.get("a_0_lt")
+    assert -5 == params.get("a_0_gt")
+
+
 def test_parse_converts_geo_statement():
     conditions = {
         "and": [
