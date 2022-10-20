@@ -33,7 +33,7 @@ class QdrantConfigurator(BaseConfigurator):
         self.client.recreate_collection(
             collection_name=QDRANT_COLLECTION_NAME,
             vectors_config=rest.VectorParams(
-                vector_size=dataset.config.vector_size,
+                size=dataset.config.vector_size,
                 distance=self.DISTANCE_MAPPING.get(dataset.config.distance),
             ),
             **self.collection_params
