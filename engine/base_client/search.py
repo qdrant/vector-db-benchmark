@@ -40,7 +40,7 @@ class BaseSearcher:
         if top is None:
             top = (
                 len(query.expected_result)
-                if query.expected_result is not None
+                if query.expected_result is not None and len(query.expected_result) > 0
                 else DEFAULT_TOP
             )
 
