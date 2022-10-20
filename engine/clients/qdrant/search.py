@@ -20,7 +20,6 @@ class QdrantSearcher(BaseSearcher):
 
     @classmethod
     def conditions_to_filter(cls, _meta_conditions) -> Optional[rest.Filter]:
-        # TODO: call parser directly instead
         return cls.parser.parse(_meta_conditions)
 
     @classmethod

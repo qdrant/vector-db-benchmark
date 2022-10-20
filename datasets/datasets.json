@@ -87,6 +87,102 @@
     }
   },
   {
+    "name": "random-match-keyword-100-angular",
+    "vector_size": 100,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "random-match-keyword-100-angular/random_keywords_1m.tgz",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/random_keywords_1m.tgz",
+    "schema": {
+      "a": "keyword",
+      "b": "keyword"
+    }
+  },
+  {
+    "name": "random-match-int-100-angular",
+    "vector_size": 100,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "random-match-int-100-angular/random_ints_1m.tgz",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/random_ints_1m.tgz",
+    "schema": {
+      "a": "int",
+      "b": "int"
+    }
+  },
+  {
+    "name": "random-range-100-angular",
+    "vector_size": 100,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "random-range-100-angular/random_float_1m.tgz",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/random_float_1m.tgz",
+    "schema": {
+      "a": "float",
+      "b": "float"
+    }
+  },
+  {
+    "name": "random-geo-radius-100-angular",
+    "vector_size": 100,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "random-geo-radius-100-angular/random_geo_1m.tgz",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/random_geo_1m.tgz",
+    "schema": {
+      "a": "geo",
+      "b": "geo"
+    }
+  },
+  {
+    "name": "random-match-keyword-2048-angular",
+    "vector_size": 2048,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "random-match-keyword-2048-angular/random_keywords_100k.tgz",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/random_keywords_100k.tgz",
+    "schema": {
+      "a": "keyword",
+      "b": "keyword"
+    }
+  },
+  {
+    "name": "random-match-int-2048-angular",
+    "vector_size": 2048,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "random-match-int-2048-angular/random_ints_100k.tgz",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/random_ints_100k.tgz",
+    "schema": {
+      "a": "int",
+      "b": "int"
+    }
+  },
+  {
+    "name": "random-range-2048-angular",
+    "vector_size": 2048,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "random-range-2048-angular/random_float_100k.tgz",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/random_float_100k.tgz",
+    "schema": {
+      "a": "float",
+      "b": "float"
+    }
+  },
+  {
+    "name": "random-geo-radius-2048-angular",
+    "vector_size": 2048,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "random-geo-radius-2048-angular/random_geo_100k.tgz",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/random_geo_100k.tgz",
+    "schema": {
+      "a": "geo",
+      "b": "geo"
+    }
+  },
+  {
     "name": "random-100",
     "vector_size": 100,
     "distance": "cosine",
