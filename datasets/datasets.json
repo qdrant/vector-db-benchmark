@@ -74,6 +74,19 @@
     }
   },
   {
+    "name": "arxiv-titles-384-angular",
+    "vector_size": 384,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "arxiv-titles-384-angular/arxiv.tgz",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/arxiv.tar.gz",
+    "schema": {
+      "update_date_ts": "int",
+      "labels": "keyword",
+      "submitter": "keyword"
+    }
+  },
+  {
     "name": "random-100",
     "vector_size": 100,
     "distance": "cosine",
