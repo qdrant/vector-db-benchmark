@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 from qdrant_client import QdrantClient
 from qdrant_client.http import models as rest
