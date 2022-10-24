@@ -1,9 +1,9 @@
 from collections import ChainMap
-from typing import Any, Dict, List, Optional, Text, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from engine.base_client.parser import BaseConditionParser, FieldValue
 
-QueryParamsTuple = Tuple[Text, Dict[Text, Any]]
+QueryParamsTuple = Tuple[str, Dict[str, Any]]
 
 
 class RedisConditionParser(BaseConditionParser):
@@ -15,7 +15,7 @@ class RedisConditionParser(BaseConditionParser):
         self,
         and_subfilters: Optional[List[QueryParamsTuple]],
         or_subfilters: Optional[List[QueryParamsTuple]],
-    ) -> Tuple[Text, Dict[Text, Any]]:
+    ) -> Tuple[str, Dict[str, Any]]:
         and_clauses, and_params = (
             list(zip(*and_subfilters)) if and_subfilters else ([], [])
         )
@@ -29,14 +29,14 @@ class RedisConditionParser(BaseConditionParser):
         params = list(and_params) + list(or_params)
         return " ".join(clause), dict(ChainMap(*params))
 
-    def build_exact_match_filter(self, field_name: Text, value: FieldValue) -> Any:
+    def build_exact_match_filter(self, field_name: str, value: FieldValue) -> Any:
         param_name = f"{field_name}_{self.counter}"
         self.counter += 1
         return f'@{field_name}:"${param_name}"', {param_name: value}
 
     def build_range_filter(
         self,
-        field_name: Text,
+        field_name: str,
         lt: Optional[FieldValue],
         gt: Optional[FieldValue],
         lte: Optional[FieldValue],
@@ -65,7 +65,7 @@ class RedisConditionParser(BaseConditionParser):
         return " ".join(clauses), params
 
     def build_geo_filter(
-        self, field_name: Text, lat: float, lon: float, radius: float
+        self, field_name: str, lat: float, lon: float, radius: float
     ) -> Any:
         param_prefix = f"{field_name}_{self.counter}"
         self.counter += 1

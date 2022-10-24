@@ -1,4 +1,4 @@
-from typing import Any, List, Optional, Text
+from typing import Any, List, Optional
 
 from qdrant_client.http import models as rest
 
@@ -14,7 +14,7 @@ class QdrantConditionParser(BaseConditionParser):
             must=and_subfilters,
         )
 
-    def build_exact_match_filter(self, field_name: Text, value: FieldValue) -> Any:
+    def build_exact_match_filter(self, field_name: str, value: FieldValue) -> Any:
         return rest.FieldCondition(
             key=field_name,
             match=rest.MatchValue(value=value),
@@ -22,7 +22,7 @@ class QdrantConditionParser(BaseConditionParser):
 
     def build_range_filter(
         self,
-        field_name: Text,
+        field_name: str,
         lt: Optional[FieldValue],
         gt: Optional[FieldValue],
         lte: Optional[FieldValue],
@@ -39,7 +39,7 @@ class QdrantConditionParser(BaseConditionParser):
         )
 
     def build_geo_filter(
-        self, field_name: Text, lat: float, lon: float, radius: float
+        self, field_name: str, lat: float, lon: float, radius: float
     ) -> Any:
         return rest.FieldCondition(
             key=field_name,

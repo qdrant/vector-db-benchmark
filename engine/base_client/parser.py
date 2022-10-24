@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Dict, List, Optional, Text, Union
+from typing import Any, Dict, List, Optional, Union
 
 
 class FilterType(str, Enum):
@@ -8,8 +8,8 @@ class FilterType(str, Enum):
     GEO = "geo"
 
 
-FieldValue = Union[Text, int, float]
-MetaConditions = Dict[Text, List[Any]]
+FieldValue = Union[str, int, float]
+MetaConditions = Dict[str, List[Any]]
 
 
 class BaseConditionParser:
@@ -59,7 +59,7 @@ class BaseConditionParser:
         return output_filters
 
     def build_filter(
-        self, field_name: Text, filter_type: FilterType, criteria: Dict[Text, Any]
+        self, field_name: str, filter_type: FilterType, criteria: Dict[str, Any]
     ):
         if FilterType.FULL_MATCH == filter_type:
             return self.build_exact_match_filter(
@@ -82,12 +82,12 @@ class BaseConditionParser:
             )
         raise NotImplementedError
 
-    def build_exact_match_filter(self, field_name: Text, value: FieldValue) -> Any:
+    def build_exact_match_filter(self, field_name: str, value: FieldValue) -> Any:
         raise NotImplementedError
 
     def build_range_filter(
         self,
-        field_name: Text,
+        field_name: str,
         lt: Optional[FieldValue],
         gt: Optional[FieldValue],
         lte: Optional[FieldValue],
@@ -96,6 +96,6 @@ class BaseConditionParser:
         raise NotImplementedError
 
     def build_geo_filter(
-        self, field_name: Text, lat: float, lon: float, radius: float
+        self, field_name: str, lat: float, lon: float, radius: float
     ) -> Any:
         raise NotImplementedError

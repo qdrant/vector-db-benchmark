@@ -1,5 +1,5 @@
 import json
-from typing import Any, List, Optional, Text
+from typing import Any, List, Optional
 
 from engine.base_client import IncompatibilityError
 from engine.base_client.parser import BaseConditionParser, FieldValue
@@ -16,13 +16,13 @@ class MilvusConditionParser(BaseConditionParser):
             clauses.append("(" + " && ".join(and_subfilters) + ")")
         return " && ".join(clauses)
 
-    def build_exact_match_filter(self, field_name: Text, value: FieldValue) -> Any:
+    def build_exact_match_filter(self, field_name: str, value: FieldValue) -> Any:
         # json.dumps is called so the string value gets additional quotation marks
         return f"{field_name} == {json.dumps(value)}"
 
     def build_range_filter(
         self,
-        field_name: Text,
+        field_name: str,
         lt: Optional[FieldValue],
         gt: Optional[FieldValue],
         lte: Optional[FieldValue],
@@ -40,6 +40,6 @@ class MilvusConditionParser(BaseConditionParser):
         return "(" + " && ".join(clauses) + ")"
 
     def build_geo_filter(
-        self, field_name: Text, lat: float, lon: float, radius: float
+        self, field_name: str, lat: float, lon: float, radius: float
     ) -> Any:
         raise IncompatibilityError

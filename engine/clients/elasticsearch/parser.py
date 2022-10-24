@@ -1,4 +1,4 @@
-from typing import Any, List, Optional, Text
+from typing import Any, List, Optional
 
 from engine.base_client.parser import BaseConditionParser, FieldValue
 
@@ -16,12 +16,12 @@ class ElasticConditionParser(BaseConditionParser):
             }
         }
 
-    def build_exact_match_filter(self, field_name: Text, value: FieldValue) -> Any:
+    def build_exact_match_filter(self, field_name: str, value: FieldValue) -> Any:
         return {"match": {field_name: value}}
 
     def build_range_filter(
         self,
-        field_name: Text,
+        field_name: str,
         lt: Optional[FieldValue],
         gt: Optional[FieldValue],
         lte: Optional[FieldValue],
@@ -30,7 +30,7 @@ class ElasticConditionParser(BaseConditionParser):
         return {"range": {"lt": lt, "gt": gt, "lte": lte, "gte": gte}}
 
     def build_geo_filter(
-        self, field_name: Text, lat: float, lon: float, radius: float
+        self, field_name: str, lat: float, lon: float, radius: float
     ) -> Any:
         return {
             "geo_distance": {

@@ -1,11 +1,11 @@
-from typing import Any, Dict, List, Optional, Text
+from typing import Any, Dict, List, Optional
 
 from engine.base_client import IncompatibilityError
 from engine.base_client.parser import BaseConditionParser, FieldValue
 
 
 class WeaviateConditionParser(BaseConditionParser):
-    def parse(self, meta_conditions: Dict[Text, Any]) -> Optional[Any]:
+    def parse(self, meta_conditions: Dict[str, Any]) -> Optional[Any]:
         if meta_conditions is None or len(meta_conditions) == 0:
             return {}
         return super().parse(meta_conditions)
@@ -28,7 +28,7 @@ class WeaviateConditionParser(BaseConditionParser):
             }
         return clause
 
-    def build_exact_match_filter(self, field_name: Text, value: FieldValue) -> Any:
+    def build_exact_match_filter(self, field_name: str, value: FieldValue) -> Any:
         return {
             "operator": "Equal",
             "path": [field_name],
@@ -37,7 +37,7 @@ class WeaviateConditionParser(BaseConditionParser):
 
     def build_range_filter(
         self,
-        field_name: Text,
+        field_name: str,
         lt: Optional[FieldValue],
         gt: Optional[FieldValue],
         lte: Optional[FieldValue],
@@ -63,7 +63,7 @@ class WeaviateConditionParser(BaseConditionParser):
         }
 
     def build_geo_filter(
-        self, field_name: Text, lat: float, lon: float, radius: float
+        self, field_name: str, lat: float, lon: float, radius: float
     ) -> Any:
         return {
             "operator": "WithinGeoRange",
@@ -77,8 +77,8 @@ class WeaviateConditionParser(BaseConditionParser):
             },
         }
 
-    def value_key(self, value: FieldValue) -> Text:
-        if isinstance(value, Text):
+    def value_key(self, value: FieldValue) -> str:
+        if isinstance(value, str):
             return "valueString"
         if isinstance(value, int):
             return "valueInt"
