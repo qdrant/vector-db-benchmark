@@ -19,15 +19,11 @@ class QdrantSearcher(BaseSearcher):
         cls.search_params = search_params
 
     @classmethod
-    def conditions_to_filter(cls, _meta_conditions) -> Optional[rest.Filter]:
-        return cls.parser.parse(_meta_conditions)
-
-    @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
         res = cls.client.search(
             collection_name=QDRANT_COLLECTION_NAME,
             query_vector=vector,
-            query_filter=cls.conditions_to_filter(meta_conditions),
+            query_filter=cls.parser.parse(meta_conditions),
             limit=top,
             search_params=rest.SearchParams(
                 **cls.search_params.get("search_params", {})

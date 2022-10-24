@@ -25,7 +25,7 @@ class RedisUploader(BaseUploader):
             idx = ids[i]
             vec = vectors[i]
             meta = metadata[i] if metadata else {}
-            meta = {k: v for k, v in meta.items() if v is not None} or {}
+            meta = {k: v for k, v in meta.items() if v is not None}
             cls.client.hset(
                 str(idx),
                 mapping={"vector": np.array(vec).astype(np.float32).tobytes(), **meta},

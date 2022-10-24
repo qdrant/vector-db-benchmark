@@ -37,10 +37,6 @@ class MilvusSearcher(BaseSearcher):
         return "forkserver" if "forkserver" in mp.get_all_start_methods() else "spawn"
 
     @classmethod
-    def conditions_to_filter(cls, _meta_conditions):
-        return cls.parser.parse(_meta_conditions)
-
-    @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
         param = {"metric_type": cls.distance, "params": cls.search_params["params"]}
         try:
@@ -49,7 +45,7 @@ class MilvusSearcher(BaseSearcher):
                 anns_field="vector",
                 param=param,
                 limit=top,
-                expr=cls.conditions_to_filter(meta_conditions),
+                expr=cls.parser.parse(meta_conditions),
             )
         except Exception as e:
             import ipdb

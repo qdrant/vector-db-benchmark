@@ -7,11 +7,11 @@ from engine.base_client.parser import BaseConditionParser, FieldValue
 
 class QdrantConditionParser(BaseConditionParser):
     def build_condition(
-        self, and_statements: List[Any], or_statements: List[Any]
+        self, and_subfilters: Optional[List[Any]], or_subfilters: Optional[List[Any]]
     ) -> Optional[Any]:
         return rest.Filter(
-            should=or_statements,
-            must=and_statements,
+            should=or_subfilters,
+            must=and_subfilters,
         )
 
     def build_exact_match_filter(self, field_name: Text, value: FieldValue) -> Any:
@@ -30,7 +30,7 @@ class QdrantConditionParser(BaseConditionParser):
     ) -> Any:
         return rest.FieldCondition(
             key=field_name,
-            match=rest.Range(
+            range=rest.Range(
                 lt=lt,
                 gt=gt,
                 gte=gte,

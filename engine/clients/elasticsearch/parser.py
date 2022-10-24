@@ -5,13 +5,13 @@ from engine.base_client.parser import BaseConditionParser, FieldValue
 
 class ElasticConditionParser(BaseConditionParser):
     def build_condition(
-        self, and_statements: List[Any], or_statements: List[Any]
+        self, and_subfilters: Optional[List[Any]], or_subfilters: Optional[List[Any]]
     ) -> Optional[Any]:
         return {
             "query": {
                 "bool": {
-                    "must": and_statements,
-                    "should": or_statements,
+                    "must": and_subfilters,
+                    "should": or_subfilters,
                 }
             }
         }

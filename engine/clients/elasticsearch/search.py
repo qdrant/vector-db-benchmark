@@ -5,7 +5,7 @@ from typing import List, Tuple
 from elasticsearch import Elasticsearch
 
 from engine.base_client.search import BaseSearcher
-from engine.clients.elasticsearch import (
+from engine.clients.elasticsearch.config import (
     ELASTIC_INDEX,
     ELASTIC_PASSWORD,
     ELASTIC_PORT,

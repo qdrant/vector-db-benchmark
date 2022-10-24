@@ -1,4 +1,3 @@
-import json
 from collections import ChainMap
 from typing import Any, Dict, List, Optional, Text, Tuple
 
@@ -14,22 +13,18 @@ class RedisConditionParser(BaseConditionParser):
 
     def build_condition(
         self,
-        and_statements: List[QueryParamsTuple],
-        or_statements: List[QueryParamsTuple],
+        and_subfilters: Optional[List[QueryParamsTuple]],
+        or_subfilters: Optional[List[QueryParamsTuple]],
     ) -> Tuple[Text, Dict[Text, Any]]:
-        if and_statements is None or 0 == len(and_statements):
-            and_clauses, and_params = [], []
-        else:
-            and_clauses, and_params = list(zip(*and_statements))
-        if or_statements is None or 0 == len(or_statements):
-            or_clauses, or_params = [], []
-        else:
-            or_clauses, or_params = list(zip(*or_statements))
+        and_clauses, and_params = (
+            list(zip(*and_subfilters)) if and_subfilters else ([], [])
+        )
+        or_clauses, or_params = list(zip(*or_subfilters)) if or_subfilters else ([], [])
 
         clause = []
-        if and_clauses is not None and len(and_clauses) > 0:
+        if len(and_clauses) > 0:
             clause.append("(" + " ".join(and_clauses) + ")")
-        if or_clauses is not None and len(or_clauses) > 0:
+        if len(or_clauses) > 0:
             clause.append("(" + " | ".join(or_clauses) + ")")
         params = list(and_params) + list(or_params)
         return " ".join(clause), dict(ChainMap(*params))

@@ -14,14 +14,6 @@ DISTANCE_MAPPING = {
     # Jaccard, Tanimoto, Hamming distance, Superstructure and Substructure are also available
 }
 
-DTYPE_MAPPING = {
-    "int": DataType.INT64,
-    "keyword": DataType.VARCHAR,
-    "text": DataType.VARCHAR,
-    "float": DataType.FLOAT,
-    "geo": DataType.UNKNOWN,
-}
-
 DTYPE_EXTRAS = {
     "keyword": {"max_length": 500},
     "text": {"max_length": 5000},
@@ -29,6 +21,6 @@ DTYPE_EXTRAS = {
 
 DTYPE_DEFAULT = {
     DataType.INT64: 0,
-    DataType.VARCHAR: "---MILUVS DOES NOT ACCEPT EMPTY STRINGS---",
+    DataType.VARCHAR: "---MILVUS DOES NOT ACCEPT EMPTY STRINGS---",
     DataType.FLOAT: 0.0,
 }

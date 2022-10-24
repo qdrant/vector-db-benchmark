@@ -7,32 +7,44 @@ class FilterType(str, Enum):
     RANGE = "range"
     GEO = "geo"
 
-    @classmethod
-    def from_value(cls, value: Text) -> "FilterType":
-        for allowed_value in FilterType:
-            if allowed_value == value:
-                return allowed_value
-        raise ValueError("Requested non-supported enum member")
-
 
 FieldValue = Union[Text, int, float]
+MetaConditions = Dict[Text, List[Any]]
 
 
 class BaseConditionParser:
-    def parse(self, meta_conditions: Dict[Text, Any]) -> Optional[Any]:
+    def parse(self, meta_conditions: Optional[MetaConditions]) -> Optional[Any]:
+        """
+        The parse method accepts the meta conditions stored in a dict-like
+        internal benchmark structure and converts it into the representation
+        used by a specific engine.
+
+        The internal representation has the following structure:
+        {
+            "or": [
+                {"a": {"match": {"value": 80}}},
+                {"a": {"match": {"value": 2}}}
+            ]
+        }
+
+        There is always an operator ("and" / "or") and a list of operands.
+
+        :param meta_conditions:
+        :return:
+        """
         if meta_conditions is None or 0 == len(meta_conditions):
             return None
         return self.build_condition(
-            and_statements=self.create_filter_part(meta_conditions.get("and")),
-            or_statements=self.create_filter_part(meta_conditions.get("or")),
+            and_subfilters=self.create_condition_subfilters(meta_conditions.get("and")),
+            or_subfilters=self.create_condition_subfilters(meta_conditions.get("or")),
         )
 
     def build_condition(
-        self, and_statements: List[Any], or_statements: List[Any]
+        self, and_subfilters: Optional[List[Any]], or_subfilters: Optional[List[Any]]
     ) -> Optional[Any]:
         raise NotImplementedError
 
-    def create_filter_part(self, entries) -> Optional[List[Any]]:
+    def create_condition_subfilters(self, entries) -> Optional[List[Any]]:
         if entries is None:
             return None
 
@@ -41,7 +53,7 @@ class BaseConditionParser:
             for field_name, field_filters in entry.items():
                 for condition_type, value in field_filters.items():
                     condition = self.build_filter(
-                        field_name, FilterType.from_value(condition_type), value
+                        field_name, FilterType(condition_type), value
                     )
                     output_filters.append(condition)
         return output_filters

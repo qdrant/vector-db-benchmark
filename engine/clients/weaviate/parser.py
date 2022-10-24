@@ -11,20 +11,20 @@ class WeaviateConditionParser(BaseConditionParser):
         return super().parse(meta_conditions)
 
     def build_condition(
-        self, and_statements: List[Any], or_statements: List[Any]
+        self, and_subfilters: Optional[List[Any]], or_subfilters: Optional[List[Any]]
     ) -> Optional[Any]:
         clause = {}
-        if or_statements is not None and len(or_statements) > 0:
+        if or_subfilters is not None and len(or_subfilters) > 0:
             clause = {
                 "operator": "Or",
-                "operands": or_statements,
+                "operands": or_subfilters,
             }
-        if and_statements is not None and len(and_statements) > 0:
+        if and_subfilters is not None and len(and_subfilters) > 0:
             clause = {
                 "operator": "And",
-                "operands": and_statements + [clause]
+                "operands": and_subfilters + [clause]
                 if len(clause) > 0
-                else and_statements,
+                else and_subfilters,
             }
         return clause
 

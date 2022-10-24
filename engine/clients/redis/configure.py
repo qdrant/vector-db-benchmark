@@ -1,10 +1,10 @@
 import redis
-from redis.commands.search.field import VectorField
+from redis.commands.search.field import GeoField, NumericField, TextField, VectorField
 
 from benchmark.dataset import Dataset
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
-from engine.clients.redis.config import FIELD_MAPPING, REDIS_PORT
+from engine.clients.redis.config import REDIS_PORT
 
 
 class RedisConfigurator(BaseConfigurator):
@@ -12,6 +12,13 @@ class RedisConfigurator(BaseConfigurator):
         Distance.L2: "L2",
         Distance.COSINE: "COSINE",
         Distance.DOT: "IP",
+    }
+    FIELD_MAPPING = {
+        "int": NumericField,
+        "keyword": TextField,
+        "text": TextField,
+        "float": NumericField,
+        "geo": GeoField,
     }
 
     def __init__(self, host, collection_params: dict, connection_params: dict):
@@ -30,7 +37,7 @@ class RedisConfigurator(BaseConfigurator):
         self.clean()
         search_namespace = self.client.ft()
         payload_fields = [
-            FIELD_MAPPING[field_type](
+            self.FIELD_MAPPING[field_type](
                 name=field_name,
             )
             for field_name, field_type in dataset.config.schema.items()

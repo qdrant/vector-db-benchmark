@@ -42,8 +42,7 @@ class MilvusUploader(BaseUploader):
         if metadata is not None:
             field_values = [
                 [
-                    payload.get(field_schema.name, DTYPE_DEFAULT[field_schema.dtype])
-                    or DTYPE_DEFAULT[field_schema.dtype]
+                    payload.get(field_schema.name) or DTYPE_DEFAULT[field_schema.dtype]
                     for payload in metadata
                 ]
                 for field_schema in cls.collection.schema.fields

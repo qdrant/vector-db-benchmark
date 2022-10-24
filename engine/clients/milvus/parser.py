@@ -7,13 +7,13 @@ from engine.base_client.parser import BaseConditionParser, FieldValue
 
 class MilvusConditionParser(BaseConditionParser):
     def build_condition(
-        self, and_statements: List[Any], or_statements: List[Any]
+        self, and_subfilters: Optional[List[Any]], or_subfilters: Optional[List[Any]]
     ) -> Optional[Any]:
         clauses = []
-        if or_statements is not None and len(or_statements) > 0:
-            clauses.append("(" + " || ".join(or_statements) + ")")
-        if and_statements is not None and len(and_statements) > 0:
-            clauses.append("(" + " && ".join(and_statements) + ")")
+        if or_subfilters is not None and len(or_subfilters) > 0:
+            clauses.append("(" + " || ".join(or_subfilters) + ")")
+        if and_subfilters is not None and len(and_subfilters) > 0:
+            clauses.append("(" + " && ".join(and_subfilters) + ")")
         return " && ".join(clauses)
 
     def build_exact_match_filter(self, field_name: Text, value: FieldValue) -> Any:

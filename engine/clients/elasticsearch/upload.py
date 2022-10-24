@@ -5,7 +5,7 @@ from typing import List, Optional
 from elasticsearch import Elasticsearch
 
 from engine.base_client.upload import BaseUploader
-from engine.clients.elasticsearch import (
+from engine.clients.elasticsearch.config import (
     ELASTIC_INDEX,
     ELASTIC_PASSWORD,
     ELASTIC_PORT,

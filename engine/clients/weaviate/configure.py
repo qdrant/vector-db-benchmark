@@ -3,11 +3,7 @@ from weaviate import Client
 from benchmark.dataset import Dataset
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
-from engine.clients.weaviate.config import (
-    FIELD_TYPE_MAPPING,
-    WEAVIATE_CLASS_NAME,
-    WEAVIATE_DEFAULT_PORT,
-)
+from engine.clients.weaviate.config import WEAVIATE_CLASS_NAME, WEAVIATE_DEFAULT_PORT
 
 
 class WeaviateConfigurator(BaseConfigurator):
@@ -15,6 +11,13 @@ class WeaviateConfigurator(BaseConfigurator):
         Distance.L2: "l2-squared",
         Distance.COSINE: "cosine",
         Distance.DOT: "dot",
+    }
+    FIELD_TYPE_MAPPING = {
+        "int": "int",
+        "keyword": "string",
+        "text": "string",
+        "float": "number",
+        "geo": "geoCoordinates",
     }
 
     def __init__(self, host, collection_params: dict, connection_params: dict):
@@ -37,7 +40,7 @@ class WeaviateConfigurator(BaseConfigurator):
                     {
                         "name": field_name,
                         "dataType": [
-                            FIELD_TYPE_MAPPING[field_type],
+                            self.FIELD_TYPE_MAPPING[field_type],
                         ],
                         "indexInverted": True,
                     }

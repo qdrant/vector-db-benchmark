@@ -4,7 +4,7 @@ from benchmark.dataset import Dataset
 from engine.base_client import IncompatibilityError
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
-from engine.clients.elasticsearch import (
+from engine.clients.elasticsearch.config import (
     ELASTIC_INDEX,
     ELASTIC_PASSWORD,
     ELASTIC_PORT,

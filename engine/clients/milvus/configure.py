@@ -15,7 +15,6 @@ from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
 from engine.clients.milvus.config import (
     DTYPE_EXTRAS,
-    DTYPE_MAPPING,
     MILVUS_COLLECTION_NAME,
     MILVUS_DEFAULT_ALIAS,
     MILVUS_DEFAULT_PORT,
@@ -23,6 +22,14 @@ from engine.clients.milvus.config import (
 
 
 class MilvusConfigurator(BaseConfigurator):
+    DTYPE_MAPPING = {
+        "int": DataType.INT64,
+        "keyword": DataType.VARCHAR,
+        "text": DataType.VARCHAR,
+        "float": DataType.FLOAT,
+        "geo": DataType.UNKNOWN,
+    }
+
     def __init__(self, host, collection_params: dict, connection_params: dict):
         super().__init__(host, collection_params, connection_params)
         self.client = connections.connect(
@@ -56,7 +63,7 @@ class MilvusConfigurator(BaseConfigurator):
             try:
                 field_schema = FieldSchema(
                     name=field_name,
-                    dtype=DTYPE_MAPPING.get(field_type),
+                    dtype=self.DTYPE_MAPPING.get(field_type),
                     **DTYPE_EXTRAS.get(field_type, {}),
                 )
                 fields.append(field_schema)
