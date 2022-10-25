@@ -8,11 +8,9 @@ class ElasticConditionParser(BaseConditionParser):
         self, and_subfilters: Optional[List[Any]], or_subfilters: Optional[List[Any]]
     ) -> Optional[Any]:
         return {
-            "query": {
-                "bool": {
-                    "must": and_subfilters,
-                    "should": or_subfilters,
-                }
+            "bool": {
+                "must": and_subfilters,
+                "should": or_subfilters,
             }
         }
 
