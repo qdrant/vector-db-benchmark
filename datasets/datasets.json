@@ -44,7 +44,7 @@
     "vector_size": 2048,
     "distance": "cosine",
     "type": "tar",
-    "path": "h-and-m-2048-angular/hnm.tgz",
+    "path": "h-and-m-2048-angular/hnm",
     "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/hnm.tgz",
     "schema": {
       "product_code": "int",
@@ -78,7 +78,7 @@
     "vector_size": 384,
     "distance": "cosine",
     "type": "tar",
-    "path": "arxiv-titles-384-angular/arxiv.tgz",
+    "path": "arxiv-titles-384-angular/arxiv",
     "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/arxiv.tar.gz",
     "schema": {
       "update_date_ts": "int",
@@ -91,7 +91,7 @@
     "vector_size": 100,
     "distance": "cosine",
     "type": "tar",
-    "path": "random-match-keyword-100-angular/random_keywords_1m.tgz",
+    "path": "random-match-keyword-100-angular/random_keywords_1m",
     "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/random_keywords_1m.tgz",
     "schema": {
       "a": "keyword",
@@ -103,7 +103,7 @@
     "vector_size": 100,
     "distance": "cosine",
     "type": "tar",
-    "path": "random-match-int-100-angular/random_ints_1m.tgz",
+    "path": "random-match-int-100-angular/random_ints_1m",
     "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/random_ints_1m.tgz",
     "schema": {
       "a": "int",
@@ -115,7 +115,7 @@
     "vector_size": 100,
     "distance": "cosine",
     "type": "tar",
-    "path": "random-range-100-angular/random_float_1m.tgz",
+    "path": "random-range-100-angular/random_float_1m",
     "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/random_float_1m.tgz",
     "schema": {
       "a": "float",
@@ -127,7 +127,7 @@
     "vector_size": 100,
     "distance": "cosine",
     "type": "tar",
-    "path": "random-geo-radius-100-angular/random_geo_1m.tgz",
+    "path": "random-geo-radius-100-angular/random_geo_1m",
     "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/random_geo_1m.tgz",
     "schema": {
       "a": "geo",
@@ -139,7 +139,7 @@
     "vector_size": 2048,
     "distance": "cosine",
     "type": "tar",
-    "path": "random-match-keyword-2048-angular/random_keywords_100k.tgz",
+    "path": "random-match-keyword-2048-angular/random_keywords_100k",
     "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/random_keywords_100k.tgz",
     "schema": {
       "a": "keyword",
@@ -151,7 +151,7 @@
     "vector_size": 2048,
     "distance": "cosine",
     "type": "tar",
-    "path": "random-match-int-2048-angular/random_ints_100k.tgz",
+    "path": "random-match-int-2048-angular/random_ints_100k",
     "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/random_ints_100k.tgz",
     "schema": {
       "a": "int",
@@ -163,7 +163,7 @@
     "vector_size": 2048,
     "distance": "cosine",
     "type": "tar",
-    "path": "random-range-2048-angular/random_float_100k.tgz",
+    "path": "random-range-2048-angular/random_float_100k",
     "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/random_float_100k.tgz",
     "schema": {
       "a": "float",
@@ -175,7 +175,7 @@
     "vector_size": 2048,
     "distance": "cosine",
     "type": "tar",
-    "path": "random-geo-radius-2048-angular/random_geo_100k.tgz",
+    "path": "random-geo-radius-2048-angular/random_geo_100k",
     "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/random_geo_100k.tgz",
     "schema": {
       "a": "geo",

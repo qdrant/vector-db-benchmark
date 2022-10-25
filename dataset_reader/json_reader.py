@@ -6,28 +6,28 @@ import numpy as np
 
 from dataset_reader.base_reader import BaseReader, Query, Record
 
-VECTORS_FILE = "vectors.jsonl"
-PAYLOADS_FILE = "payloads.jsonl"
-QUERIES_FILE = "queries.jsonl"
-NEIGHBOURS_FILE = "neighbours.jsonl"
-
 
 class JSONReader(BaseReader):
+    VECTORS_FILE = "vectors.jsonl"
+    PAYLOADS_FILE = "payloads.jsonl"
+    QUERIES_FILE = "queries.jsonl"
+    NEIGHBOURS_FILE = "neighbours.jsonl"
+
     def __init__(self, path: Path, normalize=False):
         self.path = path
         self.normalize = normalize
 
     def read_payloads(self) -> Iterator[dict]:
-        if not (self.path / PAYLOADS_FILE).exists():
+        if not (self.path / self.PAYLOADS_FILE).exists():
             while True:
                 yield {}
-        with open(self.path / PAYLOADS_FILE, "r") as json_fp:
+        with open(self.path / self.PAYLOADS_FILE, "r") as json_fp:
             for json_line in json_fp:
                 line = json.loads(json_line)
                 yield line
 
     def read_vectors(self) -> Iterator[List[float]]:
-        with open(self.path / VECTORS_FILE, "r") as json_fp:
+        with open(self.path / self.VECTORS_FILE, "r") as json_fp:
             for json_line in json_fp:
                 vector = json.loads(json_line)
                 if self.normalize:
@@ -35,17 +35,17 @@ class JSONReader(BaseReader):
                 yield vector
 
     def read_neighbours(self) -> Iterator[Optional[List[int]]]:
-        if not (self.path / NEIGHBOURS_FILE).exists():
+        if not (self.path / self.NEIGHBOURS_FILE).exists():
             while True:
                 yield None
 
-        with open(self.path / NEIGHBOURS_FILE, "r") as json_fp:
+        with open(self.path / self.NEIGHBOURS_FILE, "r") as json_fp:
             for json_line in json_fp:
                 line = json.loads(json_line)
                 yield line
 
     def read_query_vectors(self) -> Iterator[List[float]]:
-        with open(self.path / QUERIES_FILE, "r") as json_fp:
+        with open(self.path / self.QUERIES_FILE, "r") as json_fp:
             for json_line in json_fp:
                 vector = json.loads(json_line)
                 if self.normalize:
