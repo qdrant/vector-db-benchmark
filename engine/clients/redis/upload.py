@@ -5,6 +5,7 @@ import redis
 
 from engine.base_client.upload import BaseUploader
 from engine.clients.redis.config import REDIS_PORT
+from engine.clients.redis.helper import epsg_4326_to_900913
 
 
 class RedisUploader(BaseUploader):
@@ -25,10 +26,25 @@ class RedisUploader(BaseUploader):
             idx = ids[i]
             vec = vectors[i]
             meta = metadata[i] if metadata else {}
-            meta = {k: v for k, v in meta.items() if v is not None}
+            payload = {
+                k: v
+                for k, v in meta.items()
+                if v is not None and not isinstance(v, dict)
+            }
+            # Redis treats geopoints differently and requires putting them as
+            # a comma-separated string with lat and lon coordinates
+            geopoints = {
+                k: ",".join(map(str, epsg_4326_to_900913(v["lon"], v["lat"])))
+                for k, v in meta.items()
+                if isinstance(v, dict)
+            }
             cls.client.hset(
                 str(idx),
-                mapping={"vector": np.array(vec).astype(np.float32).tobytes(), **meta},
+                mapping={
+                    "vector": np.array(vec).astype(np.float32).tobytes(),
+                    **payload,
+                    **geopoints,
+                },
             )
         p.execute()
 

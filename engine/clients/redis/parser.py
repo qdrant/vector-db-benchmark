@@ -2,6 +2,7 @@ from collections import ChainMap
 from typing import Any, Dict, List, Optional, Tuple
 
 from engine.base_client.parser import BaseConditionParser, FieldValue
+from engine.clients.redis.helper import epsg_4326_to_900913
 
 QueryParamsTuple = Tuple[str, Dict[str, Any]]
 
@@ -32,7 +33,9 @@ class RedisConditionParser(BaseConditionParser):
     def build_exact_match_filter(self, field_name: str, value: FieldValue) -> Any:
         param_name = f"{field_name}_{self.counter}"
         self.counter += 1
-        return f'@{field_name}:"${param_name}"', {param_name: value}
+        if isinstance(value, str):
+            return f'@{field_name}:"${param_name}"', {param_name: value}
+        return f"@{field_name}:[${param_name} ${param_name}]", {param_name: value}
 
     def build_range_filter(
         self,
@@ -69,6 +72,7 @@ class RedisConditionParser(BaseConditionParser):
     ) -> Any:
         param_prefix = f"{field_name}_{self.counter}"
         self.counter += 1
+        lon, lat = epsg_4326_to_900913(lon, lat)
         params = {
             f"{param_prefix}_lon": lon,
             f"{param_prefix}_lat": lat,

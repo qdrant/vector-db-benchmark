@@ -56,6 +56,7 @@ class ElasticSearcher(BaseSearcher):
                 **{"num_candidates": 100, **cls.search_params},
             },
             query=cls.parser.parse(meta_conditions),
+            size=top,
         )
         return [
             (uuid.UUID(hex=hit["_id"]).int, hit["_score"])

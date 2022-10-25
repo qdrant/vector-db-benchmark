@@ -33,7 +33,7 @@ def test_parse_converts_multiple_or_statements(redis_condition_parser):
     }
     redis_filter, params = redis_condition_parser.parse(conditions)
 
-    assert '(@a:"$a_0" | @a:"$a_1")' == redis_filter
+    assert "(@a:[$a_0 $a_0] | @a:[$a_1 $a_1])" == redis_filter
     assert 80 in params.values()
     assert 2 in params.values()
 

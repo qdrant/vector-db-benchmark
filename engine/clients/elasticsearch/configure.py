@@ -50,6 +50,8 @@ class ElasticConfigurator(BaseConfigurator):
     def recreate(self, dataset: Dataset, collection_params):
         if dataset.config.distance == Distance.DOT:
             raise IncompatibilityError
+        if dataset.config.vector_size > 1024:
+            raise IncompatibilityError
 
         self.client.indices.create(
             index=ELASTIC_INDEX,
