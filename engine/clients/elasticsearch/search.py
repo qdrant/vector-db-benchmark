@@ -53,9 +53,9 @@ class ElasticSearcher(BaseSearcher):
                 "field": "vector",
                 "query_vector": vector,
                 "k": top,
+                "filter": cls.parser.parse(meta_conditions),
                 **{"num_candidates": 100, **cls.search_params},
             },
-            query=cls.parser.parse(meta_conditions),
             size=top,
         )
         return [
