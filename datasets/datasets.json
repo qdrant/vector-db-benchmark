@@ -40,7 +40,7 @@
     "link": "http://ann-benchmarks.com/gist-960-euclidean.hdf5"
   },
   {
-    "name": "h-and-m-2048-angular",
+    "name": "h-and-m-2048-angular-filters",
     "vector_size": 2048,
     "distance": "cosine",
     "type": "tar",
@@ -74,7 +74,7 @@
     }
   },
   {
-    "name": "arxiv-titles-384-angular",
+    "name": "arxiv-titles-384-angular-filters",
     "vector_size": 384,
     "distance": "cosine",
     "type": "tar",
@@ -87,7 +87,7 @@
     }
   },
   {
-    "name": "random-match-keyword-100-angular",
+    "name": "random-match-keyword-100-angular-filters",
     "vector_size": 100,
     "distance": "cosine",
     "type": "tar",
@@ -99,7 +99,7 @@
     }
   },
   {
-    "name": "random-match-int-100-angular",
+    "name": "random-match-int-100-angular-filters",
     "vector_size": 100,
     "distance": "cosine",
     "type": "tar",
@@ -111,7 +111,7 @@
     }
   },
   {
-    "name": "random-range-100-angular",
+    "name": "random-range-100-angular-filters",
     "vector_size": 100,
     "distance": "cosine",
     "type": "tar",
@@ -123,7 +123,7 @@
     }
   },
   {
-    "name": "random-geo-radius-100-angular",
+    "name": "random-geo-radius-100-angular-filters",
     "vector_size": 100,
     "distance": "cosine",
     "type": "tar",
@@ -135,7 +135,7 @@
     }
   },
   {
-    "name": "random-match-keyword-2048-angular",
+    "name": "random-match-keyword-2048-angular-filters",
     "vector_size": 2048,
     "distance": "cosine",
     "type": "tar",
@@ -147,7 +147,7 @@
     }
   },
   {
-    "name": "random-match-int-2048-angular",
+    "name": "random-match-int-2048-angular-filters",
     "vector_size": 2048,
     "distance": "cosine",
     "type": "tar",
@@ -159,7 +159,7 @@
     }
   },
   {
-    "name": "random-range-2048-angular",
+    "name": "random-range-2048-angular-filters",
     "vector_size": 2048,
     "distance": "cosine",
     "type": "tar",
@@ -171,7 +171,7 @@
     }
   },
   {
-    "name": "random-geo-radius-2048-angular",
+    "name": "random-geo-radius-2048-angular-filters",
     "vector_size": 2048,
     "distance": "cosine",
     "type": "tar",
