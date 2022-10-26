@@ -2,7 +2,7 @@ from collections import ChainMap
 from typing import Any, Dict, List, Optional, Tuple
 
 from engine.base_client.parser import BaseConditionParser, FieldValue
-from engine.clients.redis.helper import epsg_4326_to_900913
+from engine.clients.redis.helper import convert_to_redis_coords
 
 QueryParamsTuple = Tuple[str, Dict[str, Any]]
 
@@ -72,7 +72,7 @@ class RedisConditionParser(BaseConditionParser):
     ) -> Any:
         param_prefix = f"{field_name}_{self.counter}"
         self.counter += 1
-        lon, lat = epsg_4326_to_900913(lon, lat)
+        lon, lat = convert_to_redis_coords(lon, lat)
         params = {
             f"{param_prefix}_lon": lon,
             f"{param_prefix}_lat": lat,

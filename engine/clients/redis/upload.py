@@ -5,7 +5,7 @@ import redis
 
 from engine.base_client.upload import BaseUploader
 from engine.clients.redis.config import REDIS_PORT
-from engine.clients.redis.helper import epsg_4326_to_900913
+from engine.clients.redis.helper import convert_to_redis_coords
 
 
 class RedisUploader(BaseUploader):
@@ -34,7 +34,7 @@ class RedisUploader(BaseUploader):
             # Redis treats geopoints differently and requires putting them as
             # a comma-separated string with lat and lon coordinates
             geopoints = {
-                k: ",".join(map(str, epsg_4326_to_900913(v["lon"], v["lat"])))
+                k: ",".join(map(str, convert_to_redis_coords(v["lon"], v["lat"])))
                 for k, v in meta.items()
                 if isinstance(v, dict)
             }
