@@ -25,7 +25,7 @@ class ElasticConditionParser(BaseConditionParser):
         lte: Optional[FieldValue],
         gte: Optional[FieldValue],
     ) -> Any:
-        return {"range": {"lt": lt, "gt": gt, "lte": lte, "gte": gte}}
+        return {"range": {field_name: {"lt": lt, "gt": gt, "lte": lte, "gte": gte}}}
 
     def build_geo_filter(
         self, field_name: str, lat: float, lon: float, radius: float
