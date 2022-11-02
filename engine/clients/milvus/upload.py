@@ -65,7 +65,9 @@ class MilvusUploader(BaseUploader):
             if field_schema.name in ["id", "vector"]:
                 continue
             try:
-                cls.collection.create_index(field_name=field_schema.name)
+                cls.collection.create_index(
+                    field_name=field_schema.name, index_name=field_schema.name
+                )
             except MilvusException as e:
                 # Code 1 means there is already an index for that column
                 if 1 != e.code:
