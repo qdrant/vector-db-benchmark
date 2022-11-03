@@ -26,7 +26,7 @@ class RedisSearcher(BaseSearcher):
             Query(
                 f"{prefilter_condition}=>[KNN $K @vector $vec_param EF_RUNTIME $EF AS vector_score]"
             )
-            .sort_by("vector_score")
+            .sort_by("vector_score", asc=False)
             .paging(0, top)
             .return_fields("vector_score")
             .dialect(2)

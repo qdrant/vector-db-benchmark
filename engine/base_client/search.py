@@ -49,7 +49,7 @@ class BaseSearcher:
         end = time.perf_counter()
 
         precision = 1.0
-        if query.expected_result is not None:
+        if query.expected_result:
             ids = set(x[0] for x in search_res)
             precision = len(ids.intersection(query.expected_result[:top])) / top
 
