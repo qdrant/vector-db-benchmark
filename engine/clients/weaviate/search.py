@@ -22,13 +22,13 @@ class WeaviateSearcher(BaseSearcher):
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
         near_vector = {"vector": vector}
-        res = (
-            cls.client.query.get(WEAVIATE_CLASS_NAME, ["_additional {id distance}"])
-            .with_near_vector(near_vector)
-            .with_where(cls.parser.parse(meta_conditions))
-            .with_limit(top)
-            .do()
-        )["data"]["Get"][WEAVIATE_CLASS_NAME]
+        where_conditions = cls.parser.parse(meta_conditions)
+        query = cls.client.query.get(
+            WEAVIATE_CLASS_NAME, ["_additional {id distance}"]
+        ).with_near_vector(near_vector)
+        if where_conditions is not None:
+            query = query.with_where(where_conditions)
+        res = (query.with_limit(top).do())["data"]["Get"][WEAVIATE_CLASS_NAME]
 
         id_score_pairs: List[Tuple[int, float]] = []
         for obj in res:

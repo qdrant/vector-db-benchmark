@@ -7,7 +7,7 @@ from engine.base_client.parser import BaseConditionParser, FieldValue
 class WeaviateConditionParser(BaseConditionParser):
     def parse(self, meta_conditions: Dict[str, Any]) -> Optional[Any]:
         if meta_conditions is None or len(meta_conditions) == 0:
-            return {}
+            return None
         return super().parse(meta_conditions)
 
     def build_condition(
