@@ -5,7 +5,7 @@ description = ""
 authors = ["Kacper Łukawski <kacper.lukawski@qdrant.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = ">=3.8,<3.11"
 docker = "^5.0.3"
 qdrant-client = { git = "https://github.com/qdrant/qdrant_client.git", branch = "master" }
 typer = "^0.6.1"
