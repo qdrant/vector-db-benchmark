@@ -16,12 +16,13 @@ class QdrantSearcher(BaseSearcher):
 
     @classmethod
     def init_client(cls, host, distance, connection_params: dict, search_params: dict):
-        cls.client: QdrantClient = QdrantClient(host, prefer_grpc=True, **connection_params)
+        cls.client: QdrantClient = QdrantClient(host, prefer_grpc=False, **connection_params)
         cls.search_params = search_params
 
-    @classmethod
-    def get_mp_start_method(cls):
-        return "forkserver" if "forkserver" in mp.get_all_start_methods() else "spawn"
+    # Uncomment for gRPC
+    # @classmethod
+    # def get_mp_start_method(cls):
+    #     return "forkserver" if "forkserver" in mp.get_all_start_methods() else "spawn"
 
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
