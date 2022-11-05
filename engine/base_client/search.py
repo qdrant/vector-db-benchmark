@@ -60,7 +60,6 @@ class BaseSearcher:
         distance,
         queries: Iterable[Query],
     ):
-        start = time.perf_counter()
         parallel = self.search_params.pop("parallel", 1)
         top = self.search_params.pop("top", None)
 
@@ -73,6 +72,7 @@ class BaseSearcher:
         search_one = functools.partial(self.__class__._search_one, top=top)
 
         if parallel == 1:
+            start = time.perf_counter()
             precisions, latencies = list(
                 zip(*[search_one(query) for query in tqdm.tqdm(queries)])
             )
@@ -89,6 +89,9 @@ class BaseSearcher:
                     self.search_params,
                 ),
             ) as pool:
+                if parallel > 10:
+                    time.sleep(5)  # Wait for all processes to start
+                start = time.perf_counter()
                 precisions, latencies = list(
                     zip(*pool.imap_unordered(search_one, iterable=tqdm.tqdm(queries)))
                 )
