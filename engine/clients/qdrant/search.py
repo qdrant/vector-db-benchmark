@@ -16,7 +16,9 @@ class QdrantSearcher(BaseSearcher):
 
     @classmethod
     def init_client(cls, host, distance, connection_params: dict, search_params: dict):
-        cls.client: QdrantClient = QdrantClient(host, prefer_grpc=False, **connection_params)
+        cls.client: QdrantClient = QdrantClient(
+            host, prefer_grpc=False, **connection_params
+        )
         cls.search_params = search_params
 
     # Uncomment for gRPC
