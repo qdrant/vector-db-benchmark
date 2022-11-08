@@ -24,7 +24,7 @@ def run(
 ):
     """
     Example:
-        python3 run --engines *-m-16-* --engines qdrant-* --datasets glove-*
+        python3 run.py --engines *-m-16-* --engines qdrant-* --datasets glove-*
     """
     all_engines = read_engine_configs()
     all_datasets = read_dataset_config()
