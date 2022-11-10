@@ -1,5 +1,7 @@
 from typing import Optional
 
+from benchmark.dataset import Dataset
+
 
 class BaseConfigurator:
     DISTANCE_MAPPING = {}
@@ -12,12 +14,12 @@ class BaseConfigurator:
     def clean(self):
         raise NotImplementedError()
 
-    def recreate(self, distance, vector_size, collection_params):
+    def recreate(self, dataset: Dataset, collection_params):
         raise NotImplementedError()
 
-    def configure(self, distance, vector_size) -> Optional[dict]:
+    def configure(self, dataset: Dataset) -> Optional[dict]:
         self.clean()
-        return self.recreate(distance, vector_size, self.collection_params) or {}
+        return self.recreate(dataset, self.collection_params) or {}
 
     def execution_params(self, distance, vector_size) -> dict:
         return {}

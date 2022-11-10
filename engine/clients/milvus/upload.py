@@ -1,11 +1,12 @@
 import multiprocessing as mp
 from typing import List, Optional
 
-from pymilvus import Collection, connections
+from pymilvus import Collection, MilvusException, connections
 
 from engine.base_client.upload import BaseUploader
 from engine.clients.milvus.config import (
     DISTANCE_MAPPING,
+    DTYPE_DEFAULT,
     MILVUS_COLLECTION_NAME,
     MILVUS_DEFAULT_ALIAS,
     MILVUS_DEFAULT_PORT,
@@ -38,7 +39,18 @@ class MilvusUploader(BaseUploader):
     def upload_batch(
         cls, ids: List[int], vectors: List[list], metadata: Optional[List[dict]]
     ):
-        cls.collection.insert([ids, vectors])
+        if metadata is not None:
+            field_values = [
+                [
+                    payload.get(field_schema.name) or DTYPE_DEFAULT[field_schema.dtype]
+                    for payload in metadata
+                ]
+                for field_schema in cls.collection.schema.fields
+                if field_schema.name not in ["id", "vector"]
+            ]
+        else:
+            field_values = []
+        cls.collection.insert([ids, vectors] + field_values)
 
     @classmethod
     def post_upload(cls, distance):
@@ -49,6 +61,17 @@ class MilvusUploader(BaseUploader):
         }
 
         cls.collection.create_index(field_name="vector", index_params=index_params)
+        for field_schema in cls.collection.schema.fields:
+            if field_schema.name in ["id", "vector"]:
+                continue
+            try:
+                cls.collection.create_index(
+                    field_name=field_schema.name, index_name=field_schema.name
+                )
+            except MilvusException as e:
+                # Code 1 means there is already an index for that column
+                if 1 != e.code:
+                    raise e
 
         cls.collection.load()
         return {}

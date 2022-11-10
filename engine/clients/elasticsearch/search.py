@@ -5,12 +5,13 @@ from typing import List, Tuple
 from elasticsearch import Elasticsearch
 
 from engine.base_client.search import BaseSearcher
-from engine.clients.elasticsearch import (
+from engine.clients.elasticsearch.config import (
     ELASTIC_INDEX,
     ELASTIC_PASSWORD,
     ELASTIC_PORT,
     ELASTIC_USER,
 )
+from engine.clients.elasticsearch.parser import ElasticConditionParser
 
 
 class ClosableElastic(Elasticsearch):
@@ -21,6 +22,7 @@ class ClosableElastic(Elasticsearch):
 class ElasticSearcher(BaseSearcher):
     search_params = {}
     client: Elasticsearch = None
+    parser = ElasticConditionParser()
 
     @classmethod
     def get_mp_start_method(cls):
@@ -45,14 +47,16 @@ class ElasticSearcher(BaseSearcher):
 
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
-        res = cls.client.knn_search(
+        res = cls.client.search(
             index=ELASTIC_INDEX,
             knn={
                 "field": "vector",
                 "query_vector": vector,
                 "k": top,
+                "filter": cls.parser.parse(meta_conditions),
                 **{"num_candidates": 100, **cls.search_params},
             },
+            size=top,
         )
         return [
             (uuid.UUID(hex=hit["_id"]).int, hit["_score"])

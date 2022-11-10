@@ -2,10 +2,11 @@ import os
 import shutil
 import tarfile
 import urllib.request
-from dataclasses import dataclass
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import Dict, Optional
 
 from benchmark import DATASETS_DIR
+from dataset_reader.ann_compound_reader import AnnCompoundReader
 from dataset_reader.ann_h5_reader import AnnH5Reader
 from dataset_reader.base_reader import BaseReader
 from dataset_reader.json_reader import JSONReader
@@ -19,9 +20,10 @@ class DatasetConfig:
     type: str
     path: str
     link: Optional[str] = None
+    schema: Optional[Dict[str, str]] = field(default_factory=dict)
 
 
-READER_TYPE = {"h5": AnnH5Reader, "jsonl": JSONReader}
+READER_TYPE = {"h5": AnnH5Reader, "jsonl": JSONReader, "tar": AnnCompoundReader}
 
 
 class Dataset:
@@ -39,9 +41,11 @@ class Dataset:
             print(f"Downloading {self.config.link}...")
             tmp_path, _ = urllib.request.urlretrieve(self.config.link)
 
-            if tmp_path.endswith(".tgz") or tmp_path.endswith(".tar.gz"):
+            if self.config.link.endswith(".tgz") or self.config.link.endswith(
+                ".tar.gz"
+            ):
                 print(f"Extracting: {tmp_path} -> {target_path}")
-                (DATASETS_DIR / self.config.path).mkdir(exist_ok=True)
+                (DATASETS_DIR / self.config.path).mkdir(exist_ok=True, parents=True)
                 file = tarfile.open(tmp_path)
                 file.extractall(target_path)
                 file.close()

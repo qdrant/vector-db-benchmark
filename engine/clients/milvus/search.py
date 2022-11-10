@@ -10,6 +10,7 @@ from engine.clients.milvus.config import (
     MILVUS_DEFAULT_ALIAS,
     MILVUS_DEFAULT_PORT,
 )
+from engine.clients.milvus.parser import MilvusConditionParser
 
 
 class MilvusSearcher(BaseSearcher):
@@ -17,6 +18,7 @@ class MilvusSearcher(BaseSearcher):
     client: connections = None
     collection: Collection = None
     distance: str = None
+    parser = MilvusConditionParser()
 
     @classmethod
     def init_client(cls, host, distance, connection_params: dict, search_params: dict):
@@ -35,11 +37,6 @@ class MilvusSearcher(BaseSearcher):
         return "forkserver" if "forkserver" in mp.get_all_start_methods() else "spawn"
 
     @classmethod
-    def conditions_to_filter(cls, _meta_conditions):
-        # ToDo: implement
-        return None
-
-    @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
         param = {"metric_type": cls.distance, "params": cls.search_params["params"]}
         try:
@@ -48,6 +45,7 @@ class MilvusSearcher(BaseSearcher):
                 anns_field="vector",
                 param=param,
                 limit=top,
+                expr=cls.parser.parse(meta_conditions),
             )
         except Exception as e:
             import ipdb

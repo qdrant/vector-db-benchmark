@@ -1,2 +1,1 @@
-REDIS_INDEX_NAME = "benchmark"
 REDIS_PORT = 6380

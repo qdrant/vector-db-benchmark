@@ -33,10 +33,12 @@ class BaseClient:
         experiments_file = (
             f"{self.name}-{dataset_name}-search-{search_id}-{timestamp}.json"
         )
-        with open(RESULTS_DIR / experiments_file, "w") as out:
+        result_path = RESULTS_DIR / experiments_file
+        with open(result_path, "w") as out:
             out.write(
                 json.dumps({"params": search_params, "results": results}, indent=2)
             )
+        return result_path
 
     def save_upload_results(
         self, dataset_name: str, results: dict, upload_params: dict
@@ -60,10 +62,7 @@ class BaseClient:
 
         if not skip_upload:
             print("Experiment stage: Configure")
-            self.configurator.configure(
-                distance=dataset.config.distance,
-                vector_size=dataset.config.vector_size,
-            )
+            self.configurator.configure(dataset)
 
             print("Experiment stage: Upload")
             upload_stats = self.uploader.upload(
@@ -88,3 +87,4 @@ class BaseClient:
                 dataset.config.name, search_stats, search_id, search_params
             )
         print("Experiment stage: Done")
+        print("Results saved to: ", RESULTS_DIR)

@@ -68,6 +68,8 @@ class BaseUploader:
 
         total_time = time.perf_counter() - start
 
+        print(f"Total import time: {total_time}")
+
         return {
             "post_upload": post_upload_stats,
             "upload_time": upload_time,
