@@ -90,7 +90,7 @@ class BaseSearcher:
                 ),
             ) as pool:
                 if parallel > 10:
-                    time.sleep(5)  # Wait for all processes to start
+                    time.sleep(15)  # Wait for all processes to start
                 start = time.perf_counter()
                 precisions, latencies = list(
                     zip(*pool.imap_unordered(search_one, iterable=tqdm.tqdm(queries)))

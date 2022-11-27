@@ -47,15 +47,20 @@ class ElasticSearcher(BaseSearcher):
 
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
+        knn = {
+            "field": "vector",
+            "query_vector": vector,
+            "k": top,
+            **{"num_candidates": 100, **cls.search_params},
+        }
+
+        meta_conditions = cls.parser.parse(meta_conditions)
+        if meta_conditions:
+            knn["filter"] = meta_conditions
+
         res = cls.client.search(
             index=ELASTIC_INDEX,
-            knn={
-                "field": "vector",
-                "query_vector": vector,
-                "k": top,
-                "filter": cls.parser.parse(meta_conditions),
-                **{"num_candidates": 100, **cls.search_params},
-            },
+            knn=knn,
             size=top,
         )
         return [
