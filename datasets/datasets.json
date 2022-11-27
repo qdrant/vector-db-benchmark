@@ -195,5 +195,17 @@
     "distance": "l2",
     "type": "jsonl",
     "path": "random-100/"
+  },
+  {
+    "name": "random-100-match-kw-small-vocab",
+    "vector_size": 256,
+    "distance": "cosine",
+    "type": "tar",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/random_keywords_1m_vocab_10.tgz",
+    "path": "random-100-match-kw-small-vocab/random_keywords_1m_vocab_10",
+    "schema": {
+      "a": "keyword",
+      "b": "keyword"
+    }
   }
 ]
