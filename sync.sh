@@ -3,6 +3,7 @@
 
 rsync -avP \
    --exclude="results" \
+   --exclude="results-*" \
    --exclude='*.hdf5' \
    --exclude='venv' \
    --exclude='__pycache__' \
