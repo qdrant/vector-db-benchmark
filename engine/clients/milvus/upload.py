@@ -1,7 +1,12 @@
 import multiprocessing as mp
 from typing import List, Optional
 
-from pymilvus import Collection, MilvusException, connections, wait_for_index_building_complete
+from pymilvus import (
+    Collection,
+    MilvusException,
+    connections,
+    wait_for_index_building_complete,
+)
 
 from engine.base_client.upload import BaseUploader
 from engine.clients.milvus.config import (
@@ -37,7 +42,7 @@ class MilvusUploader(BaseUploader):
 
     @classmethod
     def upload_batch(
-            cls, ids: List[int], vectors: List[list], metadata: Optional[List[dict]]
+        cls, ids: List[int], vectors: List[list], metadata: Optional[List[dict]]
     ):
         if metadata is not None:
             field_values = [
@@ -74,9 +79,11 @@ class MilvusUploader(BaseUploader):
                     raise e
 
         for index in cls.collection.indexes:
-            wait_for_index_building_complete(MILVUS_COLLECTION_NAME,
-                                             index_name=index.index_name,
-                                             using=MILVUS_DEFAULT_ALIAS)
+            wait_for_index_building_complete(
+                MILVUS_COLLECTION_NAME,
+                index_name=index.index_name,
+                using=MILVUS_DEFAULT_ALIAS,
+            )
 
         cls.collection.load()
         return {}
