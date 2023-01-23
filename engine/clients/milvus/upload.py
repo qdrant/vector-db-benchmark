@@ -1,7 +1,12 @@
 import multiprocessing as mp
 from typing import List, Optional
 
-from pymilvus import Collection, MilvusException, connections
+from pymilvus import (
+    Collection,
+    MilvusException,
+    connections,
+    wait_for_index_building_complete,
+)
 
 from engine.base_client.upload import BaseUploader
 from engine.clients.milvus.config import (
@@ -59,7 +64,7 @@ class MilvusUploader(BaseUploader):
             "index_type": "HNSW",
             "params": {**cls.upload_params.get("index_params", {})},
         }
-
+        cls.collection.flush()
         cls.collection.create_index(field_name="vector", index_params=index_params)
         for field_schema in cls.collection.schema.fields:
             if field_schema.name in ["id", "vector"]:
@@ -72,6 +77,13 @@ class MilvusUploader(BaseUploader):
                 # Code 1 means there is already an index for that column
                 if 1 != e.code:
                     raise e
+
+        for index in cls.collection.indexes:
+            wait_for_index_building_complete(
+                MILVUS_COLLECTION_NAME,
+                index_name=index.index_name,
+                using=MILVUS_DEFAULT_ALIAS,
+            )
 
         cls.collection.load()
         return {}

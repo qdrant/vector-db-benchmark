@@ -53,7 +53,10 @@ class ElasticUploader(BaseUploader):
         for idx, vector, payload in zip(ids, vectors, metadata):
             vector_id = uuid.UUID(int=idx).hex
             operations.append({"index": {"_id": vector_id}})
-            operations.append({"vector": vector, **payload})
+            if payload:
+                operations.append({"vector": vector, **payload})
+            else:
+                operations.append({"vector": vector})
 
         cls.client.bulk(
             index=ELASTIC_INDEX,
