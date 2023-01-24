@@ -48,7 +48,7 @@ Run the benchmark:
 ```bash
 Usage: run.py [OPTIONS]
 
-  Example: python3 run --engines *-m-16-* --datasets glove-*
+  Example: python3 -m run --engines *-m-16-* --datasets glove-*
 
 Options:
   --engines TEXT                  [default: *]
