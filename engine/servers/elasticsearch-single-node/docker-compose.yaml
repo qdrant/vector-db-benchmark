@@ -2,7 +2,7 @@ version: '3.5'
 
 services:
   es:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.5.2
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.6.0
     environment:
       ELASTIC_PASSWORD: "passwd"
       KIBANA_PASSWORD: "passwd"

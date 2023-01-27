@@ -2,9 +2,7 @@ version: "3.7"
 
 services:
   redis:
-    # It is set to edge for the time being, as long as 2.4.16 is not ready
-    # See: https://github.com/RediSearch/RediSearch/issues/3202
-    image: redislabs/redisearch:edge
+    image: redislabs/redisearch:2.6.4
     ports:
       - '6380:6379'
     deploy:

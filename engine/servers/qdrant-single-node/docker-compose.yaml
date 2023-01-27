@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   qdrant_bench:
-    image: qdrant/qdrant:v0.11.4
+    image: qdrant/qdrant:v0.11.7
     network_mode: host
     deploy:
       resources:
