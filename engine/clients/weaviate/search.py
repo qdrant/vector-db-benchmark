@@ -29,8 +29,10 @@ class WeaviateSearcher(BaseSearcher):
 
         is_geo_query = False
         if where_conditions is not None:
-            operands = where_conditions['operands']
-            is_geo_query = any(operand['operator'] == 'WithinGeoRange' for operand in operands)
+            operands = where_conditions["operands"]
+            is_geo_query = any(
+                operand["operator"] == "WithinGeoRange" for operand in operands
+            )
             query = query.with_where(where_conditions)
 
         query_obj = query.with_limit(top)
@@ -54,5 +56,3 @@ class WeaviateSearcher(BaseSearcher):
 
     def setup_search(self):
         self.client.schema.update_config(WEAVIATE_CLASS_NAME, self.search_params)
-
-
