@@ -9,4 +9,6 @@ rsync -avP \
    --exclude='__pycache__' \
    --exclude='frontend' \
    --exclude='.idea' \
+   --exclude='.git' \
+   --exclude='datasets/*/' \
    . $1:./projects/vector-db-benchmark/

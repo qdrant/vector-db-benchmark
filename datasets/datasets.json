@@ -86,6 +86,14 @@
       "submitter": "keyword"
     }
   },
+    {
+    "name": "arxiv-titles-384-angular-no-filters",
+    "vector_size": 384,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "arxiv-titles-384-angular-no-filters/arxiv_no_filters",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/arxiv_no_filters.tar.gz"
+  },
   {
     "name": "random-match-keyword-100-angular-filters",
     "vector_size": 100,

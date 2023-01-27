@@ -26,9 +26,23 @@ class WeaviateSearcher(BaseSearcher):
         query = cls.client.query.get(
             WEAVIATE_CLASS_NAME, ["_additional {id distance}"]
         ).with_near_vector(near_vector)
+
+        is_geo_query = False
         if where_conditions is not None:
+            operands = where_conditions['operands']
+            is_geo_query = any(operand['operator'] == 'WithinGeoRange' for operand in operands)
             query = query.with_where(where_conditions)
-        res = (query.with_limit(top).do())["data"]["Get"][WEAVIATE_CLASS_NAME]
+
+        query_obj = query.with_limit(top)
+        if is_geo_query:
+            # weaviate can't handle geo queries in python due to excess quotes in generated queries
+            gql_query = query_obj.build()
+            for field in ("geoCoordinates", "latitude", "longitude", "distance", "max"):
+                gql_query = gql_query.replace(f'"{field}"', field)  # get rid of quotes
+            response = cls.client.query.raw(gql_query)
+        else:
+            response = query_obj.do()
+        res = response["data"]["Get"][WEAVIATE_CLASS_NAME]
 
         id_score_pairs: List[Tuple[int, float]] = []
         for obj in res:
@@ -40,3 +54,5 @@ class WeaviateSearcher(BaseSearcher):
 
     def setup_search(self):
         self.client.schema.update_config(WEAVIATE_CLASS_NAME, self.search_params)
+
+

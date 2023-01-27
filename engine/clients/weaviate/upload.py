@@ -1,4 +1,3 @@
-import time
 import uuid
 from typing import List, Optional
 
@@ -20,6 +19,18 @@ class WeaviateUploader(BaseUploader):
         cls.upload_params = upload_params
         cls.connection_params = connection_params
 
+    @staticmethod
+    def _update_geo_data(data_object):
+        keys = data_object.keys()
+        for key in keys:
+            if isinstance(data_object[key], dict):
+                if lat := data_object[key].pop('lat', None):
+                    data_object[key]['latitude'] = lat
+                if lon := data_object[key].pop('lon', None):
+                    data_object[key]['longitude'] = lon
+
+        return data_object
+
     @classmethod
     def upload_batch(
         cls, ids: List[int], vectors: List[list], metadata: List[Optional[dict]]
@@ -33,6 +44,7 @@ class WeaviateUploader(BaseUploader):
 
         with cls.client.batch as batch:
             for id_, vector, data_object in zip(ids, vectors, metadata):
+                data_object = cls._update_geo_data(data_object)
                 batch.add_data_object(
                     data_object=data_object or {},
                     class_name=WEAVIATE_CLASS_NAME,

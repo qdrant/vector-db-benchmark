@@ -21,7 +21,13 @@ class RedisSearcher(BaseSearcher):
 
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
-        prefilter_condition, params = cls.parser.parse(meta_conditions)
+        conditions = cls.parser.parse(meta_conditions)
+        if conditions is None:
+            prefilter_condition = "*"
+            params = {}
+        else:
+            prefilter_condition, params = conditions
+
         q = (
             Query(
                 f"{prefilter_condition}=>[KNN $K @vector $vec_param EF_RUNTIME $EF AS vector_score]"
