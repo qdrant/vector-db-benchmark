@@ -26,7 +26,7 @@ class MilvusConfigurator(BaseConfigurator):
         "int": DataType.INT64,
         "keyword": DataType.VARCHAR,
         "text": DataType.VARCHAR,
-        "float": DataType.FLOAT,
+        "float": DataType.DOUBLE,
         "geo": DataType.UNKNOWN,
     }
 
