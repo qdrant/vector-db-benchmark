@@ -47,24 +47,32 @@ class RedisConditionParser(BaseConditionParser):
     ) -> Any:
         param_prefix = f"{field_name}_{self.counter}"
         self.counter += 1
-        params = {
-            f"{param_prefix}_lt": lt,
-            f"{param_prefix}_lte": lte,
-            f"{param_prefix}_gt": gt,
-            f"{param_prefix}_gte": gte,
-        }
-        filters = [
-            ("-inf", f"(${param_prefix}_lt") if lt is not None else None,
-            ("-inf", f"${param_prefix}_lte") if lte is not None else None,
-            (f"${param_prefix}_gte", "+inf") if gte is not None else None,
-            (f"(${param_prefix}_gt", "+inf") if gt is not None else None,
-        ]
+        params = dict()
+        filters = list()
+
+        if lt is not None:
+            params[f"{param_prefix}_lt"] = lt
+            filters.append(("-inf", f"(${param_prefix}_lt"))
+
+        if gt is not None:
+            params[f"{param_prefix}_gt"] = gt
+            filters.append((f"(${param_prefix}_gt", "+inf") )
+
+        if lte is not None:
+            params[f"{param_prefix}_lte"] = lte
+            filters.append(("-inf", f"${param_prefix}_lte"))
+
+        if gte is not None:
+            params[f"{param_prefix}_gte"] = gte
+            filters.append((f"${param_prefix}_gte", "+inf"))
+
         clauses = []
         for filter_entry in filters:
             if filter_entry is None:
                 continue
             left, right = filter_entry
             clauses.append(f"@{field_name}:[{left} {right}]")
+
         return " ".join(clauses), params
 
     def build_geo_filter(
