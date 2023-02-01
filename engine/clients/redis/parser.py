@@ -56,7 +56,7 @@ class RedisConditionParser(BaseConditionParser):
 
         if gt is not None:
             params[f"{param_prefix}_gt"] = gt
-            filters.append((f"(${param_prefix}_gt", "+inf") )
+            filters.append((f"(${param_prefix}_gt", "+inf"))
 
         if lte is not None:
             params[f"{param_prefix}_lte"] = lte
