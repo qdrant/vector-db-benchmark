@@ -1,1 +1,1 @@
-QDRANT_COLLECTION_NAME = "Benchmark"
+QDRANT_COLLECTION_NAME = "benchmark"
