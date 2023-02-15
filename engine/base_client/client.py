@@ -53,7 +53,7 @@ class BaseClient:
             }
             out.write(json.dumps(upload_stats, indent=2))
 
-    def run_experiment(self, dataset: Dataset, skip_upload: bool = False):
+    def run_experiment(self, dataset: Dataset, skip_upload: bool = False, skip_search: bool = False):
         execution_params = self.configurator.execution_params(
             distance=dataset.config.distance, vector_size=dataset.config.vector_size
         )
@@ -77,14 +77,15 @@ class BaseClient:
                 },
             )
 
-        print("Experiment stage: Search")
-        for search_id, searcher in enumerate(self.searchers):
-            search_params = {**searcher.search_params}
-            search_stats = searcher.search_all(
-                dataset.config.distance, reader.read_queries()
-            )
-            self.save_search_results(
-                dataset.config.name, search_stats, search_id, search_params
-            )
+        if not skip_search:
+            print("Experiment stage: Search")
+            for search_id, searcher in enumerate(self.searchers):
+                search_params = {**searcher.search_params}
+                search_stats = searcher.search_all(
+                    dataset.config.distance, reader.read_queries()
+                )
+                self.save_search_results(
+                    dataset.config.name, search_stats, search_id, search_params
+                )
         print("Experiment stage: Done")
         print("Results saved to: ", RESULTS_DIR)
