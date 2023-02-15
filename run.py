@@ -19,6 +19,7 @@ def run(
     datasets: List[str] = typer.Option(["*"]),
     host: str = "localhost",
     skip_upload: bool = False,
+    skip_search: bool = False,
     exit_on_error: bool = True,
     timeout: float = 86400.0,
 ):
@@ -48,7 +49,7 @@ def run(
             dataset.download()
             try:
                 with stopit.ThreadingTimeout(timeout) as tt:
-                    client.run_experiment(dataset, skip_upload)
+                    client.run_experiment(dataset, skip_upload, skip_search)
 
                 # If the timeout is reached, the server might be still in the
                 # middle of some background processing, like creating the index.
