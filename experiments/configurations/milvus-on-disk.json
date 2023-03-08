@@ -1,0 +1,12 @@
+[
+  {
+    "name": "milvus-on-disk-default",
+    "engine": "milvus",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      { "parallel": 8, "params": { } }
+    ],
+    "upload_params": { "parallel": 4, "index_type": "DISKANN", "index_params": {  } }
+  }
+]

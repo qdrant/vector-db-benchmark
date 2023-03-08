@@ -1,0 +1,10 @@
+version: '3.7'
+
+services:
+  qdrant_bench:
+    image: qdrant/qdrant:v1.0.2
+    network_mode: host
+    deploy:
+      resources:
+        limits:
+          memory: 2Gb

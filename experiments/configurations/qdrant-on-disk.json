@@ -1,0 +1,15 @@
+[
+  {
+    "name": "qdrant-on-disk-default",
+    "engine": "qdrant",
+    "connection_params": {},
+    "collection_params": {
+      "optimizers_config": { "memmap_threshold": 10000 },
+      "hnsw_config": { "on_disk": true }
+    },
+    "search_params": [
+      { "parallel": 8, "search_params": { "hnsw_ef": 128 } }
+    ],
+    "upload_params": { "parallel": 4 }
+  }
+]

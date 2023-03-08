@@ -61,7 +61,7 @@ class MilvusUploader(BaseUploader):
     def post_upload(cls, distance):
         index_params = {
             "metric_type": cls.distance,
-            "index_type": "HNSW",
+            "index_type": cls.upload_params.get("index_type", "HNSW"),
             "params": {**cls.upload_params.get("index_params", {})},
         }
         cls.collection.flush()
