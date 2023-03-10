@@ -277,7 +277,7 @@
     "path": "random-100/"
   },
   {
-    "name": "random-100-match-kw-small-vocab",
+    "name": "random-100-match-kw-small-vocab-filters",
     "vector_size": 256,
     "distance": "cosine",
     "type": "tar",
