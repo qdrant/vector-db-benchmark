@@ -79,3 +79,8 @@ class OpenSearchSearcher(BaseSearcher):
             (uuid.UUID(hex=hit["_id"]).int, hit["_score"])
             for hit in res["hits"]["hits"]
         ]
+
+    @classmethod
+    def setup_search(cls):
+        if cls.search_params:
+            cls.client.indices.put_settings(body=cls.search_params, index=OPENSEARCH_INDEX)
