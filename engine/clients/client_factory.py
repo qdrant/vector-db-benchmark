@@ -7,11 +7,19 @@ from engine.base_client.client import (
     BaseSearcher,
     BaseUploader,
 )
-from engine.clients.elasticsearch import ElasticConfigurator, ElasticUploader, ElasticSearcher
+from engine.clients.elasticsearch import (
+    ElasticConfigurator,
+    ElasticSearcher,
+    ElasticUploader,
+)
 from engine.clients.milvus import MilvusConfigurator, MilvusSearcher, MilvusUploader
-from engine.clients.opensearch import OpenSearchConfigurator, OpenSearchUploader, OpenSearchSearcher
+from engine.clients.opensearch import (
+    OpenSearchConfigurator,
+    OpenSearchSearcher,
+    OpenSearchUploader,
+)
 from engine.clients.qdrant import QdrantConfigurator, QdrantSearcher, QdrantUploader
-from engine.clients.redis import RedisConfigurator, RedisUploader, RedisSearcher
+from engine.clients.redis import RedisConfigurator, RedisSearcher, RedisUploader
 from engine.clients.weaviate import (
     WeaviateConfigurator,
     WeaviateSearcher,
