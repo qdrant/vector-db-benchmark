@@ -70,6 +70,8 @@ class BaseUploader:
 
         print(f"Total import time: {total_time}")
 
+        self.delete_client()
+
         return {
             "post_upload": post_upload_stats,
             "upload_time": upload_time,
@@ -95,3 +97,7 @@ class BaseUploader:
         cls, ids: List[int], vectors: List[list], metadata: List[Optional[dict]]
     ):
         raise NotImplementedError()
+
+    @classmethod
+    def delete_client(cls):
+        pass
