@@ -17,6 +17,7 @@ protobuf = "3.20.0"
 redis = "^4.3.4"
 ipdb = "^0.13.9"
 stopit = "^1.1.2"
+opensearch-py = "^2.2.0"
 
 
 [tool.poetry.dev-dependencies]

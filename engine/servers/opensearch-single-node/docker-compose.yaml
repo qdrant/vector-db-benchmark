@@ -1,0 +1,16 @@
+version: '3.5'
+
+services:
+  opensearch:
+    image: opensearchproject/opensearch:2.6.0
+    environment:
+      discovery.type: "single-node"
+      plugins.security.disabled: true
+      OPENSEARCH_JAVA_OPTS: "-Xms4g -Xmx4g"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    deploy:
+      resources:
+        limits:
+          memory: 25Gb
