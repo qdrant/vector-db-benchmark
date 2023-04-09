@@ -5,6 +5,11 @@ services:
     image: redislabs/redisearch:2.6.4
     ports:
       - '6380:6379'
+    logging:
+      driver: "json-file"
+      options:
+        max-file: 1
+        max-size: 10m
     deploy:
       resources:
         limits:
