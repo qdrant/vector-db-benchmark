@@ -44,9 +44,9 @@ class WeaviateUploader(BaseUploader):
 
         with cls.client.batch as batch:
             for id_, vector, data_object in zip(ids, vectors, metadata):
-                data_object = cls._update_geo_data(data_object)
+                data_object = cls._update_geo_data(data_object or {})
                 batch.add_data_object(
-                    data_object=data_object or {},
+                    data_object=data_object,
                     class_name=WEAVIATE_CLASS_NAME,
                     uuid=uuid.UUID(int=id_).hex,
                     vector=vector,
