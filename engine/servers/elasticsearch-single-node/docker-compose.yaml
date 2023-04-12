@@ -12,6 +12,11 @@ services:
     ports:
       - "9200:9200"
       - "9300:9300"
+    logging:
+      driver: "json-file"
+      options:
+        max-file: 1
+        max-size: 10m
     deploy:
       resources:
         limits:

@@ -2,8 +2,13 @@ version: '3.7'
 
 services:
   qdrant_bench:
-    image: qdrant/qdrant:v0.11.7
+    image: qdrant/qdrant:v1.1.0
     network_mode: host
+    logging:
+      driver: "json-file"
+      options:
+        max-file: 1
+        max-size: 10m
     deploy:
       resources:
         limits:
