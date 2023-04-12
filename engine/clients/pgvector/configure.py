@@ -47,6 +47,6 @@ class PgvectorConfigurator(BaseConfigurator):
                     id serial PRIMARY KEY,
                     "vector" vector({dataset.config.vector_size}),
                 """
-            create_stmt += ', '.join(fields)
+            create_stmt += ", ".join(fields)
             create_stmt += ")"
             cur.execute(create_stmt)

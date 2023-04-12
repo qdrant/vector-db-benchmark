@@ -26,7 +26,7 @@ class PgvectorSearcher(BaseSearcher):
 
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
-        
+
         vector = "[" + ", ".join(str(x) for x in vector) + "]"
         meta_conditions = cls.parser.parse(meta_conditions)
 
