@@ -63,11 +63,7 @@ class ElasticConfigurator(BaseConfigurator):
                 }
             },
             mappings={
-                "_source": {
-                    "excludes": [
-                        "vector"
-                    ]
-                },
+                "_source": {"excludes": ["vector"]},
                 "properties": {
                     "vector": {
                         "type": "dense_vector",
@@ -84,7 +80,7 @@ class ElasticConfigurator(BaseConfigurator):
                         },
                     },
                     **self._prepare_fields_config(dataset),
-                }
+                },
             },
         )
 
