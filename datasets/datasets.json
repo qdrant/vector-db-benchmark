@@ -40,6 +40,14 @@
     "link": "http://ann-benchmarks.com/gist-960-euclidean.hdf5"
   },
   {
+    "name": "laion-768-5m-ip",
+    "vector_size": 768,
+    "distance": "dot",
+    "type": "h5",
+    "path": "laion-768-5m-ip/laion-5m-test-ip.hdf5",
+    "link": "https://myscale-datasets.s3.ap-southeast-1.amazonaws.com/laion-5m-test-ip.hdf5"
+  },
+  {
     "name": "h-and-m-2048-angular-filters",
     "vector_size": 2048,
     "distance": "cosine",
