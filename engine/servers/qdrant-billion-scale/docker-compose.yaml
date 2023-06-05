@@ -1,0 +1,18 @@
+version: '3.7'
+
+services:
+  qdrant_bench:
+    image: qdrant/qdrant:dev
+    network_mode: host
+    volumes:
+      - ./storage:/qdrant/storage
+    environment:
+      - QDRANT__STORAGE__HNSW_INDEX__MAX_INDEXING_THREADS=8
+      - QDRANT__STORAGE__PERFORMANCE__MAX_OPTIMIZATION_THREADS=8
+      - QDRANT__SERVICE__MAX_WORKERS=16
+      - QDRANT__LOG_LEVEL=debug
+    logging:
+      driver: "json-file"
+      options:
+        max-file: 1
+        max-size: 10m
