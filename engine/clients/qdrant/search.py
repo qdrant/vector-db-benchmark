@@ -6,7 +6,7 @@ from qdrant_client import QdrantClient
 from qdrant_client.http import models as rest
 
 from engine.base_client.search import BaseSearcher
-from engine.clients.qdrant.config import QDRANT_COLLECTION_NAME
+from engine.clients.qdrant.config import QDRANT_COLLECTION_NAME, QDRANT_API_KEY
 from engine.clients.qdrant.parser import QdrantConditionParser
 
 
@@ -18,7 +18,8 @@ class QdrantSearcher(BaseSearcher):
     @classmethod
     def init_client(cls, host, distance, connection_params: dict, search_params: dict):
         cls.client: QdrantClient = QdrantClient(
-            host,
+            url=host,
+            api_key=QDRANT_API_KEY,
             prefer_grpc=True,
             limits=httpx.Limits(max_connections=None, max_keepalive_connections=0),
             **connection_params

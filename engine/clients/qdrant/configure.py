@@ -4,7 +4,7 @@ from qdrant_client.http import models as rest
 from benchmark.dataset import Dataset
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
-from engine.clients.qdrant.config import QDRANT_COLLECTION_NAME
+from engine.clients.qdrant.config import QDRANT_COLLECTION_NAME, QDRANT_API_KEY
 
 
 class QdrantConfigurator(BaseConfigurator):
@@ -24,7 +24,7 @@ class QdrantConfigurator(BaseConfigurator):
     def __init__(self, host, collection_params: dict, connection_params: dict):
         super().__init__(host, collection_params, connection_params)
 
-        self.client = QdrantClient(host=host, **connection_params)
+        self.client = QdrantClient(url=host, api_key=QDRANT_API_KEY, **connection_params)
 
     def clean(self):
         self.client.delete_collection(collection_name=QDRANT_COLLECTION_NAME)

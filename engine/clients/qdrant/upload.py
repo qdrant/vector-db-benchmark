@@ -5,7 +5,7 @@ from qdrant_client import QdrantClient
 from qdrant_client.http.models import Batch, CollectionStatus
 
 from engine.base_client.upload import BaseUploader
-from engine.clients.qdrant.config import QDRANT_COLLECTION_NAME
+from engine.clients.qdrant.config import QDRANT_COLLECTION_NAME, QDRANT_API_KEY
 
 
 class QdrantUploader(BaseUploader):
@@ -14,12 +14,12 @@ class QdrantUploader(BaseUploader):
 
     @classmethod
     def init_client(cls, host, distance, connection_params, upload_params):
-        cls.client = QdrantClient(host=host, prefer_grpc=True, **connection_params)
+        cls.client = QdrantClient(url=host, api_key=QDRANT_API_KEY, prefer_grpc=True, **connection_params)
         cls.upload_params = upload_params
 
     @classmethod
     def upload_batch(
-        cls, ids: List[int], vectors: List[list], metadata: Optional[List[dict]]
+            cls, ids: List[int], vectors: List[list], metadata: Optional[List[dict]]
     ):
         cls.client.upsert(
             collection_name=QDRANT_COLLECTION_NAME,
