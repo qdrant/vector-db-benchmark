@@ -31,5 +31,18 @@
       { "parallel": 8, "search_params": { "hnsw_ef": 128 } }
     ],
     "upload_params": { "parallel": 4 }
+  },
+  {
+    "name": "qdrant-disk-hnsw",
+    "engine": "qdrant",
+    "connection_params": {},
+    "collection_params": {
+      "optimizers_config": { "memmap_threshold": 10000, "default_segment_number": 2, "max_segment_size": 2000000 },
+      "hnsw_config": { "on_disk": true, "m": 128, "ef_construct": 512 }
+    },
+    "search_params": [
+      { "parallel": 8, "search_params": { "hnsw_ef": 32 } }
+    ],
+    "upload_params": { "parallel": 4 }
   }
 ]
