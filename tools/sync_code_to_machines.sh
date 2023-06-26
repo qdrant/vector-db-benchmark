@@ -7,6 +7,8 @@ CLOUD_NAME=${CLOUD_NAME:-"hetzner"}
 SCRIPT=$(realpath "$0")
 SCRIPT_PATH=$(dirname "$SCRIPT")
 
+CONTAINER_TO_BENCH=${CONTAINER_TO_BENCH:-"qdrant-single-node"}
+
 
 BENCH_SERVER_NAME=${SERVER_NAME:-"benchmark-server-1"}
 BENCH_CLIENT_NAME=${CLIENT_NAME:-"benchmark-client-1"}
@@ -20,4 +22,5 @@ bash -x "${SCRIPT_PATH}/sync.sh" "root@$IP_OF_THE_CLIENT"
 
 cat "${SCRIPT_PATH}/install_dependencies.sh" | ssh "root@${IP_OF_THE_CLIENT}" bash
 
+bash -x "${SCRIPT_PATH}/run_server_container.sh" "$CONTAINER_TO_BENCH"
 
