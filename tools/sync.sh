@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+PROJECT_PATH=$(realpath "$(dirname "$0")/..")
 
 rsync -avP \
    --exclude="results" \
@@ -11,4 +12,4 @@ rsync -avP \
    --exclude='.idea' \
    --exclude='.git' \
    --exclude='datasets/*/' \
-   . $1:./projects/vector-db-benchmark/
+   "$PROJECT_PATH/" $1:./projects/vector-db-benchmark/
