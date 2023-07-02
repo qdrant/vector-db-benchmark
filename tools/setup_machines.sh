@@ -27,6 +27,7 @@ SERVER_CREATION_PID=$!
 SERVER_NAME=$BENCH_CLIENT_NAME bash -x "${SCRIPT_PATH}/${CLOUD_NAME}/create_and_install.sh"
 wait $SERVER_CREATION_PID
 
+SERVER_CONTAINER_NAME=${SERVER_CONTAINER_NAME:-"qdrant-continuous-benchmarks"}
 
-bash -x "${SCRIPT_PATH}/sync_code_to_machines.sh"
+bash -x "${SCRIPT_PATH}/run_server_container.sh" "$SERVER_CONTAINER_NAME"
 

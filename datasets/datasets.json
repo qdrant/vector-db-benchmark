@@ -40,6 +40,17 @@
     "link": "http://ann-benchmarks.com/gist-960-euclidean.hdf5"
   },
   {
+    "name": "laion-small-clip",
+    "vector_size": 512,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "laion-small-clip/laion-small-clip",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/laion-small-clip.tgz",
+    "schema": {
+      "similarity": "float"
+    }
+  },
+  {
     "name": "h-and-m-2048-angular-filters",
     "vector_size": 2048,
     "distance": "cosine",
