@@ -1,4 +1,4 @@
-name: External Links
+name: Continuous Benchmark
 
 on:
   repository_dispatch:
