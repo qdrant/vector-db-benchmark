@@ -36,7 +36,7 @@ SERVER_IP=$(hcloud server ip "${SERVER_NAME}")
 
 echo "Server IP: ${SERVER_IP}"
 
-ssh-keygen -f "$HOME/.ssh/known_hosts" -R "${SERVER_IP}"
+ssh-keygen -f "$HOME/.ssh/known_hosts" -R "${SERVER_IP}" || true
 
 # Wait for server to be ready
 
@@ -47,4 +47,3 @@ done
 # Create and install docker
 
 cat "${SCRIPTPATH}/setup_hetzner.sh" | ssh "root@${SERVER_IP}" bash
-
