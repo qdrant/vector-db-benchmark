@@ -9,8 +9,8 @@ SCRIPT_PATH=$(dirname "$SCRIPT")
 
 # Set up dependencies
 
-apt update
-apt install -y jq
+sudo apt update
+sudo apt install -y jq
 
 # Download and install hcloud
 
@@ -20,7 +20,7 @@ wget https://github.com/hetznercloud/cli/releases/download/${HCVERSION}/hcloud-l
 
 tar xzf hcloud-linux-amd64.tar.gz
 
-mv hcloud /usr/local/bin
+sudo mv hcloud /usr/local/bin
 
 # Install mc
 
