@@ -15,5 +15,8 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Benches
-        run: bash -x tools/run_ci.sh
-
+        run: |
+          export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
+          export GCS_KEY=${{ secrets.GCS_KEY }}
+          export GCS_SECRET=${{ secrets.GCS_SECRET }}
+          bash -x tools/run_ci.sh
