@@ -51,7 +51,7 @@ MEMORY_USAGE=$(cat "$MEMEORY_USAGE_FILE")
 MEASURE_TIMESTAMP=${MEASURE_TIMESTAMP:-$(date -u +"%Y-%m-%dT%H:%M:%SZ")}
 
 
-docker run -it --rm jbergknoff/postgresql-client "postgresql://qdrant:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/postgres" -c "
+docker run --rm jbergknoff/postgresql-client "postgresql://qdrant:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/postgres" -c "
 INSERT INTO benchmark (engine, measure_timestamp, upload_time, indexing_time, rps, mean_precisions, p95_time, p99_time, memory_usage)
 VALUES (\"qdrant-ci\" '${MEASURE_TIMESTAMP}', ${UPLOAD_TIME}, ${INDEXING_TIME}, ${RPS}, ${MEAN_PRECISIONS}, ${P95_TIME}, ${P99_TIME}, ${MEMORY_USAGE});
 "
