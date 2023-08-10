@@ -16,7 +16,7 @@ BENCH_SERVER_NAME=${SERVER_NAME:-"benchmark-server-1"}
 
 IP_OF_THE_SERVER=$(bash "${SCRIPT_PATH}/${CLOUD_NAME}/get_public_ip.sh" "$BENCH_SERVER_NAME")
 
-MEMORY_USAGE=$(ssh -t "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "grep VmRSS /proc/$(pidof qdrant)/status | awk '{print $2}'")
+MEMORY_USAGE=$(ssh -t "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "grep VmRSS /proc/\$(pidof qdrant)/status | awk '{print \$2}'")
 
 CURRENT_DATE=$(date +%Y-%m-%d-%H-%M-%S)
 
