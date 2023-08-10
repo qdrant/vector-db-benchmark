@@ -36,6 +36,6 @@ bash -x "${SCRIPT_PATH}/run_remote_benchmark.sh"
 
 export SEARCH_RESULTS_FILE=$(ls results/*-search-*.json | head -n 1)
 export UPLOAD_RESULTS_FILE=$(ls results/*-upload-*.json | head -n 1)
-export MEMORY_USAGE_FILE=$(ls results/memory-usage-*.txt | head -n 1)
+export MEMEORY_USAGE_FILE=$(ls results/memory-usage-*.txt | head -n 1)
 
 bash -x "${SCRIPT_PATH}/upload_results_postgres.sh"
