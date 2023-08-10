@@ -33,3 +33,5 @@ SERVER_CONTAINER_NAME=${SERVER_CONTAINER_NAME:-"qdrant-continuous-benchmarks"}
 bash -x "${SCRIPT_PATH}/run_server_container.sh" "$SERVER_CONTAINER_NAME"
 
 bash -x "${SCRIPT_PATH}/run_client_script.sh"
+
+bash -x "${SCRIPT_PATH}/qdrant_mem_usage.sh" "$SERVER_CONTAINER_NAME"
