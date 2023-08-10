@@ -81,4 +81,4 @@ class MilvusConfigurator(BaseConfigurator):
             index.drop()
 
     def execution_params(self, distance, vector_size):
-        return {"normalize": distance == Distance.COSINE}
+        return {"normalize": distance == Distance.COSINE or distance == Distance.DOT}
