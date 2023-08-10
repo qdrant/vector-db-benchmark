@@ -18,23 +18,23 @@
 #);
 
 SEARCH_RESULTS_FILE=${SEARCH_RESULTS_FILE:-""}
+UPLOAD_RESULTS_FILE=${UPLOAD_RESULTS_FILE:-""}
+MEMORY_USAGE_FILE=${MEMORY_USAGE_FILE:-""}
 
 if [[ -z "$SEARCH_RESULTS_FILE" ]]; then
   echo "SEARCH_RESULTS_FILE is not set"
   exit 1
 fi
 
-UPLOAD_RESULT_PATH=${UPLOAD_RESULT_PATH:-""}
 
 if [[ -z "$UPLOAD_RESULTS_FILE" ]]; then
-  echo "UPLOAD_RESULT_PATH is not set"
+  echo "UPLOAD_RESULTS_FILE is not set"
   exit 1
 fi
 
-MEMEORY_USAGE_FILE=${MEMEORY_USAGE_FILE:-""}
 
-if [[ -z "$MEMEORY_USAGE_FILE" ]]; then
-  echo "MEMEORY_USAGE_FILE is not set"
+if [[ -z "$MEMORY_USAGE_FILE" ]]; then
+  echo "MEMORY_USAGE_FILE is not set"
   exit 1
 fi
 
@@ -46,7 +46,7 @@ P99_TIME=$(jq -r '.results.p99_time' "$SEARCH_RESULTS_FILE")
 UPLOAD_TIME=$(jq -r '.results.upload_time' "$UPLOAD_RESULTS_FILE")
 INDEXING_TIME=$(jq -r '.results.total_time' "$UPLOAD_RESULTS_FILE")
 
-MEMORY_USAGE=$(cat "$MEMEORY_USAGE_FILE")
+MEMORY_USAGE=$(cat "$MEMORY_USAGE_FILE")
 
 MEASURE_TIMESTAMP=${MEASURE_TIMESTAMP:-$(date -u +"%Y-%m-%dT%H:%M:%SZ")}
 

@@ -23,9 +23,9 @@ BENCH_CLIENT_NAME=${CLIENT_NAME:-"benchmark-client-1"}
 
 trap 'cleanup' EXIT
 
-SERVER_NAME=$BENCH_SERVER_NAME bash -x "${SCRIPT_PATH}/${CLOUD_NAME}/create_and_install.sh" &
+SERVER_NAME=$BENCH_SERVER_NAME SERVER_TYPE='ccx12' bash -x "${SCRIPT_PATH}/${CLOUD_NAME}/create_and_install.sh" &
 SERVER_CREATION_PID=$!
-SERVER_NAME=$BENCH_CLIENT_NAME bash -x "${SCRIPT_PATH}/${CLOUD_NAME}/create_and_install.sh"
+SERVER_NAME=$BENCH_CLIENT_NAME SERVER_TYPE='cpx31' bash -x "${SCRIPT_PATH}/${CLOUD_NAME}/create_and_install.sh"
 wait $SERVER_CREATION_PID
 
 SERVER_CONTAINER_NAME=${SERVER_CONTAINER_NAME:-"qdrant-continuous-benchmarks"}
