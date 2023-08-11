@@ -2,7 +2,7 @@ import time
 from typing import List, Optional
 
 from qdrant_client import QdrantClient
-from qdrant_client.http.models import Batch, CollectionStatus
+from qdrant_client.http.models import Batch, CollectionStatus, OptimizersConfigDiff
 
 from engine.base_client.upload import BaseUploader
 from engine.clients.qdrant.config import QDRANT_COLLECTION_NAME
@@ -19,7 +19,7 @@ class QdrantUploader(BaseUploader):
 
     @classmethod
     def upload_batch(
-        cls, ids: List[int], vectors: List[list], metadata: Optional[List[dict]]
+            cls, ids: List[int], vectors: List[list], metadata: Optional[List[dict]]
     ):
         cls.client.upsert(
             collection_name=QDRANT_COLLECTION_NAME,
@@ -32,6 +32,13 @@ class QdrantUploader(BaseUploader):
 
     @classmethod
     def post_upload(cls, _distance):
+        cls.client.update_collection(
+            collection_name=QDRANT_COLLECTION_NAME,
+            optimizer_config=OptimizersConfigDiff(
+                max_optimization_threads=1,
+            )
+        )
+
         cls.wait_collection_green()
         return {}
 
