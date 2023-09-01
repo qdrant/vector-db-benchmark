@@ -7,36 +7,40 @@ from engine.base_client.client import (
     BaseSearcher,
     BaseUploader,
 )
-#from engine.clients.elasticsearch import (
+
+# from engine.clients.elasticsearch import (
 #    ElasticConfigurator,
 #    ElasticSearcher,
 #    ElasticUploader,
-#)
+# )
 from engine.clients.milvus import MilvusConfigurator, MilvusSearcher, MilvusUploader
-#from engine.clients.opensearch import (
+from engine.clients.pgvector import (
+    PGVectorConfigurator,
+    PGVectorSearcher,
+    PGVectorUploader,
+)
+
+# from engine.clients.opensearch import (
 #    OpenSearchConfigurator,
 #    OpenSearchSearcher,
 #    OpenSearchUploader,
-#)
+# )
 from engine.clients.qdrant import QdrantConfigurator, QdrantSearcher, QdrantUploader
-#from engine.clients.redis import RedisConfigurator, RedisSearcher, RedisUploader
+
+# from engine.clients.redis import RedisConfigurator, RedisSearcher, RedisUploader
 from engine.clients.weaviate import (
     WeaviateConfigurator,
     WeaviateSearcher,
     WeaviateUploader,
 )
-from engine.clients.pgvector import (
-    PGVectorConfigurator, 
-    PGVectorSearcher, 
-    PGVectorUploader,
-)
+
 ENGINE_CONFIGURATORS = {
     "qdrant": QdrantConfigurator,
     "weaviate": WeaviateConfigurator,
     "milvus": MilvusConfigurator,
-    #"elastic": ElasticConfigurator,
-    #"opensearch": OpenSearchConfigurator,
-    #"redis": RedisConfigurator,
+    # "elastic": ElasticConfigurator,
+    # "opensearch": OpenSearchConfigurator,
+    # "redis": RedisConfigurator,
     "pgvector": PGVectorConfigurator,
 }
 
@@ -44,9 +48,9 @@ ENGINE_UPLOADERS = {
     "qdrant": QdrantUploader,
     "weaviate": WeaviateUploader,
     "milvus": MilvusUploader,
-    #"elastic": ElasticUploader,
-    #"opensearch": OpenSearchUploader,
-    #"redis": RedisUploader,
+    # "elastic": ElasticUploader,
+    # "opensearch": OpenSearchUploader,
+    # "redis": RedisUploader,
     "pgvector": PGVectorUploader,
 }
 
@@ -54,9 +58,9 @@ ENGINE_SEARCHERS = {
     "qdrant": QdrantSearcher,
     "weaviate": WeaviateSearcher,
     "milvus": MilvusSearcher,
-    #"elastic": ElasticSearcher,
-    #"opensearch": OpenSearchSearcher,
-    #"redis": RedisSearcher,
+    # "elastic": ElasticSearcher,
+    # "opensearch": OpenSearchSearcher,
+    # "redis": RedisSearcher,
     "pgvector": PGVectorSearcher,
 }
 
