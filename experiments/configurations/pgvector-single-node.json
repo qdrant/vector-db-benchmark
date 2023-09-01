@@ -1,0 +1,22 @@
+[
+{
+"name": "pgvector-default",
+"engine": "pgvector",
+"connection_params": {},
+"collection_params": {},
+"search_params":
+[
+{"parallel": 1, "search_params": {}},
+{"parallel": 2, "search_params": {}},
+{"parallel": 4, "search_params": {}},
+{"parallel": 8, "search_params": {}},
+{"parallel": 100, "search_params": {}}
+],
+"upload_params": {"parallel": 8, "batch_size": 16, "index_params": {}}
+}
+]
+        
+      
+      
+      
+   

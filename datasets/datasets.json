@@ -1,5 +1,37 @@
 [
   {
+    "name": "gist-960-euclidean-extended",
+    "vector_size": 960,
+    "distance": "l2",
+    "type": "h5",
+    "path": "gist-960-euclidean/gist-960-euclidean-extended.hdf5",
+    "link": ""
+  },
+  {
+    "name": "gist-960-euclidean",
+    "vector_size": 960,
+    "distance": "l2",
+    "type": "h5",
+    "path": "gist-960-euclidean/gist-960-euclidean.hdf5",
+    "link": "http://ann-benchmarks.com/gist-960-euclidean.hdf5"
+  },
+  {
+    "name": "fashion-mnist-784-extended",
+    "vector_size": 784,
+    "distance": "l2",
+    "type": "h5",
+    "path": "fashion-mnist-784/fashion-mnist-784-euclidean-extended.hdf5",
+    "link": ""
+  },
+  {
+    "name": "fashion-mnist-784",
+    "vector_size": 784,
+    "distance": "l2",
+    "type": "h5",
+    "path": "fashion-mnist-784/fashion-mnist-784-euclidean.hdf5",
+    "link": "http://ann-benchmarks.com/fashion-mnist-784-euclidean.hdf5"
+  },
+  {
     "name": "glove-25-angular",
     "vector_size": 25,
     "distance": "cosine",
@@ -16,12 +48,36 @@
     "link": "http://ann-benchmarks.com/glove-100-angular.hdf5"
   },
   {
+    "name": "glove-100-angular-subset",
+    "vector_size": 100,
+    "distance": "cosine",
+    "type": "h5",
+    "path": "glove-100-angular/glove-100-angular-subset.hdf5",
+    "link": "http://ann-benchmarks.com/glove-100-angular-subset.hdf5"
+  },
+  {
+    "name": "glove-200-angular",
+    "vector_size": 200,
+    "distance": "cosine",
+    "type": "h5",
+    "path": "glove-200-angular/glove-200-angular.hdf5",
+    "link": "http://ann-benchmarks.com/glove-200-angular.hdf5"
+  },
+  {
     "name": "deep-image-96-angular",
     "vector_size": 96,
     "distance": "cosine",
     "type": "h5",
     "path": "deep-image-96-angular/deep-image-96-angular.hdf5",
     "link": "http://ann-benchmarks.com/deep-image-96-angular.hdf5"
+  },
+  {
+    "name": "deep-image-96-angular-reduced",
+    "vector_size": 96,
+    "distance": "cosine",
+    "type": "h5",
+    "path": "deep-image-96-angular/deep-image-96-angular-reduced.hdf5",
+    "link": ""
   },
   {
     "name": "gist-960-euclidean",
