@@ -26,6 +26,8 @@ from engine.clients.weaviate import (
     WeaviateUploader,
 )
 
+from engine.clients.gsi import GSIConfigurator
+
 ENGINE_CONFIGURATORS = {
     "qdrant": QdrantConfigurator,
     "weaviate": WeaviateConfigurator,
