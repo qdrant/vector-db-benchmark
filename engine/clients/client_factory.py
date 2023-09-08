@@ -33,6 +33,7 @@ ENGINE_CONFIGURATORS = {
     "elastic": ElasticConfigurator,
     "opensearch": OpenSearchConfigurator,
     "redis": RedisConfigurator,
+    "gsi": GSIConfigurator
 }
 
 ENGINE_UPLOADERS = {
