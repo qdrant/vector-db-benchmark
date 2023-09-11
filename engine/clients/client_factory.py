@@ -26,7 +26,7 @@ from engine.clients.weaviate import (
     WeaviateUploader,
 )
 
-from engine.clients.gsi import GSIConfigurator
+from engine.clients.gsi import GSIConfigurator, GSISearcher
 
 ENGINE_CONFIGURATORS = {
     "qdrant": QdrantConfigurator,
@@ -35,7 +35,7 @@ ENGINE_CONFIGURATORS = {
     "elastic": ElasticConfigurator,
     "opensearch": OpenSearchConfigurator,
     "redis": RedisConfigurator,
-    "gsi": GSIConfigurator
+    "gsi": GSIConfigurator,
 }
 
 ENGINE_UPLOADERS = {
@@ -54,6 +54,7 @@ ENGINE_SEARCHERS = {
     "elastic": ElasticSearcher,
     "opensearch": OpenSearchSearcher,
     "redis": RedisSearcher,
+    "gsi": GSISearcher,
 }
 
 
