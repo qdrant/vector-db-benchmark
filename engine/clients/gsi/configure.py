@@ -1,5 +1,5 @@
-import gsi.swagger_client as swagger_client
-from gsi.swagger_client.models import *
+import swagger_client as swagger_client
+from swagger_client.models import *
 
 from benchmark.dataset import Dataset
 from engine.base_client.configure import BaseConfigurator

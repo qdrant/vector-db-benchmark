@@ -5,7 +5,7 @@ import time, os
 from engine.base_client.search import BaseSearcher
 from engine.clients.gsi.config import GSI_DEFAULT_PORT, GSI_DEFAULT_ALLOC, GSI_DEFUALT_VERSION, GSI_DEFAULT_DATA_PATH
 from engine.clients.gsi.client import GSIClient
-from gsi.swagger_client.models import *
+from swagger_client.models import *
 
 
 class GSISearcher(BaseSearcher):
@@ -68,3 +68,5 @@ class GSISearcher(BaseSearcher):
             SearchRequest(cls.client.allocation_id, dataset_id, queries_file_path=qpath, topk=top),
             cls.client.allocation_id
         )
+
+        # TODO: format search results, List[Tuple[int, float]]

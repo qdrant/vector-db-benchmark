@@ -1,5 +1,5 @@
-import gsi.swagger_client as swagger_client
-from gsi.swagger_client.models import *
+import swagger_client as swagger_client
+from swagger_client.models import *
 from engine.clients.gsi.config import GSI_DEFAULT_ALLOC, GSI_DEFAULT_PORT, GSI_DEFUALT_VERSION
 
 class GSIClient:
