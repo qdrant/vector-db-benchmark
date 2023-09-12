@@ -11,7 +11,7 @@ from swagger_client.models import *
 class GSISearcher(BaseSearcher):
 
     @classmethod
-    def init_client(cls, host, connection_params: dict, search_params: dict):
+    def init_client(cls, host, distance, connection_params: dict, search_params: dict):
         cls.search_params = search_params
         cls.client = GSIClient(host, connection_params)
         
@@ -23,7 +23,8 @@ class GSISearcher(BaseSearcher):
 
         # import dataset
         response = cls.client.datasets_apis.controllers_dataset_controller_import_dataset(
-            ImportDatasetRequest(GSI_DEFAULT_DATA_PATH, cls.allocation_id, search_type, train_ind=True, nbits=nbits)
+            ImportDatasetRequest(GSI_DEFAULT_DATA_PATH, cls.client.allocation_id, search_type, train_ind=True, nbits=nbits),
+            cls.client.allocation_id
         )
         print("... got datasetid=", response.dataset_id)
         dataset_id = response.dataset_id
@@ -68,5 +69,9 @@ class GSISearcher(BaseSearcher):
             SearchRequest(cls.client.allocation_id, dataset_id, queries_file_path=qpath, topk=top),
             cls.client.allocation_id
         )
-
-        # TODO: format search results, List[Tuple[int, float]]
+        # parse results
+        inds, dists = response["indices"], response["distance"]
+        id_score_pairs: List[Tuple[int, float]] = []
+        for ind, dist in zip(inds, dists):
+            id_score_pairs.append((ind, dist))
+        return id_score_pairs
