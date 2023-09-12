@@ -139,6 +139,113 @@ class UtilitiesApi(object):
             _request_timeout=params.get('_request_timeout'),
             collection_formats=collection_formats)
 
+    def controllers_utilities_controller_abort_upload_to_s3(self, body, allocation_token, **kwargs):  # noqa: E501
+        """get presignedUrl AWS S3 Bucket for specific user  # noqa: E501
+
+        get presignedUrl AWS S3 Bucket for specific user  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.controllers_utilities_controller_abort_upload_to_s3(body, allocation_token, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param AbortUploadRequest body: (required)
+        :param str allocation_token: (required)
+        :return: GetFilesFromS3Response
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.controllers_utilities_controller_abort_upload_to_s3_with_http_info(body, allocation_token, **kwargs)  # noqa: E501
+        else:
+            (data) = self.controllers_utilities_controller_abort_upload_to_s3_with_http_info(body, allocation_token, **kwargs)  # noqa: E501
+            return data
+
+    def controllers_utilities_controller_abort_upload_to_s3_with_http_info(self, body, allocation_token, **kwargs):  # noqa: E501
+        """get presignedUrl AWS S3 Bucket for specific user  # noqa: E501
+
+        get presignedUrl AWS S3 Bucket for specific user  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.controllers_utilities_controller_abort_upload_to_s3_with_http_info(body, allocation_token, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param AbortUploadRequest body: (required)
+        :param str allocation_token: (required)
+        :return: GetFilesFromS3Response
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['body', 'allocation_token']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method controllers_utilities_controller_abort_upload_to_s3" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'body' is set
+        if ('body' not in params or
+                params['body'] is None):
+            raise ValueError("Missing the required parameter `body` when calling `controllers_utilities_controller_abort_upload_to_s3`")  # noqa: E501
+        # verify the required parameter 'allocation_token' is set
+        if ('allocation_token' not in params or
+                params['allocation_token'] is None):
+            raise ValueError("Missing the required parameter `allocation_token` when calling `controllers_utilities_controller_abort_upload_to_s3`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+
+        query_params = []
+
+        header_params = {}
+        if 'allocation_token' in params:
+            header_params['allocationToken'] = params['allocation_token']  # noqa: E501
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        if 'body' in params:
+            body_params = params['body']
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = []  # noqa: E501
+
+        return self.api_client.call_api(
+            '/s3/upload/abort', 'POST',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='GetFilesFromS3Response',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
     def controllers_utilities_controller_alive(self, **kwargs):  # noqa: E501
         """alive message.  # noqa: E501
 
@@ -321,6 +428,220 @@ class UtilitiesApi(object):
             _request_timeout=params.get('_request_timeout'),
             collection_formats=collection_formats)
 
+    def controllers_utilities_controller_compare_recall_at10(self, body, allocation_token, **kwargs):  # noqa: E501
+        """Compare search results against ground truth and returns the recal@10.  # noqa: E501
+
+        Compare search results against ground truth and returns the recal@10.  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.controllers_utilities_controller_compare_recall_at10(body, allocation_token, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param RecallCompareRequest body: (required)
+        :param str allocation_token: (required)
+        :return: RecallCompareResponse
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.controllers_utilities_controller_compare_recall_at10_with_http_info(body, allocation_token, **kwargs)  # noqa: E501
+        else:
+            (data) = self.controllers_utilities_controller_compare_recall_at10_with_http_info(body, allocation_token, **kwargs)  # noqa: E501
+            return data
+
+    def controllers_utilities_controller_compare_recall_at10_with_http_info(self, body, allocation_token, **kwargs):  # noqa: E501
+        """Compare search results against ground truth and returns the recal@10.  # noqa: E501
+
+        Compare search results against ground truth and returns the recal@10.  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.controllers_utilities_controller_compare_recall_at10_with_http_info(body, allocation_token, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param RecallCompareRequest body: (required)
+        :param str allocation_token: (required)
+        :return: RecallCompareResponse
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['body', 'allocation_token']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method controllers_utilities_controller_compare_recall_at10" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'body' is set
+        if ('body' not in params or
+                params['body'] is None):
+            raise ValueError("Missing the required parameter `body` when calling `controllers_utilities_controller_compare_recall_at10`")  # noqa: E501
+        # verify the required parameter 'allocation_token' is set
+        if ('allocation_token' not in params or
+                params['allocation_token'] is None):
+            raise ValueError("Missing the required parameter `allocation_token` when calling `controllers_utilities_controller_compare_recall_at10`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+
+        query_params = []
+
+        header_params = {}
+        if 'allocation_token' in params:
+            header_params['allocationToken'] = params['allocation_token']  # noqa: E501
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        if 'body' in params:
+            body_params = params['body']
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = []  # noqa: E501
+
+        return self.api_client.call_api(
+            '/groundtruth/compare', 'POST',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='RecallCompareResponse',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
+    def controllers_utilities_controller_complete_upload_to_s3(self, body, allocation_token, **kwargs):  # noqa: E501
+        """get presignedUrl AWS S3 Bucket for specific user  # noqa: E501
+
+        get presignedUrl AWS S3 Bucket for specific user  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.controllers_utilities_controller_complete_upload_to_s3(body, allocation_token, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param CompleteUploadRequest body: (required)
+        :param str allocation_token: (required)
+        :return: GetFilesFromS3Response
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.controllers_utilities_controller_complete_upload_to_s3_with_http_info(body, allocation_token, **kwargs)  # noqa: E501
+        else:
+            (data) = self.controllers_utilities_controller_complete_upload_to_s3_with_http_info(body, allocation_token, **kwargs)  # noqa: E501
+            return data
+
+    def controllers_utilities_controller_complete_upload_to_s3_with_http_info(self, body, allocation_token, **kwargs):  # noqa: E501
+        """get presignedUrl AWS S3 Bucket for specific user  # noqa: E501
+
+        get presignedUrl AWS S3 Bucket for specific user  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.controllers_utilities_controller_complete_upload_to_s3_with_http_info(body, allocation_token, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param CompleteUploadRequest body: (required)
+        :param str allocation_token: (required)
+        :return: GetFilesFromS3Response
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['body', 'allocation_token']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method controllers_utilities_controller_complete_upload_to_s3" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'body' is set
+        if ('body' not in params or
+                params['body'] is None):
+            raise ValueError("Missing the required parameter `body` when calling `controllers_utilities_controller_complete_upload_to_s3`")  # noqa: E501
+        # verify the required parameter 'allocation_token' is set
+        if ('allocation_token' not in params or
+                params['allocation_token'] is None):
+            raise ValueError("Missing the required parameter `allocation_token` when calling `controllers_utilities_controller_complete_upload_to_s3`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+
+        query_params = []
+
+        header_params = {}
+        if 'allocation_token' in params:
+            header_params['allocationToken'] = params['allocation_token']  # noqa: E501
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        if 'body' in params:
+            body_params = params['body']
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = []  # noqa: E501
+
+        return self.api_client.call_api(
+            '/s3/upload/complete', 'POST',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='GetFilesFromS3Response',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
     def controllers_utilities_controller_create_ground_truth(self, body, allocation_token, **kwargs):  # noqa: E501
         """Create ground truth.  # noqa: E501
 
@@ -333,7 +654,7 @@ class UtilitiesApi(object):
         :param async_req bool
         :param CreateGTRequest body: (required)
         :param str allocation_token: (required)
-        :return: CreateGTResponse
+        :return: InlineResponse200
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -356,7 +677,7 @@ class UtilitiesApi(object):
         :param async_req bool
         :param CreateGTRequest body: (required)
         :param str allocation_token: (required)
-        :return: CreateGTResponse
+        :return: InlineResponse200
                  If the method is called asynchronously,
                  returns the request thread.
         """
@@ -420,7 +741,7 @@ class UtilitiesApi(object):
             body=body_params,
             post_params=form_params,
             files=local_var_files,
-            response_type='CreateGTResponse',  # noqa: E501
+            response_type='InlineResponse200',  # noqa: E501
             auth_settings=auth_settings,
             async_req=params.get('async_req'),
             _return_http_data_only=params.get('_return_http_data_only'),
@@ -1046,6 +1367,101 @@ class UtilitiesApi(object):
             _request_timeout=params.get('_request_timeout'),
             collection_formats=collection_formats)
 
+    def controllers_utilities_controller_get_queries_list(self, allocation_token, **kwargs):  # noqa: E501
+        """Get the list of available queries.  # noqa: E501
+
+        Get the list of available queries.  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.controllers_utilities_controller_get_queries_list(allocation_token, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str allocation_token: (required)
+        :return: GetQueriesListResponse
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.controllers_utilities_controller_get_queries_list_with_http_info(allocation_token, **kwargs)  # noqa: E501
+        else:
+            (data) = self.controllers_utilities_controller_get_queries_list_with_http_info(allocation_token, **kwargs)  # noqa: E501
+            return data
+
+    def controllers_utilities_controller_get_queries_list_with_http_info(self, allocation_token, **kwargs):  # noqa: E501
+        """Get the list of available queries.  # noqa: E501
+
+        Get the list of available queries.  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.controllers_utilities_controller_get_queries_list_with_http_info(allocation_token, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str allocation_token: (required)
+        :return: GetQueriesListResponse
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['allocation_token']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method controllers_utilities_controller_get_queries_list" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'allocation_token' is set
+        if ('allocation_token' not in params or
+                params['allocation_token'] is None):
+            raise ValueError("Missing the required parameter `allocation_token` when calling `controllers_utilities_controller_get_queries_list`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+
+        query_params = []
+
+        header_params = {}
+        if 'allocation_token' in params:
+            header_params['allocationToken'] = params['allocation_token']  # noqa: E501
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = []  # noqa: E501
+
+        return self.api_client.call_api(
+            '/utilities/query/list', 'GET',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='GetQueriesListResponse',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
     def controllers_utilities_controller_get_s3_presigned_url(self, body, allocation_token, **kwargs):  # noqa: E501
         """get presignedUrl AWS S3 Bucket for specific user  # noqa: E501
 
@@ -1153,6 +1569,216 @@ class UtilitiesApi(object):
             _request_timeout=params.get('_request_timeout'),
             collection_formats=collection_formats)
 
+    def controllers_utilities_controller_import_queries(self, body, allocation_token, **kwargs):  # noqa: E501
+        """Import a queries file.  # noqa: E501
+
+        Import a queries file.  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.controllers_utilities_controller_import_queries(body, allocation_token, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param ImportQueriesRequest body: (required)
+        :param str allocation_token: (required)
+        :return: ImportQueriesResponse
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.controllers_utilities_controller_import_queries_with_http_info(body, allocation_token, **kwargs)  # noqa: E501
+        else:
+            (data) = self.controllers_utilities_controller_import_queries_with_http_info(body, allocation_token, **kwargs)  # noqa: E501
+            return data
+
+    def controllers_utilities_controller_import_queries_with_http_info(self, body, allocation_token, **kwargs):  # noqa: E501
+        """Import a queries file.  # noqa: E501
+
+        Import a queries file.  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.controllers_utilities_controller_import_queries_with_http_info(body, allocation_token, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param ImportQueriesRequest body: (required)
+        :param str allocation_token: (required)
+        :return: ImportQueriesResponse
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['body', 'allocation_token']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method controllers_utilities_controller_import_queries" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'body' is set
+        if ('body' not in params or
+                params['body'] is None):
+            raise ValueError("Missing the required parameter `body` when calling `controllers_utilities_controller_import_queries`")  # noqa: E501
+        # verify the required parameter 'allocation_token' is set
+        if ('allocation_token' not in params or
+                params['allocation_token'] is None):
+            raise ValueError("Missing the required parameter `allocation_token` when calling `controllers_utilities_controller_import_queries`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+
+        query_params = []
+
+        header_params = {}
+        if 'allocation_token' in params:
+            header_params['allocationToken'] = params['allocation_token']  # noqa: E501
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        if 'body' in params:
+            body_params = params['body']
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = []  # noqa: E501
+
+        return self.api_client.call_api(
+            '/utilities/query/import', 'POST',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='ImportQueriesResponse',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
+    def controllers_utilities_controller_remove_query(self, query_id, allocation_token, **kwargs):  # noqa: E501
+        """Remove a query file from list  # noqa: E501
+
+        Removes a query based on query ID from list of queries file  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.controllers_utilities_controller_remove_query(query_id, allocation_token, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str query_id: Query UID identifies the specific query. (required)
+        :param str allocation_token: (required)
+        :return: QueriesFileResponse
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.controllers_utilities_controller_remove_query_with_http_info(query_id, allocation_token, **kwargs)  # noqa: E501
+        else:
+            (data) = self.controllers_utilities_controller_remove_query_with_http_info(query_id, allocation_token, **kwargs)  # noqa: E501
+            return data
+
+    def controllers_utilities_controller_remove_query_with_http_info(self, query_id, allocation_token, **kwargs):  # noqa: E501
+        """Remove a query file from list  # noqa: E501
+
+        Removes a query based on query ID from list of queries file  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.controllers_utilities_controller_remove_query_with_http_info(query_id, allocation_token, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str query_id: Query UID identifies the specific query. (required)
+        :param str allocation_token: (required)
+        :return: QueriesFileResponse
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['query_id', 'allocation_token']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method controllers_utilities_controller_remove_query" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'query_id' is set
+        if ('query_id' not in params or
+                params['query_id'] is None):
+            raise ValueError("Missing the required parameter `query_id` when calling `controllers_utilities_controller_remove_query`")  # noqa: E501
+        # verify the required parameter 'allocation_token' is set
+        if ('allocation_token' not in params or
+                params['allocation_token'] is None):
+            raise ValueError("Missing the required parameter `allocation_token` when calling `controllers_utilities_controller_remove_query`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+        if 'query_id' in params:
+            path_params['query_id'] = params['query_id']  # noqa: E501
+
+        query_params = []
+
+        header_params = {}
+        if 'allocation_token' in params:
+            header_params['allocationToken'] = params['allocation_token']  # noqa: E501
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = []  # noqa: E501
+
+        return self.api_client.call_api(
+            '/utilities/query/remove/{query_id}', 'DELETE',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='QueriesFileResponse',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
     def controllers_utilities_controller_save_results(self, body, allocation_token, **kwargs):  # noqa: E501
         """Save json structured results to a file.  # noqa: E501
 
@@ -1253,220 +1879,6 @@ class UtilitiesApi(object):
             post_params=form_params,
             files=local_var_files,
             response_type='SaveResultsResponse',  # noqa: E501
-            auth_settings=auth_settings,
-            async_req=params.get('async_req'),
-            _return_http_data_only=params.get('_return_http_data_only'),
-            _preload_content=params.get('_preload_content', True),
-            _request_timeout=params.get('_request_timeout'),
-            collection_formats=collection_formats)
-
-    def controllers_utilities_controller_upload_file_to_s3(self, file_to_upload, allocation_token, **kwargs):  # noqa: E501
-        """Upload file to AWS S3 Bucket  # noqa: E501
-
-        Upload file to AWS S3 Bucket  # noqa: E501
-        This method makes a synchronous HTTP request by default. To make an
-        asynchronous HTTP request, please pass async_req=True
-        >>> thread = api.controllers_utilities_controller_upload_file_to_s3(file_to_upload, allocation_token, async_req=True)
-        >>> result = thread.get()
-
-        :param async_req bool
-        :param str file_to_upload: (required)
-        :param str allocation_token: (required)
-        :return: UploadFileResponse
-                 If the method is called asynchronously,
-                 returns the request thread.
-        """
-        kwargs['_return_http_data_only'] = True
-        if kwargs.get('async_req'):
-            return self.controllers_utilities_controller_upload_file_to_s3_with_http_info(file_to_upload, allocation_token, **kwargs)  # noqa: E501
-        else:
-            (data) = self.controllers_utilities_controller_upload_file_to_s3_with_http_info(file_to_upload, allocation_token, **kwargs)  # noqa: E501
-            return data
-
-    def controllers_utilities_controller_upload_file_to_s3_with_http_info(self, file_to_upload, allocation_token, **kwargs):  # noqa: E501
-        """Upload file to AWS S3 Bucket  # noqa: E501
-
-        Upload file to AWS S3 Bucket  # noqa: E501
-        This method makes a synchronous HTTP request by default. To make an
-        asynchronous HTTP request, please pass async_req=True
-        >>> thread = api.controllers_utilities_controller_upload_file_to_s3_with_http_info(file_to_upload, allocation_token, async_req=True)
-        >>> result = thread.get()
-
-        :param async_req bool
-        :param str file_to_upload: (required)
-        :param str allocation_token: (required)
-        :return: UploadFileResponse
-                 If the method is called asynchronously,
-                 returns the request thread.
-        """
-
-        all_params = ['file_to_upload', 'allocation_token']  # noqa: E501
-        all_params.append('async_req')
-        all_params.append('_return_http_data_only')
-        all_params.append('_preload_content')
-        all_params.append('_request_timeout')
-
-        params = locals()
-        for key, val in six.iteritems(params['kwargs']):
-            if key not in all_params:
-                raise TypeError(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method controllers_utilities_controller_upload_file_to_s3" % key
-                )
-            params[key] = val
-        del params['kwargs']
-        # verify the required parameter 'file_to_upload' is set
-        if ('file_to_upload' not in params or
-                params['file_to_upload'] is None):
-            raise ValueError("Missing the required parameter `file_to_upload` when calling `controllers_utilities_controller_upload_file_to_s3`")  # noqa: E501
-        # verify the required parameter 'allocation_token' is set
-        if ('allocation_token' not in params or
-                params['allocation_token'] is None):
-            raise ValueError("Missing the required parameter `allocation_token` when calling `controllers_utilities_controller_upload_file_to_s3`")  # noqa: E501
-
-        collection_formats = {}
-
-        path_params = {}
-
-        query_params = []
-
-        header_params = {}
-        if 'allocation_token' in params:
-            header_params['allocationToken'] = params['allocation_token']  # noqa: E501
-
-        form_params = []
-        local_var_files = {}
-        if 'file_to_upload' in params:
-            local_var_files['fileToUpload'] = params['file_to_upload']  # noqa: E501
-
-        body_params = None
-        # HTTP header `Accept`
-        header_params['Accept'] = self.api_client.select_header_accept(
-            ['application/json'])  # noqa: E501
-
-        # HTTP header `Content-Type`
-        header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
-            ['multipart/form-data'])  # noqa: E501
-
-        # Authentication setting
-        auth_settings = []  # noqa: E501
-
-        return self.api_client.call_api(
-            '/s3/upload', 'POST',
-            path_params,
-            query_params,
-            header_params,
-            body=body_params,
-            post_params=form_params,
-            files=local_var_files,
-            response_type='UploadFileResponse',  # noqa: E501
-            auth_settings=auth_settings,
-            async_req=params.get('async_req'),
-            _return_http_data_only=params.get('_return_http_data_only'),
-            _preload_content=params.get('_preload_content', True),
-            _request_timeout=params.get('_request_timeout'),
-            collection_formats=collection_formats)
-
-    def controllers_utilities_controller_validate(self, body, allocation_token, **kwargs):  # noqa: E501
-        """Validate search results against ground truth.  # noqa: E501
-
-        Validate search results against ground truth.  # noqa: E501
-        This method makes a synchronous HTTP request by default. To make an
-        asynchronous HTTP request, please pass async_req=True
-        >>> thread = api.controllers_utilities_controller_validate(body, allocation_token, async_req=True)
-        >>> result = thread.get()
-
-        :param async_req bool
-        :param ValidateRequest body: (required)
-        :param str allocation_token: (required)
-        :return: ValidateResponse
-                 If the method is called asynchronously,
-                 returns the request thread.
-        """
-        kwargs['_return_http_data_only'] = True
-        if kwargs.get('async_req'):
-            return self.controllers_utilities_controller_validate_with_http_info(body, allocation_token, **kwargs)  # noqa: E501
-        else:
-            (data) = self.controllers_utilities_controller_validate_with_http_info(body, allocation_token, **kwargs)  # noqa: E501
-            return data
-
-    def controllers_utilities_controller_validate_with_http_info(self, body, allocation_token, **kwargs):  # noqa: E501
-        """Validate search results against ground truth.  # noqa: E501
-
-        Validate search results against ground truth.  # noqa: E501
-        This method makes a synchronous HTTP request by default. To make an
-        asynchronous HTTP request, please pass async_req=True
-        >>> thread = api.controllers_utilities_controller_validate_with_http_info(body, allocation_token, async_req=True)
-        >>> result = thread.get()
-
-        :param async_req bool
-        :param ValidateRequest body: (required)
-        :param str allocation_token: (required)
-        :return: ValidateResponse
-                 If the method is called asynchronously,
-                 returns the request thread.
-        """
-
-        all_params = ['body', 'allocation_token']  # noqa: E501
-        all_params.append('async_req')
-        all_params.append('_return_http_data_only')
-        all_params.append('_preload_content')
-        all_params.append('_request_timeout')
-
-        params = locals()
-        for key, val in six.iteritems(params['kwargs']):
-            if key not in all_params:
-                raise TypeError(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method controllers_utilities_controller_validate" % key
-                )
-            params[key] = val
-        del params['kwargs']
-        # verify the required parameter 'body' is set
-        if ('body' not in params or
-                params['body'] is None):
-            raise ValueError("Missing the required parameter `body` when calling `controllers_utilities_controller_validate`")  # noqa: E501
-        # verify the required parameter 'allocation_token' is set
-        if ('allocation_token' not in params or
-                params['allocation_token'] is None):
-            raise ValueError("Missing the required parameter `allocation_token` when calling `controllers_utilities_controller_validate`")  # noqa: E501
-
-        collection_formats = {}
-
-        path_params = {}
-
-        query_params = []
-
-        header_params = {}
-        if 'allocation_token' in params:
-            header_params['allocationToken'] = params['allocation_token']  # noqa: E501
-
-        form_params = []
-        local_var_files = {}
-
-        body_params = None
-        if 'body' in params:
-            body_params = params['body']
-        # HTTP header `Accept`
-        header_params['Accept'] = self.api_client.select_header_accept(
-            ['application/json'])  # noqa: E501
-
-        # HTTP header `Content-Type`
-        header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
-            ['application/json'])  # noqa: E501
-
-        # Authentication setting
-        auth_settings = []  # noqa: E501
-
-        return self.api_client.call_api(
-            '/groundtruth/compare', 'POST',
-            path_params,
-            query_params,
-            header_params,
-            body=body_params,
-            post_params=form_params,
-            files=local_var_files,
-            response_type='ValidateResponse',  # noqa: E501
             auth_settings=auth_settings,
             async_req=params.get('async_req'),
             _return_http_data_only=params.get('_return_http_data_only'),

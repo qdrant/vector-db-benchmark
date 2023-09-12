@@ -40,7 +40,8 @@ class LoadDatasetRequest(object):
         'neural_matrix_id': 'str',
         'algorithm': 'str',
         'bitmasks_ind': 'bool',
-        'async_load': 'bool'
+        'async_load': 'bool',
+        'max_n_probes': 'int'
     }
 
     attribute_map = {
@@ -56,10 +57,11 @@ class LoadDatasetRequest(object):
         'neural_matrix_id': 'neuralMatrixId',
         'algorithm': 'algorithm',
         'bitmasks_ind': 'bitmasksInd',
-        'async_load': 'asyncLoad'
+        'async_load': 'asyncLoad',
+        'max_n_probes': 'maxNProbes'
     }
 
-    def __init__(self, allocation_id=None, dataset_id=None, typical_n_queries=10, max_n_queries=3100, normalize=False, centroids_hamming_k=5000, centroids_rerank=4000, hamming_k=3200, topk=1000, neural_matrix_id=None, algorithm=None, bitmasks_ind=False, async_load=False):  # noqa: E501
+    def __init__(self, allocation_id=None, dataset_id=None, typical_n_queries=10, max_n_queries=3100, normalize=False, centroids_hamming_k=5000, centroids_rerank=4000, hamming_k=3200, topk=25, neural_matrix_id=None, algorithm=None, bitmasks_ind=False, async_load=False, max_n_probes=64):  # noqa: E501
         """LoadDatasetRequest - a model defined in Swagger"""  # noqa: E501
         self._allocation_id = None
         self._dataset_id = None
@@ -74,6 +76,7 @@ class LoadDatasetRequest(object):
         self._algorithm = None
         self._bitmasks_ind = None
         self._async_load = None
+        self._max_n_probes = None
         self.discriminator = None
         self.allocation_id = allocation_id
         self.dataset_id = dataset_id
@@ -99,6 +102,8 @@ class LoadDatasetRequest(object):
             self.bitmasks_ind = bitmasks_ind
         if async_load is not None:
             self.async_load = async_load
+        if max_n_probes is not None:
+            self.max_n_probes = max_n_probes
 
     @property
     def allocation_id(self):
@@ -408,6 +413,29 @@ class LoadDatasetRequest(object):
         """
 
         self._async_load = async_load
+
+    @property
+    def max_n_probes(self):
+        """Gets the max_n_probes of this LoadDatasetRequest.  # noqa: E501
+
+        Maximum number of NProbes to be used in the search  # noqa: E501
+
+        :return: The max_n_probes of this LoadDatasetRequest.  # noqa: E501
+        :rtype: int
+        """
+        return self._max_n_probes
+
+    @max_n_probes.setter
+    def max_n_probes(self, max_n_probes):
+        """Sets the max_n_probes of this LoadDatasetRequest.
+
+        Maximum number of NProbes to be used in the search  # noqa: E501
+
+        :param max_n_probes: The max_n_probes of this LoadDatasetRequest.  # noqa: E501
+        :type: int
+        """
+
+        self._max_n_probes = max_n_probes
 
     def to_dict(self):
         """Returns the model properties as a dict"""

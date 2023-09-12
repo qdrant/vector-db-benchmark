@@ -34,6 +34,9 @@ class SearchRequest(object):
         'queries_file_type': 'str',
         'queries_file_path': 'OneOfSearchRequestQueriesFilePath',
         'topk': 'int',
+        'ef_search': 'int',
+        'n_probs': 'int',
+        'num_of_threads': 'int',
         'prefilters': 'list[SearchRequestPrefilters]'
     }
 
@@ -44,10 +47,13 @@ class SearchRequest(object):
         'queries_file_type': 'queriesFileType',
         'queries_file_path': 'queriesFilePath',
         'topk': 'topk',
+        'ef_search': 'efSearch',
+        'n_probs': 'nProbs',
+        'num_of_threads': 'numOfThreads',
         'prefilters': 'prefilters'
     }
 
-    def __init__(self, allocation_id=None, dataset_id=None, neural_matrix_id=None, queries_file_type=None, queries_file_path=None, topk=25, prefilters=None):  # noqa: E501
+    def __init__(self, allocation_id=None, dataset_id=None, neural_matrix_id=None, queries_file_type=None, queries_file_path=None, topk=25, ef_search=100, n_probs=10, num_of_threads=-1, prefilters=None):  # noqa: E501
         """SearchRequest - a model defined in Swagger"""  # noqa: E501
         self._allocation_id = None
         self._dataset_id = None
@@ -55,6 +61,9 @@ class SearchRequest(object):
         self._queries_file_type = None
         self._queries_file_path = None
         self._topk = None
+        self._ef_search = None
+        self._n_probs = None
+        self._num_of_threads = None
         self._prefilters = None
         self.discriminator = None
         self.allocation_id = allocation_id
@@ -66,6 +75,12 @@ class SearchRequest(object):
         self.queries_file_path = queries_file_path
         if topk is not None:
             self.topk = topk
+        if ef_search is not None:
+            self.ef_search = ef_search
+        if n_probs is not None:
+            self.n_probs = n_probs
+        if num_of_threads is not None:
+            self.num_of_threads = num_of_threads
         if prefilters is not None:
             self.prefilters = prefilters
 
@@ -210,6 +225,75 @@ class SearchRequest(object):
         """
 
         self._topk = topk
+
+    @property
+    def ef_search(self):
+        """Gets the ef_search of this SearchRequest.  # noqa: E501
+
+        Number of neighbors to search for each node in the HNSW graph  # noqa: E501
+
+        :return: The ef_search of this SearchRequest.  # noqa: E501
+        :rtype: int
+        """
+        return self._ef_search
+
+    @ef_search.setter
+    def ef_search(self, ef_search):
+        """Sets the ef_search of this SearchRequest.
+
+        Number of neighbors to search for each node in the HNSW graph  # noqa: E501
+
+        :param ef_search: The ef_search of this SearchRequest.  # noqa: E501
+        :type: int
+        """
+
+        self._ef_search = ef_search
+
+    @property
+    def n_probs(self):
+        """Gets the n_probs of this SearchRequest.  # noqa: E501
+
+        Number of clusters to search inside  # noqa: E501
+
+        :return: The n_probs of this SearchRequest.  # noqa: E501
+        :rtype: int
+        """
+        return self._n_probs
+
+    @n_probs.setter
+    def n_probs(self, n_probs):
+        """Sets the n_probs of this SearchRequest.
+
+        Number of clusters to search inside  # noqa: E501
+
+        :param n_probs: The n_probs of this SearchRequest.  # noqa: E501
+        :type: int
+        """
+
+        self._n_probs = n_probs
+
+    @property
+    def num_of_threads(self):
+        """Gets the num_of_threads of this SearchRequest.  # noqa: E501
+
+        Number of threads to be used during the hnsw search  # noqa: E501
+
+        :return: The num_of_threads of this SearchRequest.  # noqa: E501
+        :rtype: int
+        """
+        return self._num_of_threads
+
+    @num_of_threads.setter
+    def num_of_threads(self, num_of_threads):
+        """Sets the num_of_threads of this SearchRequest.
+
+        Number of threads to be used during the hnsw search  # noqa: E501
+
+        :param num_of_threads: The num_of_threads of this SearchRequest.  # noqa: E501
+        :type: int
+        """
+
+        self._num_of_threads = num_of_threads
 
     @property
     def prefilters(self):

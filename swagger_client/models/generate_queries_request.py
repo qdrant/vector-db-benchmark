@@ -29,21 +29,26 @@ class GenerateQueriesRequest(object):
     """
     swagger_types = {
         'num_of_records': 'int',
-        'num_of_features': 'int'
+        'num_of_features': 'int',
+        'query_type': 'str'
     }
 
     attribute_map = {
         'num_of_records': 'numOfRecords',
-        'num_of_features': 'numOfFeatures'
+        'num_of_features': 'numOfFeatures',
+        'query_type': 'queryType'
     }
 
-    def __init__(self, num_of_records=None, num_of_features=None):  # noqa: E501
+    def __init__(self, num_of_records=None, num_of_features=None, query_type='float32'):  # noqa: E501
         """GenerateQueriesRequest - a model defined in Swagger"""  # noqa: E501
         self._num_of_records = None
         self._num_of_features = None
+        self._query_type = None
         self.discriminator = None
         self.num_of_records = num_of_records
         self.num_of_features = num_of_features
+        if query_type is not None:
+            self.query_type = query_type
 
     @property
     def num_of_records(self):
@@ -94,6 +99,35 @@ class GenerateQueriesRequest(object):
             raise ValueError("Invalid value for `num_of_features`, must not be `None`")  # noqa: E501
 
         self._num_of_features = num_of_features
+
+    @property
+    def query_type(self):
+        """Gets the query_type of this GenerateQueriesRequest.  # noqa: E501
+
+        Type of query to generate - float32 or uint8  # noqa: E501
+
+        :return: The query_type of this GenerateQueriesRequest.  # noqa: E501
+        :rtype: str
+        """
+        return self._query_type
+
+    @query_type.setter
+    def query_type(self, query_type):
+        """Sets the query_type of this GenerateQueriesRequest.
+
+        Type of query to generate - float32 or uint8  # noqa: E501
+
+        :param query_type: The query_type of this GenerateQueriesRequest.  # noqa: E501
+        :type: str
+        """
+        allowed_values = ["float32", "uint8"]  # noqa: E501
+        if query_type not in allowed_values:
+            raise ValueError(
+                "Invalid value for `query_type` ({0}), must be one of {1}"  # noqa: E501
+                .format(query_type, allowed_values)
+            )
+
+        self._query_type = query_type
 
     def to_dict(self):
         """Returns the model properties as a dict"""

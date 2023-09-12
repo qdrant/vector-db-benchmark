@@ -29,34 +29,46 @@ class TrainDatasetRequest(object):
     """
     swagger_types = {
         'dataset_id': 'str',
-        'grid_train': 'bool',
+        'train_type': 'str',
         'nbits': 'int',
         'qbits': 'int',
         'num_of_boards': 'int',
-        'num_of_clusters': 'int'
+        'num_of_clusters': 'int',
+        'ef_construction': 'int',
+        'm_number_of_edges': 'int',
+        'distance_function': 'str',
+        'hnsw_use_ssd': 'bool'
     }
 
     attribute_map = {
         'dataset_id': 'datasetId',
-        'grid_train': 'gridTrain',
+        'train_type': 'trainType',
         'nbits': 'nbits',
         'qbits': 'qbits',
         'num_of_boards': 'numOfBoards',
-        'num_of_clusters': 'numOfClusters'
+        'num_of_clusters': 'numOfClusters',
+        'ef_construction': 'efConstruction',
+        'm_number_of_edges': 'mNumberOfEdges',
+        'distance_function': 'distanceFunction',
+        'hnsw_use_ssd': 'hnswUseSSD'
     }
 
-    def __init__(self, dataset_id=None, grid_train=False, nbits=768, qbits=768, num_of_boards=None, num_of_clusters=None):  # noqa: E501
+    def __init__(self, dataset_id=None, train_type='Regular', nbits=768, qbits=768, num_of_boards=None, num_of_clusters=None, ef_construction=100, m_number_of_edges=32, distance_function='cosine', hnsw_use_ssd=False):  # noqa: E501
         """TrainDatasetRequest - a model defined in Swagger"""  # noqa: E501
         self._dataset_id = None
-        self._grid_train = None
+        self._train_type = None
         self._nbits = None
         self._qbits = None
         self._num_of_boards = None
         self._num_of_clusters = None
+        self._ef_construction = None
+        self._m_number_of_edges = None
+        self._distance_function = None
+        self._hnsw_use_ssd = None
         self.discriminator = None
         self.dataset_id = dataset_id
-        if grid_train is not None:
-            self.grid_train = grid_train
+        if train_type is not None:
+            self.train_type = train_type
         if nbits is not None:
             self.nbits = nbits
         if qbits is not None:
@@ -65,6 +77,14 @@ class TrainDatasetRequest(object):
             self.num_of_boards = num_of_boards
         if num_of_clusters is not None:
             self.num_of_clusters = num_of_clusters
+        if ef_construction is not None:
+            self.ef_construction = ef_construction
+        if m_number_of_edges is not None:
+            self.m_number_of_edges = m_number_of_edges
+        if distance_function is not None:
+            self.distance_function = distance_function
+        if hnsw_use_ssd is not None:
+            self.hnsw_use_ssd = hnsw_use_ssd
 
     @property
     def dataset_id(self):
@@ -92,27 +112,33 @@ class TrainDatasetRequest(object):
         self._dataset_id = dataset_id
 
     @property
-    def grid_train(self):
-        """Gets the grid_train of this TrainDatasetRequest.  # noqa: E501
+    def train_type(self):
+        """Gets the train_type of this TrainDatasetRequest.  # noqa: E501
 
-        Flag that indicates whether the train should be optimized. Grid train is taking longer time than default train.  # noqa: E501
+        Flag that indicates whether the train should be optimized. Grid/Optuna train is taking longer time than Regular train.  # noqa: E501
 
-        :return: The grid_train of this TrainDatasetRequest.  # noqa: E501
-        :rtype: bool
+        :return: The train_type of this TrainDatasetRequest.  # noqa: E501
+        :rtype: str
         """
-        return self._grid_train
+        return self._train_type
 
-    @grid_train.setter
-    def grid_train(self, grid_train):
-        """Sets the grid_train of this TrainDatasetRequest.
+    @train_type.setter
+    def train_type(self, train_type):
+        """Sets the train_type of this TrainDatasetRequest.
 
-        Flag that indicates whether the train should be optimized. Grid train is taking longer time than default train.  # noqa: E501
+        Flag that indicates whether the train should be optimized. Grid/Optuna train is taking longer time than Regular train.  # noqa: E501
 
-        :param grid_train: The grid_train of this TrainDatasetRequest.  # noqa: E501
-        :type: bool
+        :param train_type: The train_type of this TrainDatasetRequest.  # noqa: E501
+        :type: str
         """
+        allowed_values = ["Regular", "Grid", "Optuna"]  # noqa: E501
+        if train_type not in allowed_values:
+            raise ValueError(
+                "Invalid value for `train_type` ({0}), must be one of {1}"  # noqa: E501
+                .format(train_type, allowed_values)
+            )
 
-        self._grid_train = grid_train
+        self._train_type = train_type
 
     @property
     def nbits(self):
@@ -205,6 +231,104 @@ class TrainDatasetRequest(object):
         """
 
         self._num_of_clusters = num_of_clusters
+
+    @property
+    def ef_construction(self):
+        """Gets the ef_construction of this TrainDatasetRequest.  # noqa: E501
+
+        controls the size of the candidate queue for edges when adding a node to the graph  # noqa: E501
+
+        :return: The ef_construction of this TrainDatasetRequest.  # noqa: E501
+        :rtype: int
+        """
+        return self._ef_construction
+
+    @ef_construction.setter
+    def ef_construction(self, ef_construction):
+        """Sets the ef_construction of this TrainDatasetRequest.
+
+        controls the size of the candidate queue for edges when adding a node to the graph  # noqa: E501
+
+        :param ef_construction: The ef_construction of this TrainDatasetRequest.  # noqa: E501
+        :type: int
+        """
+
+        self._ef_construction = ef_construction
+
+    @property
+    def m_number_of_edges(self):
+        """Gets the m_number_of_edges of this TrainDatasetRequest.  # noqa: E501
+
+        number of neighbors for each node in the HNSW graph  # noqa: E501
+
+        :return: The m_number_of_edges of this TrainDatasetRequest.  # noqa: E501
+        :rtype: int
+        """
+        return self._m_number_of_edges
+
+    @m_number_of_edges.setter
+    def m_number_of_edges(self, m_number_of_edges):
+        """Sets the m_number_of_edges of this TrainDatasetRequest.
+
+        number of neighbors for each node in the HNSW graph  # noqa: E501
+
+        :param m_number_of_edges: The m_number_of_edges of this TrainDatasetRequest.  # noqa: E501
+        :type: int
+        """
+
+        self._m_number_of_edges = m_number_of_edges
+
+    @property
+    def distance_function(self):
+        """Gets the distance_function of this TrainDatasetRequest.  # noqa: E501
+
+        controls the type of distance computation  # noqa: E501
+
+        :return: The distance_function of this TrainDatasetRequest.  # noqa: E501
+        :rtype: str
+        """
+        return self._distance_function
+
+    @distance_function.setter
+    def distance_function(self, distance_function):
+        """Sets the distance_function of this TrainDatasetRequest.
+
+        controls the type of distance computation  # noqa: E501
+
+        :param distance_function: The distance_function of this TrainDatasetRequest.  # noqa: E501
+        :type: str
+        """
+        allowed_values = ["cosine"]  # noqa: E501
+        if distance_function not in allowed_values:
+            raise ValueError(
+                "Invalid value for `distance_function` ({0}), must be one of {1}"  # noqa: E501
+                .format(distance_function, allowed_values)
+            )
+
+        self._distance_function = distance_function
+
+    @property
+    def hnsw_use_ssd(self):
+        """Gets the hnsw_use_ssd of this TrainDatasetRequest.  # noqa: E501
+
+        Only for HNSW - controls whether to use SSD or not  # noqa: E501
+
+        :return: The hnsw_use_ssd of this TrainDatasetRequest.  # noqa: E501
+        :rtype: bool
+        """
+        return self._hnsw_use_ssd
+
+    @hnsw_use_ssd.setter
+    def hnsw_use_ssd(self, hnsw_use_ssd):
+        """Sets the hnsw_use_ssd of this TrainDatasetRequest.
+
+        Only for HNSW - controls whether to use SSD or not  # noqa: E501
+
+        :param hnsw_use_ssd: The hnsw_use_ssd of this TrainDatasetRequest.  # noqa: E501
+        :type: bool
+        """
+
+        self._hnsw_use_ssd = hnsw_use_ssd
 
     def to_dict(self):
         """Returns the model properties as a dict"""

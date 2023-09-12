@@ -28,29 +28,19 @@ class ImportDatasetResponse(object):
                             and the value is json key in definition.
     """
     swagger_types = {
-        'dataset_id': 'str',
-        'queries_batch_reached': 'int',
-        'hamming_k': 'int'
+        'dataset_id': 'str'
     }
 
     attribute_map = {
-        'dataset_id': 'datasetId',
-        'queries_batch_reached': 'queries_batch_reached',
-        'hamming_k': 'hamming_k'
+        'dataset_id': 'datasetId'
     }
 
-    def __init__(self, dataset_id=None, queries_batch_reached=None, hamming_k=None):  # noqa: E501
+    def __init__(self, dataset_id=None):  # noqa: E501
         """ImportDatasetResponse - a model defined in Swagger"""  # noqa: E501
         self._dataset_id = None
-        self._queries_batch_reached = None
-        self._hamming_k = None
         self.discriminator = None
         if dataset_id is not None:
             self.dataset_id = dataset_id
-        if queries_batch_reached is not None:
-            self.queries_batch_reached = queries_batch_reached
-        if hamming_k is not None:
-            self.hamming_k = hamming_k
 
     @property
     def dataset_id(self):
@@ -74,48 +64,6 @@ class ImportDatasetResponse(object):
         """
 
         self._dataset_id = dataset_id
-
-    @property
-    def queries_batch_reached(self):
-        """Gets the queries_batch_reached of this ImportDatasetResponse.  # noqa: E501
-
-
-        :return: The queries_batch_reached of this ImportDatasetResponse.  # noqa: E501
-        :rtype: int
-        """
-        return self._queries_batch_reached
-
-    @queries_batch_reached.setter
-    def queries_batch_reached(self, queries_batch_reached):
-        """Sets the queries_batch_reached of this ImportDatasetResponse.
-
-
-        :param queries_batch_reached: The queries_batch_reached of this ImportDatasetResponse.  # noqa: E501
-        :type: int
-        """
-
-        self._queries_batch_reached = queries_batch_reached
-
-    @property
-    def hamming_k(self):
-        """Gets the hamming_k of this ImportDatasetResponse.  # noqa: E501
-
-
-        :return: The hamming_k of this ImportDatasetResponse.  # noqa: E501
-        :rtype: int
-        """
-        return self._hamming_k
-
-    @hamming_k.setter
-    def hamming_k(self, hamming_k):
-        """Sets the hamming_k of this ImportDatasetResponse.
-
-
-        :param hamming_k: The hamming_k of this ImportDatasetResponse.  # noqa: E501
-        :type: int
-        """
-
-        self._hamming_k = hamming_k
 
     def to_dict(self):
         """Returns the model properties as a dict"""

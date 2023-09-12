@@ -32,6 +32,113 @@ class DatasetsApi(object):
             api_client = ApiClient()
         self.api_client = api_client
 
+    def controllers_dataset_controller_add_chunk(self, body, allocation_token, **kwargs):  # noqa: E501
+        """add chunk of records to existing dataset created by /dataset/create  # noqa: E501
+
+        add chunk of records to existing dataset created by /dataset/create  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.controllers_dataset_controller_add_chunk(body, allocation_token, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param AddChunkRequest body: (required)
+        :param str allocation_token: (required)
+        :return: AddChunkResponse
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.controllers_dataset_controller_add_chunk_with_http_info(body, allocation_token, **kwargs)  # noqa: E501
+        else:
+            (data) = self.controllers_dataset_controller_add_chunk_with_http_info(body, allocation_token, **kwargs)  # noqa: E501
+            return data
+
+    def controllers_dataset_controller_add_chunk_with_http_info(self, body, allocation_token, **kwargs):  # noqa: E501
+        """add chunk of records to existing dataset created by /dataset/create  # noqa: E501
+
+        add chunk of records to existing dataset created by /dataset/create  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.controllers_dataset_controller_add_chunk_with_http_info(body, allocation_token, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param AddChunkRequest body: (required)
+        :param str allocation_token: (required)
+        :return: AddChunkResponse
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['body', 'allocation_token']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method controllers_dataset_controller_add_chunk" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'body' is set
+        if ('body' not in params or
+                params['body'] is None):
+            raise ValueError("Missing the required parameter `body` when calling `controllers_dataset_controller_add_chunk`")  # noqa: E501
+        # verify the required parameter 'allocation_token' is set
+        if ('allocation_token' not in params or
+                params['allocation_token'] is None):
+            raise ValueError("Missing the required parameter `allocation_token` when calling `controllers_dataset_controller_add_chunk`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+
+        query_params = []
+
+        header_params = {}
+        if 'allocation_token' in params:
+            header_params['allocationToken'] = params['allocation_token']  # noqa: E501
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        if 'body' in params:
+            body_params = params['body']
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = []  # noqa: E501
+
+        return self.api_client.call_api(
+            '/dataset/add/chunk', 'POST',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='AddChunkResponse',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
     def controllers_dataset_controller_add_data(self, body, allocation_token, **kwargs):  # noqa: E501
         """Add data into a loaded dataset.  # noqa: E501
 
@@ -132,6 +239,113 @@ class DatasetsApi(object):
             post_params=form_params,
             files=local_var_files,
             response_type='AddDataResponse',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
+    def controllers_dataset_controller_add_neural_matrix(self, body, allocation_token, **kwargs):  # noqa: E501
+        """Add a neural matrix into the list.  # noqa: E501
+
+        Add a neural matrix into the list.  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.controllers_dataset_controller_add_neural_matrix(body, allocation_token, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param AddNeuralMatrixRequest body: (required)
+        :param str allocation_token: (required)
+        :return: AddNeuralMatrixResponse
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.controllers_dataset_controller_add_neural_matrix_with_http_info(body, allocation_token, **kwargs)  # noqa: E501
+        else:
+            (data) = self.controllers_dataset_controller_add_neural_matrix_with_http_info(body, allocation_token, **kwargs)  # noqa: E501
+            return data
+
+    def controllers_dataset_controller_add_neural_matrix_with_http_info(self, body, allocation_token, **kwargs):  # noqa: E501
+        """Add a neural matrix into the list.  # noqa: E501
+
+        Add a neural matrix into the list.  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.controllers_dataset_controller_add_neural_matrix_with_http_info(body, allocation_token, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param AddNeuralMatrixRequest body: (required)
+        :param str allocation_token: (required)
+        :return: AddNeuralMatrixResponse
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['body', 'allocation_token']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method controllers_dataset_controller_add_neural_matrix" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'body' is set
+        if ('body' not in params or
+                params['body'] is None):
+            raise ValueError("Missing the required parameter `body` when calling `controllers_dataset_controller_add_neural_matrix`")  # noqa: E501
+        # verify the required parameter 'allocation_token' is set
+        if ('allocation_token' not in params or
+                params['allocation_token'] is None):
+            raise ValueError("Missing the required parameter `allocation_token` when calling `controllers_dataset_controller_add_neural_matrix`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+
+        query_params = []
+
+        header_params = {}
+        if 'allocation_token' in params:
+            header_params['allocationToken'] = params['allocation_token']  # noqa: E501
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        if 'body' in params:
+            body_params = params['body']
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = []  # noqa: E501
+
+        return self.api_client.call_api(
+            '/dataset/neuralmatrix/add', 'POST',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='AddNeuralMatrixResponse',  # noqa: E501
             auth_settings=auth_settings,
             async_req=params.get('async_req'),
             _return_http_data_only=params.get('_return_http_data_only'),
@@ -246,6 +460,113 @@ class DatasetsApi(object):
             _request_timeout=params.get('_request_timeout'),
             collection_formats=collection_formats)
 
+    def controllers_dataset_controller_create_dataset(self, body, allocation_token, **kwargs):  # noqa: E501
+        """create an empty dataset  # noqa: E501
+
+        create an empty dataset and add items later by using /dataset/add/chunk  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.controllers_dataset_controller_create_dataset(body, allocation_token, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param CreateDatasetRequest body: (required)
+        :param str allocation_token: (required)
+        :return: CreateDatasetResponse
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.controllers_dataset_controller_create_dataset_with_http_info(body, allocation_token, **kwargs)  # noqa: E501
+        else:
+            (data) = self.controllers_dataset_controller_create_dataset_with_http_info(body, allocation_token, **kwargs)  # noqa: E501
+            return data
+
+    def controllers_dataset_controller_create_dataset_with_http_info(self, body, allocation_token, **kwargs):  # noqa: E501
+        """create an empty dataset  # noqa: E501
+
+        create an empty dataset and add items later by using /dataset/add/chunk  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.controllers_dataset_controller_create_dataset_with_http_info(body, allocation_token, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param CreateDatasetRequest body: (required)
+        :param str allocation_token: (required)
+        :return: CreateDatasetResponse
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['body', 'allocation_token']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method controllers_dataset_controller_create_dataset" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'body' is set
+        if ('body' not in params or
+                params['body'] is None):
+            raise ValueError("Missing the required parameter `body` when calling `controllers_dataset_controller_create_dataset`")  # noqa: E501
+        # verify the required parameter 'allocation_token' is set
+        if ('allocation_token' not in params or
+                params['allocation_token'] is None):
+            raise ValueError("Missing the required parameter `allocation_token` when calling `controllers_dataset_controller_create_dataset`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+
+        query_params = []
+
+        header_params = {}
+        if 'allocation_token' in params:
+            header_params['allocationToken'] = params['allocation_token']  # noqa: E501
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        if 'body' in params:
+            body_params = params['body']
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = []  # noqa: E501
+
+        return self.api_client.call_api(
+            '/dataset/create', 'POST',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='CreateDatasetResponse',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
     def controllers_dataset_controller_focus_dataset(self, body, allocation_token, **kwargs):  # noqa: E501
         """Focus on a loaded dataset that you want to search in.  # noqa: E501
 
@@ -346,6 +667,109 @@ class DatasetsApi(object):
             post_params=form_params,
             files=local_var_files,
             response_type='StatusOkResponse',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
+    def controllers_dataset_controller_get_dataset_status(self, dataset_id, allocation_token, **kwargs):  # noqa: E501
+        """Get the status of a given dataset  # noqa: E501
+
+        Get the status of a given dataset  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.controllers_dataset_controller_get_dataset_status(dataset_id, allocation_token, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str dataset_id: Dataset UID identifies the specific dataset to use. It is generated using the /import/dataset endpoint. (required)
+        :param str allocation_token: (required)
+        :return: GetDatasetStatusResponse
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.controllers_dataset_controller_get_dataset_status_with_http_info(dataset_id, allocation_token, **kwargs)  # noqa: E501
+        else:
+            (data) = self.controllers_dataset_controller_get_dataset_status_with_http_info(dataset_id, allocation_token, **kwargs)  # noqa: E501
+            return data
+
+    def controllers_dataset_controller_get_dataset_status_with_http_info(self, dataset_id, allocation_token, **kwargs):  # noqa: E501
+        """Get the status of a given dataset  # noqa: E501
+
+        Get the status of a given dataset  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.controllers_dataset_controller_get_dataset_status_with_http_info(dataset_id, allocation_token, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str dataset_id: Dataset UID identifies the specific dataset to use. It is generated using the /import/dataset endpoint. (required)
+        :param str allocation_token: (required)
+        :return: GetDatasetStatusResponse
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['dataset_id', 'allocation_token']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method controllers_dataset_controller_get_dataset_status" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'dataset_id' is set
+        if ('dataset_id' not in params or
+                params['dataset_id'] is None):
+            raise ValueError("Missing the required parameter `dataset_id` when calling `controllers_dataset_controller_get_dataset_status`")  # noqa: E501
+        # verify the required parameter 'allocation_token' is set
+        if ('allocation_token' not in params or
+                params['allocation_token'] is None):
+            raise ValueError("Missing the required parameter `allocation_token` when calling `controllers_dataset_controller_get_dataset_status`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+        if 'dataset_id' in params:
+            path_params['dataset_id'] = params['dataset_id']  # noqa: E501
+
+        query_params = []
+
+        header_params = {}
+        if 'allocation_token' in params:
+            header_params['allocationToken'] = params['allocation_token']  # noqa: E501
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = []  # noqa: E501
+
+        return self.api_client.call_api(
+            '/dataset/status/{dataset_id}', 'GET',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='GetDatasetStatusResponse',  # noqa: E501
             auth_settings=auth_settings,
             async_req=params.get('async_req'),
             _return_http_data_only=params.get('_return_http_data_only'),
@@ -551,6 +975,101 @@ class DatasetsApi(object):
             _request_timeout=params.get('_request_timeout'),
             collection_formats=collection_formats)
 
+    def controllers_dataset_controller_get_neural_matrix_list(self, allocation_token, **kwargs):  # noqa: E501
+        """Get the list of available neural matrices.  # noqa: E501
+
+        Get the list of available neural matrices.  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.controllers_dataset_controller_get_neural_matrix_list(allocation_token, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str allocation_token: (required)
+        :return: GetNeuralMatrixListResponse
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.controllers_dataset_controller_get_neural_matrix_list_with_http_info(allocation_token, **kwargs)  # noqa: E501
+        else:
+            (data) = self.controllers_dataset_controller_get_neural_matrix_list_with_http_info(allocation_token, **kwargs)  # noqa: E501
+            return data
+
+    def controllers_dataset_controller_get_neural_matrix_list_with_http_info(self, allocation_token, **kwargs):  # noqa: E501
+        """Get the list of available neural matrices.  # noqa: E501
+
+        Get the list of available neural matrices.  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.controllers_dataset_controller_get_neural_matrix_list_with_http_info(allocation_token, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str allocation_token: (required)
+        :return: GetNeuralMatrixListResponse
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['allocation_token']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method controllers_dataset_controller_get_neural_matrix_list" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'allocation_token' is set
+        if ('allocation_token' not in params or
+                params['allocation_token'] is None):
+            raise ValueError("Missing the required parameter `allocation_token` when calling `controllers_dataset_controller_get_neural_matrix_list`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+
+        query_params = []
+
+        header_params = {}
+        if 'allocation_token' in params:
+            header_params['allocationToken'] = params['allocation_token']  # noqa: E501
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = []  # noqa: E501
+
+        return self.api_client.call_api(
+            '/dataset/neuralmatrix/list', 'GET',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='GetNeuralMatrixListResponse',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
     def controllers_dataset_controller_get_transactions(self, dataset_id, allocation_token, **kwargs):  # noqa: E501
         """Get list of pending transactions for a selected dataset.  # noqa: E501
 
@@ -655,9 +1174,9 @@ class DatasetsApi(object):
             collection_formats=collection_formats)
 
     def controllers_dataset_controller_import_dataset(self, body, allocation_token, **kwargs):  # noqa: E501
-        """Import a file of records as a dataset.  # noqa: E501
+        """Import a file/array of records as a dataset.  # noqa: E501
 
-        Import a dataset into the system. As part of the import, if toTrain flag is True, the dataset will be trained.<br> Number of dataset records supported is 2250 records.  # noqa: E501
+        Import a dataset into the system. As part of the import, if toTrain flag is True, the dataset will be trained.<br>  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.controllers_dataset_controller_import_dataset(body, allocation_token, async_req=True)
@@ -674,13 +1193,14 @@ class DatasetsApi(object):
         if kwargs.get('async_req'):
             return self.controllers_dataset_controller_import_dataset_with_http_info(body, allocation_token, **kwargs)  # noqa: E501
         else:
+            #print("DBG alloctok=", allocation_token)
             (data) = self.controllers_dataset_controller_import_dataset_with_http_info(body, allocation_token, **kwargs)  # noqa: E501
             return data
 
     def controllers_dataset_controller_import_dataset_with_http_info(self, body, allocation_token, **kwargs):  # noqa: E501
-        """Import a file of records as a dataset.  # noqa: E501
+        """Import a file/array of records as a dataset.  # noqa: E501
 
-        Import a dataset into the system. As part of the import, if toTrain flag is True, the dataset will be trained.<br> Number of dataset records supported is 2250 records.  # noqa: E501
+        Import a dataset into the system. As part of the import, if toTrain flag is True, the dataset will be trained.<br>  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
         >>> thread = api.controllers_dataset_controller_import_dataset_with_http_info(body, allocation_token, async_req=True)
@@ -716,6 +1236,7 @@ class DatasetsApi(object):
         # verify the required parameter 'allocation_token' is set
         if ('allocation_token' not in params or
                 params['allocation_token'] is None):
+            #print("DBG", params)
             raise ValueError("Missing the required parameter `allocation_token` when calling `controllers_dataset_controller_import_dataset`")  # noqa: E501
 
         collection_formats = {}
@@ -1399,6 +1920,113 @@ class DatasetsApi(object):
             _request_timeout=params.get('_request_timeout'),
             collection_formats=collection_formats)
 
+    def controllers_dataset_controller_remove_documents(self, body, allocation_token, **kwargs):  # noqa: E501
+        """Remove document/s from the dataset.  # noqa: E501
+
+        Remove document/s from the dataset.  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.controllers_dataset_controller_remove_documents(body, allocation_token, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param RemoveDocRequest body: (required)
+        :param str allocation_token: (required)
+        :return: StatusOkResponse
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.controllers_dataset_controller_remove_documents_with_http_info(body, allocation_token, **kwargs)  # noqa: E501
+        else:
+            (data) = self.controllers_dataset_controller_remove_documents_with_http_info(body, allocation_token, **kwargs)  # noqa: E501
+            return data
+
+    def controllers_dataset_controller_remove_documents_with_http_info(self, body, allocation_token, **kwargs):  # noqa: E501
+        """Remove document/s from the dataset.  # noqa: E501
+
+        Remove document/s from the dataset.  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.controllers_dataset_controller_remove_documents_with_http_info(body, allocation_token, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param RemoveDocRequest body: (required)
+        :param str allocation_token: (required)
+        :return: StatusOkResponse
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['body', 'allocation_token']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method controllers_dataset_controller_remove_documents" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'body' is set
+        if ('body' not in params or
+                params['body'] is None):
+            raise ValueError("Missing the required parameter `body` when calling `controllers_dataset_controller_remove_documents`")  # noqa: E501
+        # verify the required parameter 'allocation_token' is set
+        if ('allocation_token' not in params or
+                params['allocation_token'] is None):
+            raise ValueError("Missing the required parameter `allocation_token` when calling `controllers_dataset_controller_remove_documents`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+
+        query_params = []
+
+        header_params = {}
+        if 'allocation_token' in params:
+            header_params['allocationToken'] = params['allocation_token']  # noqa: E501
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        if 'body' in params:
+            body_params = params['body']
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # HTTP header `Content-Type`
+        header_params['Content-Type'] = self.api_client.select_header_content_type(  # noqa: E501
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = []  # noqa: E501
+
+        return self.api_client.call_api(
+            '/dataset/remove/documents', 'POST',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='StatusOkResponse',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
     def controllers_dataset_controller_remove_metadata(self, body, allocation_token, **kwargs):  # noqa: E501
         """Remove data from a loaded dataset by index of metadata  # noqa: E501
 
@@ -1820,6 +2448,101 @@ class DatasetsApi(object):
             post_params=form_params,
             files=local_var_files,
             response_type='SetNeuralMatrixActiveResponse',  # noqa: E501
+            auth_settings=auth_settings,
+            async_req=params.get('async_req'),
+            _return_http_data_only=params.get('_return_http_data_only'),
+            _preload_content=params.get('_preload_content', True),
+            _request_timeout=params.get('_request_timeout'),
+            collection_formats=collection_formats)
+
+    def controllers_dataset_controller_set_train_status_to_ip(self, dataset_id, **kwargs):  # noqa: E501
+        """Update the status of a training for given dataset  # noqa: E501
+
+        Update the status of a training for given dataset  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.controllers_dataset_controller_set_train_status_to_ip(dataset_id, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str dataset_id: Dataset UID identifies the specific dataset to use. It is generated using the /import/dataset endpoint. (required)
+        :return: StatusOkResponse
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+        kwargs['_return_http_data_only'] = True
+        if kwargs.get('async_req'):
+            return self.controllers_dataset_controller_set_train_status_to_ip_with_http_info(dataset_id, **kwargs)  # noqa: E501
+        else:
+            (data) = self.controllers_dataset_controller_set_train_status_to_ip_with_http_info(dataset_id, **kwargs)  # noqa: E501
+            return data
+
+    def controllers_dataset_controller_set_train_status_to_ip_with_http_info(self, dataset_id, **kwargs):  # noqa: E501
+        """Update the status of a training for given dataset  # noqa: E501
+
+        Update the status of a training for given dataset  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+        >>> thread = api.controllers_dataset_controller_set_train_status_to_ip_with_http_info(dataset_id, async_req=True)
+        >>> result = thread.get()
+
+        :param async_req bool
+        :param str dataset_id: Dataset UID identifies the specific dataset to use. It is generated using the /import/dataset endpoint. (required)
+        :return: StatusOkResponse
+                 If the method is called asynchronously,
+                 returns the request thread.
+        """
+
+        all_params = ['dataset_id']  # noqa: E501
+        all_params.append('async_req')
+        all_params.append('_return_http_data_only')
+        all_params.append('_preload_content')
+        all_params.append('_request_timeout')
+
+        params = locals()
+        for key, val in six.iteritems(params['kwargs']):
+            if key not in all_params:
+                raise TypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method controllers_dataset_controller_set_train_status_to_ip" % key
+                )
+            params[key] = val
+        del params['kwargs']
+        # verify the required parameter 'dataset_id' is set
+        if ('dataset_id' not in params or
+                params['dataset_id'] is None):
+            raise ValueError("Missing the required parameter `dataset_id` when calling `controllers_dataset_controller_set_train_status_to_ip`")  # noqa: E501
+
+        collection_formats = {}
+
+        path_params = {}
+        if 'dataset_id' in params:
+            path_params['dataset_id'] = params['dataset_id']  # noqa: E501
+
+        query_params = []
+
+        header_params = {}
+
+        form_params = []
+        local_var_files = {}
+
+        body_params = None
+        # HTTP header `Accept`
+        header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # Authentication setting
+        auth_settings = []  # noqa: E501
+
+        return self.api_client.call_api(
+            '/dataset/train/setstatusip/{dataset_id}', 'PUT',
+            path_params,
+            query_params,
+            header_params,
+            body=body_params,
+            post_params=form_params,
+            files=local_var_files,
+            response_type='StatusOkResponse',  # noqa: E501
             auth_settings=auth_settings,
             async_req=params.get('async_req'),
             _return_http_data_only=params.get('_return_http_data_only'),

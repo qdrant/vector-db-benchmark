@@ -1,5 +1,6 @@
 .idea/
 .pytest_cache/
+.vscode
 __pycache__
 *.pyc
 NOTES.md

@@ -24,3 +24,4 @@ class GSIUploader(BaseUploader):
         data = np.array(vectors)
         with NpyAppendArray(GSI_DEFAULT_DATA_PATH) as npaa:
             npaa.append(data)
+            npaa.close()
