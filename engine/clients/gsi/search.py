@@ -14,10 +14,12 @@ class GSISearcher(BaseSearcher):
     def init_client(cls, host, distance, connection_params: dict, search_params: dict):
         cls.search_params = search_params
         cls.client = GSIClient(host, connection_params)
+        cls.client.cleanup()
         
     
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
+        print(top)
         nbits = cls.search_params["nbits"] or 768
         search_type = cls.search_params["searchType"] or "clusters"
 
@@ -31,7 +33,7 @@ class GSISearcher(BaseSearcher):
 
         # import dataset
         response = cls.client.datasets_apis.controllers_dataset_controller_import_dataset(
-            ImportDatasetRequest(records=GSI_DEFAULT_DATA_PATH, search_type=search_type, train_ind=True, nbits=nbits),
+            ImportDatasetRequest(records=GSI_DEFAULT_DATA_PATH, search_type=search_type, train_ind=True, nbits=nbits, dataset_name="QdrantBench"),
             cls.client.allocation_id
         )
         print("... got datasetid=", response.dataset_id)
@@ -49,7 +51,7 @@ class GSISearcher(BaseSearcher):
 
         # write vector npy file
         query = np.array(vector)
-        query = np.reshape(query, len(vector), 1)
+        query = np.reshape(query, (1, len(vector)))
         if not isinstance(np.float32, type(query[0])):
             query = np.float32(query)
         path = "/home/public/oneVecQdrant.npy"
@@ -64,25 +66,29 @@ class GSISearcher(BaseSearcher):
         qid, qpath = response.added_query["id"], response.added_query["queriesFilePath"]
 
         # load dataset
+        print('loading dataset')
         cls.client.datasets_apis.controllers_dataset_controller_load_dataset(
-            LoadDatasetRequest(allocation_id=cls.client.allocation_id, dataset_id=dataset_id),
+            LoadDatasetRequest(allocation_id=cls.client.allocation_id, dataset_id=dataset_id, topk=top),
             allocation_token=cls.client.allocation_id
         )
 
         # set dataset in focus
+        print('focus dataset')
         cls.client.datasets_apis.controllers_dataset_controller_focus_dataset(
             FocusDatasetRequest(cls.client.allocation_id, dataset_id),
             cls.client.allocation_id
         )
 
         # search yay
+        print('search')
         response = cls.client.search_apis.controllers_search_controller_search(
-            SearchRequest(cls.client.allocation_id, dataset_id, queries_file_path=qpath, topk=top),
+            SearchRequest(allocation_id=cls.client.allocation_id, dataset_id=dataset_id, queries_file_path=qpath, topk=top),
             cls.client.allocation_id
         )
         # parse results
-        inds, dists = response["indices"], response["distance"]
+        print('parse results')
+        inds, dists = response.indices, response.distance
         id_score_pairs: List[Tuple[int, float]] = []
-        for ind, dist in zip(inds, dists):
+        for ind, dist in zip(inds[0], dists[0]):
             id_score_pairs.append((ind, dist))
         return id_score_pairs

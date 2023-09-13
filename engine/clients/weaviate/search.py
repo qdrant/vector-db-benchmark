@@ -55,4 +55,6 @@ class WeaviateSearcher(BaseSearcher):
         return id_score_pairs
 
     def setup_search(self):
+        if self.client.schema.get(WEAVIATE_CLASS_NAME)['vectorIndexType'] == 'gemini':
+            return
         self.client.schema.update_config(WEAVIATE_CLASS_NAME, self.search_params)

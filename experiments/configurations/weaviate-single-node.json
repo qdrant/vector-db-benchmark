@@ -1,5 +1,16 @@
 [
   {
+    "name": "weaviate-gemini",
+    "engine": "weaviate",
+    "connection_params": {
+      "timeout_config": 1000
+    },
+    "collection_params": { "vectorIndexConfig": {"nBits": 768, "searchType": "clusters", "filePath": ""}},
+    "search_params": [
+      {"gemini": true}
+    ]
+  },
+  {
     "name": "weaviate-default",
     "engine": "weaviate",
     "connection_params": {

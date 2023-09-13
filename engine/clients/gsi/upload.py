@@ -16,7 +16,6 @@ class GSIUploader(BaseUploader):
         cls.upload_params = upload_params
         cls.connection_params = connection_params
         cls.data = None
-        print(os.path.exists(GSI_DEFAULT_DATA_PATH))
 
 
     @classmethod

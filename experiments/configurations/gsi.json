@@ -2,6 +2,6 @@
     {
         "name": "gsi-default",
         "engine": "gsi",
-        "search_params": [{"nbits": 768, "searchType": "clusters"}]
+        "search_params": [{"nbits": 768, "searchType": "clusters", "top": 10}]
     }
 ]

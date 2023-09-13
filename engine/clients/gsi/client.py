@@ -14,5 +14,18 @@ class GSIClient:
         self.datasets_apis = swagger_client.DatasetsApi(api_config)
         self.search_apis = swagger_client.SearchApi(api_config)
         self.utilities_apis = swagger_client.UtilitiesApi(api_config)
+        self.boards_apis = swagger_client.BoardsApi(api_config)
 
         self.dataset_ids = []
+
+    def cleanup(self):
+        loaded = self.boards_apis.controllers_boards_controller_get_allocations_list(self.allocation_id)
+        dataset_list = self.datasets_apis.controllers_dataset_controller_get_datasets_list(self.allocation_id)
+        print('Cleaning up FVS, loaded count:', len(loaded), ' total count:', len(dataset_list))
+        for dset in loaded.allocations_list[self.allocation_id]['loadedDatasets']:
+            self.datasets_apis.controllers_dataset_controller_unload_dataset(
+                UnloadDatasetRequest(allocation_id=self.allocation_id, dataset_id=dset),
+                self.allocation_id
+            )
+        for dset in dataset_list.dataset_list:
+            self.datasets_apis.controllers_dataset_controller_remove_dataset(dset['id'], self.allocation_id)
