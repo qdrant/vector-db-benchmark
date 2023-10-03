@@ -42,7 +42,7 @@ class QdrantConfigurator(BaseConfigurator):
             collection_name=QDRANT_COLLECTION_NAME,
             optimizer_config=rest.OptimizersConfigDiff(
                 max_optimization_threads=0,
-            )
+            ),
         )
         for field_name, field_type in dataset.config.schema.items():
             self.client.create_payload_index(
