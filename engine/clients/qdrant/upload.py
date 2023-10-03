@@ -19,7 +19,7 @@ class QdrantUploader(BaseUploader):
 
     @classmethod
     def upload_batch(
-            cls, ids: List[int], vectors: List[list], metadata: Optional[List[dict]]
+        cls, ids: List[int], vectors: List[list], metadata: Optional[List[dict]]
     ):
         cls.client.upsert(
             collection_name=QDRANT_COLLECTION_NAME,
@@ -36,7 +36,7 @@ class QdrantUploader(BaseUploader):
             collection_name=QDRANT_COLLECTION_NAME,
             optimizer_config=OptimizersConfigDiff(
                 max_optimization_threads=1,
-            )
+            ),
         )
 
         cls.wait_collection_green()
