@@ -26,7 +26,7 @@ if [ "${QDRANT_VERSION}" == "dev" ]; then
     ssh -t "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "cd ./projects/vector-db-benchmark/engine/servers/${CONTAINER_NAME} ; $DOCKER_COMPOSE"
 else
     # else run natively in the server
-    DOCKER_QDRANT_STOP="docker stop qdrant-continuous || true"
-    QDRANT_BUILD="git checkout ${QDRANT_VERSION}; nohup mold -run cargo run --bin qdrant --release &"
+    DOCKER_QDRANT_STOP="docker stop qdrant-continuous"
+    QDRANT_BUILD="git checkout ${QDRANT_VERSION}; source /root/.cargo/env; nohup mold -run cargo run --bin qdrant --release &"
     ssh -T "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "cd ./projects/qdrant; ${DOCKER_QDRANT_STOP}; $QDRANT_BUILD"
 fi
