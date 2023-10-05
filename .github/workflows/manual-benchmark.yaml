@@ -1,0 +1,32 @@
+name: Manual Benchmark
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+    inputs:
+        qdrant_branch:
+            description: "Branch of qdrant to benchmark"
+            default: dev
+        benchmark_table:
+            description: "Postgres table to store benchmark results"
+            default: benchmark_manual
+
+jobs:
+  runManualBenchmark:
+    name: manual benchmark - ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Benches
+        run: |
+          export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
+          export GCS_KEY=${{ secrets.GCS_KEY }}
+          export GCS_SECRET=${{ secrets.GCS_SECRET }}
+          export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+          export QDRANT_VERSION=${{ inputs.qdrant_branch }}
+          export POSTGRES_TABLE=${{ inputs.benchmark_table }}
+          bash -x tools/run_ci.sh

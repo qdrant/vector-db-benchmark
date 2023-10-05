@@ -20,7 +20,13 @@ IP_OF_THE_SERVER=$(bash "${SCRIPT_PATH}/${CLOUD_NAME}/get_public_ip.sh" "$BENCH_
 
 bash -x "${SCRIPT_PATH}/sync_servers.sh" "root@$IP_OF_THE_SERVER"
 
-DOCKER_COMPOSE="export QDRANT_VERSION=${QDRANT_VERSION}; docker compose down ; docker rmi qdrant/qdrant:${QDRANT_VERSION} || true ; docker compose up -d"
-
-ssh -t "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "cd ./projects/vector-db-benchmark/engine/servers/${CONTAINER_NAME} ; $DOCKER_COMPOSE"
-
+if [ "${QDRANT_VERSION}" == "dev" ]; then
+    # if version is dev, run in docker
+    DOCKER_COMPOSE="export QDRANT_VERSION=${QDRANT_VERSION}; docker compose down ; docker rmi qdrant/qdrant:${QDRANT_VERSION} || true ; docker compose up -d"
+    ssh -t "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "cd ./projects/vector-db-benchmark/engine/servers/${CONTAINER_NAME} ; $DOCKER_COMPOSE"
+else
+    # else run natively in the server
+    DOCKER_QDRANT_STOP="docker stop qdrant-continuous || true"
+    QDRANT_BUILD="git checkout ${QDRANT_VERSION}; nohup mold -run cargo run --bin qdrant --release &"
+    ssh -t "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "cd ./projects/qdrant; ${DOCKER_QDRANT_STOP}; $QDRANT_BUILD"
+fi
