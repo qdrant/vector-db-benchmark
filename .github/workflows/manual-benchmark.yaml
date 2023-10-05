@@ -13,7 +13,7 @@ on:
 
 jobs:
   runManualBenchmark:
-    name: manual benchmark - ${{ github.ref_name }}
+    name: manual benchmark - ${{ inputs.qdrant_branch }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
