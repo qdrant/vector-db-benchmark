@@ -8,7 +8,7 @@ on:
             description: "Branch of qdrant to benchmark"
             default: dev
         datasets:
-            description: "Datasets to benchmark"
+            description: "Dataset to benchmark"
             default: laion-small-clip
         benchmark_table:
             description: "Postgres table to store benchmark results"
