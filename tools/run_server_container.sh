@@ -27,6 +27,7 @@ if [ "${QDRANT_VERSION}" == "dev" ]; then
 else
     # else run natively in the server
     DOCKER_QDRANT_STOP="docker stop qdrant-continuous"
-    QDRANT_BUILD="git checkout ${QDRANT_VERSION}; source /root/.cargo/env; nohup mold -run cargo run --bin qdrant --release &"
-    ssh -T "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "cd ./projects/qdrant; ${DOCKER_QDRANT_STOP}; $QDRANT_BUILD"
+    QDRANT_BUILD="git checkout ${QDRANT_VERSION}; source /root/.cargo/env; mold -run cargo build --bin qdrant --release"
+    QDRANT_RUN="nohup ./target/release/qdrant &"
+    ssh -T "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "cd ./projects/qdrant; ${DOCKER_QDRANT_STOP}; ${QDRANT_BUILD} ${QDRANT_RUN}"
 fi
