@@ -25,4 +25,5 @@ RUN_EXPERIMENT="ENGINE_NAME=${ENGINE_NAME} DATASETS=${DATASETS} PRIVATE_IP_OF_TH
 
 ssh -tt "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "${RUN_EXPERIMENT}"
 
-scp -r "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/results" "./results"
+# -p preseves modification time, access time, and modes (but not change time)
+scp -rp "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/results" "./results"
