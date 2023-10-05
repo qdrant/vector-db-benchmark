@@ -21,5 +21,4 @@ jobs:
           export GCS_SECRET=${{ secrets.GCS_SECRET }}
           export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
           export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
-          export POSTGRES_TABLE='benchmark'
           bash -x tools/run_ci.sh

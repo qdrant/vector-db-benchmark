@@ -3,9 +3,20 @@ name: Manual Benchmark
 on:
   repository_dispatch:
   workflow_dispatch:
+    inputs:
+        qdrant_branch:
+            description: "Branch of qdrant to benchmark"
+            default: dev
+        datasets:
+            description: "Datasets to benchmark"
+            default: laion-small-clip
+        benchmark_table:
+            description: "Postgres table to store benchmark results"
+            default: benchmark_manual
 
 jobs:
   runManualBenchmark:
+    name: manual benchmark - ${{ github.ref_name }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -19,5 +30,6 @@ jobs:
           export GCS_SECRET=${{ secrets.GCS_SECRET }}
           export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
           export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
-          export POSTGRES_TABLE='benchmark_manual'
+          export QDRANT_VERSION=${{ inputs.qdrant_branch }}
+          export POSTGRES_TABLE=${{ inputs.benchmark_table }}
           bash -x tools/run_ci.sh
