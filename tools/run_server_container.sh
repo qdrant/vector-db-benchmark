@@ -31,5 +31,5 @@ else
     QDRANT_RUN="nohup ./qdrant &"
     ssh -t "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "cd ./projects/qdrant; ${QDRANT_STOP}; ${QDRANT_BUILD}"
     # not using -t because it will make the nohup ineffective: process will exit after ssh session
-    ssh "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "cd ./projects/qdrant/target/release; ${QDRANT_RUN}"
+    ssh "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "cd ./projects/qdrant/target/release; ${QDRANT_RUN}" &
 fi
