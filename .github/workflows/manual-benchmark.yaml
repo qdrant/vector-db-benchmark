@@ -1,13 +1,11 @@
-name: Continuous Benchmark
+name: Manual Benchmark
 
 on:
   repository_dispatch:
   workflow_dispatch:
-  schedule:
-    - cron: "00 23 * * *"
 
 jobs:
-  runBenchmark:
+  runManualBenchmark:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -21,5 +19,5 @@ jobs:
           export GCS_SECRET=${{ secrets.GCS_SECRET }}
           export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
           export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
-          export POSTGRES_TABLE='benchmark'
+          export POSTGRES_TABLE='benchmark_manual'
           bash -x tools/run_ci.sh

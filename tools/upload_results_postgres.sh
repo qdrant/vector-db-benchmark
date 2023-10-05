@@ -20,6 +20,7 @@
 SEARCH_RESULTS_FILE=${SEARCH_RESULTS_FILE:-""}
 UPLOAD_RESULTS_FILE=${UPLOAD_RESULTS_FILE:-""}
 MEMORY_USAGE_FILE=${MEMORY_USAGE_FILE:-""}
+POSTGRES_TABLE=${POSTGRES_TABLE:-"benchmark"}
 
 if [[ -z "$SEARCH_RESULTS_FILE" ]]; then
   echo "SEARCH_RESULTS_FILE is not set"
@@ -52,7 +53,7 @@ MEASURE_TIMESTAMP=${MEASURE_TIMESTAMP:-$(date -u +"%Y-%m-%dT%H:%M:%SZ")}
 
 
 docker run --rm jbergknoff/postgresql-client "postgresql://qdrant:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/postgres" -c "
-INSERT INTO benchmark (engine, measure_timestamp, upload_time, indexing_time, rps, mean_precisions, p95_time, p99_time, memory_usage)
+INSERT INTO ${POSTGRES_TABLE} (engine, measure_timestamp, upload_time, indexing_time, rps, mean_precisions, p95_time, p99_time, memory_usage)
 VALUES ('qdrant-ci', '${MEASURE_TIMESTAMP}', ${UPLOAD_TIME}, ${INDEXING_TIME}, ${RPS}, ${MEAN_PRECISIONS}, ${P95_TIME}, ${P99_TIME}, ${MEMORY_USAGE});
 "
 
