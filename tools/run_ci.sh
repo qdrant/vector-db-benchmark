@@ -33,9 +33,9 @@ bash -x "${SCRIPT_PATH}/run_remote_benchmark.sh"
 ./mc cp results/* qdrant/vector-search-engines-benchmark/results/ci/qdrant/
 
 # Upload to postgres
-
-export SEARCH_RESULTS_FILE=$(ls -ct results/*-search-*.json | head -n 1)
-export UPLOAD_RESULTS_FILE=$(ls -ct results/*-upload-*.json | head -n 1)
-export MEMORY_USAGE_FILE=$(ls -ct results/memory-usage-*.txt | head -n 1)
+# -t sorts by modification time
+export SEARCH_RESULTS_FILE=$(ls -t results/*-search-*.json | head -n 1)
+export UPLOAD_RESULTS_FILE=$(ls -t results/*-upload-*.json | head -n 1)
+export MEMORY_USAGE_FILE=$(ls -t results/memory-usage-*.txt | head -n 1)
 
 bash -x "${SCRIPT_PATH}/upload_results_postgres.sh"
