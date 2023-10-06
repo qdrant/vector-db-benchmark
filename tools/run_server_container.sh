@@ -30,6 +30,5 @@ else
     QDRANT_BUILD="git checkout ${QDRANT_VERSION}; source /root/.cargo/env; mold -run cargo build --bin qdrant --release"
     QDRANT_RUN="cd ./projects/qdrant/target/release; ./qdrant"
     ssh -t "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "cd ./projects/qdrant; ${QDRANT_STOP}; ${QDRANT_BUILD}"
-    # not using -t because it will make the nohup ineffective: process will exit after ssh session
     nohup ssh "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "${QDRANT_RUN}" &
 fi
