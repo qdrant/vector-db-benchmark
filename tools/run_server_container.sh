@@ -23,7 +23,7 @@ bash -x "${SCRIPT_PATH}/sync_servers.sh" "root@$IP_OF_THE_SERVER"
 if [ "${QDRANT_VERSION}" == "dev" ]; then
     # if version is dev, run in docker
     DOCKER_COMPOSE="export QDRANT_VERSION=${QDRANT_VERSION}; docker compose down ; docker rmi qdrant/qdrant:${QDRANT_VERSION} || true ; docker compose up -d"
-    ssh -t "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "cd ./projects/vector-db-benchmark/engine/servers/${CONTAINER_NAME} ; $DOCKER_COMPOSE"
+    ssh -t "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "cd ./projects/vector-db-benchmark/engine/servers/${CONTAINER_NAME} ; pkill qdrant ; $DOCKER_COMPOSE"
 else
     # else run natively in the server
     QDRANT_STOP="docker stop qdrant-continuous; pkill qdrant"
