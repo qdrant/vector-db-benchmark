@@ -71,6 +71,21 @@ class BaseSearcher:
 
         search_one = functools.partial(self.__class__._search_one, top=top)
 
+        if parallel == 100:
+            return {
+                "total_time": 0,
+                "mean_time": 0,
+                "mean_precisions": 0,
+                "std_time": 0,
+                "min_time": 0,
+                "max_time": 0,
+                "rps": 0,
+                "p95_time": 0,
+                "p99_time": 0,
+                "precisions": [],
+                "latencies": [],
+            }
+
         if parallel == 1:
             start = time.perf_counter()
             precisions, latencies = list(

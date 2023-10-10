@@ -38,6 +38,14 @@ class BaseUploader:
             self.host, distance, self.connection_params, self.upload_params
         )
 
+        if parallel == 100:
+            return {
+                "post_upload": {},
+                "upload_time": 0,
+                "total_time": 0,
+                "latencies": []
+            }
+
         if parallel == 1:
             for batch in iter_batches(tqdm.tqdm(records), batch_size):
                 latencies.append(self._upload_batch(batch))
