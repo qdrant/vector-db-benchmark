@@ -88,6 +88,7 @@ class ClientFactory(ABC):
                 search_params=search_params,
             )
             for search_params in experiment.get("search_params", [{}])
+            if not search_params.get("parallel") == 100
         ]
 
         return engine_searchers
