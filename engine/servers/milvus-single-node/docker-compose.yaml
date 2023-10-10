@@ -1,4 +1,5 @@
 version: '3.5'
+# Based on https://milvus.io/docs/install_standalone-docker.md#Download-the-YAML-file
 
 services:
   etcd:
@@ -39,7 +40,7 @@ services:
 
   standalone:
     container_name: milvus-standalone
-    image: milvusdb/milvus:v2.3.0-beta
+    image: milvusdb/milvus:v2.3.1
     command: ["milvus", "run", "standalone"]
     environment:
       ETCD_ENDPOINTS: etcd:2379
