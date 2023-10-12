@@ -46,6 +46,20 @@
     "upload_params": { "parallel": 16, "batch_size": 1024 }
   },
   {
+    "name": "qdrant-parallel",
+    "engine": "qdrant",
+    "connection_params": { "timeout": 30 },
+    "collection_params": {
+      "optimizers_config": { "memmap_threshold": 10000000 }
+    },
+    "search_params": [
+      { "parallel": 16, "search_params": { "hnsw_ef": 128 } },
+      { "parallel": 32, "search_params": { "hnsw_ef": 128 } },
+      { "parallel": 100, "search_params": { "hnsw_ef": 128 } }
+    ],
+    "upload_params": { "parallel": 16, "batch_size": 1024 }
+  },
+  {
     "name": "qdrant-m-16-ef-128",
     "engine": "qdrant",
     "connection_params": { "timeout": 30 },

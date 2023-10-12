@@ -97,6 +97,9 @@ class BaseSearcher:
                 )
 
         total_time = time.perf_counter() - start
+
+        self.__class__.delete_client()
+
         return {
             "total_time": total_time,
             "mean_time": np.mean(latencies),
@@ -116,3 +119,8 @@ class BaseSearcher:
 
     def post_search(self):
         pass
+
+    @classmethod
+    def delete_client(cls):
+        pass
+

@@ -32,6 +32,7 @@ class QdrantSearcher(BaseSearcher):
 
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
+        # return cls.client.count(collection_name=QDRANT_COLLECTION_NAME)
         res = cls.client.search(
             collection_name=QDRANT_COLLECTION_NAME,
             query_vector=vector,
@@ -42,3 +43,8 @@ class QdrantSearcher(BaseSearcher):
             ),
         )
         return [(hit.id, hit.score) for hit in res]
+
+    @classmethod
+    def delete_client(cls):
+        if cls.client is not None:
+            del cls.client
