@@ -123,4 +123,3 @@ class BaseSearcher:
     @classmethod
     def delete_client(cls):
         pass
-
