@@ -1,7 +1,7 @@
 [
   {
-    "name": "elastic-default",
-    "engine": "elastic",
+    "name": "elasticsearch-default",
+    "engine": "elasticsearch",
     "connection_params": {
       "request_timeout": 10000
     },
@@ -16,8 +16,8 @@
     "upload_params": { "parallel": 16 }
   },
   {
-    "name": "elastic-m-16-ef-128",
-    "engine": "elastic",
+    "name": "elasticsearch-m-16-ef-128",
+    "engine": "elasticsearch",
     "connection_params": {
       "request_timeout": 10000
     },
@@ -32,8 +32,8 @@
     "upload_params": { "parallel": 16 }
   },
   {
-    "name": "elastic-m-32-ef-128",
-    "engine": "elastic",
+    "name": "elasticsearch-m-32-ef-128",
+    "engine": "elasticsearch",
     "connection_params": {
       "request_timeout": 10000
     },
@@ -48,8 +48,8 @@
     "upload_params": { "parallel": 16 }
   },
   {
-    "name": "elastic-m-32-ef-256",
-    "engine": "elastic",
+    "name": "elasticsearch-m-32-ef-256",
+    "engine": "elasticsearch",
     "connection_params": {
       "request_timeout": 10000
     },
@@ -64,8 +64,8 @@
     "upload_params": { "parallel": 16 }
   },
   {
-    "name": "elastic-m-32-ef-512",
-    "engine": "elastic",
+    "name": "elasticsearch-m-32-ef-512",
+    "engine": "elasticsearch",
     "connection_params": {
       "request_timeout": 10000
     },
@@ -80,8 +80,8 @@
     "upload_params": { "parallel": 16 }
   },
   {
-    "name": "elastic-m-64-ef-256",
-    "engine": "elastic",
+    "name": "elasticsearch-m-64-ef-256",
+    "engine": "elasticsearch",
     "connection_params": {
       "request_timeout": 10000
     },
@@ -96,8 +96,8 @@
     "upload_params": { "parallel": 16 }
   },
   {
-    "name": "elastic-m-64-ef-512",
-    "engine": "elastic",
+    "name": "elasticsearch-m-64-ef-512",
+    "engine": "elasticsearch",
     "connection_params": {
       "request_timeout": 10000
     },
