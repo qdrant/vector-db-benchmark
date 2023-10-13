@@ -42,8 +42,3 @@ class QdrantSearcher(BaseSearcher):
             ),
         )
         return [(hit.id, hit.score) for hit in res]
-
-    @classmethod
-    def delete_client(cls):
-        if cls.client is not None:
-            del cls.client
