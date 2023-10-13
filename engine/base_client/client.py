@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from pathlib import Path
 from typing import List
 
 from benchmark import ROOT_DIR
@@ -54,7 +55,11 @@ class BaseClient:
             out.write(json.dumps(upload_stats, indent=2))
 
     def run_experiment(
-        self, dataset: Dataset, skip_upload: bool = False, skip_search: bool = False
+        self,
+        dataset: Dataset,
+        skip_upload: bool = False,
+        skip_search: bool = False,
+        skip_if_exists: bool = False,
     ):
         execution_params = self.configurator.execution_params(
             distance=dataset.config.distance, vector_size=dataset.config.vector_size
@@ -82,6 +87,18 @@ class BaseClient:
         if not skip_search:
             print("Experiment stage: Search")
             for search_id, searcher in enumerate(self.searchers):
+
+                if skip_if_exists:
+                    existing_results = RESULTS_DIR.glob(
+                        f"{self.name}-{dataset.config.name}-search-{search_id}-*.json"
+                    )
+                    if len(existing_results) == 1:
+                        print(
+                            f"Skipping search {search_id} as it already exists in",
+                            existing_results[0],
+                        )
+                        continue
+
                 search_params = {**searcher.search_params}
                 search_stats = searcher.search_all(
                     dataset.config.distance, reader.read_queries()
