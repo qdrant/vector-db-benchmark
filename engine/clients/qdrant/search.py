@@ -32,7 +32,6 @@ class QdrantSearcher(BaseSearcher):
 
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
-        # return cls.client.count(collection_name=QDRANT_COLLECTION_NAME)
         res = cls.client.search(
             collection_name=QDRANT_COLLECTION_NAME,
             query_vector=vector,
