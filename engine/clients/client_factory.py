@@ -30,7 +30,7 @@ ENGINE_CONFIGURATORS = {
     "qdrant": QdrantConfigurator,
     "weaviate": WeaviateConfigurator,
     "milvus": MilvusConfigurator,
-    "elastic": ElasticConfigurator,
+    "elasticsearch": ElasticConfigurator,
     "opensearch": OpenSearchConfigurator,
     "redis": RedisConfigurator,
 }
@@ -39,7 +39,7 @@ ENGINE_UPLOADERS = {
     "qdrant": QdrantUploader,
     "weaviate": WeaviateUploader,
     "milvus": MilvusUploader,
-    "elastic": ElasticUploader,
+    "elasticsearch": ElasticUploader,
     "opensearch": OpenSearchUploader,
     "redis": RedisUploader,
 }
@@ -48,7 +48,7 @@ ENGINE_SEARCHERS = {
     "qdrant": QdrantSearcher,
     "weaviate": WeaviateSearcher,
     "milvus": MilvusSearcher,
-    "elastic": ElasticSearcher,
+    "elasticsearch": ElasticSearcher,
     "opensearch": OpenSearchSearcher,
     "redis": RedisSearcher,
 }
