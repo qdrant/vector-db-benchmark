@@ -25,7 +25,7 @@ class RedisUploader(BaseUploader):
         for i in range(len(ids)):
             idx = ids[i]
             vec = vectors[i]
-            meta = metadata[i] if metadata else {}
+            meta = metadata[i] if metadata and metadata[i] else {}
             payload = {
                 k: v
                 for k, v in meta.items()
