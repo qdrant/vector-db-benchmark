@@ -89,11 +89,11 @@ class BaseClient:
             for search_id, searcher in enumerate(self.searchers):
 
                 if skip_if_exists:
-                    existing_results = list(
-                        RESULTS_DIR.glob(
-                            f"{self.name}-{dataset.config.name}-search-{search_id}-*.json"
-                        )
+                    glob_pattern = (
+                        f"{self.name}-{dataset.config.name}-search-{search_id}-*.json"
                     )
+                    existing_results = list(RESULTS_DIR.glob(glob_pattern))
+                    print("Pattern", glob_pattern, "Results:", existing_results)
                     if len(existing_results) == 1:
                         print(
                             f"Skipping search {search_id} as it already exists in",
