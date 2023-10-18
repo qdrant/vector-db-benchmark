@@ -53,8 +53,8 @@
       "optimizers_config": { "memmap_threshold": 10000000 }
     },
     "search_params": [
-      { "parallel": 6, "search_params": { "hnsw_ef": 128 } },
-      { "parallel": 32, "search_params": { "hnsw_ef": 128 } },
+      { "parallel": 8, "search_params": { "hnsw_ef": 128 } },
+      { "parallel": 16, "search_params": { "hnsw_ef": 128 } },
       { "parallel": 100, "search_params": { "hnsw_ef": 128 } }
     ],
     "upload_params": { "parallel": 16, "batch_size": 1024 }
