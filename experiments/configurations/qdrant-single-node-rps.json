@@ -13,7 +13,7 @@
     "upload_params": { "parallel": 16 }
   },
   {
-    "name": "qdrant-rps-prallel",
+    "name": "qdrant-rps-parallel",
     "engine": "qdrant",
     "connection_params": { "timeout": 30 },
     "collection_params": {
