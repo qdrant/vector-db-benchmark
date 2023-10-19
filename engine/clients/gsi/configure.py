@@ -10,10 +10,7 @@ class GSIConfigurator(BaseConfigurator):
         self.client = GSIClient(host, connection_params)
 
     def clean(self):
-        for id in self.client.dataset_ids:
-            self.client.datasets_apis.controllers_dataset_controller_remove_dataset(
-                id, self.client.allocation_id
-            )
+        self.client.cleanup()
 
     def recreate(self, dataset: Dataset, collection_params):
         pass

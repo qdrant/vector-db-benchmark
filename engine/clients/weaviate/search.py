@@ -1,10 +1,10 @@
-import uuid
+import uuid, time
 from typing import List, Tuple
 
 from weaviate import Client
 
 from engine.base_client.search import BaseSearcher
-from engine.clients.weaviate.config import WEAVIATE_CLASS_NAME, WEAVIATE_DEFAULT_PORT
+from engine.clients.weaviate.config import WEAVIATE_CLASS_NAME, WEAVIATE_DEFAULT_PORT, WEAVIATE_GEMINI
 from engine.clients.weaviate.parser import WeaviateConditionParser
 
 
@@ -37,6 +37,7 @@ class WeaviateSearcher(BaseSearcher):
 
         query_obj = query.with_limit(top)
         if is_geo_query:
+            print(query_obj, " is geo query...")
             # weaviate can't handle geo queries in python due to excess quotes in generated queries
             gql_query = query_obj.build()
             for field in ("geoCoordinates", "latitude", "longitude", "distance", "max"):
@@ -44,6 +45,15 @@ class WeaviateSearcher(BaseSearcher):
             response = cls.client.query.raw(gql_query)
         else:
             response = query_obj.do()
+
+        consec_errs = 0
+        if "errors" in response.keys() and WEAVIATE_GEMINI :
+            while consec_errs < 50 and "errors" in response.keys():
+                print("got an error:", response["errors"], "\nWaiting 5 seconds, or stop program if really bad")
+                response = query_obj.do()
+                time.sleep(5)
+                consec_errs += 1
+
         res = response["data"]["Get"][WEAVIATE_CLASS_NAME]
 
         id_score_pairs: List[Tuple[int, float]] = []

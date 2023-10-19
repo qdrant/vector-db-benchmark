@@ -14,40 +14,11 @@ class GSISearcher(BaseSearcher):
     def init_client(cls, host, distance, connection_params: dict, search_params: dict):
         cls.search_params = search_params
         cls.client = GSIClient(host, connection_params)
-        cls.client.cleanup()
-        
+        print("doing search...")
     
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
-        print(top)
-        nbits = cls.search_params["nbits"] or 768
-        search_type = cls.search_params["searchType"] or "clusters"
-
-        # convert dataset to float32...
-        data = np.load(GSI_DEFAULT_DATA_PATH)
-        if not isinstance(np.float32, type(data[0][0])):
-            data = np.float32(data)
-        if os.path.exists(GSI_DEFAULT_DATA_PATH):
-            os.remove(GSI_DEFAULT_DATA_PATH)
-        np.save(GSI_DEFAULT_DATA_PATH, data)
-
-        # import dataset
-        response = cls.client.datasets_apis.controllers_dataset_controller_import_dataset(
-            ImportDatasetRequest(records=GSI_DEFAULT_DATA_PATH, search_type=search_type, train_ind=True, nbits=nbits, dataset_name="QdrantBench"),
-            cls.client.allocation_id
-        )
-        print("... got datasetid=", response.dataset_id)
-        dataset_id = response.dataset_id
-        cls.client.dataset_ids.append(dataset_id)
-
-        # train status
-        train_status = None
-        while train_status != "completed":
-            train_status = cls.client.datasets_apis.controllers_dataset_controller_get_dataset_status(
-                dataset_id=dataset_id, allocation_token=cls.client.allocation_id
-            ).dataset_status
-            print('train status:', train_status)
-            time.sleep(1)
+        ef = cls.search_params['ef'] or None
 
         # write vector npy file
         query = np.array(vector)
@@ -59,36 +30,29 @@ class GSISearcher(BaseSearcher):
             os.remove(path)
         np.save(path, query)
         # load query to fvs
-        print('loading queries')
+        # print('loading queries')
         response = cls.client.utilities_apis.controllers_utilities_controller_import_queries(
             ImportQueriesRequest(path), allocation_token=cls.client.allocation_id
         )
         qid, qpath = response.added_query["id"], response.added_query["queriesFilePath"]
 
-        # load dataset
-        print('loading dataset')
-        cls.client.datasets_apis.controllers_dataset_controller_load_dataset(
-            LoadDatasetRequest(allocation_id=cls.client.allocation_id, dataset_id=dataset_id, topk=top),
-            allocation_token=cls.client.allocation_id
-        )
-
-        # set dataset in focus
-        print('focus dataset')
-        cls.client.datasets_apis.controllers_dataset_controller_focus_dataset(
-            FocusDatasetRequest(cls.client.allocation_id, dataset_id),
+        dataset_list = cls.client.datasets_apis.controllers_dataset_controller_get_datasets_list(
             cls.client.allocation_id
-        )
+            ).datasets_list
+        dataset_id = dataset_list[-1]['id']
 
         # search yay
-        print('search')
+        # print('search')
         response = cls.client.search_apis.controllers_search_controller_search(
-            SearchRequest(allocation_id=cls.client.allocation_id, dataset_id=dataset_id, queries_file_path=qpath, topk=top),
+            SearchRequest(allocation_id=cls.client.allocation_id, dataset_id=dataset_id, queries_file_path=qpath, topk=top, ef_search=ef),
             cls.client.allocation_id
         )
         # parse results
-        print('parse results')
+        # print('parse results')
         inds, dists = response.indices, response.distance
         id_score_pairs: List[Tuple[int, float]] = []
         for ind, dist in zip(inds[0], dists[0]):
             id_score_pairs.append((ind, dist))
+
+        # cls.client.cleanup()
         return id_score_pairs

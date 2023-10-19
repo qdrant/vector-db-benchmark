@@ -334,6 +334,9 @@ class ApiClient(object):
                 post_params=None, body=None, _preload_content=True,
                 _request_timeout=None):
         """Makes the HTTP request using RESTClient."""
+        if os.getenv("SWAGGER_VERBOSE"):
+            print(f"SWAGGER CLIENT: method {method}, url {url}, query params {query_params}, \
+                  headers {headers}, post params {post_params}, body {body}")
         if method == "GET":
             return self.rest_client.GET(url,
                                         query_params=query_params,

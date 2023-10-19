@@ -21,11 +21,16 @@ class GSIClient:
     def cleanup(self):
         loaded = self.boards_apis.controllers_boards_controller_get_allocations_list(self.allocation_id)
         dataset_list = self.datasets_apis.controllers_dataset_controller_get_datasets_list(self.allocation_id)
-        print('Cleaning up FVS, loaded count:', len(loaded), ' total count:', len(dataset_list))
-        for dset in loaded.allocations_list[self.allocation_id]['loadedDatasets']:
+        print('Cleaning up FVS, loaded count:', len(loaded.allocations_list), 
+              ' total count:', len(dataset_list.datasets_list))
+        for loaded_id in loaded.allocations_list[self.allocation_id]['loadedDatasets']:
             self.datasets_apis.controllers_dataset_controller_unload_dataset(
-                UnloadDatasetRequest(allocation_id=self.allocation_id, dataset_id=dset),
+                UnloadDatasetRequest(allocation_id=self.allocation_id, dataset_id=loaded_id['datasetId']),
                 self.allocation_id
             )
-        for dset in dataset_list.dataset_list:
-            self.datasets_apis.controllers_dataset_controller_remove_dataset(dset['id'], self.allocation_id)
+        for dataset_id in dataset_list.datasets_list:
+            self.datasets_apis.controllers_dataset_controller_remove_dataset(
+                dataset_id=dataset_id['id'], allocation_token=self.allocation_id
+            )
+
+        print('Done cleaning')
