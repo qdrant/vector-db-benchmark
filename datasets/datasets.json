@@ -56,7 +56,7 @@
     "distance": "cosine",
     "type": "tar",
     "path": "dbpedia-openai-1M-1536-angular/dbpedia_openai_1M",
-    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/dppedia_openai_1M.tgz"
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/dbpedia_openai_1M.tgz"
   },
   {
     "name": "h-and-m-2048-angular-filters",

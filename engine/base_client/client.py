@@ -59,7 +59,7 @@ class BaseClient:
         dataset: Dataset,
         skip_upload: bool = False,
         skip_search: bool = False,
-        skip_if_exists: bool = False,
+        skip_if_exists: bool = True,
     ):
         execution_params = self.configurator.execution_params(
             distance=dataset.config.distance, vector_size=dataset.config.vector_size
