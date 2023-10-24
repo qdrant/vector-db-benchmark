@@ -67,6 +67,15 @@ class BaseClient:
 
         reader = dataset.get_reader(execution_params.get("normalize", False))
 
+        if skip_if_exists:
+            glob_pattern = f"{self.name}-{dataset.config.name}-search-*-*.json"
+            existing_results = list(RESULTS_DIR.glob(glob_pattern))
+            if len(existing_results) == len(self.searchers):
+                print(
+                    f"Skipping run (upload + search) for {self.name} since it already ran {len(self.searchers)} search configs previously"
+                )
+                return
+
         if not skip_upload:
             print("Experiment stage: Configure")
             self.configurator.configure(dataset)
