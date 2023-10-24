@@ -1,8 +1,7 @@
 #!/bin/bash
 
 set -e
-# Get ip of the private network interface of Hetzner server
-# Using `hcloud` CLI tool
+# Get ip of the private network interface of custom cloud server
 
 # Usage: ./get_private_ip.sh <server_name>
 
