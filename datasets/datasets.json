@@ -51,6 +51,14 @@
     }
   },
   {
+    "name": "dbpedia-openai-1M-1536-angular",
+    "vector_size": 1536,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "dbpedia-openai-1M-1536-angular/dbpedia_openai_1M",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/dbpedia_openai_1M.tgz"
+  },
+  {
     "name": "h-and-m-2048-angular-filters",
     "vector_size": 2048,
     "distance": "cosine",

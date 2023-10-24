@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from pathlib import Path
 from typing import List
 
 from benchmark import ROOT_DIR
@@ -54,13 +55,26 @@ class BaseClient:
             out.write(json.dumps(upload_stats, indent=2))
 
     def run_experiment(
-        self, dataset: Dataset, skip_upload: bool = False, skip_search: bool = False
+        self,
+        dataset: Dataset,
+        skip_upload: bool = False,
+        skip_search: bool = False,
+        skip_if_exists: bool = True,
     ):
         execution_params = self.configurator.execution_params(
             distance=dataset.config.distance, vector_size=dataset.config.vector_size
         )
 
         reader = dataset.get_reader(execution_params.get("normalize", False))
+
+        if skip_if_exists:
+            glob_pattern = f"{self.name}-{dataset.config.name}-search-*-*.json"
+            existing_results = list(RESULTS_DIR.glob(glob_pattern))
+            if len(existing_results) == len(self.searchers):
+                print(
+                    f"Skipping run (upload + search) for {self.name} since it already ran {len(self.searchers)} search configs previously"
+                )
+                return
 
         if not skip_upload:
             print("Experiment stage: Configure")
@@ -82,6 +96,20 @@ class BaseClient:
         if not skip_search:
             print("Experiment stage: Search")
             for search_id, searcher in enumerate(self.searchers):
+
+                if skip_if_exists:
+                    glob_pattern = (
+                        f"{self.name}-{dataset.config.name}-search-{search_id}-*.json"
+                    )
+                    existing_results = list(RESULTS_DIR.glob(glob_pattern))
+                    print("Pattern", glob_pattern, "Results:", existing_results)
+                    if len(existing_results) == 1:
+                        print(
+                            f"Skipping search {search_id} as it already exists in",
+                            existing_results[0],
+                        )
+                        continue
+
                 search_params = {**searcher.search_params}
                 search_stats = searcher.search_all(
                     dataset.config.distance, reader.read_queries()

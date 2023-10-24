@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   qdrant_bench:
-    image: qdrant/qdrant:v1.1.0
+    image: qdrant/qdrant:v1.5.1
     network_mode: host
     logging:
       driver: "json-file"
