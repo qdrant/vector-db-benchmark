@@ -72,7 +72,7 @@ class BaseClient:
             existing_results = list(RESULTS_DIR.glob(glob_pattern))
             if len(existing_results) == len(self.searchers):
                 print(
-                    f"Skipping run (upload + search) for {self.name} since it already ran {len(self.searchers)} search configs previously"
+                    f"Skipping run for {self.name} since it already ran {len(self.searchers)} search configs previously"
                 )
                 return
 
