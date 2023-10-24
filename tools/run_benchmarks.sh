@@ -13,9 +13,10 @@ VECTOR_DBS=("qdrant" "milvus" "elasticsearch" "weaviate" "redis")
 BRANCH="master"
 
 # Run only while setting up new benchmark server and client:
+# Create different servers and clients for each dataset so benchmarking can be done in parallel
 # for dataset in "${DATASETS[@]}"; do
-#     SERVER_NAME=benchmark-client-${dataset} bash -x $SCRIPT_PATH/clouds/$CLOUD_NAME/create_and_install.sh
-#     SERVER_NAME=benchmark-server-${dataset} bash -x $SCRIPT_PATH/clouds/$CLOUD_NAME/create_and_install.sh
+#     SERVER_NAME=benchmark-client-${dataset} bash -x $SCRIPT_PATH/$CLOUD_NAME/create_and_install.sh
+#     SERVER_NAME=benchmark-server-${dataset} bash -x $SCRIPT_PATH/$CLOUD_NAME/create_and_install.sh
 # done
 
 DATASET=$1
