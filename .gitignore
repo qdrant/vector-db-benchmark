@@ -5,3 +5,4 @@ __pycache__
 NOTES.md
 
 results/*
+tools/custom/data.json
