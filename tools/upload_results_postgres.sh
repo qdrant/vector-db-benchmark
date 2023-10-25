@@ -4,23 +4,28 @@
 # Read search results from json file and upload it to postgres
 #
 # Assume table:
-#create table benchmark (
-#	id SERIAL PRIMARY key,
-#	engine VARCHAR(255),
-#	measure_timestamp TIMESTAMP,
-#	upload_time real,
-#	indexing_time real,
-#	rps real,
-#	mean_precisions real,
-#	p95_time real,
-#	p99_time real,
-#	memory_usage real
-#);
+# create table benchmark (
+# 	id SERIAL PRIMARY key,
+# 	engine VARCHAR(255),
+# 	branch VARCCHAR(255),
+# 	dataset VARCHAR(255),
+# 	measure_timestamp TIMESTAMP,
+# 	upload_time real,
+# 	indexing_time real,
+# 	rps real,
+# 	mean_precisions real,
+# 	p95_time real,
+# 	p99_time real,
+# 	memory_usage real
+# );
 
 SEARCH_RESULTS_FILE=${SEARCH_RESULTS_FILE:-""}
 UPLOAD_RESULTS_FILE=${UPLOAD_RESULTS_FILE:-""}
 MEMORY_USAGE_FILE=${MEMORY_USAGE_FILE:-""}
 POSTGRES_TABLE=${POSTGRES_TABLE:-"benchmark"}
+
+QDRANT_VERSION=${QDRANT_VERSION:-"dev"}
+DATASETS=${DATASETS:-"laion-small-clip"}
 
 if [[ -z "$SEARCH_RESULTS_FILE" ]]; then
   echo "SEARCH_RESULTS_FILE is not set"
@@ -53,7 +58,7 @@ MEASURE_TIMESTAMP=${MEASURE_TIMESTAMP:-$(date -u +"%Y-%m-%dT%H:%M:%SZ")}
 
 
 docker run --rm jbergknoff/postgresql-client "postgresql://qdrant:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/postgres" -c "
-INSERT INTO ${POSTGRES_TABLE} (engine, measure_timestamp, upload_time, indexing_time, rps, mean_precisions, p95_time, p99_time, memory_usage)
-VALUES ('qdrant-ci', '${MEASURE_TIMESTAMP}', ${UPLOAD_TIME}, ${INDEXING_TIME}, ${RPS}, ${MEAN_PRECISIONS}, ${P95_TIME}, ${P99_TIME}, ${MEMORY_USAGE});
+INSERT INTO ${POSTGRES_TABLE} (engine, branch, dataset, measure_timestamp, upload_time, indexing_time, rps, mean_precisions, p95_time, p99_time, memory_usage)
+VALUES ('qdrant-ci', '${QDRANT_VERSION}', '${DATASETS}', '${MEASURE_TIMESTAMP}', ${UPLOAD_TIME}, ${INDEXING_TIME}, ${RPS}, ${MEAN_PRECISIONS}, ${P95_TIME}, ${P99_TIME}, ${MEMORY_USAGE});
 "
 
