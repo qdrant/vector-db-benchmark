@@ -59,6 +59,6 @@ MEASURE_TIMESTAMP=${MEASURE_TIMESTAMP:-$(date -u +"%Y-%m-%dT%H:%M:%SZ")}
 
 docker run --rm jbergknoff/postgresql-client "postgresql://qdrant:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/postgres" -c "
 INSERT INTO ${POSTGRES_TABLE} (engine, branch, dataset, measure_timestamp, upload_time, indexing_time, rps, mean_precisions, p95_time, p99_time, memory_usage)
-VALUES ('qdrant-ci', ${QDRANT_VERSION}, ${DATASETS}, '${MEASURE_TIMESTAMP}', ${UPLOAD_TIME}, ${INDEXING_TIME}, ${RPS}, ${MEAN_PRECISIONS}, ${P95_TIME}, ${P99_TIME}, ${MEMORY_USAGE});
+VALUES ('qdrant-ci', '${QDRANT_VERSION}', '${DATASETS}', '${MEASURE_TIMESTAMP}', ${UPLOAD_TIME}, ${INDEXING_TIME}, ${RPS}, ${MEAN_PRECISIONS}, ${P95_TIME}, ${P99_TIME}, ${MEMORY_USAGE});
 "
 
