@@ -103,10 +103,9 @@ class BaseClient:
                     )
                     existing_results = list(RESULTS_DIR.glob(glob_pattern))
                     print("Pattern", glob_pattern, "Results:", existing_results)
-                    if len(existing_results) == 1:
+                    if len(existing_results) >= 1:
                         print(
-                            f"Skipping search {search_id} as it already exists in",
-                            existing_results[0],
+                            f"Skipping search {search_id} as it already exists",
                         )
                         continue
 
