@@ -7,8 +7,8 @@
 # create table benchmark (
 # 	id SERIAL PRIMARY key,
 # 	engine VARCHAR(255),
-#   branch VARCCHAR(255),
-#   dataset VARCHAR(255),
+# 	branch VARCCHAR(255),
+# 	dataset VARCHAR(255),
 # 	measure_timestamp TIMESTAMP,
 # 	upload_time real,
 # 	indexing_time real,
