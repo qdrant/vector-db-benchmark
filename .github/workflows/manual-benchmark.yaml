@@ -7,9 +7,9 @@ on:
         qdrant_branch:
             description: "Branch of qdrant to benchmark"
             default: dev
-        benchmark_table:
-            description: "Postgres table to store benchmark results"
-            default: benchmark_manual
+        dataset:
+            description: "Dataset to benchmark"
+            default: laion-small-clip
 
 jobs:
   runManualBenchmark:
@@ -28,5 +28,6 @@ jobs:
           export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
           export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
           export QDRANT_VERSION=${{ inputs.qdrant_branch }}
-          export POSTGRES_TABLE=${{ inputs.benchmark_table }}
+          export DATASETS=${{ inputs.dataset }}
+          export POSTGRES_TABLE=benchmark_manual
           bash -x tools/run_ci.sh
