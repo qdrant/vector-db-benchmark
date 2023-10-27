@@ -18,6 +18,11 @@ from engine.clients.opensearch import (
     OpenSearchSearcher,
     OpenSearchUploader,
 )
+from engine.clients.pgvector import (
+    PgVectorConfigurator,
+    PgVectorSearcher,
+    PgVectorUploader,
+)
 from engine.clients.qdrant import QdrantConfigurator, QdrantSearcher, QdrantUploader
 from engine.clients.redis import RedisConfigurator, RedisSearcher, RedisUploader
 from engine.clients.weaviate import (
@@ -33,6 +38,7 @@ ENGINE_CONFIGURATORS = {
     "elasticsearch": ElasticConfigurator,
     "opensearch": OpenSearchConfigurator,
     "redis": RedisConfigurator,
+    "pgvector": PgVectorConfigurator,
 }
 
 ENGINE_UPLOADERS = {
@@ -42,6 +48,7 @@ ENGINE_UPLOADERS = {
     "elasticsearch": ElasticUploader,
     "opensearch": OpenSearchUploader,
     "redis": RedisUploader,
+    "pgvector": PgVectorUploader,
 }
 
 ENGINE_SEARCHERS = {
@@ -51,6 +58,7 @@ ENGINE_SEARCHERS = {
     "elasticsearch": ElasticSearcher,
     "opensearch": OpenSearchSearcher,
     "redis": RedisSearcher,
+    "pgvector": PgVectorSearcher,
 }
 
 
