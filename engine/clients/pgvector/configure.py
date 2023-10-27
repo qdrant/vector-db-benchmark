@@ -37,8 +37,6 @@ class PgVectorConfigurator(BaseConfigurator):
     def recreate(self, dataset: Dataset, collection_params):
         if dataset.config.distance == Distance.DOT:
             raise IncompatibilityError
-        if dataset.config.vector_size > 1024:
-            raise IncompatibilityError
 
         self.cursor.execute(
             f"""CREATE TABLE items (
