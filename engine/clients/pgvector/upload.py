@@ -13,7 +13,7 @@ class PgVectorUploader(BaseUploader):
 
     @classmethod
     def init_client(cls, host, distance, connection_params, upload_params):
-        cls.conn = psycopg2.connect(**get_db_config())
+        cls.conn = psycopg2.connect(**get_db_config(host))
         cls.cur = cls.conn.cursor(cursor_factory=RealDictCursor)
         cls.upload_params = upload_params
 

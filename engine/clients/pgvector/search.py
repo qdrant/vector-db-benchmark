@@ -22,7 +22,7 @@ class PgVectorSearcher(BaseSearcher):
 
     @classmethod
     def init_client(cls, host, distance, connection_params: dict, search_params: dict):
-        cls.conn = psycopg2.connect(**get_db_config())
+        cls.conn = psycopg2.connect(**get_db_config(host))
         register_vector(cls.conn)
         cls.cur = cls.conn.cursor(cursor_factory=RealDictCursor)
         cls.distance = distance

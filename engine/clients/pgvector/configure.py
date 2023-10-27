@@ -22,7 +22,7 @@ class PgVectorConfigurator(BaseConfigurator):
 
     def __init__(self, host, collection_params: dict, connection_params: dict):
         super().__init__(host, collection_params, connection_params)
-        self.conn = psycopg2.connect(**get_db_config())
+        self.conn = psycopg2.connect(**get_db_config(host))
         self.cursor = self.conn.cursor(cursor_factory=RealDictCursor)
 
     def clean(self):
