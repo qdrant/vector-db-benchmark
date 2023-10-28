@@ -17,17 +17,21 @@ class PgVectorSearcher(BaseSearcher):
     parser = PgVectorConditionParser()
 
     @classmethod
+    def get_mp_start_method(cls):
+        return "forkserver" if "forkserver" in mp.get_all_start_methods() else "spawn"
+
+    @classmethod
     def init_client(cls, host, distance, connection_params: dict, search_params: dict):
         cls.conn = psycopg2.connect(**get_db_config(host))
         register_vector(cls.conn)
         cls.cur = cls.conn.cursor(cursor_factory=RealDictCursor)
         cls.distance = distance
         cls.connection_params = connection_params
-        cls.search_params = search_params
+        cls.search_params = search_params["search_params"]
 
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
-        cls.cur.execute("SET hnsw.ef_search = %d", (cls.search_params["hnsw_ef"],))
+        cls.cur.execute("SET hnsw.ef_search = %s", (cls.search_params["hnsw_ef"],))
 
         if cls.distance == "cosine":
             QUERY = f"SELECT id, embedding <=> %s AS _score FROM items ORDER BY _score LIMIT {top};"

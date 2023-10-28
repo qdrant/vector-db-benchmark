@@ -1,6 +1,8 @@
+from io import BytesIO, StringIO
 from typing import List, Optional
 
 import psycopg2
+from pgvector.psycopg2 import register_vector
 from psycopg2.extras import RealDictCursor
 
 from engine.base_client.upload import BaseUploader
@@ -14,7 +16,8 @@ class PgVectorUploader(BaseUploader):
     @classmethod
     def init_client(cls, host, distance, connection_params, upload_params):
         cls.conn = psycopg2.connect(**get_db_config(host))
-        cls.cur = cls.conn.cursor(cursor_factory=RealDictCursor)
+        register_vector(cls.conn)
+        cls.cur = cls.conn.cursor()
         cls.distance = distance
         cls.connection_params = connection_params
         cls.upload_params = upload_params
@@ -23,12 +26,19 @@ class PgVectorUploader(BaseUploader):
     def upload_batch(
         cls, ids: List[int], vectors: List[list], metadata: Optional[List[dict]]
     ):
-        INSERT_EMBEDDING_QUERY = """
-        INSERT INTO items (id, embedding) VALUES (%s, %s)
-        """
-        cls.cur.executemany(
-            INSERT_EMBEDDING_QUERY, [(id, vector) for id, vector in zip(ids, vectors)]
-        )
+        # COPY is faster than INSERT:
+        data = BytesIO()
+        for i, embedding in zip(ids, vectors):
+            data.write(f"{i}\t{embedding}\n".encode("utf-8"))
+
+        data.seek(0)
+        cls.cur.copy_from(data, "items", columns=("id", "embedding"))
+
+        # INSERT_QUERY = "INSERT INTO items (id, embedding) VALUES (%s, %s)"
+        # cls.cur.executemany(
+        #     INSERT_QUERY, [(id, vector) for id, vector in zip(ids, vectors)]
+        # )
+
         cls.conn.commit()
 
     @classmethod

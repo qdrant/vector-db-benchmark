@@ -9,7 +9,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=passwd
       - POSTGRES_HOST_AUTH_METHOD=trust
-      - POSTGRES_MAX_CONNECTIONS=128
+      - POSTGRES_MAX_CONNECTIONS=200
     ports:
       - 5432:5432
     volumes:

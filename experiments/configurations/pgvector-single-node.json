@@ -12,6 +12,20 @@
         "upload_params": { "parallel": 1, "batch_size": 1024 }
     },
     {
+      "name": "pgvector-parallel",
+      "engine": "pgvector",
+      "connection_params": { "timeout": 30 },
+      "collection_params": {
+        "optimizers_config": { "memmap_threshold": 10000000 }
+      },
+      "search_params": [
+        { "parallel": 8, "search_params": { "hnsw_ef": 128 } },
+        { "parallel": 16, "search_params": { "hnsw_ef": 128 } },
+        { "parallel": 100, "search_params": { "hnsw_ef": 128 } }
+      ],
+      "upload_params": { "parallel": 1, "batch_size": 1024 }
+  },
+    {
         "name": "pgvector-m-16-ef-128",
         "engine": "pgvector",
         "connection_params": { "timeout": 30 },
