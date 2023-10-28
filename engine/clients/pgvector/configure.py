@@ -44,6 +44,9 @@ class PgVectorConfigurator(BaseConfigurator):
                 embedding vector({dataset.config.vector_size}) NOT NULL
             );"""
         )
+        self.cursor.execute(
+            "ALTER TABLE items ALTER COLUMN embedding SET STORAGE PLAIN"
+        )
 
         if dataset.config.distance == "cosine":
             hnsw_distance_type = "vector_cosine_ops"
@@ -53,9 +56,12 @@ class PgVectorConfigurator(BaseConfigurator):
             raise NotImplementedError(f"Unsupported distance metric: {self.metric}")
 
         # FIXME: Shouldn't be hardcoded
-        collection_params.update({"m": 16, "ef": 100})
+        collection_params.update({"m": 16, "ef": 128})
 
         self.cursor.execute(
             f"CREATE INDEX on items USING hnsw(embedding {hnsw_distance_type}) WITH (m = {collection_params['m']}, ef_construction = {collection_params['ef']})"
         )
         self.conn.commit()
+
+        self.cursor.close()
+        self.conn.close()

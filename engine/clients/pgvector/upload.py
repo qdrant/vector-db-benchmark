@@ -15,6 +15,8 @@ class PgVectorUploader(BaseUploader):
     def init_client(cls, host, distance, connection_params, upload_params):
         cls.conn = psycopg2.connect(**get_db_config(host))
         cls.cur = cls.conn.cursor(cursor_factory=RealDictCursor)
+        cls.distance = distance
+        cls.connection_params = connection_params
         cls.upload_params = upload_params
 
     @classmethod
@@ -28,3 +30,8 @@ class PgVectorUploader(BaseUploader):
             INSERT_EMBEDDING_QUERY, [(id, vector) for id, vector in zip(ids, vectors)]
         )
         cls.conn.commit()
+
+    @classmethod
+    def delete_client(cls):
+        cls.cur.close()
+        cls.conn.close()
