@@ -3,7 +3,6 @@ from typing import List, Optional
 
 import psycopg2
 from pgvector.psycopg2 import register_vector
-from psycopg2.extras import RealDictCursor
 
 from engine.base_client.upload import BaseUploader
 from engine.clients.pgvector.config import get_db_config

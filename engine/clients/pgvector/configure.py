@@ -1,5 +1,4 @@
 import psycopg2
-from elasticsearch import Elasticsearch, NotFoundError
 from psycopg2.extras import RealDictCursor
 
 from benchmark.dataset import Dataset
@@ -15,10 +14,6 @@ class PgVectorConfigurator(BaseConfigurator):
         Distance.COSINE: "cosine",
         Distance.DOT: "dot_product",
     }
-    INDEX_TYPE_MAPPING = {
-        "int": "long",
-        "geo": "geo_point",
-    }
 
     def __init__(self, host, collection_params: dict, connection_params: dict):
         super().__init__(host, collection_params, connection_params)
@@ -26,13 +21,10 @@ class PgVectorConfigurator(BaseConfigurator):
         self.cursor = self.conn.cursor(cursor_factory=RealDictCursor)
 
     def clean(self):
-        try:
-            self.cursor.execute(
-                "DROP TABLE IF EXISTS items CASCADE;",
-            )
-            self.conn.commit()
-        except NotFoundError:
-            pass
+        self.cursor.execute(
+            "DROP TABLE IF EXISTS items CASCADE;",
+        )
+        self.conn.commit()
 
     def recreate(self, dataset: Dataset, collection_params):
         if dataset.config.distance == Distance.DOT:
@@ -48,18 +40,15 @@ class PgVectorConfigurator(BaseConfigurator):
             "ALTER TABLE items ALTER COLUMN embedding SET STORAGE PLAIN"
         )
 
-        if dataset.config.distance == "cosine":
+        if dataset.config.distance == Distance.COSINE:
             hnsw_distance_type = "vector_cosine_ops"
-        elif dataset.config.distance == "euclidean":
+        elif dataset.config.distance == Distance.L2:
             hnsw_distance_type = "vector_l2_ops"
         else:
             raise NotImplementedError(f"Unsupported distance metric: {self.metric}")
 
-        # FIXME: Shouldn't be hardcoded
-        collection_params.update({"m": 16, "ef": 128})
-
         self.cursor.execute(
-            f"CREATE INDEX on items USING hnsw(embedding {hnsw_distance_type}) WITH (m = {collection_params['m']}, ef_construction = {collection_params['ef']})"
+            f"CREATE INDEX on items USING hnsw(embedding {hnsw_distance_type}) WITH (m = {collection_params['hnsw_config']['m']}, ef_construction = {collection_params['hnsw_config']['ef']})"
         )
         self.conn.commit()
 

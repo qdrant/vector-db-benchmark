@@ -7,15 +7,10 @@ class PgVectorConditionParser(BaseConditionParser):
     def build_condition(
         self, and_subfilters: Optional[List[Any]], or_subfilters: Optional[List[Any]]
     ) -> Optional[Any]:
-        return {
-            "bool": {
-                "must": and_subfilters,
-                "should": or_subfilters,
-            }
-        }
+        raise NotImplementedError()
 
     def build_exact_match_filter(self, field_name: str, value: FieldValue) -> Any:
-        return {"match": {field_name: value}}
+        raise NotImplementedError()
 
     def build_range_filter(
         self,
@@ -25,14 +20,9 @@ class PgVectorConditionParser(BaseConditionParser):
         lte: Optional[FieldValue],
         gte: Optional[FieldValue],
     ) -> Any:
-        return {"range": {field_name: {"lt": lt, "gt": gt, "lte": lte, "gte": gte}}}
+        raise NotImplementedError()
 
     def build_geo_filter(
         self, field_name: str, lat: float, lon: float, radius: float
     ) -> Any:
-        return {
-            "geo_distance": {
-                "distance": f"{radius}m",
-                field_name: {"lat": lat, "lon": lon},
-            }
-        }
+        raise NotImplementedError()
