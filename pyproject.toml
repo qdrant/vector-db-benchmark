@@ -18,8 +18,8 @@ ipdb = "^0.13.9"
 stopit = "^1.1.2"
 opensearch-py = "^2.3.2"
 tqdm = "^4.66.1"
-psycopg2 = "^2.9.9"
 pgvector = "^0.2.3"
+psycopg2-binary = "^2.9.9"
 
 
 [tool.poetry.dev-dependencies]
