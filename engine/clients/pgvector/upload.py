@@ -32,12 +32,6 @@ class PgVectorUploader(BaseUploader):
 
         data.seek(0)
         cls.cur.copy_from(data, "items", columns=("id", "embedding"))
-
-        # INSERT_QUERY = "INSERT INTO items (id, embedding) VALUES (%s, %s)"
-        # cls.cur.executemany(
-        #     INSERT_QUERY, [(id, vector) for id, vector in zip(ids, vectors)]
-        # )
-
         cls.conn.commit()
 
     @classmethod
