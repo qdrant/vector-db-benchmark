@@ -13,7 +13,7 @@ else
 fi
 
 cd vector-db-benchmark
-git checkout $BRANCH && git pull
+git fetch && git checkout $BRANCH && git pull
 
 # remove all running containers:
 RUNNING_CONTAINERS=$(docker ps -q)
