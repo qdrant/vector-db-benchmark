@@ -6,6 +6,7 @@ import psycopg2
 from pgvector.psycopg2 import register_vector
 from psycopg2.extras import RealDictCursor
 
+from engine.base_client.distances import Distance
 from engine.base_client.search import BaseSearcher
 from engine.clients.pgvector.config import get_db_config
 from engine.clients.pgvector.parser import PgVectorConditionParser
@@ -33,9 +34,9 @@ class PgVectorSearcher(BaseSearcher):
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
         cls.cur.execute("SET hnsw.ef_search = %s", (cls.search_params["hnsw_ef"],))
 
-        if cls.distance == "cosine":
+        if cls.distance == Distance.COSINE:
             QUERY = f"SELECT id, embedding <=> %s AS _score FROM items ORDER BY _score LIMIT {top};"
-        elif cls.distance == "euclidean":
+        elif cls.distance == Distance.L2:
             QUERY = f"SELECT id, embedding <-> %s AS _score FROM items ORDER BY _score LIMIT {top};"
         else:
             raise NotImplementedError("Unsupported distance metric")
