@@ -25,8 +25,14 @@ class GSIUploader(BaseUploader):
 
         # get dataset shape
         path = os.path.join(os.path.abspath("./datasets"), os.getenv("DATA_PATH"))
-        file = h5py.File(path)
-        cls.shape = file['train'].shape[0]
+        if os.getenv("dataset") == "laion-small-clip":
+            path = os.path.join(path, "vectors.npy")
+            tmp = np.load(path)
+            cls.shape = tmp.shape[0]
+            print("shape:", cls.shape)
+        else:
+            file = h5py.File(path)
+            cls.shape = file['train'].shape[0]
 
     @classmethod
     def upload_batch(cls, ids: List[int], vectors: List[list], metadata: Optional[List[dict]]):
@@ -35,6 +41,7 @@ class GSIUploader(BaseUploader):
             npaa.append(data)
             if npaa.shape[0] >= cls.shape:
                 npaa.close()
+                print("done batching, shape", cls.shape)
                 cls.fvs_upload()
             npaa.close()
 

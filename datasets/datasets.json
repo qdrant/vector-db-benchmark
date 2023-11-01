@@ -37,7 +37,7 @@
     "distance": "dot",
     "type": "h5",
     "path": "gist-960-angular/gist-960-angular.hdf5",
-    "link": "http://ann-benchmarks.com/gist-960-euclidean.hdf5"
+    "link": "http://ann-benchmarks.com/gist-960-angular.hdf5"
   },
   {
     "name": "laion-small-clip",

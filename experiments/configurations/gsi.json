@@ -31,7 +31,32 @@
         "search_params": [{"top": 10}]
     },
     {
-        "name": "gsi-64-hnsw",
+        "name": "gsi-128-clusters",
+        "engine": "gsi",
+        "upload_params": {"nbits": 128, "searchType": "clusters", "top": 10},
+        "search_params": [{"top": 10}]
+    },
+    {
+        "name": "gsi-256-clusters",
+        "engine": "gsi",
+        "upload_params": {"nbits": 256, "searchType": "clusters", "top": 10},
+        "search_params": [{"top": 10}]
+    },
+
+    {
+        "name": "gsi-512-clusters",
+        "engine": "gsi",
+        "upload_params": {"nbits": 512, "searchType": "clusters", "top": 10},
+        "search_params": [{"top": 10}]
+    },
+    {
+        "name": "gsi-768-clusters",
+        "engine": "gsi",
+        "upload_params": {"nbits": 768, "searchType": "clusters", "top": 10},
+        "search_params": [{"top": 10}]
+    },
+    {
+        "name": "gsi-64-hnsw-default",
         "engine": "gsi",
         "upload_params": {"nbits": 64, "searchType":"hnsw", "top": 10},
         "search_params": [{"top": 10}]
@@ -72,7 +97,7 @@
         ]
     },
     {
-        "name": "gsi-256-hnsw-m-64-ef-126",
+        "name": "gsi-256-hnsw-m-64-ef-128",
         "engine": "gsi",
         "upload_params": {"nbits": 256, "searchType": "hnsw", "top": 10, "m": 64, "efConstruction": 128},
         "search_params": [
@@ -95,6 +120,94 @@
     },
     {
         "name": "gsi-768-hnsw-m-64-ef-128",
+        "engine": "gsi",
+        "upload_params": {"nbits": 768, "searchType": "hnsw", "top": 10, "m": 64, "efConstruction": 128},
+        "search_params": [
+            {"vectorIndexConfig": {"ef": 64, "top": 10}},
+            {"vectorIndexConfig": {"ef": 128, "top": 10}},
+            {"vectorIndexConfig": {"ef": 256, "top": 10}},
+            {"vectorIndexConfig": {"ef": 512, "top": 10}}
+        ]
+    }, 
+    {
+        "name": "gsi-128-hnsw-m-64-ef-256",
+        "engine": "gsi",
+        "upload_params": {"nbits": 768, "searchType": "hnsw", "top": 10, "m": 64, "efConstruction": 128},
+        "search_params": [
+            {"vectorIndexConfig": {"ef": 64, "top": 10}},
+            {"vectorIndexConfig": {"ef": 128, "top": 10}},
+            {"vectorIndexConfig": {"ef": 256, "top": 10}},
+            {"vectorIndexConfig": {"ef": 512, "top": 10}}
+        ]
+    }, 
+    {
+        "name": "gsi-256-hnsw-m-64-ef-256",
+        "engine": "gsi",
+        "upload_params": {"nbits": 768, "searchType": "hnsw", "top": 10, "m": 64, "efConstruction": 128},
+        "search_params": [
+            {"vectorIndexConfig": {"ef": 64, "top": 10}},
+            {"vectorIndexConfig": {"ef": 128, "top": 10}},
+            {"vectorIndexConfig": {"ef": 256, "top": 10}},
+            {"vectorIndexConfig": {"ef": 512, "top": 10}}
+        ]
+    }, 
+    {
+        "name": "gsi-512-hnsw-m-64-ef-256",
+        "engine": "gsi",
+        "upload_params": {"nbits": 768, "searchType": "hnsw", "top": 10, "m": 64, "efConstruction": 128},
+        "search_params": [
+            {"vectorIndexConfig": {"ef": 64, "top": 10}},
+            {"vectorIndexConfig": {"ef": 128, "top": 10}},
+            {"vectorIndexConfig": {"ef": 256, "top": 10}},
+            {"vectorIndexConfig": {"ef": 512, "top": 10}}
+        ]
+    }, 
+    {
+        "name": "gsi-768-hnsw-m-64-ef-256",
+        "engine": "gsi",
+        "upload_params": {"nbits": 768, "searchType": "hnsw", "top": 10, "m": 64, "efConstruction": 128},
+        "search_params": [
+            {"vectorIndexConfig": {"ef": 64, "top": 10}},
+            {"vectorIndexConfig": {"ef": 128, "top": 10}},
+            {"vectorIndexConfig": {"ef": 256, "top": 10}},
+            {"vectorIndexConfig": {"ef": 512, "top": 10}}
+        ]
+    }, 
+    {
+        "name": "gsi-128-hnsw-m-64-ef-512",
+        "engine": "gsi",
+        "upload_params": {"nbits": 768, "searchType": "hnsw", "top": 10, "m": 64, "efConstruction": 128},
+        "search_params": [
+            {"vectorIndexConfig": {"ef": 64, "top": 10}},
+            {"vectorIndexConfig": {"ef": 128, "top": 10}},
+            {"vectorIndexConfig": {"ef": 256, "top": 10}},
+            {"vectorIndexConfig": {"ef": 512, "top": 10}}
+        ]
+    }, 
+    {
+        "name": "gsi-256-hnsw-m-64-ef-512",
+        "engine": "gsi",
+        "upload_params": {"nbits": 768, "searchType": "hnsw", "top": 10, "m": 64, "efConstruction": 128},
+        "search_params": [
+            {"vectorIndexConfig": {"ef": 64, "top": 10}},
+            {"vectorIndexConfig": {"ef": 128, "top": 10}},
+            {"vectorIndexConfig": {"ef": 256, "top": 10}},
+            {"vectorIndexConfig": {"ef": 512, "top": 10}}
+        ]
+    }, 
+    {
+        "name": "gsi-512-hnsw-m-64-ef-512",
+        "engine": "gsi",
+        "upload_params": {"nbits": 768, "searchType": "hnsw", "top": 10, "m": 64, "efConstruction": 128},
+        "search_params": [
+            {"vectorIndexConfig": {"ef": 64, "top": 10}},
+            {"vectorIndexConfig": {"ef": 128, "top": 10}},
+            {"vectorIndexConfig": {"ef": 256, "top": 10}},
+            {"vectorIndexConfig": {"ef": 512, "top": 10}}
+        ]
+    }, 
+    {
+        "name": "gsi-768-hnsw-m-64-ef-512",
         "engine": "gsi",
         "upload_params": {"nbits": 768, "searchType": "hnsw", "top": 10, "m": 64, "efConstruction": 128},
         "search_params": [

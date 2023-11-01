@@ -18,7 +18,10 @@ class GSISearcher(BaseSearcher):
     
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
-        ef = cls.search_params['ef'] or None
+        if 'ef' in cls.search_params.keys():
+            ef = cls.search_params['ef']
+        else:
+            ef = None
 
         # write vector npy file
         query = np.array(vector)

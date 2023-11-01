@@ -19,16 +19,22 @@ class GSIClient:
         self.dataset_ids = []
 
     def cleanup(self):
-        loaded = self.boards_apis.controllers_boards_controller_get_allocations_list(self.allocation_id)
+
+        # print('Clearing cache...')
+        # self.utilities_apis.controllers_utilities_controller_clear_cache(self.allocation_id)
+
+        # loaded = self.boards_apis.controllers_boards_controller_get_allocations_list(self.allocation_id)
         dataset_list = self.datasets_apis.controllers_dataset_controller_get_datasets_list(self.allocation_id)
-        print('Cleaning up FVS, loaded count:', len(loaded.allocations_list), 
-              ' total count:', len(dataset_list.datasets_list))
-        for loaded_id in loaded.allocations_list[self.allocation_id]['loadedDatasets']:
-            self.datasets_apis.controllers_dataset_controller_unload_dataset(
-                UnloadDatasetRequest(allocation_id=self.allocation_id, dataset_id=loaded_id['datasetId']),
-                self.allocation_id
-            )
+        print('Cleaning up FVS, total count:', len(dataset_list.datasets_list))
         for dataset_id in dataset_list.datasets_list:
+            status = self.datasets_apis.controllers_dataset_controller_get_dataset_status(
+                dataset_id=dataset_id['id'], allocation_token=self.allocation_id
+            ).dataset_status
+            if status == "loaded":
+                self.datasets_apis.controllers_dataset_controller_unload_dataset(
+                    UnloadDatasetRequest(allocation_id=self.allocation_id, dataset_id=dataset_id['id']),
+                    self.allocation_id
+                )
             self.datasets_apis.controllers_dataset_controller_remove_dataset(
                 dataset_id=dataset_id['id'], allocation_token=self.allocation_id
             )
