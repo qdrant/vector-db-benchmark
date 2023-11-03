@@ -48,8 +48,6 @@ def run(
             os.environ["DATA_PATH"] = dataset_config['path']
             client = ClientFactory(host).build_client(engine_config)
             dataset = Dataset(dataset_config)
-            print("dataset config:", dataset_config)
-            print("engine config:", engine_config)
             dataset.download()
             try:
                 with stopit.ThreadingTimeout(timeout) as tt:

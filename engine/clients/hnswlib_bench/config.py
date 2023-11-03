@@ -1,0 +1,1 @@
+DEFAULT_INDEX_PATH = "./myIndex.bin"

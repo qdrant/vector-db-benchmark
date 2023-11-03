@@ -28,6 +28,8 @@ from engine.clients.weaviate import (
 
 from engine.clients.gsi import GSIConfigurator, GSISearcher, GSIUploader
 
+from engine.clients.hnswlib_bench import HNSWLibConfigurator, HNSWLibSearcher, HNSWLibUploader
+
 ENGINE_CONFIGURATORS = {
     "qdrant": QdrantConfigurator,
     "weaviate": WeaviateConfigurator,
@@ -36,6 +38,7 @@ ENGINE_CONFIGURATORS = {
     "opensearch": OpenSearchConfigurator,
     "redis": RedisConfigurator,
     "gsi": GSIConfigurator,
+    "hnswlib": HNSWLibConfigurator,
 }
 
 ENGINE_UPLOADERS = {
@@ -46,6 +49,7 @@ ENGINE_UPLOADERS = {
     "opensearch": OpenSearchUploader,
     "redis": RedisUploader,
     "gsi": GSIUploader,
+    "hnswlib": HNSWLibUploader,
 }
 
 ENGINE_SEARCHERS = {
@@ -56,6 +60,7 @@ ENGINE_SEARCHERS = {
     "opensearch": OpenSearchSearcher,
     "redis": RedisSearcher,
     "gsi": GSISearcher,
+    "hnswlib": HNSWLibSearcher,
 }
 
 
