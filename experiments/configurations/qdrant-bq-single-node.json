@@ -1,0 +1,14 @@
+[
+  {
+    "name": "qdrant-bq-default",
+    "engine": "qdrant",
+    "connection_params": { "timeout": 30 },
+    "collection_params": {
+      "quantization_config": { "binary": {"always_ram": true} }
+    },
+    "search_params": [
+      { "parallel": 1, "search_params": { "hnsw_ef": 128, "quantization": { "rescore": true, "oversampling": 2.0 } } }
+    ],
+    "upload_params": { "parallel": 1, "batch_size": 1024 }
+  }
+]
