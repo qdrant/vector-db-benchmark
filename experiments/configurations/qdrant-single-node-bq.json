@@ -10,5 +10,24 @@
       { "parallel": 1, "search_params": { "hnsw_ef": 128, "quantization": { "rescore": true, "oversampling": 2.0 } } }
     ],
     "upload_params": { "parallel": 1, "batch_size": 1024 }
+  },
+  {
+    "name": "qdrant-bq-m-16-ef-128",
+    "engine": "qdrant",
+    "connection_params": { "timeout": 30 },
+    "collection_params": {
+      "quantization_config": { "binary": {"always_ram": true} }
+    },
+    "search_params": [
+      { "parallel": 1, "search_params": { "hnsw_ef": 128, "quantization": { "rescore": true, "oversampling": 1.0 } } },
+      { "parallel": 1, "search_params": { "hnsw_ef": 128, "quantization": { "rescore": true, "oversampling": 2.0 } } },
+      { "parallel": 1, "search_params": { "hnsw_ef": 128, "quantization": { "rescore": true, "oversampling": 4.0 } } },
+      { "parallel": 1, "search_params": { "hnsw_ef": 128, "quantization": { "rescore": true, "oversampling": 8.0 } } },
+      { "parallel": 100, "search_params": { "hnsw_ef": 128, "quantization": { "rescore": true, "oversampling": 1.0 } } },
+      { "parallel": 100, "search_params": { "hnsw_ef": 128, "quantization": { "rescore": true, "oversampling": 2.0 } } },
+      { "parallel": 100, "search_params": { "hnsw_ef": 128, "quantization": { "rescore": true, "oversampling": 4.0 } } },
+      { "parallel": 100, "search_params": { "hnsw_ef": 128, "quantization": { "rescore": true, "oversampling": 8.0 } } }
+    ],
+    "upload_params": { "parallel": 16, "batch_size": 1024 }
   }
 ]
