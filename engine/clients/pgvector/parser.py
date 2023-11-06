@@ -1,5 +1,7 @@
+import json
 from typing import Any, List, Optional
 
+from engine.base_client import IncompatibilityError
 from engine.base_client.parser import BaseConditionParser, FieldValue
 
 
@@ -7,10 +9,16 @@ class PgVectorConditionParser(BaseConditionParser):
     def build_condition(
         self, and_subfilters: Optional[List[Any]], or_subfilters: Optional[List[Any]]
     ) -> Optional[Any]:
-        raise NotImplementedError()
+        clauses = []
+        if or_subfilters is not None and len(or_subfilters) > 0:
+            clauses.append(f"( {' OR '.join(or_subfilters)} )")
+        if and_subfilters is not None and len(and_subfilters) > 0:
+            clauses.append(f"( {' AND '.join(or_subfilters)} )")
+
+        return " AND ".join(clauses)
 
     def build_exact_match_filter(self, field_name: str, value: FieldValue) -> Any:
-        raise NotImplementedError()
+        raise f"{field_name} == {json.dumps(value)}"
 
     def build_range_filter(
         self,
@@ -20,9 +28,19 @@ class PgVectorConditionParser(BaseConditionParser):
         lte: Optional[FieldValue],
         gte: Optional[FieldValue],
     ) -> Any:
-        raise NotImplementedError()
+        clauses = []
+        if lt is not None:
+            clauses.append(f"{field_name} < {lt}")
+        if gt is not None:
+            clauses.append(f"{field_name} > {gt}")
+        if lte is not None:
+            clauses.append(f"{field_name} <= {lte}")
+        if gte is not None:
+            clauses.append(f"{field_name} >= {gte}")
+        return f"( {' AND '.join(clauses)} )"
 
     def build_geo_filter(
         self, field_name: str, lat: float, lon: float, radius: float
     ) -> Any:
-        raise NotImplementedError()
+        # TODO: Implement this
+        raise IncompatibilityError

@@ -12,8 +12,6 @@ services:
       - POSTGRES_MAX_CONNECTIONS=200
     ports:
       - 5432:5432
-    volumes:
-     - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     logging:
       driver: "json-file"
       options:
