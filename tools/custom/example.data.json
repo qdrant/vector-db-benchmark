@@ -1,0 +1,12 @@
+{
+    "benchmark-client-glove-100": {
+        "public_ip": "aa.bb.cc.dd",
+        "private_ip": "xx.y.z.a",
+        "user": "root"
+    },
+    "benchmark-server-glove-100": {
+        "public_ip": "aa.bb.cc.de",
+        "private_ip": "xx.y.z.b",
+        "user": "root"
+    }
+}
