@@ -19,7 +19,7 @@ python3 -m poetry install
 
 # if using qdrant vector db
 if [ "$VECTOR_DB" == "qdrant" ]; then
-    QDRANT_CONFIGS=$(cat experiments/configurations/qdrant-single-node{-bq,-rps,}.json | jq '.[] | .name' | grep -E 'qdrant(-(rps|bq))?-m-.*-ef-.*' | sed 's/"//g')
+    QDRANT_CONFIGS=$(cat experiments/configurations/qdrant-single-node{-bq,-sq,-rps,}.json | jq '.[] | .name' | grep -E 'qdrant(-(rps|bq|sq))?-m-.*-ef-.*' | sed 's/"//g')
 
     for QDRANT_CONFIG in $QDRANT_CONFIGS; do
         # upload
