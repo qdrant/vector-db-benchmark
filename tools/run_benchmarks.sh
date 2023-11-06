@@ -5,7 +5,7 @@
 set -e
 set -x
 
-SCRIPT_PATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+SCRIPT_PATH="$( cd "$(dirname "$0")" &>/dev/null ; pwd -P )"
 export CLOUD_NAME=${CLOUD_NAME:-"custom"}
 
 DATASETS=("glove-100-angular" "deep-image-96" "gist-960-euclidean" "dbpedia-openai-1M-1536-angular")
