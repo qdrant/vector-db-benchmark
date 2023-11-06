@@ -13,8 +13,10 @@ from engine.clients.pgvector.parser import PgVectorConditionParser
 
 
 class PgVectorSearcher(BaseSearcher):
+    conn = None
+    cur = None
+    distance = None
     search_params = {}
-    cursor = None
     parser = PgVectorConditionParser()
 
     @classmethod
@@ -23,11 +25,10 @@ class PgVectorSearcher(BaseSearcher):
 
     @classmethod
     def init_client(cls, host, distance, connection_params: dict, search_params: dict):
-        cls.conn = psycopg2.connect(**get_db_config(host))
+        cls.conn = psycopg2.connect(**get_db_config(host, connection_params))
         register_vector(cls.conn)
         cls.cur = cls.conn.cursor(cursor_factory=RealDictCursor)
         cls.distance = distance
-        cls.connection_params = connection_params
         cls.search_params = search_params["search_params"]
 
     @classmethod
@@ -35,14 +36,14 @@ class PgVectorSearcher(BaseSearcher):
         cls.cur.execute("SET hnsw.ef_search = %s", (cls.search_params["hnsw_ef"],))
 
         if cls.distance == Distance.COSINE:
-            QUERY = f"SELECT id, embedding <=> %s AS _score FROM items ORDER BY _score LIMIT {top};"
+            query = f"SELECT id, embedding <=> %s AS _score FROM items ORDER BY _score LIMIT {top};"
         elif cls.distance == Distance.L2:
-            QUERY = f"SELECT id, embedding <-> %s AS _score FROM items ORDER BY _score LIMIT {top};"
+            query = f"SELECT id, embedding <-> %s AS _score FROM items ORDER BY _score LIMIT {top};"
         else:
-            raise NotImplementedError("Unsupported distance metric")
+            raise NotImplementedError(f"Unsupported distance metric {cls.distance}")
 
         cls.cur.execute(
-            QUERY,
+            query,
             (np.array(vector),),
         )
         res = cls.cur.fetchall()

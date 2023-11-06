@@ -9,16 +9,15 @@ from engine.clients.pgvector.config import get_db_config
 
 
 class PgVectorUploader(BaseUploader):
-    client = None
+    conn = None
+    cur = None
     upload_params = {}
 
     @classmethod
     def init_client(cls, host, distance, connection_params, upload_params):
-        cls.conn = psycopg2.connect(**get_db_config(host))
+        cls.conn = psycopg2.connect(**get_db_config(host, connection_params))
         register_vector(cls.conn)
         cls.cur = cls.conn.cursor()
-        cls.distance = distance
-        cls.connection_params = connection_params
         cls.upload_params = upload_params
 
     @classmethod

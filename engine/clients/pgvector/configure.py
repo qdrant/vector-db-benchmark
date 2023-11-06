@@ -10,18 +10,17 @@ from engine.clients.pgvector.config import get_db_config
 
 class PgVectorConfigurator(BaseConfigurator):
     DISTANCE_MAPPING = {
-        Distance.L2: "l2_norm",
-        Distance.COSINE: "cosine",
-        Distance.DOT: "dot_product",
+        Distance.L2: "vector_l2_ops",
+        Distance.COSINE: "vector_cosine_ops",
     }
 
     def __init__(self, host, collection_params: dict, connection_params: dict):
         super().__init__(host, collection_params, connection_params)
-        self.conn = psycopg2.connect(**get_db_config(host))
-        self.cursor = self.conn.cursor(cursor_factory=RealDictCursor)
+        self.conn = psycopg2.connect(**get_db_config(host, connection_params))
+        self.cur = self.conn.cursor(cursor_factory=RealDictCursor)
 
     def clean(self):
-        self.cursor.execute(
+        self.cur.execute(
             "DROP TABLE IF EXISTS items CASCADE;",
         )
         self.conn.commit()
@@ -30,27 +29,25 @@ class PgVectorConfigurator(BaseConfigurator):
         if dataset.config.distance == Distance.DOT:
             raise IncompatibilityError
 
-        self.cursor.execute(
+        self.cur.execute(
             f"""CREATE TABLE items (
                 id SERIAL PRIMARY KEY,
                 embedding vector({dataset.config.vector_size}) NOT NULL
             );"""
         )
-        self.cursor.execute(
-            "ALTER TABLE items ALTER COLUMN embedding SET STORAGE PLAIN"
-        )
+        self.cur.execute("ALTER TABLE items ALTER COLUMN embedding SET STORAGE PLAIN")
 
-        if dataset.config.distance == Distance.COSINE:
-            hnsw_distance_type = "vector_cosine_ops"
-        elif dataset.config.distance == Distance.L2:
-            hnsw_distance_type = "vector_l2_ops"
-        else:
-            raise NotImplementedError(f"Unsupported distance metric: {self.metric}")
+        try:
+            hnsw_distance_type = self.DISTANCE_MAPPING[dataset.config.distance]
+        except KeyError:
+            raise IncompatibilityError(
+                f"Unsupported distance metric: {dataset.config.distance}"
+            )
 
-        self.cursor.execute(
+        self.cur.execute(
             f"CREATE INDEX on items USING hnsw(embedding {hnsw_distance_type}) WITH (m = {collection_params['hnsw_config']['m']}, ef_construction = {collection_params['hnsw_config']['ef_construct']})"
         )
         self.conn.commit()
 
-        self.cursor.close()
+        self.cur.close()
         self.conn.close()
