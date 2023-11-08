@@ -14,9 +14,7 @@ class HNSWLibSearcher(BaseSearcher):
         dim = int(os.getenv("DIM"))
         cls.index = hnswlib.Index(space=distance, dim=dim)
         cls.index.load_index(DEFAULT_INDEX_PATH)
-        print('search time index size', cls.index.get_current_count())
         cls.index.set_ef(search_params['vectorIndexConfig']['ef'])
-        print("\nParams", cls.index.ef, cls.index.ef_construction, cls.index.M, distance)
 
     @classmethod
     def search_one(cls, vector: List[float], meta_conditions, top) -> List[Tuple[int, float]]:

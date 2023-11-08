@@ -51,6 +51,22 @@
     }
   },
   {
+    "name": "laion-30M",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "h5",
+    "path": "laion-30M/laion-30M.hdf5",
+    "link": "https://sisap-23-challenge.s3.amazonaws.com/SISAP23-Challenge/laion2B-en-clip768v2-n=30M.h5"
+  },
+  {
+    "name": "laion-300K",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "h5",
+    "path": "laion-300K/laion-300K.hdf5",
+    "link": "https://sisap-23-challenge.s3.amazonaws.com/SISAP23-Challenge/laion2B-en-clip768v2-n=300K.h5"
+  },
+  {
     "name": "h-and-m-2048-angular-filters",
     "vector_size": 2048,
     "distance": "cosine",

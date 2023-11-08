@@ -61,9 +61,7 @@ class BaseSearcher:
         queries: Iterable[Query],
     ):
         parallel = self.search_params.pop("parallel", 1)
-        print("before pop", self.search_params)
         top = self.search_params.pop("top", None)
-        print("after pop", self.search_params)
 
         # setup_search may require initialized client
         self.init_client(
