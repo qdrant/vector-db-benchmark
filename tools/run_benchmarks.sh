@@ -12,6 +12,9 @@ DATASETS=("glove-100-angular" "deep-image-96" "gist-960-euclidean" "dbpedia-open
 VECTOR_DBS=("qdrant" "milvus" "elasticsearch" "weaviate" "redis")
 BRANCH="master"
 
+# Note: If you want to run with a different version of Qdrant. Set the QDRANT_VERSION env variable.
+# export QDRANT_VERSION=dev
+
 # Run only while setting up new benchmark server and client:
 # Create different servers and clients for each dataset so benchmarking can be done in parallel
 # for dataset in "${DATASETS[@]}"; do
@@ -30,7 +33,7 @@ for VECTOR_DB in "${VECTOR_DBS[@]}"; do
     echo Running benchmark for ${VECTOR_DB} on ${DATASET}
 
     RUN_SCRIPT="${SCRIPT_PATH}/remote/setup_benchmark_server.sh" \
-        ENV_CONTEXT="${VECTOR_DB@A} ${BRANCH@A}" \
+        ENV_CONTEXT="${VECTOR_DB@A} ${BRANCH@A} ${QDRANT_VERSION@A}" \
         SERVER_NAME=${SERVER_NAME} \
         bash -x $SCRIPT_PATH/run_remote.sh
 
