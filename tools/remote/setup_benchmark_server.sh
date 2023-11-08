@@ -21,6 +21,10 @@ if [ -n "$RUNNING_CONTAINERS" ]; then
     docker container rm -f $RUNNING_CONTAINERS
 fi
 
+if [ "$VECTOR_DB" == "qdrant" ] && [ "$QDRANT_VERSION" == "dev" ]; then
+    docker rmi qdrant/qdrant:dev || true
+fi
+
 cd engine/servers/${VECTOR_DB}-single-node
 docker compose up -d
 
