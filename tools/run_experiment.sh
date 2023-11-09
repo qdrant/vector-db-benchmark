@@ -28,11 +28,11 @@ docker run \
   -it \
   -v "$HOME/results:/code/results" \
   qdrant/vector-db-benchmark:latest \
-  python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --skip-search
+  python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-search
 
 docker run \
   --rm \
   -it \
   -v "$HOME/results:/code/results" \
   qdrant/vector-db-benchmark:latest \
-  python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --skip-upload
+  python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-upload
