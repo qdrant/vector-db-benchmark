@@ -16,6 +16,14 @@
     "link": "http://ann-benchmarks.com/glove-100-angular.hdf5"
   },
   {
+    "name": "yandex-t2i-gt-100k",
+    "vector_size": 200,
+    "distance": "dot",
+    "type": "tar",
+    "path": "yandex-1B-200-angular/yandex_t2i_gt_100k",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/yandex_t2i_gt_100k.tgz"
+  },
+  {
     "name": "deep-image-96-angular",
     "vector_size": 96,
     "distance": "cosine",
