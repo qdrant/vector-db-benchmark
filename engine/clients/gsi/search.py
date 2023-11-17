@@ -3,7 +3,7 @@ import numpy as np
 import time, os
 
 from engine.base_client.search import BaseSearcher
-from engine.clients.gsi.config import GSI_DEFAULT_PORT, GSI_DEFAULT_ALLOC, GSI_DEFAULT_VERSION, GSI_DEFAULT_DATA_PATH
+from engine.clients.gsi.config import GSI_DEFAULT_QUERY_PATH
 from engine.clients.gsi.client import GSIClient
 from swagger_client.models import *
 
@@ -23,15 +23,8 @@ class GSISearcher(BaseSearcher):
         else:
             ef = None
 
-        # write vector npy file
-        query = np.array(vector)
-        query = np.reshape(query, (1, len(vector)))
-        if not isinstance(np.float32, type(query[0])):
-            query = np.float32(query)
-        path = "/home/public/oneVecQdrant.npy"
-        if os.path.exists(path):
-            os.remove(path)
-        np.save(path, query)
+        path = GSI_DEFAULT_QUERY_PATH
+        
         # load query to fvs
         # print('loading queries')
         response = cls.client.utilities_apis.controllers_utilities_controller_import_queries(

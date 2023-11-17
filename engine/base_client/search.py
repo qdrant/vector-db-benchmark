@@ -7,6 +7,7 @@ import numpy as np
 import tqdm
 
 from dataset_reader.base_reader import Query
+# from engine.clients.gsi.config import GSI_DEFAULT_QUERY_PATH
 
 DEFAULT_TOP = 10
 
@@ -43,7 +44,8 @@ class BaseSearcher:
                 if query.expected_result is not None and len(query.expected_result) > 0
                 else DEFAULT_TOP
             )
-
+            
+        print(cls.__name__)
         start = time.perf_counter()
         search_res = cls.search_one(query.vector, query.meta_conditions, top)
         end = time.perf_counter()
