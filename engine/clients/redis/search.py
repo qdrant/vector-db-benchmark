@@ -3,13 +3,14 @@ from typing import List, Tuple
 import numpy as np
 from redis import Redis, RedisCluster
 from redis.commands.search.query import Query
+
 from engine.base_client.search import BaseSearcher
 from engine.clients.redis.config import (
+    REDIS_AUTH,
+    REDIS_CLUSTER,
     REDIS_PORT,
     REDIS_QUERY_TIMEOUT,
-    REDIS_AUTH,
     REDIS_USER,
-    REDIS_CLUSTER,
 )
 from engine.clients.redis.parser import RedisConditionParser
 

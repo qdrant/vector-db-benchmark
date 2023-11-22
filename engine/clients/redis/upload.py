@@ -2,12 +2,13 @@ from typing import List, Optional
 
 import numpy as np
 from redis import Redis, RedisCluster
+
 from engine.base_client.upload import BaseUploader
 from engine.clients.redis.config import (
-    REDIS_PORT,
     REDIS_AUTH,
-    REDIS_USER,
     REDIS_CLUSTER,
+    REDIS_PORT,
+    REDIS_USER,
 )
 from engine.clients.redis.helper import convert_to_redis_coords
 

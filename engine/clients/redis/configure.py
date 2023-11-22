@@ -3,19 +3,19 @@ from redis import Redis, RedisCluster
 from redis.commands.search.field import (
     GeoField,
     NumericField,
+    TagField,
     TextField,
     VectorField,
-    TagField,
 )
 
 from benchmark.dataset import Dataset
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
 from engine.clients.redis.config import (
-    REDIS_PORT,
     REDIS_AUTH,
-    REDIS_USER,
     REDIS_CLUSTER,
+    REDIS_PORT,
+    REDIS_USER,
 )
 
 
