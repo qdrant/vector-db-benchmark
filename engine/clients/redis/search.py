@@ -1,11 +1,16 @@
 from typing import List, Tuple
 
 import numpy as np
-import redis
+from redis import Redis, RedisCluster
 from redis.commands.search.query import Query
-
 from engine.base_client.search import BaseSearcher
-from engine.clients.redis.config import REDIS_PORT
+from engine.clients.redis.config import (
+    REDIS_PORT,
+    REDIS_QUERY_TIMEOUT,
+    REDIS_AUTH,
+    REDIS_USER,
+    REDIS_CLUSTER,
+)
 from engine.clients.redis.parser import RedisConditionParser
 
 
@@ -16,8 +21,12 @@ class RedisSearcher(BaseSearcher):
 
     @classmethod
     def init_client(cls, host, distance, connection_params: dict, search_params: dict):
-        cls.client = redis.Redis(host=host, port=REDIS_PORT, db=0)
+        redis_constructor = RedisCluster if REDIS_CLUSTER else Redis
+        cls.client = redis_constructor(
+            host=host, port=REDIS_PORT, password=REDIS_AUTH, username=REDIS_USER
+        )
         cls.search_params = search_params
+        cls.knn_conditions = "EF_RUNTIME $EF"
 
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
@@ -30,12 +39,15 @@ class RedisSearcher(BaseSearcher):
 
         q = (
             Query(
-                f"{prefilter_condition}=>[KNN $K @vector $vec_param EF_RUNTIME $EF AS vector_score]"
+                f"{prefilter_condition}=>[KNN $K @vector $vec_param {cls.knn_conditions} AS vector_score]"
             )
-            .sort_by("vector_score", asc=False)
+            .sort_by("vector_score", asc=True)
             .paging(0, top)
             .return_fields("vector_score")
-            .dialect(2)
+            # performance is optimized for sorting operations on DIALECT 4 in different scenarios.
+            # check SORTBY details in https://redis.io/commands/ft.search/
+            .dialect(4)
+            .timeout(REDIS_QUERY_TIMEOUT)
         )
         params_dict = {
             "vec_param": np.array(vector).astype(np.float32).tobytes(),
