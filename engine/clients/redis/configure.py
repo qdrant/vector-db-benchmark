@@ -40,7 +40,6 @@ class RedisConfigurator(BaseConfigurator):
             host=host, port=REDIS_PORT, password=REDIS_AUTH, username=REDIS_USER
         )
 
-
     def clean(self):
         index = self.client.ft()
         try:
