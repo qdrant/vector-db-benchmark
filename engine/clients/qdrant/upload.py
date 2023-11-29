@@ -16,7 +16,7 @@ class QdrantUploader(BaseUploader):
     @classmethod
     def init_client(cls, host, distance, connection_params, upload_params):
         os.environ["GRPC_ENABLE_FORK_SUPPORT"] = "true"
-        os.environ["GRPC_POLL_STRATEGY"] = "poll"
+        os.environ["GRPC_POLL_STRATEGY"] = "epoll,poll"
         cls.client = QdrantClient(host=host, prefer_grpc=True, **connection_params)
         cls.upload_params = upload_params
 

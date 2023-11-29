@@ -19,7 +19,7 @@ class QdrantSearcher(BaseSearcher):
     @classmethod
     def init_client(cls, host, distance, connection_params: dict, search_params: dict):
         os.environ["GRPC_ENABLE_FORK_SUPPORT"] = "true"
-        os.environ["GRPC_POLL_STRATEGY"] = "poll"
+        os.environ["GRPC_POLL_STRATEGY"] = "epoll,poll"
         cls.client: QdrantClient = QdrantClient(
             host,
             prefer_grpc=True,
