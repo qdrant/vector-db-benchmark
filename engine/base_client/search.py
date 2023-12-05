@@ -5,9 +5,10 @@ from typing import Iterable, List, Optional, Tuple
 
 import numpy as np
 import tqdm
+import os
 
 from dataset_reader.base_reader import Query
-# from engine.clients.gsi.config import GSI_DEFAULT_QUERY_PATH
+
 
 DEFAULT_TOP = 10
 
@@ -38,14 +39,22 @@ class BaseSearcher:
 
     @classmethod
     def _search_one(cls, query, top: Optional[int] = None):
+        
+        if cls.__name__ == "GSISearcher":
+            from engine.clients.gsi.config import GSI_DEFAULT_QUERY_PATH
+            if os.path.exists(GSI_DEFAULT_QUERY_PATH):
+                os.remove(GSI_DEFAULT_QUERY_PATH)
+            vec = np.array(query.vector)
+            vec = vec.reshape(1, len(vec))
+            np.save(GSI_DEFAULT_QUERY_PATH, vec)            
+        
         if top is None:
             top = (
                 len(query.expected_result)
                 if query.expected_result is not None and len(query.expected_result) > 0
                 else DEFAULT_TOP
-            )
+            )        
             
-        print(cls.__name__)
         start = time.perf_counter()
         search_res = cls.search_one(query.vector, query.meta_conditions, top)
         end = time.perf_counter()

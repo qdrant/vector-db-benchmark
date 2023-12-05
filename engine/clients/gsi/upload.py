@@ -10,6 +10,8 @@ from engine.clients.gsi.config import GSI_DEFAULT_DATA_PATH
 
 class GSIUploader(BaseUploader):
     client = None
+    global skip
+    skip = True
 
     @classmethod
     def init_client(cls, host, distance, connection_params: dict, upload_params: dict):
@@ -30,12 +32,20 @@ class GSIUploader(BaseUploader):
             tmp = np.load(path)
             cls.shape = tmp.shape[0]
             print("shape:", cls.shape)
+            return
         else:
             file = h5py.File(path)
             cls.shape = file['train'].shape[0]
+            
+        if skip:
+            print(f"saving {path} to {GSI_DEFAULT_DATA_PATH}")
+            np.save(GSI_DEFAULT_DATA_PATH, file['train'][:])
+            cls.fvs_upload()
 
     @classmethod
     def upload_batch(cls, ids: List[int], vectors: List[list], metadata: Optional[List[dict]]):
+        if skip:
+            return
         data = np.array(vectors)
         with NpyAppendArray(GSI_DEFAULT_DATA_PATH) as npaa:
             npaa.append(data)
@@ -82,6 +92,7 @@ class GSIUploader(BaseUploader):
             train_status = cls.client.datasets_apis.controllers_dataset_controller_get_dataset_status(
                 dataset_id=dataset_id, allocation_token=cls.client.allocation_id
             ).dataset_status
+            time.sleep(10)
 
         # load dataset
         print('done training, loading dataset...')
