@@ -28,6 +28,7 @@ class RedisSearcher(BaseSearcher):
         )
         cls.search_params = search_params
         cls.knn_conditions = "EF_RUNTIME $EF"
+        cls._is_cluster = True if REDIS_CLUSTER else False
 
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
