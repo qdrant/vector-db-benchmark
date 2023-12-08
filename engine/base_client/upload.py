@@ -37,6 +37,14 @@ class BaseUploader:
         self.init_client(
             self.host, distance, self.connection_params, self.upload_params
         )
+        
+        if self.__class__.__name__ == "GSIUploader":
+            return {
+            "post_upload": None,
+            "upload_time": None,
+            "total_time": None,
+            "latencies": None,
+        }
 
         if parallel == 1:
             for batch in iter_batches(tqdm.tqdm(records), batch_size):

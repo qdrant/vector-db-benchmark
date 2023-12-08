@@ -8,6 +8,7 @@ import tqdm
 import os
 
 from dataset_reader.base_reader import Query
+from swagger_client.models.import_queries_request import ImportQueriesRequest
 
 
 DEFAULT_TOP = 10
@@ -40,13 +41,16 @@ class BaseSearcher:
     @classmethod
     def _search_one(cls, query, top: Optional[int] = None):
         
-        if cls.__name__ == "GSISearcher":
-            from engine.clients.gsi.config import GSI_DEFAULT_QUERY_PATH
-            if os.path.exists(GSI_DEFAULT_QUERY_PATH):
-                os.remove(GSI_DEFAULT_QUERY_PATH)
-            vec = np.array(query.vector)
-            vec = vec.reshape(1, len(vec))
-            np.save(GSI_DEFAULT_QUERY_PATH, vec)            
+        # if cls.__name__ == "GSISearcher":
+        #     from engine.clients.gsi.config import GSI_DEFAULT_QUERY_PATH
+            
+        #     idx = os.environ["id"]
+        #     qpath = GSI_DEFAULT_QUERY_PATH + idx + ".npy"
+        #     if os.path.exists(qpath):
+        #         os.remove(qpath)
+        #     vec = np.array(query.vector)
+        #     vec = vec.reshape((1, len(vec)))
+        #     np.save(qpath, vec)
         
         if top is None:
             top = (
@@ -54,10 +58,13 @@ class BaseSearcher:
                 if query.expected_result is not None and len(query.expected_result) > 0
                 else DEFAULT_TOP
             )        
-            
+        idx = os.environ['id']
+        
         start = time.perf_counter()
         search_res = cls.search_one(query.vector, query.meta_conditions, top)
         end = time.perf_counter()
+        
+        os.environ["id"] = str(int(idx) + 1)
 
         precision = 1.0
         if query.expected_result:
