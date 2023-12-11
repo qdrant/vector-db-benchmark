@@ -4,8 +4,8 @@ on:
   repository_dispatch:
   workflow_dispatch:
     inputs:
-        qdrant_branch:
-            description: "Branch of qdrant to benchmark (tags/v1.6.1, <commit-id>, my-branch, docker/docker-tag)"
+        qdrant_version:
+            description: "Version of qdrant to benchmark (tags/v1.6.1, <commit-id>, my-branch, docker/docker-tag)"
             default: dev
         dataset:
             description: "Dataset to benchmark"
@@ -13,7 +13,7 @@ on:
 
 jobs:
   runManualBenchmark:
-    name: manual benchmark - ${{ inputs.qdrant_branch }} - ${{ inputs.dataset }}
+    name: manual benchmark - ${{ inputs.qdrant_version }} - ${{ inputs.dataset }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -27,7 +27,7 @@ jobs:
           export GCS_SECRET=${{ secrets.GCS_SECRET }}
           export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
           export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
-          export QDRANT_VERSION=${{ inputs.qdrant_branch }}
+          export QDRANT_VERSION=${{ inputs.qdrant_version }}
           export DATASETS=${{ inputs.dataset }}
           export POSTGRES_TABLE=benchmark_manual
           bash -x tools/run_ci.sh
