@@ -21,7 +21,7 @@ IP_OF_THE_SERVER=$(bash "${SCRIPT_PATH}/${CLOUD_NAME}/get_public_ip.sh" "$BENCH_
 bash -x "${SCRIPT_PATH}/sync_servers.sh" "root@$IP_OF_THE_SERVER"
 
 # if version is dev or if starts with "docker", run in docker
-if [ "${QDRANT_VERSION}" == "dev"] || [[ ${QDRANT_VERSION} == docker/* ]]; then
+if [ "${QDRANT_VERSION}" == "dev" ] || [[ ${QDRANT_VERSION} == docker/* ]]; then
     QDRANT_VERSION=${QDRANT_VERSION#docker/}
     DOCKER_COMPOSE="export QDRANT_VERSION=${QDRANT_VERSION}; docker compose down ; pkill qdrant ; docker rmi qdrant/qdrant:${QDRANT_VERSION} || true ; docker compose up -d"
     ssh -t "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "cd ./projects/vector-db-benchmark/engine/servers/${CONTAINER_NAME} ; $DOCKER_COMPOSE"
