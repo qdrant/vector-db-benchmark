@@ -14,7 +14,7 @@ SCRIPT_PATH=$(dirname "$SCRIPT")
 
 BENCH_SERVER_NAME=${SERVER_NAME:-"benchmark-server-1"}
 
-QDRANT_VERSION=${QDRANT_VERSION:-"docker/4277f8bf"}
+QDRANT_VERSION=${QDRANT_VERSION:-"docker/65e79e45"}
 
 IP_OF_THE_SERVER=$(bash "${SCRIPT_PATH}/${CLOUD_NAME}/get_public_ip.sh" "$BENCH_SERVER_NAME")
 
