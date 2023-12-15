@@ -27,4 +27,4 @@ ssh -tt "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "${RUN_EXPERIMENT}"
 
 LATEST_RESULT=$(ssh "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "ls -t results/ | head -n 1")
 # -p preseves modification time, access time, and modes (but not change time)
-scp -p "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/results/${LATEST_RESULTS}" "${SCRIPT_PATH}/results"
+scp -p "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/results/${LATEST_RESULT}" "${SCRIPT_PATH}/results"
