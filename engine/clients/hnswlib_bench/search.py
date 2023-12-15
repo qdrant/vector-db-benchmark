@@ -13,7 +13,11 @@ class HNSWLibSearcher(BaseSearcher):
         # load index
         dim = int(os.getenv("DIM"))
         cls.index = hnswlib.Index(space=distance, dim=dim)
-        cls.index.load_index(DEFAULT_INDEX_PATH)
+        try:
+            if os.environ['GXL_IDX']:
+                cls.index.load_index(os.environ['GXL_IDX'])
+        except: 
+            cls.index.load_index(DEFAULT_INDEX_PATH)
         cls.index.set_ef(search_params['vectorIndexConfig']['ef'])
 
     @classmethod

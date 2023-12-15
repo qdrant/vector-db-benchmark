@@ -20,7 +20,6 @@ class GSISearcher(BaseSearcher):
         cls.dataset_id = dataset_list[-1]['id']
         print(cls.dataset_id)
         print("doing search...")
-        os.environ["id"] = '0'
     
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
@@ -28,13 +27,12 @@ class GSISearcher(BaseSearcher):
             ef = cls.search_params['ef']
         else:
             ef = None
-        
-        idx = os.environ["id"]
-        qpath = GSI_DEFAULT_QUERY_PATH + idx + ".npy"
+
+        qpath = GSI_DEFAULT_QUERY_PATH
         response = cls.client.search_apis.controllers_search_controller_search(
-            SearchRequest(allocation_id=cls.client.allocation_id, dataset_id=cls.dataset_id, 
+            SearchRequest(allocation_id=cls.client.allocation_id, dataset_id=cls.dataset_id,
                           queries_file_path=qpath, topk=top),
-            cls.client.allocation_id
+            allocation_token=cls.client.allocation_id
         )
         
         # parse results

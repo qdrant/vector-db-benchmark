@@ -11,6 +11,10 @@ class HNSWLibUploader(BaseUploader):
     def init_client(cls, host, distance, connection_params: dict, upload_params: dict):
         cls.upload_params = upload_params
         dim = int(os.getenv("DIM"))
+        if 'gxl' in upload_params.keys():
+            os.environ['GXL'] = 'true'
+        else:
+            os.environ['GXL'] = 'false'
         cls.index = hnswlib.Index(space=distance, dim=dim)
         cls.index.load_index(DEFAULT_INDEX_PATH)
         cls.index.resize_index(int(os.getenv("MAX_ADDS")))

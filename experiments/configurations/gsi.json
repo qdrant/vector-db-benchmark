@@ -31,6 +31,12 @@
         "search_params": [{"top": 10}]
     },
     {
+        "name": "gsi-64-clusters",
+        "engine": "gsi",
+        "upload_params": {"nbits": 64, "searchType": "clusters", "top": 10},
+        "search_params": [{"top": 10}]
+    },
+    {
         "name": "gsi-128-clusters",
         "engine": "gsi",
         "upload_params": {"nbits": 128, "searchType": "clusters", "top": 10},

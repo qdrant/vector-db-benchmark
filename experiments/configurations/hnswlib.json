@@ -9,6 +9,54 @@
         ]
     },
     {
+        "name": "hnswlib-gxl-m-32-ef-128",
+        "engine": "hnswlib",
+        "collection_params": {"vectorIndexConfig": {"ef": 100, "efConstruction": 128, "maxConnections": 32}},
+        "upload_params": {"batch_size": 1000, "m": 32, "efConstruction": 128, "gxl": true},
+        "search_params": [
+            {"parallel": 1, "vectorIndexConfig": {"ef": 64}},
+            {"parallel": 1, "vectorIndexConfig": {"ef": 128}},
+            {"parallel": 1, "vectorIndexConfig": {"ef": 256}},
+            {"parallel": 1, "vectorIndexConfig": {"ef": 512}}
+        ]
+    },
+    {
+        "name": "hnswlib-gxl-m-32-ef-256",
+        "engine": "hnswlib",
+        "collection_params": {"vectorIndexConfig": {"ef": 100, "efConstruction": 256, "maxConnections": 32}},
+        "upload_params": {"batch_size": 1000, "m": 32, "efConstruction": 256, "gxl": true},
+        "search_params": [
+            {"parallel": 1, "vectorIndexConfig": {"ef": 64}},
+            {"parallel": 1, "vectorIndexConfig": {"ef": 128}},
+            {"parallel": 1, "vectorIndexConfig": {"ef": 256}},
+            {"parallel": 1, "vectorIndexConfig": {"ef": 512}}
+        ]
+    },
+    {
+        "name": "hnswlib-gxl-m-64-ef-256",
+        "engine": "hnswlib",
+        "collection_params": {"vectorIndexConfig": {"ef": 100, "efConstruction": 256, "maxConnections": 64}},
+        "upload_params": {"batch_size": 1000, "m": 32, "efConstruction": 256, "gxl": true},
+        "search_params": [
+            {"parallel": 1, "vectorIndexConfig": {"ef": 64}},
+            {"parallel": 1, "vectorIndexConfig": {"ef": 128}},
+            {"parallel": 1, "vectorIndexConfig": {"ef": 256}},
+            {"parallel": 1, "vectorIndexConfig": {"ef": 512}}
+        ]
+    },
+    {
+        "name": "hnswlib-gxl-m-64-ef-512",
+        "engine": "hnswlib",
+        "collection_params": {"vectorIndexConfig": {"ef": 100, "efConstruction": 512, "maxConnections": 64}},
+        "upload_params": {"batch_size": 1000, "m": 64, "efConstruction": 512, "gxl": true},
+        "search_params": [
+            {"parallel": 1, "vectorIndexConfig": {"ef": 64}},
+            {"parallel": 1, "vectorIndexConfig": {"ef": 128}},
+            {"parallel": 1, "vectorIndexConfig": {"ef": 256}},
+            {"parallel": 1, "vectorIndexConfig": {"ef": 512}}
+        ]
+    },
+    {
         "name": "hnswlib-m-16-ef-128",
         "engine": "hnswlib",
         "collection_params": {"vectorIndexConfig": {"ef": 100, "efConstruction": 128, "maxConnections": 16}},

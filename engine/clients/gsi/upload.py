@@ -6,7 +6,7 @@ import os, time
 from swagger_client.models import *
 from engine.base_client.upload import BaseUploader
 from engine.clients.gsi.client import GSIClient
-from engine.clients.gsi.config import GSI_DEFAULT_DATA_PATH
+from engine.clients.gsi.config import *
 
 class GSIUploader(BaseUploader):
     client = None
@@ -21,7 +21,6 @@ class GSIUploader(BaseUploader):
         cls.connection_params = connection_params
         cls.data = None
 
-        # TODO: do better!
         if os.path.exists(GSI_DEFAULT_DATA_PATH):
             os.remove(GSI_DEFAULT_DATA_PATH)
 
@@ -29,31 +28,20 @@ class GSIUploader(BaseUploader):
         path = os.path.join(os.path.abspath("./datasets"), os.getenv("DATA_PATH"))
         if os.getenv("dataset") == "laion-small-clip":
             path = os.path.join(path, "vectors.npy")
-            tmp = np.load(path)
-            cls.shape = tmp.shape[0]
-            print("shape:", cls.shape)
-            return
+            train = np.load(path)
+            cls.shape = train.shape[0]
         else:
             file = h5py.File(path)
+            train = file['train'][:]
             cls.shape = file['train'].shape[0]
             
-        if skip:
-            print(f"saving {path} to {GSI_DEFAULT_DATA_PATH}")
-            np.save(GSI_DEFAULT_DATA_PATH, file['train'][:])
-            cls.fvs_upload()
+        print(f"saving {path} to {GSI_DEFAULT_DATA_PATH}")
+        np.save(GSI_DEFAULT_DATA_PATH, train)
+        cls.fvs_upload()
 
     @classmethod
     def upload_batch(cls, ids: List[int], vectors: List[list], metadata: Optional[List[dict]]):
-        if skip:
-            return
-        data = np.array(vectors)
-        with NpyAppendArray(GSI_DEFAULT_DATA_PATH) as npaa:
-            npaa.append(data)
-            if npaa.shape[0] >= cls.shape:
-                npaa.close()
-                print("done batching, shape", cls.shape)
-                cls.fvs_upload()
-            npaa.close()
+        return
 
     @classmethod
     def fvs_upload(cls):
@@ -75,7 +63,7 @@ class GSIUploader(BaseUploader):
 
         # import dataset
         response = cls.client.datasets_apis.controllers_dataset_controller_import_dataset(
-            ImportDatasetRequest(records=GSI_DEFAULT_DATA_PATH, search_type=search_type, train_ind=True,\
+            ImportDatasetRequest(records=GSI_DEFAULT_DATA_PATH, search_type=search_type, train_ind=True,
                                  nbits=nbits, dataset_name="QdrantBench", m_number_of_edges=m, ef_construction=efc),
             cls.client.allocation_id
         )
@@ -98,14 +86,12 @@ class GSIUploader(BaseUploader):
         print('done training, loading dataset...')
 
         load_status = cls.client.datasets_apis.controllers_dataset_controller_load_dataset(
-                LoadDatasetRequest(allocation_id=cls.client.allocation_id, dataset_id=dataset_id, topk=top),
+                LoadDatasetRequest(allocation_id=cls.client.allocation_id, dataset_id=dataset_id, topk=top,
+                                   centroids_hamming_k=NPROBE, centroids_rerank=NPROBE, hamming_k=HAMMINGK),
                 allocation_token=cls.client.allocation_id
             ).status
-        while load_status != "ok":
-            load_status = cls.client.datasets_apis.controllers_dataset_controller_load_dataset(
-                LoadDatasetRequest(allocation_id=cls.client.allocation_id, dataset_id=dataset_id, topk=top),
-                allocation_token=cls.client.allocation_id
-            ).status
+        
+        print(load_status)
 
         # set dataset in focus
         print('focus dataset')
