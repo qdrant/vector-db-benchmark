@@ -27,5 +27,5 @@ jobs:
           bash -x tools/run_ci.sh
 
           # Benchmark the master branch:
-          export QDRANT_VERSION=master
+          export QDRANT_VERSION=docker/master
           bash -x tools/run_ci.sh
