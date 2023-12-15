@@ -21,4 +21,11 @@ jobs:
           export GCS_SECRET=${{ secrets.GCS_SECRET }}
           export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
           export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+
+          # Benchmark the dev branch:
+          export QDRANT_VERSION=dev
+          bash -x tools/run_ci.sh
+
+          # Benchmark the master branch:
+          export QDRANT_VERSION=master
           bash -x tools/run_ci.sh
