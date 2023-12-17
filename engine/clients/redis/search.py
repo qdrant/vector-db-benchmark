@@ -1,6 +1,7 @@
 from typing import List, Tuple
 
 import numpy as np
+import random
 from redis import Redis, RedisCluster
 from redis.commands.search.query import Query
 
@@ -29,6 +30,13 @@ class RedisSearcher(BaseSearcher):
         cls.search_params = search_params
         cls.knn_conditions = "EF_RUNTIME $EF"
         cls._is_cluster = True if REDIS_CLUSTER else False
+        cls.conns = [cls.client]
+        if cls._is_cluster:
+            cls.conns = [
+                cls.client.get_redis_connection(node)
+                for node in cls.client.get_primaries()
+            ]
+        cls._ft = cls.conns[random.randint(0, len(cls.conns)) - 1].ft()
 
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
@@ -57,7 +65,6 @@ class RedisSearcher(BaseSearcher):
             "EF": cls.search_params["search_params"]["ef"],
             **params,
         }
-
-        results = cls.client.ft().search(q, query_params=params_dict)
+        results = cls._ft.search(q, query_params=params_dict)
 
         return [(int(result.id), float(result.vector_score)) for result in results.docs]
