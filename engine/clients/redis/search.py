@@ -30,6 +30,8 @@ class RedisSearcher(BaseSearcher):
         cls.search_params = search_params
         cls.knn_conditions = "EF_RUNTIME $EF"
         cls._is_cluster = True if REDIS_CLUSTER else False
+        # In the case of CLUSTER API enabled we randomly select the starting primary shard
+        # when doing the client initialization to evenly distribute the load among the cluster
         cls.conns = [cls.client]
         if cls._is_cluster:
             cls.conns = [
