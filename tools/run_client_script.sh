@@ -25,5 +25,13 @@ RUN_EXPERIMENT="ENGINE_NAME=${ENGINE_NAME} DATASETS=${DATASETS} PRIVATE_IP_OF_TH
 
 ssh -tt "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "${RUN_EXPERIMENT}"
 
-# -p preseves modification time, access time, and modes (but not change time)
-scp -rp "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/results" "./results"
+SEARCH_RESULT_FILE=$(ssh "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "ls -t results/*-search-*.json | head -n 1")
+UPLOAD_RESULT_FILE=$(ssh "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "ls -t results/*-upload-*.json | head -n 1")
+MEMORY_USAGE_FILE=$(ssh "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "ls -t results/memory-usage-*.txt | head -n 1")
+
+mkdir -p results
+
+for RESULT_FILE in $SEARCH_RESULT_FILE $UPLOAD_RESULT_FILE $MEMORY_USAGE_FILE; do
+    # -p preseves modification time, access time, and modes (but not change time)
+    scp -p "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/${RESULT_FILE}" "./results"
+done
