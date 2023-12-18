@@ -22,4 +22,6 @@ CURRENT_DATE=$(date +%Y-%m-%d-%H-%M-%S)
 
 mkdir -p results
 
+ls results
+
 echo $MEMORY_USAGE > results/memory-usage-${CURRENT_DATE}.txt
