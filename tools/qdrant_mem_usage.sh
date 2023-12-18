@@ -22,6 +22,8 @@ CURRENT_DATE=$(date +%Y-%m-%d-%H-%M-%S)
 
 echo results/memory-usage-${CURRENT_DATE}.txt
 
+realpath results/memory-usage-${CURRENT_DATE}.txt
+
 ls results
 
 echo $MEMORY_USAGE > results/memory-usage-${CURRENT_DATE}.txt
