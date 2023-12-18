@@ -20,6 +20,4 @@ MEMORY_USAGE=$(ssh -t "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "grep VmRSS /proc
 
 CURRENT_DATE=$(date +%Y-%m-%d-%H-%M-%S)
 
-echo $MEMORY_USAGE > ${SCRIPT_PATH}/results/memory-usage-latest.txt
-
-# echo $MEMORY_USAGE > ${SCRIPT_PATH}/results/memory-usage-${CURRENT_DATE}.txt
+echo $MEMORY_USAGE > results/memory-usage-${CURRENT_DATE}.txt
