@@ -30,9 +30,9 @@ UPLOAD_RESULT_FILE=$(ssh "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "ls -t results
 MEMORY_USAGE_FILE=$(ssh "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "ls -t results/memory-usage-*.txt | head -n 1")
 
 
+mkdir -p results
+
 # -p preseves modification time, access time, and modes (but not change time)
 for RESULT_FILE in $SEARCH_RESULT_FILE $UPLOAD_RESULT_FILE $MEMORY_USAGE_FILE; do
     scp -p "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/${RESULT_FILE}" "./results"
-    ls "./results"
-    echo "${RESULT_FILE} copied to $(realpath ./results)"
 done
