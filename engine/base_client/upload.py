@@ -42,13 +42,18 @@ class BaseUploader:
         )
         
         if self.__class__.__name__ == "GSIUploader":
-            return {
-            "post_upload": None,
-            "upload_time": None,
-            "total_time": None,
-            "latencies": None,
-        }
-        
+            ret = {"centroids_hamming_k": None,
+                    "centroids_rerank": None,
+                    "hamming_k": None,
+                    "num_of_boards": None,
+                    "num_of_clusters": None}
+            
+            for key in ret.keys():
+                if key in self.upload_params.keys():
+                    ret[key] = self.upload_params[key]
+
+            return ret
+            
         if self.__class__.__name__ == "HNSWLibUploader" and os.environ['GXL'] == 'true':
             from engine.clients.hnswlib_bench.GXL_helpers import convert_np_to_fbin, gxl_upload
             from engine.clients.hnswlib_bench.config import DEFAULT_INDEX_PATH, GXL_BIN_PATH

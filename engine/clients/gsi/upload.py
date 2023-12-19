@@ -64,7 +64,8 @@ class GSIUploader(BaseUploader):
         # import dataset
         response = cls.client.datasets_apis.controllers_dataset_controller_import_dataset(
             ImportDatasetRequest(records=GSI_DEFAULT_DATA_PATH, search_type=search_type, train_ind=True,
-                                 nbits=nbits, dataset_name="QdrantBench", m_number_of_edges=m, ef_construction=efc),
+                                 nbits=nbits, dataset_name="QdrantBench", m_number_of_edges=m, ef_construction=efc,
+                                 num_of_boards=cls.upload_params["num_of_boards"], num_of_clusters=cls.upload_params["num_of_clusters"]),
             cls.client.allocation_id
         )
         print("got datasetid=", response.dataset_id)
@@ -87,7 +88,9 @@ class GSIUploader(BaseUploader):
 
         load_status = cls.client.datasets_apis.controllers_dataset_controller_load_dataset(
                 LoadDatasetRequest(allocation_id=cls.client.allocation_id, dataset_id=dataset_id, topk=top,
-                                   centroids_hamming_k=NPROBE, centroids_rerank=NPROBE, hamming_k=HAMMINGK),
+                                   centroids_hamming_k=cls.upload_params["centroids_hamming_k"],
+                                   centroids_rerank=cls.upload_params["centroid_rerank"], hamming_k=cls.upload_params["hamming_k"],
+                                   ),
                 allocation_token=cls.client.allocation_id
             ).status
         
