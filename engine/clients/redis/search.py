@@ -1,7 +1,7 @@
+import random
 from typing import List, Tuple
 
 import numpy as np
-import random
 from redis import Redis, RedisCluster
 from redis.commands.search.query import Query
 
