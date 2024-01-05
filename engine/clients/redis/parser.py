@@ -34,7 +34,8 @@ class RedisConditionParser(BaseConditionParser):
         param_name = f"{field_name}_{self.counter}"
         self.counter += 1
         if isinstance(value, str):
-            return f"@{field_name}:${param_name}", {param_name: value}
+            return f"@{field_name}:{{${param_name}}}", {param_name: value}
+        # field is numeric, value is an integer
         return f"@{field_name}:[${param_name} ${param_name}]", {param_name: value}
 
     def build_range_filter(

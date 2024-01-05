@@ -1,10 +1,22 @@
 import redis
-from redis.commands.search.field import GeoField, NumericField, TextField, VectorField
+from redis import Redis, RedisCluster
+from redis.commands.search.field import (
+    GeoField,
+    NumericField,
+    TagField,
+    TextField,
+    VectorField,
+)
 
 from benchmark.dataset import Dataset
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
-from engine.clients.redis.config import REDIS_PORT
+from engine.clients.redis.config import (
+    REDIS_AUTH,
+    REDIS_CLUSTER,
+    REDIS_PORT,
+    REDIS_USER,
+)
 
 
 class RedisConfigurator(BaseConfigurator):
@@ -15,7 +27,7 @@ class RedisConfigurator(BaseConfigurator):
     }
     FIELD_MAPPING = {
         "int": NumericField,
-        "keyword": TextField,
+        "keyword": TagField,
         "text": TextField,
         "float": NumericField,
         "geo": GeoField,
@@ -23,42 +35,73 @@ class RedisConfigurator(BaseConfigurator):
 
     def __init__(self, host, collection_params: dict, connection_params: dict):
         super().__init__(host, collection_params, connection_params)
-
-        self.client = redis.Redis(host=host, port=REDIS_PORT, db=0)
+        redis_constructor = RedisCluster if REDIS_CLUSTER else Redis
+        self._is_cluster = True if REDIS_CLUSTER else False
+        self.client = redis_constructor(
+            host=host, port=REDIS_PORT, password=REDIS_AUTH, username=REDIS_USER
+        )
 
     def clean(self):
-        index = self.client.ft()
-        try:
-            index.dropindex(delete_documents=True)
-        except redis.ResponseError as e:
-            print(e)
+        conns = [self.client]
+        if self._is_cluster:
+            conns = [
+                self.client.get_redis_connection(node)
+                for node in self.client.get_primaries()
+            ]
+        for conn in conns:
+            index = conn.ft()
+            try:
+                index.dropindex(delete_documents=True)
+            except redis.ResponseError as e:
+                if "Unknown Index name" not in e.__str__():
+                    print(e)
 
     def recreate(self, dataset: Dataset, collection_params):
         self.clean()
-        search_namespace = self.client.ft()
+
         payload_fields = [
             self.FIELD_MAPPING[field_type](
                 name=field_name,
+                sortable=True,
             )
             for field_name, field_type in dataset.config.schema.items()
+            if field_type != "keyword"
         ]
-        search_namespace.create_index(
-            fields=[
-                VectorField(
-                    name="vector",
-                    algorithm="HNSW",
-                    attributes={
-                        "TYPE": "FLOAT32",
-                        "DIM": dataset.config.vector_size,
-                        "DISTANCE_METRIC": self.DISTANCE_MAPPING[
-                            dataset.config.distance
-                        ],
-                        **self.collection_params.get("hnsw_config", {}),
-                    },
-                )
+        payload_fields += [
+            TagField(
+                name=field_name,
+                separator=";",
+                sortable=True,
+            )
+            for field_name, field_type in dataset.config.schema.items()
+            if field_type == "keyword"
+        ]
+        index_fields = [
+            VectorField(
+                name="vector",
+                algorithm="HNSW",
+                attributes={
+                    "TYPE": "FLOAT32",
+                    "DIM": dataset.config.vector_size,
+                    "DISTANCE_METRIC": self.DISTANCE_MAPPING[dataset.config.distance],
+                    **self.collection_params.get("hnsw_config", {}),
+                },
+            )
+        ] + payload_fields
+
+        conns = [self.client]
+        if self._is_cluster:
+            conns = [
+                self.client.get_redis_connection(node)
+                for node in self.client.get_primaries()
             ]
-            + payload_fields
-        )
+        for conn in conns:
+            search_namespace = conn.ft()
+            try:
+                search_namespace.create_index(fields=index_fields)
+            except redis.ResponseError as e:
+                if "Index already exists" not in e.__str__():
+                    raise e
 
 
 if __name__ == "__main__":
