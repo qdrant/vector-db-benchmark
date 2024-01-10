@@ -6,9 +6,6 @@ services:
     user: '101:101'
     container_name: clickhouse-server
     hostname: clickhouse-server
-    environment:
-      CLICKHOUSE_PASSWORD: "passwd"
-      CLICKHOUSE_USER: "default"
     ports:
       - "8123:8123"
       - "9000:9000"
