@@ -7,6 +7,7 @@ from engine.base_client.client import (
     BaseSearcher,
     BaseUploader,
 )
+from engine.clients.clickhouse import ClickHouseConfigurator, ClickHouseUploader, ClickHouseSearcher
 from engine.clients.elasticsearch import (
     ElasticConfigurator,
     ElasticSearcher,
@@ -33,6 +34,7 @@ ENGINE_CONFIGURATORS = {
     "elasticsearch": ElasticConfigurator,
     "opensearch": OpenSearchConfigurator,
     "redis": RedisConfigurator,
+    "clickhouse": ClickHouseConfigurator
 }
 
 ENGINE_UPLOADERS = {
@@ -42,6 +44,7 @@ ENGINE_UPLOADERS = {
     "elasticsearch": ElasticUploader,
     "opensearch": OpenSearchUploader,
     "redis": RedisUploader,
+    "clickhouse": ClickHouseUploader
 }
 
 ENGINE_SEARCHERS = {
@@ -51,6 +54,7 @@ ENGINE_SEARCHERS = {
     "elasticsearch": ElasticSearcher,
     "opensearch": OpenSearchSearcher,
     "redis": RedisSearcher,
+    "clickhouse": ClickHouseSearcher
 }
 
 

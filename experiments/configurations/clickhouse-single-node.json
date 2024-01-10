@@ -1,0 +1,17 @@
+[
+  {
+    "name": "clickhouse-default",
+    "engine": "clickhouse",
+    "connection_params": {
+    },
+    "collection_params": { },
+    "search_params": [
+      { "parallel": 1 },
+      { "parallel": 2 },
+      { "parallel": 4 },
+      { "parallel": 8 },
+      { "parallel": 100 }
+    ],
+    "upload_params": { "parallel": 4, "batch_size": 1000 }
+  }
+]
