@@ -72,7 +72,7 @@ client = clickhouse_connect.get_client(host=os.getenv("CLICKHOUSE_HOST", "localh
                                        database=os.getenv("CLICKHOUSE_DATABASE", "default"),
                                        port=int(os.getenv("CLICKHOUSE_PORT", 8123)),
                                        secure=True if os.getenv("CLICKHOUSE_SECURE", "False") == "True" else False)
-
+client.command("DROP TABLE IF EXISTS vector_bench_summary")
 client.command("CREATE TABLE IF NOT EXISTS vector_bench_summary ("
                "dataset LowCardinality(String), "
                "engine LowCardinality(String), "
@@ -129,7 +129,7 @@ column_names = [cd.name for cd in column_defs]
 column_types = [cd.ch_type for cd in column_defs]
 
 client.insert("vector_bench_summary", data, column_names=column_names, column_types=column_types)
-
+client.command("DROP TABLE IF EXISTS vector_bench_results")
 client.command("CREATE TABLE IF NOT EXISTS vector_bench_results ("
                "dataset LowCardinality(String), "
                "engine LowCardinality(String), "
