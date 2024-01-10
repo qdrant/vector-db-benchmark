@@ -118,3 +118,10 @@ class BaseClient:
                 )
         print("Experiment stage: Done")
         print("Results saved to: ", RESULTS_DIR)
+
+    def close(self):
+        self.uploader.close()
+        self.configurator.close()
+
+        for s in self.searchers:
+            s.close()

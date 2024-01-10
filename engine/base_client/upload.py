@@ -70,7 +70,7 @@ class BaseUploader:
 
         print(f"Total import time: {total_time}")
 
-        self.delete_client()
+        self.close()
 
         return {
             "post_upload": post_upload_stats,
@@ -99,5 +99,5 @@ class BaseUploader:
         raise NotImplementedError()
 
     @classmethod
-    def delete_client(cls):
+    def close(cls):
         pass
