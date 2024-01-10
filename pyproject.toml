@@ -19,6 +19,7 @@ stopit = "^1.1.2"
 opensearch-py = "^2.3.2"
 tqdm = "^4.66.1"
 clickhouse-connect = "^0.6.23"
+jupyter = "^1.0.0"
 
 
 [tool.poetry.dev-dependencies]
