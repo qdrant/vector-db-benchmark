@@ -60,5 +60,5 @@ class ClickHouseUploader(BaseUploader):
 
     @classmethod
     def post_upload(cls, _distance):
-        cls.client.command(f"OPTIMIZE TABLE {CLICKHOUSE_TABLE} FINAL")
+        cls.client.command(f"OPTIMIZE TABLE {CLICKHOUSE_TABLE} FINAL", settings={"alter_sync": 2})
         return {}

@@ -42,6 +42,7 @@ for upload in upload_results:
         upload[1] = 0
     if upload[2] is None:
         upload[2] = 0
+
 upload_df = pd.DataFrame(upload_results, columns=column_names) \
     .drop(columns="search_index")
 upload_df["date"] = pd.to_datetime(upload_df["date"], format="%Y-%m-%d-%H-%M-%S")
@@ -51,11 +52,11 @@ upload_df = upload_df.sort_values("date", ascending=False) \
 upload_df = pd.concat([upload_df, upload_df["results"].apply(pd.Series)], axis=1)
 upload_df = upload_df.drop(columns=["results","latencies"])
 
-for upload in search_results:
-    if upload[1] is None:
-        upload[1] = 0
-    if upload[2] is None:
-        upload[2] = 0
+for search in search_results:
+    if search[1] is None:
+        search[1] = 0
+    if search[2] is None:
+        search[2] = 0
 
 search_df = pd.DataFrame(search_results, columns=column_names)
 search_df["date"] = pd.to_datetime(search_df["date"], format="%Y-%m-%d-%H-%M-%S")
@@ -101,8 +102,8 @@ for index, row in joined_df.reset_index().iterrows():
         [
             row["dataset"],
             row["engine"],
-            row["m"],
-            row["ef"],
+            int(row["m"]),
+            int(row["ef"]),
             row["date_search"],
             {key: str(value) for key, value in row['params_search'].items()},
             row['params_search']['parallel'],
@@ -149,8 +150,8 @@ for index, row in joined_df.reset_index().iterrows():
             [
                 row["dataset"],
                 row["engine"],
-                row["m"],
-                row["ef"],
+                int(row["m"]),
+                int(row["ef"]),
                 row["date_search"],
                 {key: str(value) for key, value in row['params_search'].items()},
                 row['params_search']['parallel'],
