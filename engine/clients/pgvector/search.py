@@ -2,8 +2,8 @@ import multiprocessing as mp
 from typing import List, Tuple
 
 import numpy as np
-from pgvector.psycopg import register_vector
 import psycopg
+from pgvector.psycopg import register_vector
 
 from engine.base_client.distances import Distance
 from engine.base_client.search import BaseSearcher
