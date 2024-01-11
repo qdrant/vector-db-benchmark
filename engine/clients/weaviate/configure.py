@@ -46,6 +46,7 @@ class WeaviateConfigurator(BaseConfigurator):
                     }
                     for field_name, field_type in dataset.config.schema.items()
                 ],
+                "vectorIndexType": collection_params["vectorIndexType"] if "vectorIndexType" in collection_params else "hnsw",
                 "vectorIndexConfig": {
                     **{
                         "vectorCacheMaxObjects": 1000000000,
