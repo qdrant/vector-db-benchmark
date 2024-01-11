@@ -53,6 +53,23 @@ class ElasticConfigurator(BaseConfigurator):
         if dataset.config.vector_size > 2048:
             # https://www.elastic.co/guide/en/elasticsearch/reference/8.10/dense-vector.html#dense-vector-params
             raise IncompatibilityError
+        index = collection_params["index"] if "index" in collection_params else True
+        vector_mapping = {
+            "type": "dense_vector",
+            "dims": dataset.config.vector_size,
+            "index": index,
+        }
+
+        if index:
+            vector_mapping["similarity"] = self.DISTANCE_MAPPING[dataset.config.distance]
+            vector_mapping["index_options"] = {
+                **{
+                    "type": "hnsw",
+                    "m": 16,
+                    "ef_construction": 100,
+                },
+                **collection_params.get("index_options"),
+            }
 
         self.client.indices.create(
             index=ELASTIC_INDEX,
@@ -66,20 +83,7 @@ class ElasticConfigurator(BaseConfigurator):
             mappings={
                 "_source": {"excludes": ["vector"]},
                 "properties": {
-                    "vector": {
-                        "type": "dense_vector",
-                        "dims": dataset.config.vector_size,
-                        "index": True,
-                        "similarity": self.DISTANCE_MAPPING[dataset.config.distance],
-                        "index_options": {
-                            **{
-                                "type": "hnsw",
-                                "m": 16,
-                                "ef_construction": 100,
-                            },
-                            **collection_params.get("index_options"),
-                        },
-                    },
+                    "vector": vector_mapping,
                     **self._prepare_fields_config(dataset),
                 },
             },

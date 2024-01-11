@@ -1,113 +1,18 @@
 [
+
   {
-    "name": "elasticsearch-default",
+    "name": "elasticsearch-exact",
     "engine": "elasticsearch",
     "connection_params": {
       "request_timeout": 10000
     },
-    "collection_params": { "index_options": { "m": 16, "ef_construction": 100 } },
+    "collection_params": { "index": false },
     "search_params": [
-      { "parallel": 1, "num_candidates": 128 }, { "parallel": 1, "num_candidates": 256 }, { "parallel": 1, "num_candidates": 512 },
-      { "parallel": 2, "num_candidates": 128 }, { "parallel": 2, "num_candidates": 256 }, { "parallel": 2, "num_candidates": 512 },
-      { "parallel": 4, "num_candidates": 128 }, { "parallel": 4, "num_candidates": 256 }, { "parallel": 4, "num_candidates": 512 },
-      { "parallel": 8, "num_candidates": 128 }, { "parallel": 8, "num_candidates": 256 }, { "parallel": 8, "num_candidates": 512 },
-      { "parallel": 100, "num_candidates": 128 }, { "parallel": 100, "num_candidates": 256 }, { "parallel": 100, "num_candidates": 512 }
-    ],
-    "upload_params": { "parallel": 16 }
-  },
-  {
-    "name": "elasticsearch-m-16-ef-128",
-    "engine": "elasticsearch",
-    "connection_params": {
-      "request_timeout": 10000
-    },
-    "collection_params": { "index_options": { "m": 16, "ef_construction": 128 } },
-    "search_params": [
-      { "parallel": 1, "num_candidates": 128 }, { "parallel": 1, "num_candidates": 256 }, { "parallel": 1, "num_candidates": 512 },
-      { "parallel": 2, "num_candidates": 128 }, { "parallel": 2, "num_candidates": 256 }, { "parallel": 2, "num_candidates": 512 },
-      { "parallel": 4, "num_candidates": 128 }, { "parallel": 4, "num_candidates": 256 }, { "parallel": 4, "num_candidates": 512 },
-      { "parallel": 8, "num_candidates": 128 }, { "parallel": 8, "num_candidates": 256 }, { "parallel": 8, "num_candidates": 512 },
-      { "parallel": 100, "num_candidates": 128 }, { "parallel": 100, "num_candidates": 256 }, { "parallel": 100, "num_candidates": 512 }
-    ],
-    "upload_params": { "parallel": 16 }
-  },
-  {
-    "name": "elasticsearch-m-32-ef-128",
-    "engine": "elasticsearch",
-    "connection_params": {
-      "request_timeout": 10000
-    },
-    "collection_params": { "index_options": { "m": 32, "ef_construction": 128 } },
-    "search_params": [
-      { "parallel": 1, "num_candidates": 128 }, { "parallel": 1, "num_candidates": 256 }, { "parallel": 1, "num_candidates": 512 },
-      { "parallel": 2, "num_candidates": 128 }, { "parallel": 2, "num_candidates": 256 }, { "parallel": 2, "num_candidates": 512 },
-      { "parallel": 4, "num_candidates": 128 }, { "parallel": 4, "num_candidates": 256 }, { "parallel": 4, "num_candidates": 512 },
-      { "parallel": 8, "num_candidates": 128 }, { "parallel": 8, "num_candidates": 256 }, { "parallel": 8, "num_candidates": 512 },
-      { "parallel": 100, "num_candidates": 128 }, { "parallel": 100, "num_candidates": 256 }, { "parallel": 100, "num_candidates": 512 }
-    ],
-    "upload_params": { "parallel": 16 }
-  },
-  {
-    "name": "elasticsearch-m-32-ef-256",
-    "engine": "elasticsearch",
-    "connection_params": {
-      "request_timeout": 10000
-    },
-    "collection_params": { "index_options": { "m": 32, "ef_construction": 256 } },
-    "search_params": [
-      { "parallel": 1, "num_candidates": 128 }, { "parallel": 1, "num_candidates": 256 }, { "parallel": 1, "num_candidates": 512 },
-      { "parallel": 2, "num_candidates": 128 }, { "parallel": 2, "num_candidates": 256 }, { "parallel": 2, "num_candidates": 512 },
-      { "parallel": 4, "num_candidates": 128 }, { "parallel": 4, "num_candidates": 256 }, { "parallel": 4, "num_candidates": 512 },
-      { "parallel": 8, "num_candidates": 128 }, { "parallel": 8, "num_candidates": 256 }, { "parallel": 8, "num_candidates": 512 },
-      { "parallel": 100, "num_candidates": 128 }, { "parallel": 100, "num_candidates": 256 }, { "parallel": 100, "num_candidates": 512 }
-    ],
-    "upload_params": { "parallel": 16 }
-  },
-  {
-    "name": "elasticsearch-m-32-ef-512",
-    "engine": "elasticsearch",
-    "connection_params": {
-      "request_timeout": 10000
-    },
-    "collection_params": { "index_options": { "m": 32, "ef_construction": 512 } },
-    "search_params": [
-      { "parallel": 1, "num_candidates": 128 }, { "parallel": 1, "num_candidates": 256 }, { "parallel": 1, "num_candidates": 512 },
-      { "parallel": 2, "num_candidates": 128 }, { "parallel": 2, "num_candidates": 256 }, { "parallel": 2, "num_candidates": 512 },
-      { "parallel": 4, "num_candidates": 128 }, { "parallel": 4, "num_candidates": 256 }, { "parallel": 4, "num_candidates": 512 },
-      { "parallel": 8, "num_candidates": 128 }, { "parallel": 8, "num_candidates": 256 }, { "parallel": 8, "num_candidates": 512 },
-      { "parallel": 100, "num_candidates": 128 }, { "parallel": 100, "num_candidates": 256 }, { "parallel": 100, "num_candidates": 512 }
-    ],
-    "upload_params": { "parallel": 16 }
-  },
-  {
-    "name": "elasticsearch-m-64-ef-256",
-    "engine": "elasticsearch",
-    "connection_params": {
-      "request_timeout": 10000
-    },
-    "collection_params": { "index_options": { "m": 64, "ef_construction": 256 } },
-    "search_params": [
-      { "parallel": 1, "num_candidates": 128 }, { "parallel": 1, "num_candidates": 256 }, { "parallel": 1, "num_candidates": 512 },
-      { "parallel": 2, "num_candidates": 128 }, { "parallel": 2, "num_candidates": 256 }, { "parallel": 2, "num_candidates": 512 },
-      { "parallel": 4, "num_candidates": 128 }, { "parallel": 4, "num_candidates": 256 }, { "parallel": 4, "num_candidates": 512 },
-      { "parallel": 8, "num_candidates": 128 }, { "parallel": 8, "num_candidates": 256 }, { "parallel": 8, "num_candidates": 512 },
-      { "parallel": 100, "num_candidates": 128 }, { "parallel": 100, "num_candidates": 256 }, { "parallel": 100, "num_candidates": 512 }
-    ],
-    "upload_params": { "parallel": 16 }
-  },
-  {
-    "name": "elasticsearch-m-64-ef-512",
-    "engine": "elasticsearch",
-    "connection_params": {
-      "request_timeout": 10000
-    },
-    "collection_params": { "index_options": { "m": 64, "ef_construction": 512 } },
-    "search_params": [
-      { "parallel": 1, "num_candidates": 128 }, { "parallel": 1, "num_candidates": 256 }, { "parallel": 1, "num_candidates": 512 },
-      { "parallel": 2, "num_candidates": 128 }, { "parallel": 2, "num_candidates": 256 }, { "parallel": 2, "num_candidates": 512 },
-      { "parallel": 4, "num_candidates": 128 }, { "parallel": 4, "num_candidates": 256 }, { "parallel": 4, "num_candidates": 512 },
-      { "parallel": 8, "num_candidates": 128 }, { "parallel": 8, "num_candidates": 256 }, { "parallel": 8, "num_candidates": 512 },
-      { "parallel": 100, "num_candidates": 128 }, { "parallel": 100, "num_candidates": 256 }, { "parallel": 100, "num_candidates": 512 }
+      { "parallel": 1, "exact": true },
+      { "parallel": 2, "exact": true },
+      { "parallel": 4, "exact": true },
+      { "parallel": 8, "exact": true },
+      { "parallel": 100, "exact": true }
     ],
     "upload_params": { "parallel": 16 }
   }
