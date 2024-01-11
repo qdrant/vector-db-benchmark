@@ -15,11 +15,11 @@ RESULTS_DIR.mkdir(exist_ok=True)
 
 class BaseClient:
     def __init__(
-        self,
-        name: str,  # name of the experiment
-        configurator: BaseConfigurator,
-        uploader: BaseUploader,
-        searchers: List[BaseSearcher],
+            self,
+            name: str,  # name of the experiment
+            configurator: BaseConfigurator,
+            uploader: BaseUploader,
+            searchers: List[BaseSearcher],
     ):
         self.name = name
         self.configurator = configurator
@@ -27,7 +27,7 @@ class BaseClient:
         self.searchers = searchers
 
     def save_search_results(
-        self, dataset_name: str, results: dict, search_id: int, search_params: dict
+            self, dataset_name: str, results: dict, search_id: int, search_params: dict
     ):
         now = datetime.now()
         timestamp = now.strftime("%Y-%m-%d-%H-%M-%S")
@@ -37,29 +37,43 @@ class BaseClient:
         result_path = RESULTS_DIR / experiments_file
         with open(result_path, "w") as out:
             out.write(
-                json.dumps({"params": search_params, "results": results}, indent=2)
+                json.dumps(
+                    {
+                        "test_name": self.name,
+                        "operation": "search",
+                        "dataset_name": dataset_name,
+                        "params": search_params,
+                        "results": results,
+                        "timestamp": timestamp,
+                        "search_id": search_id,
+                    },
+                    indent=2)
             )
         return result_path
 
     def save_upload_results(
-        self, dataset_name: str, results: dict, upload_params: dict
+            self, dataset_name: str, results: dict, upload_params: dict
     ):
         now = datetime.now()
         timestamp = now.strftime("%Y-%m-%d-%H-%M-%S")
         experiments_file = f"{self.name}-{dataset_name}-upload-{timestamp}.json"
         with open(RESULTS_DIR / experiments_file, "w") as out:
             upload_stats = {
+                "test_name": self.name,
+                "operation": "upload",
+                "dataset_name": dataset_name,
+                "timestamp": timestamp,
                 "params": upload_params,
                 "results": results,
             }
             out.write(json.dumps(upload_stats, indent=2))
 
     def run_experiment(
-        self,
-        dataset: Dataset,
-        skip_upload: bool = False,
-        skip_search: bool = False,
-        skip_if_exists: bool = True,
+            self,
+            dataset: Dataset,
+            skip_upload: bool = False,
+            skip_search: bool = False,
+            skip_if_exists: bool = True,
     ):
         execution_params = self.configurator.execution_params(
             distance=dataset.config.distance, vector_size=dataset.config.vector_size

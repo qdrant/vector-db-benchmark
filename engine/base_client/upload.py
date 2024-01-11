@@ -77,6 +77,8 @@ class BaseUploader:
             "upload_time": upload_time,
             "total_time": total_time,
             "latencies": latencies,
+            "batch_size": batch_size,
+            "parallel": parallel,
         }
 
     @classmethod

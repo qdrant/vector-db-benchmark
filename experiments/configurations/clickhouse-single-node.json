@@ -6,12 +6,20 @@
     },
     "collection_params": { },
     "search_params": [
-      { "parallel": 1, "max_threads": 8 },
-      { "parallel": 2, "max_threads": 8 },
-      { "parallel": 4, "max_threads": 8 },
-      { "parallel": 8, "max_threads": 8 },
-      { "parallel": 100, "max_threads": 8 }
+      { "parallel": 1, "max_threads": 8 }
     ],
-    "upload_params": { "parallel": 4, "batch_size": 1000 }
+    "upload_params": { "parallel": 4, "batch_size": 5000 }
+  },
+  {
+    "name": "clickhouse-mmap",
+    "engine": "clickhouse",
+    "connection_params": {
+    },
+    "collection_params": { },
+    "search_params": [
+      { "parallel": 1, "max_threads": 8,
+        "local_filesystem_read_method": "mmap" }
+    ],
+    "upload_params": { "parallel": 4, "batch_size": 5000 }
   }
 ]

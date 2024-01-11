@@ -1,0 +1,10 @@
+<clickhouse>
+    <logger>
+        <!--Logging by default is trace which is significant-->
+        <level>error</level>
+        <log>/var/log/clickhouse-server/clickhouse-server.log</log>
+        <errorlog>/var/log/clickhouse-server/clickhouse-server.err.log</errorlog>
+        <size>1000M</size>
+        <count>10</count>
+    </logger>
+</clickhouse>
