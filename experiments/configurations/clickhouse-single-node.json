@@ -3,6 +3,7 @@
     "name": "clickhouse-hnsw",
     "engine": "clickhouse",
     "connection_params": {
+      "send_receive_timeout": 3000
     },
     "collection_params": {
       "index": {

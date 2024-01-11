@@ -34,7 +34,8 @@ class ClickHouseUploader(BaseUploader):
     def init_client(cls, host, distance, connection_params, upload_params):
         cls.client: Client = clickhouse_connect.get_client(host=host, username=CLICKHOUSE_USER,
                                                            password=CLICKHOUSE_PASSWORD, database=CLICKHOUSE_DATABASE,
-                                                           port=CLICKHOUSE_PORT, **connection_params)
+                                                           port=CLICKHOUSE_PORT,
+                                                           **connection_params)
         cls.upload_params = upload_params
         describe_result = cls.client.query(f'DESCRIBE TABLE {CLICKHOUSE_TABLE}')
         column_defs = [ColumnDef(**row) for row in describe_result.named_results()
