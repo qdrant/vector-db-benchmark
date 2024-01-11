@@ -60,5 +60,7 @@ class ClickHouseUploader(BaseUploader):
 
     @classmethod
     def post_upload(cls, _distance):
-        cls.client.command(f"OPTIMIZE TABLE {CLICKHOUSE_TABLE} FINAL", settings={"alter_sync": 2})
+        response = cls.client.query(f"SELECT engine FROM system.tables WHERE name='{CLICKHOUSE_TABLE}' AND database='{CLICKHOUSE_DATABASE}'")
+        if response.first_row[0] != 'Memory':
+            cls.client.command(f"OPTIMIZE TABLE {CLICKHOUSE_TABLE} FINAL", settings={"alter_sync": 2})
         return {}

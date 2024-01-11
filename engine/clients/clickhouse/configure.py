@@ -25,6 +25,7 @@ class ClickHouseConfigurator(BaseConfigurator):
         self.client = clickhouse_connect.get_client(host=host, username=CLICKHOUSE_USER, password=CLICKHOUSE_PASSWORD,
                                                     database=CLICKHOUSE_DATABASE, port=CLICKHOUSE_PORT,
                                                     **connection_params)
+        self.engine = collection_params["engine"] if "engine" in collection_params else "MergeTree"
 
     def clean(self):
         self.client.command(
@@ -35,7 +36,10 @@ class ClickHouseConfigurator(BaseConfigurator):
             # we limit
             raise IncompatibilityError
         columns = self._prepare_columns_config(dataset)
-        self.client.command(f"CREATE TABLE IF NOT EXISTS {CLICKHOUSE_TABLE} (id UInt32, vector Array(Float32), {','.join(columns)}) ENGINE = MergeTree ORDER BY tuple()")
+        order_by = ""
+        if not self.engine == "Memory":
+            order_by = "ORDER BY tuple()"
+        self.client.command(f"CREATE TABLE IF NOT EXISTS {CLICKHOUSE_TABLE} (id UInt32, vector Array(Float32), {','.join(columns)}) ENGINE = {self.engine} {order_by}")
 
     def _prepare_columns_config(self, dataset: Dataset):
         columns = []
