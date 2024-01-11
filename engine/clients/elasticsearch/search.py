@@ -66,7 +66,7 @@ class ElasticSearcher(BaseSearcher):
                         }
                     }
                 }
-            })
+            }, size=top)
 
         else:
             knn = {
