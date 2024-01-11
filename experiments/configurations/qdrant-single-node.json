@@ -12,6 +12,18 @@
     "upload_params": { "parallel": 16, "batch_size": 1024 }
   },
   {
+    "name": "qdrant-exact",
+    "engine": "qdrant",
+    "connection_params": { "timeout": 30 },
+    "collection_params": {
+      "optimizers_config": { "memmap_threshold": 10000000 }
+    },
+    "search_params": [
+      { "parallel": 8, "search_params": { "hnsw_ef": 128, "exact": true } }
+    ],
+    "upload_params": { "parallel": 16, "batch_size": 1024 }
+  },
+  {
     "name": "qdrant-continuous-benchmark",
     "engine": "qdrant",
     "connection_params": { "timeout": 30 },
