@@ -11,7 +11,7 @@ from clickhouse_connect.driver.models import ColumnDef
 DATA_DIR = Path().resolve().parent / "results"
 DATA_DIR, list(DATA_DIR.glob("*.json"))[0].name
 
-PATH_REGEX = re.compile(r"(?P<engine_name>[a-z]+)-.*")
+PATH_REGEX = re.compile(r"(?P<engine_name>[a-z]+)-(?:.*?-?m-(?P<m>\d*)-ef-(?P<ef>\d*)-)?.*")
 
 upload_results, search_results = [], []
 
@@ -25,8 +25,8 @@ for path in DATA_DIR.glob("*.json"):
     with open(path, "r") as fp:
         stats = json.load(fp)
 
-    entry = [stats["test_name"], match["engine_name"], int(stats["m"]) if "m" in stats else 0,
-             int(stats["ef"]) if "ef" in stats else 0,
+    entry = [stats["test_name"], match["engine_name"], 0 if match["m"] is None else int(match["m"]),
+             0 if match["ef"] is None else int(match["ef"]),
              stats["dataset_name"], stats["search_id"] if "search_id" in stats else 0, stats["timestamp"],
              stats["params"], stats["results"]]
     if stats["operation"] == "search":
