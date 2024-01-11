@@ -1,6 +1,43 @@
 [
   {
-    "name": "clickhouse-default",
+    "name": "clickhouse-hnsw",
+    "engine": "clickhouse",
+    "connection_params": {
+    },
+    "collection_params": {
+      "index": {
+        "type": "hnsw"
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "max_threads": 8
+      },
+      {
+        "parallel": 2,
+        "max_threads": 8
+      },
+      {
+        "parallel": 4,
+        "max_threads": 8
+      },
+      {
+        "parallel": 8,
+        "max_threads": 8
+      },
+      {
+        "parallel": 100,
+        "max_threads": 1
+      }
+    ],
+    "upload_params": {
+      "parallel": 4,
+      "batch_size": 5000
+    }
+  },
+  {
+    "name": "clickhouse-exact",
     "engine": "clickhouse",
     "connection_params": {
     },
