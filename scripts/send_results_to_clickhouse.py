@@ -145,7 +145,8 @@ client.command("CREATE TABLE IF NOT EXISTS vector_bench_results ("
                "total_upload_time Float64,"
                "index_parallel UInt16,"
                "batch_size UInt32,"
-               "precision Float64) ENGINE = MergeTree ORDER BY (date_search, engine, dataset)")
+               "precision Float64, "
+               "query_index UInt32) ENGINE = MergeTree ORDER BY (date_search, engine, dataset)")
 data = []
 for index, row in joined_df.reset_index().iterrows():
     for i, latency in enumerate(row["results"]["latencies"]):
@@ -168,6 +169,7 @@ for index, row in joined_df.reset_index().iterrows():
                 int(row['parallel']),
                 int(row['batch_size']),
                 row["results"]["precisions"][i],
+                i,
             ]
         )
 
