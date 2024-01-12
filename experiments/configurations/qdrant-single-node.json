@@ -19,7 +19,11 @@
       "optimizers_config": { "memmap_threshold": 10000000 }
     },
     "search_params": [
-      { "parallel": 8, "search_params": { "hnsw_ef": 128, "exact": true } }
+      { "parallel": 1, "search_params": { "exact": true } },
+      { "parallel": 2, "search_params": { "exact": true } },
+      { "parallel": 4, "search_params": { "exact": true } },
+      { "parallel": 8, "search_params": { "exact": true } },
+      { "parallel": 100, "search_params": { "exact": true } }
     ],
     "upload_params": { "parallel": 16, "batch_size": 1024 }
   },

@@ -74,6 +74,7 @@
     "name": "clickhouse-mmap",
     "engine": "clickhouse",
     "connection_params": {
+      "local_filesystem_read_method": "mmap"
     },
     "collection_params": {},
     "search_params": [
