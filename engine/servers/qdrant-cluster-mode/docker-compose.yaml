@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
   qdrant_node_1:
-    image: qdrant/qdrant:v1.5.1
+    image: qdrant/qdrant:v1.7.3
     environment:
       - QDRANT__SERVICE__GRPC_PORT=6334
       - QDRANT__CLUSTER__ENABLED=true
@@ -18,7 +18,7 @@ services:
 
 
   qdrant_node_follower:
-    image: qdrant/qdrant:v1.5.1
+    image: qdrant/qdrant:v1.7.3
     environment:
       - QDRANT__SERVICE__GRPC_PORT=6334
       - QDRANT__CLUSTER__ENABLED=true
@@ -36,7 +36,7 @@ services:
 
 
   qdrant_node_follower_2:
-    image: qdrant/qdrant:v1.5.1
+    image: qdrant/qdrant:v1.7.3
     environment:
       - QDRANT__SERVICE__GRPC_PORT=6334
       - QDRANT__CLUSTER__ENABLED=true

@@ -23,7 +23,7 @@ services:
       DEFAULT_VECTORIZER_MODULE: 'none'
       ENABLE_MODULES: ''
       CLUSTER_HOSTNAME: 'node1'
-      GOMEMLIMIT: 25GiB
+      GOMEMLIMIT: 25GiB # https://weaviate.io/blog/gomemlimit-a-game-changer-for-high-memory-applications
       GOGC: 50
     deploy:
       resources:

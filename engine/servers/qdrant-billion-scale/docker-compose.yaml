@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   qdrant_bench:
-    image: qdrant/qdrant:dev
+    image: qdrant/qdrant:v1.7.3
     network_mode: host
     volumes:
       - ./storage:/qdrant/storage
