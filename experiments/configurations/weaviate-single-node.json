@@ -17,7 +17,9 @@
     "connection_params": {
       "timeout_config": 1000
     },
-    "collection_params": { "vectorIndexType":"flat" },
+    "collection_params": { "vectorIndexType":"flat",
+      "vectorIndexConfig": {}
+    },
     "search_params": [
       { "parallel": 8 }
     ],
