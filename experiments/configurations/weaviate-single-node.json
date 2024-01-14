@@ -1,25 +1,5 @@
 [
   {
-    "name": "weaviate-exact",
-    "engine": "weaviate",
-    "connection_params": {
-      "timeout_config": 1000
-    },
-    "collection_params": {
-      "vectorIndexType": "flat",
-      "vectorIndexConfig": {}
-    },
-    "search_params": [
-      {
-        "parallel": 8
-      }
-    ],
-    "upload_params": {
-      "batch_size": 1000,
-      "parallel": 5
-    }
-  },
-  {
     "name": "weaviate-default",
     "engine": "weaviate",
     "connection_params": {
