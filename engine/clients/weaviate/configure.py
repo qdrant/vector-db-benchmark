@@ -46,13 +46,16 @@ class WeaviateConfigurator(BaseConfigurator):
                     }
                     for field_name, field_type in dataset.config.schema.items()
                 ],
-                "vectorIndexType": collection_params["vectorIndexType"] if "vectorIndexType" in collection_params else "hnsw",
-                "vectorIndexConfig": {
-                    **{
-                        "vectorCacheMaxObjects": 1000000000,
-                        "distance": self.DISTANCE_MAPPING.get(dataset.config.distance),
-                    },
-                    **collection_params["vectorIndexConfig"],
-                },
             }
         )
+        self.client.schema.update_config(WEAVIATE_CLASS_NAME, {
+            "vectorIndexType": collection_params[
+                "vectorIndexType"] if "vectorIndexType" in collection_params else "hnsw",
+            "vectorIndexConfig": {
+                **{
+                    "vectorCacheMaxObjects": 1000000000,
+                    "distance": self.DISTANCE_MAPPING.get(dataset.config.distance),
+                },
+                **collection_params["vectorIndexConfig"],
+            },
+        })
