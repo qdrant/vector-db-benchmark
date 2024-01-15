@@ -33,6 +33,8 @@ class ClickHouseConfigurator(BaseConfigurator):
             self.index_type = collection_params["index"]["type"] if "type" in collection_params["index"] else "exact"
             self.index_params = collection_params["index"]["params"] if "params" in collection_params["index"] else {}
         self.settings = collection_params["settings"] if "settings" in collection_params else {}
+        self.vector_compression = collection_params[
+            "vector_compression"] if "vector_compression" in collection_params else ""
 
     def clean(self):
         self.client.command(
@@ -51,7 +53,7 @@ class ClickHouseConfigurator(BaseConfigurator):
         settings = ""
         if self.settings:
             settings = f"SETTINGS={', '.join([f'{key}={value}' for key, value in self.settings.items()])}"
-        command = f"CREATE TABLE IF NOT EXISTS {CLICKHOUSE_TABLE} (id UInt32, vector Array(Float32), {','.join(columns)}) ENGINE = {self.engine} {settings} {order_by}"
+        command = f"CREATE TABLE IF NOT EXISTS {CLICKHOUSE_TABLE} (id UInt32, vector Array(Float32) {self.vector_compression}, {','.join(columns)}) ENGINE = {self.engine} {settings} {order_by}"
         self.client.command(command)
 
     def _prepare_columns_config(self, dataset: Dataset):
