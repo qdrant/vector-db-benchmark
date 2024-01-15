@@ -1,0 +1,23 @@
+version: '3.7'
+
+services:
+  pgvector:
+    container_name: pgvector
+    image: ankane/pgvector:v0.5.1
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=passwd
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - POSTGRES_MAX_CONNECTIONS=200
+    ports:
+      - 5432:5432
+    logging:
+      driver: "json-file"
+      options:
+        max-file: 1
+        max-size: 10m
+    deploy:
+      resources:
+        limits:
+          memory: 25Gb

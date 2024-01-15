@@ -23,3 +23,6 @@ class BaseConfigurator:
 
     def execution_params(self, distance, vector_size) -> dict:
         return {}
+
+    def delete_client(self):
+        pass
