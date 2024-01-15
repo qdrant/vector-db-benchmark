@@ -64,4 +64,16 @@ class ClickHouseUploader(BaseUploader):
         response = cls.client.query(f"SELECT engine FROM system.tables WHERE name='{CLICKHOUSE_TABLE}' AND database='{CLICKHOUSE_DATABASE}'")
         if response.first_row[0] != 'Memory':
             cls.client.command(f"OPTIMIZE TABLE {CLICKHOUSE_TABLE} FINAL", settings={"alter_sync": 2})
+        response = cls.client.query(
+            f"SELECT count() FROM system.tables WHERE name='{CLICKHOUSE_TABLE}_lsh' OR name='{CLICKHOUSE_TABLE}_planes' "
+            f"AND database='{CLICKHOUSE_DATABASE}'")
+        if response.first_row[0] == 2:
+            # we have projection tables, populate them
+            command = f"""INSERT INTO {CLICKHOUSE_TABLE}_lsh WITH 128 AS num_bits,
+                    ( SELECT groupArray(projection) AS projections FROM
+                        ( SELECT * FROM {CLICKHOUSE_TABLE}_planes LIMIT num_bits )
+                    ) AS projections
+                SELECT *, arraySum((projection, bit) -> bitShiftLeft(toUInt128(dotProduct(vector, projection) > 0), bit), projections, range(num_bits)) AS bits
+                FROM {CLICKHOUSE_TABLE} SETTINGS max_block_size = 1000"""
+            cls.client.command(command)
         return {}

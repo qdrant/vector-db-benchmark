@@ -24,7 +24,8 @@ class ClickHouseConfigurator(BaseConfigurator):
         super().__init__(host, collection_params, connection_params)
         self.client = clickhouse_connect.get_client(host=host, username=CLICKHOUSE_USER, password=CLICKHOUSE_PASSWORD,
                                                     database=CLICKHOUSE_DATABASE, port=CLICKHOUSE_PORT,
-                                                    settings={"allow_experimental_usearch_index": "1"},
+                                                    settings={"allow_experimental_usearch_index": "1",
+                                                              "allow_experimental_annoy_index": "1"},
                                                     **connection_params)
         self.engine = collection_params["engine"] if "engine" in collection_params else "MergeTree"
         self.index_type = "exact"
@@ -35,10 +36,13 @@ class ClickHouseConfigurator(BaseConfigurator):
         self.settings = collection_params["settings"] if "settings" in collection_params else {}
         self.vector_compression = collection_params[
             "vector_compression"] if "vector_compression" in collection_params else ""
+        self.use_projections = collection_params["use_projections"] if "use_projections" in collection_params else False
 
     def clean(self):
-        self.client.command(
-            f"DROP TABLE IF EXISTS {CLICKHOUSE_TABLE}")
+        self.client.command(f"DROP TABLE IF EXISTS {CLICKHOUSE_TABLE}")
+        self.client.command(f"DROP TABLE IF EXISTS {CLICKHOUSE_TABLE}_planes")
+        self.client.command(f"DROP TABLE IF EXISTS {CLICKHOUSE_TABLE}_lsh")
+
 
     def recreate(self, dataset: Dataset, collection_params):
         if dataset.config.vector_size > 2048:
@@ -50,11 +54,25 @@ class ClickHouseConfigurator(BaseConfigurator):
             order_by = "ORDER BY tuple()"
         if self.index_type.lower() == "hnsw":
             columns.append(f"INDEX hnsw_indx vector TYPE usearch('{DISTANCE_MAPPING[dataset.config.distance]}', 'f32')")
+        elif self.index_type.lower() == "annoy":
+            columns.append(f"INDEX annoy_indx vector TYPE annoy('{DISTANCE_MAPPING[dataset.config.distance]}')")
         settings = ""
         if self.settings:
             settings = f"SETTINGS {', '.join([f'{key}={value}' for key, value in self.settings.items()])}"
-        command = f"CREATE TABLE IF NOT EXISTS {CLICKHOUSE_TABLE} (id UInt32, vector Array(Float32) {self.vector_compression}, {','.join(columns)}) ENGINE = {self.engine} {order_by} {settings}"
-        self.client.command(command)
+        self.client.command(f"CREATE TABLE IF NOT EXISTS {CLICKHOUSE_TABLE} (id UInt32, vector Array(Float32) "
+                            f"{self.vector_compression}, {','.join(columns)}) ENGINE = {self.engine} {order_by} {settings}")
+        if self.use_projections:
+            columns.append("bits UInt128")
+            self.client.command(
+                f"CREATE TABLE IF NOT EXISTS {CLICKHOUSE_TABLE}_planes (`projection` Array(Float32)) ENGINE = MergeTree "
+                f"ORDER BY tuple() SETTINGS index_granularity = 8192")
+            self.client.command(
+                f"CREATE TABLE IF NOT EXISTS {CLICKHOUSE_TABLE}_lsh (`id` UInt32, `vector` Array(Float32) "
+                f"{self.vector_compression}, {','.join(columns)}) ENGINE = {self.engine} {order_by} {settings}")
+            self.client.command(f"INSERT INTO {CLICKHOUSE_TABLE}_planes SELECT projection / L2Norm(projection) AS projection FROM "
+                                f"( SELECT arrayJoin(arraySplit((x, y) -> y, groupArray(e), arrayMap(x -> ((x % {dataset.config.vector_size}) = 0)"
+                                f", range(128 * {dataset.config.vector_size})))) AS projection FROM ( SELECT CAST(randNormal(0, 1), 'Float32') AS e "
+                                f"FROM numbers(128 * {dataset.config.vector_size})))")
 
     def _prepare_columns_config(self, dataset: Dataset):
         columns = []
