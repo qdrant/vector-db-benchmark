@@ -52,7 +52,7 @@ class ClickHouseConfigurator(BaseConfigurator):
             columns.append(f"INDEX hnsw_indx vector TYPE usearch('{DISTANCE_MAPPING[dataset.config.distance]}', 'f32')")
         settings = ""
         if self.settings:
-            settings = f"SETTINGS={', '.join([f'{key}={value}' for key, value in self.settings.items()])}"
+            settings = f"SETTINGS {', '.join([f'{key}={value}' for key, value in self.settings.items()])}"
         command = f"CREATE TABLE IF NOT EXISTS {CLICKHOUSE_TABLE} (id UInt32, vector Array(Float32) {self.vector_compression}, {','.join(columns)}) ENGINE = {self.engine} {settings} {order_by}"
         self.client.command(command)
 
