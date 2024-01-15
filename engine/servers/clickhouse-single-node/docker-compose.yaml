@@ -8,6 +8,7 @@ services:
     hostname: clickhouse-server
     volumes:
       - ./config.xml:/etc/clickhouse-server/config.d/config.xml
+      - ./data:/var/lib/clickhouse
     ports:
       - "8123:8123"
       - "9000:9000"

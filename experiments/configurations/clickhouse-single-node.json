@@ -74,7 +74,6 @@
     "name": "clickhouse-mmap",
     "engine": "clickhouse",
     "connection_params": {
-      "local_filesystem_read_method": "mmap"
     },
     "collection_params": {},
     "search_params": [
@@ -116,6 +115,44 @@
     },
     "collection_params": {
       "engine": "Memory"
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "max_threads": 8
+      },
+      {
+        "parallel": 2,
+        "max_threads": 8
+      },
+      {
+        "parallel": 4,
+        "max_threads": 8
+      },
+      {
+        "parallel": 8,
+        "max_threads": 8
+      },
+      {
+        "parallel": 100,
+        "max_threads": 1
+      }
+    ],
+    "upload_params": {
+      "parallel": 4,
+      "batch_size": 5000
+    }
+  },
+  {
+    "name": "clickhouse-index-granularity",
+    "engine": "clickhouse",
+    "connection_params": {
+    },
+    "collection_params": {
+      "engine": "Memory",
+      "settings": {
+        "index_granularity": 800
+      }
     },
     "search_params": [
       {
