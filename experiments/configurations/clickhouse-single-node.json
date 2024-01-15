@@ -186,10 +186,6 @@
     "connection_params": {
     },
     "collection_params": {
-      "engine": "Memory",
-      "settings": {
-        "index_granularity": 800
-      },
       "vector_compression": "CODEC(NONE)"
     },
     "search_params": [
