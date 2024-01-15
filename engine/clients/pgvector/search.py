@@ -44,7 +44,7 @@ class PgVectorSearcher(BaseSearcher):
         return cls.cur.fetchall()
 
     @classmethod
-    def close(cls):
+    def delete_client(cls):
         if cls.cur:
             cls.cur.close()
             cls.conn.close()

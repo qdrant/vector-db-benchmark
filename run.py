@@ -53,7 +53,7 @@ def run(
                     client.run_experiment(
                         dataset, skip_upload, skip_search, skip_if_exists
                     )
-                client.close()
+                client.delete_client()
 
                 # If the timeout is reached, the server might be still in the
                 # middle of some background processing, like creating the index.

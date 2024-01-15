@@ -32,7 +32,7 @@ class PgVectorUploader(BaseUploader):
                 copy.write_row((i, embedding))
 
     @classmethod
-    def close(cls):
+    def delete_client(cls):
         if cls.cur:
             cls.cur.close()
             cls.conn.close()

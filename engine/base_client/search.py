@@ -98,7 +98,7 @@ class BaseSearcher:
 
         total_time = time.perf_counter() - start
 
-        self.__class__.close()
+        self.__class__.delete_client()
 
         return {
             "total_time": total_time,
@@ -121,5 +121,5 @@ class BaseSearcher:
         pass
 
     @classmethod
-    def close(cls):
+    def delete_client(cls):
         pass

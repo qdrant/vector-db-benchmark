@@ -119,9 +119,9 @@ class BaseClient:
         print("Experiment stage: Done")
         print("Results saved to: ", RESULTS_DIR)
 
-    def close(self):
-        self.uploader.close()
-        self.configurator.close()
+    def delete_client(self):
+        self.uploader.delete_client()
+        self.configurator.delete_client()
 
         for s in self.searchers:
-            s.close()
+            s.delete_client()

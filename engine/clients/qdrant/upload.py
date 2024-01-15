@@ -63,6 +63,6 @@ class QdrantUploader(BaseUploader):
         return total
 
     @classmethod
-    def close(cls):
+    def delete_client(cls):
         if cls.client is not None:
             del cls.client

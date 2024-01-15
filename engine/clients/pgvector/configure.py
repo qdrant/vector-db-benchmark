@@ -51,5 +51,5 @@ class PgVectorConfigurator(BaseConfigurator):
 
         self.conn.close()
 
-    def close(self):
+    def delete_client(self):
         self.conn.close()
