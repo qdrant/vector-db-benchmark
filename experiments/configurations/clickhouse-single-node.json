@@ -46,23 +46,28 @@
     "search_params": [
       {
         "parallel": 1,
-        "max_threads": 8
+        "max_threads": 8,
+        "use_uncompressed_cache": 1
       },
       {
         "parallel": 2,
-        "max_threads": 8
+        "max_threads": 8,
+        "use_uncompressed_cache": 1
       },
       {
         "parallel": 4,
-        "max_threads": 8
+        "max_threads": 8,
+        "use_uncompressed_cache": 1
       },
       {
         "parallel": 8,
-        "max_threads": 1
+        "max_threads": 1,
+        "use_uncompressed_cache": 1
       },
       {
         "parallel": 100,
-        "max_threads": 1
+        "max_threads": 1,
+        "use_uncompressed_cache": 1
       }
     ],
     "upload_params": {
@@ -80,27 +85,32 @@
       {
         "parallel": 1,
         "max_threads": 8,
-        "local_filesystem_read_method": "mmap"
+        "local_filesystem_read_method": "mmap",
+        "use_uncompressed_cache": 1
       },
       {
         "parallel": 2,
         "max_threads": 8,
-        "local_filesystem_read_method": "mmap"
+        "local_filesystem_read_method": "mmap",
+        "use_uncompressed_cache": 1
       },
       {
         "parallel": 4,
         "max_threads": 8,
-        "local_filesystem_read_method": "mmap"
+        "local_filesystem_read_method": "mmap",
+        "use_uncompressed_cache": 1
       },
       {
         "parallel": 8,
         "max_threads": 1,
-        "local_filesystem_read_method": "mmap"
+        "local_filesystem_read_method": "mmap",
+        "use_uncompressed_cache": 1
       },
       {
         "parallel": 100,
         "max_threads": 1,
-        "local_filesystem_read_method": "mmap"
+        "local_filesystem_read_method": "mmap",
+        "use_uncompressed_cache": 1
       }
     ],
     "upload_params": {
@@ -156,23 +166,28 @@
     "search_params": [
       {
         "parallel": 1,
-        "max_threads": 8
+        "max_threads": 8,
+        "use_uncompressed_cache": 1
       },
       {
         "parallel": 2,
-        "max_threads": 8
+        "max_threads": 8,
+        "use_uncompressed_cache": 1
       },
       {
         "parallel": 4,
-        "max_threads": 8
+        "max_threads": 8,
+        "use_uncompressed_cache": 1
       },
       {
         "parallel": 8,
-        "max_threads": 1
+        "max_threads": 1,
+        "use_uncompressed_cache": 1
       },
       {
         "parallel": 100,
-        "max_threads": 1
+        "max_threads": 1,
+        "use_uncompressed_cache": 1
       }
     ],
     "upload_params": {
@@ -191,23 +206,28 @@
     "search_params": [
       {
         "parallel": 1,
-        "max_threads": 8
+        "max_threads": 8,
+        "use_uncompressed_cache": 1
       },
       {
         "parallel": 2,
-        "max_threads": 8
+        "max_threads": 8,
+        "use_uncompressed_cache": 1
       },
       {
         "parallel": 4,
-        "max_threads": 8
+        "max_threads": 8,
+        "use_uncompressed_cache": 1
       },
       {
         "parallel": 8,
-        "max_threads": 1
+        "max_threads": 1,
+        "use_uncompressed_cache": 1
       },
       {
         "parallel": 100,
-        "max_threads": 1
+        "max_threads": 1,
+        "use_uncompressed_cache": 1
       }
     ],
     "upload_params": {

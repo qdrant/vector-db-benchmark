@@ -7,4 +7,7 @@
         <size>1000M</size>
         <count>10</count>
     </logger>
+    <uncompressed_cache_size>8589934592</uncompressed_cache_size>
+    <mark_cache_size>10737418240</mark_cache_size>
+    <index_mark_cache_size>5368709120</index_mark_cache_size>
 </clickhouse>
