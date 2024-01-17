@@ -7,7 +7,8 @@
 # create table benchmark (
 # 	id SERIAL PRIMARY key,
 # 	engine VARCHAR(255),
-# 	branch VARCCHAR(255),
+# 	branch VARCHAR(255),
+#   commit CHAR(40),
 # 	dataset VARCHAR(255),
 # 	measure_timestamp TIMESTAMP,
 # 	upload_time real,
@@ -22,6 +23,7 @@
 SEARCH_RESULTS_FILE=${SEARCH_RESULTS_FILE:-""}
 UPLOAD_RESULTS_FILE=${UPLOAD_RESULTS_FILE:-""}
 MEMORY_USAGE_FILE=${MEMORY_USAGE_FILE:-""}
+ROOT_API_RESPONSE_FILE=${ROOT_API_RESPONSE_FILE:-""}
 POSTGRES_TABLE=${POSTGRES_TABLE:-"benchmark"}
 
 QDRANT_VERSION=${QDRANT_VERSION:-"dev"}
@@ -44,6 +46,11 @@ if [[ -z "$MEMORY_USAGE_FILE" ]]; then
   exit 1
 fi
 
+if [[ -z "$ROOT_API_RESPONSE_FILE" ]]; then
+  echo "ROOT_API_RESPONSE_FILE is not set"
+  exit 1
+fi
+
 RPS=$(jq -r '.results.rps' "$SEARCH_RESULTS_FILE")
 MEAN_PRECISIONS=$(jq -r '.results.mean_precisions' "$SEARCH_RESULTS_FILE")
 P95_TIME=$(jq -r '.results.p95_time' "$SEARCH_RESULTS_FILE")
@@ -54,11 +61,13 @@ INDEXING_TIME=$(jq -r '.results.total_time' "$UPLOAD_RESULTS_FILE")
 
 MEMORY_USAGE=$(cat "$MEMORY_USAGE_FILE")
 
+QDRANT_COMMIT=$(jq -r '.commit' "$ROOT_API_RESPONSE_FILE")
+
 MEASURE_TIMESTAMP=${MEASURE_TIMESTAMP:-$(date -u +"%Y-%m-%dT%H:%M:%SZ")}
 
 
 docker run --rm jbergknoff/postgresql-client "postgresql://qdrant:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/postgres" -c "
-INSERT INTO ${POSTGRES_TABLE} (engine, branch, dataset, measure_timestamp, upload_time, indexing_time, rps, mean_precisions, p95_time, p99_time, memory_usage)
-VALUES ('qdrant-ci', '${QDRANT_VERSION}', '${DATASETS}', '${MEASURE_TIMESTAMP}', ${UPLOAD_TIME}, ${INDEXING_TIME}, ${RPS}, ${MEAN_PRECISIONS}, ${P95_TIME}, ${P99_TIME}, ${MEMORY_USAGE});
+INSERT INTO ${POSTGRES_TABLE} (engine, branch, commit, dataset, measure_timestamp, upload_time, indexing_time, rps, mean_precisions, p95_time, p99_time, memory_usage)
+VALUES ('qdrant-ci', '${QDRANT_VERSION}', '${QDRANT_COMMIT}', '${DATASETS}', '${MEASURE_TIMESTAMP}', ${UPLOAD_TIME}, ${INDEXING_TIME}, ${RPS}, ${MEAN_PRECISIONS}, ${P95_TIME}, ${P99_TIME}, ${MEMORY_USAGE});
 "
 

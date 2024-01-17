@@ -23,7 +23,7 @@ jobs:
           export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
 
           # Benchmark the dev branch:
-          export QDRANT_VERSION=dev
+          export QDRANT_VERSION=ghcr/dev
           bash -x tools/run_ci.sh
 
           # Benchmark the master branch:
