@@ -5,8 +5,8 @@ on:
   workflow_dispatch:
     inputs:
         qdrant_version:
-            description: "Version of qdrant to benchmark (tags/v1.6.1, <commit-id>, my-branch, docker/v1.5.1)"
-            default: dev
+            description: "Version of qdrant to benchmark (tags/v1.6.1, <commit-id>, my-branch, docker/v1.5.1, ghcr/dev)"
+            default: ghcr/dev
         dataset:
             description: "Dataset to benchmark"
             default: laion-small-clip

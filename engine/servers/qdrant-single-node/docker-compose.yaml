@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   qdrant_bench:
-    image: qdrant/qdrant:v1.7.3
+    image: ${CONTAINER_REGISTRY:-docker.io}/qdrant/qdrant:v1.7.3
     network_mode: host
     logging:
       driver: "json-file"

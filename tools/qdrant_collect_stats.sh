@@ -20,4 +20,8 @@ MEMORY_USAGE=$(ssh -t "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "grep VmRSS /proc
 
 CURRENT_DATE=$(date +%Y-%m-%d-%H-%M-%S)
 
-echo $MEMORY_USAGE > results/memory-usage-${CURRENT_DATE}.txt
+echo "$MEMORY_USAGE" > results/memory-usage-"${CURRENT_DATE}".txt
+
+ROOT_API_RESPONSE=$(ssh -t "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "curl -s http://localhost:6333/")
+
+echo "$ROOT_API_RESPONSE" > results/root-api-"${CURRENT_DATE}".json
