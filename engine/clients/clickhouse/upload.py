@@ -42,6 +42,11 @@ class ClickHouseUploader(BaseUploader):
                        if row['default_type'] not in ('ALIAS', 'MATERIALIZED')]
         cls.column_names = [cd.name for cd in column_defs]
         cls.column_types = [cd.ch_type for cd in column_defs]
+        cls.use_simple_projections = upload_params[
+            "use_simple_projections"] if "use_simple_projections" in upload_params else False
+        cls.use_projections = upload_params[
+            "use_projections"] if "use_projections" in upload_params else False
+        cls.vector_length = 0
 
     @classmethod
     def upload_batch(
@@ -50,8 +55,10 @@ class ClickHouseUploader(BaseUploader):
         data = []
         if metadata is None:
             metadata = [{}] * len(vectors)
-        # we make two assumptions 1. first row contains all columns 2. all rows have all columns
+        # we assume all rows have all columns
         for idx, vector, payload in zip(ids, vectors, metadata):
+            if idx == 0:
+                cls.vector_length = len(vector)
             row = [idx, vector]
             if payload:
                 for column_name in cls.column_names:
@@ -67,13 +74,43 @@ class ClickHouseUploader(BaseUploader):
         response = cls.client.query(
             f"SELECT count() FROM system.tables WHERE name='{CLICKHOUSE_TABLE}_lsh' OR name='{CLICKHOUSE_TABLE}_planes' "
             f"AND database='{CLICKHOUSE_DATABASE}'")
-        if response.first_row[0] == 2:
+        if response.first_row[0] == 2 and (cls.use_simple_projections or cls.use_projections):
             # we have projection tables, populate them
-            command = f"""INSERT INTO {CLICKHOUSE_TABLE}_lsh WITH 128 AS num_bits,
-                    ( SELECT groupArray(projection) AS projections FROM
-                        ( SELECT * FROM {CLICKHOUSE_TABLE}_planes LIMIT num_bits )
-                    ) AS projections
-                SELECT *, arraySum((projection, bit) -> bitShiftLeft(toUInt128(dotProduct(vector, projection) > 0), bit), projections, range(num_bits)) AS bits
-                FROM {CLICKHOUSE_TABLE} SETTINGS max_block_size = 1000"""
-            cls.client.command(command)
+            if cls.use_simple_projections:
+                cls.client.command(
+                    f"INSERT INTO {CLICKHOUSE_TABLE}_planes SELECT projection / L2Norm(projection) AS projection FROM "
+                    f"( SELECT arrayJoin(arraySplit((x, y) -> y, groupArray(e), arrayMap(x -> ((x % {cls.vector_length}) = 0)"
+                    f", range(128 * {cls.vector_length})))) AS projection FROM ( SELECT CAST(randNormal(0, 1), 'Float32') AS e "
+                    f"FROM numbers(128 * {cls.vector_length})))")
+                cls.client.command(f"""INSERT INTO {CLICKHOUSE_TABLE}_lsh WITH 128 AS num_bits,
+                        ( SELECT groupArray(projection) AS projections FROM
+                            ( SELECT * FROM {CLICKHOUSE_TABLE}_planes LIMIT num_bits )
+                        ) AS projections
+                    SELECT *, arraySum((projection, bit) -> bitShiftLeft(toUInt128(dotProduct(vector, projection) > 0), bit), projections, range(num_bits)) AS bits
+                    FROM {CLICKHOUSE_TABLE} SETTINGS max_block_size = 1000""")
+            elif cls.use_projections:
+                cls.client.command(f"INSERT INTO {CLICKHOUSE_TABLE}_planes "
+                                   f"SELECT v1 - v2 AS normal, (v1 + v2) / 2 AS offset FROM "
+                                   f"(SELECT min(vector) AS v1, max(vector) AS v2 FROM "
+                                   f"(SELECT vector FROM {CLICKHOUSE_TABLE} ORDER BY rand() ASC LIMIT 256) "
+                                   f"GROUP BY intDiv(rowNumberInAllBlocks(), 2))")
+                cls.client.command(f"""INSERT INTO {CLICKHOUSE_TABLE}_lsh
+                                    WITH 128 AS num_bits,
+                                       (
+                                           SELECT
+                                               groupArray(normal) AS normals,
+                                               groupArray(offset) AS offsets
+                                           FROM
+                                           (
+                                               SELECT *
+                                               FROM {CLICKHOUSE_TABLE}_planes
+                                               LIMIT num_bits
+                                           )
+                                       ) AS partition,
+                                       partition.1 AS normals,
+                                       partition.2 AS offsets
+                                    SELECT
+                                       *,
+                                       arraySum((normal, offset, bit) -> bitShiftLeft(toUInt128(dotProduct(vector - offset, normal) > 0), bit), normals, offsets, range(num_bits)) AS bits
+                                    FROM {CLICKHOUSE_TABLE}""", settings={"max_block_size": 1000})
         return {}
