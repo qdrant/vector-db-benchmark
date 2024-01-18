@@ -78,7 +78,7 @@ class ClickHouseSearcher(BaseSearcher):
                ) AS target
             SELECT
                id,
-               cosineDistance(vector, {vector}) AS score
+               {cls.distance}(vector, {vector}) AS score
             FROM {CLICKHOUSE_TABLE}_lsh
             PREWHERE bitHammingDistance(bits, target) <= 5 WHERE {where_condition}
             ORDER BY score ASC

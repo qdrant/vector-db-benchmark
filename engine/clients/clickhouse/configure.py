@@ -58,6 +58,7 @@ class ClickHouseConfigurator(BaseConfigurator):
             columns.append(f"INDEX hnsw_indx vector TYPE usearch('{DISTANCE_MAPPING[dataset.config.distance]}', 'f32')")
         elif self.index_type.lower() == "annoy":
             columns.append(f"INDEX annoy_indx vector TYPE annoy('{DISTANCE_MAPPING[dataset.config.distance]}')")
+
         settings = ""
         if self.settings:
             settings = f"SETTINGS {', '.join([f'{key}={value}' for key, value in self.settings.items()])}"
@@ -68,19 +69,21 @@ class ClickHouseConfigurator(BaseConfigurator):
             self.client.command(
                 f"CREATE TABLE IF NOT EXISTS {CLICKHOUSE_TABLE}_planes (`projection` Array(Float32)) ENGINE = MergeTree "
                 f"ORDER BY tuple()")
+            self.settings["index_granularity"] = 128
+            settings = f"SETTINGS {', '.join([f'{key}={value}' for key, value in self.settings.items()])}"
             self.client.command(
                 f"CREATE TABLE IF NOT EXISTS {CLICKHOUSE_TABLE}_lsh (`id` UInt32, `vector` Array(Float32) "
-                f"{self.vector_compression}, {','.join(columns)}) ENGINE = {self.engine} ORDER BY (bits) {settings} "
-                f"SETTINGS index_granularity = 128")
+                f"{self.vector_compression}, {','.join(columns)}) ENGINE = {self.engine} ORDER BY (bits) {settings}")
         elif self.use_projections:
             columns.append("bits UInt128")
             self.client.command(
                 f"CREATE TABLE IF NOT EXISTS {CLICKHOUSE_TABLE}_planes "
                 f"(`normal` Array(Float32), `offset` Array(Float32)) ENGINE = MergeTree ORDER BY tuple()")
+            self.settings["index_granularity"] = 128
+            settings = f"SETTINGS {', '.join([f'{key}={value}' for key, value in self.settings.items()])}"
             self.client.command(
                 f"CREATE TABLE IF NOT EXISTS {CLICKHOUSE_TABLE}_lsh (`id` UInt32, `vector` Array(Float32) "
-                f"{self.vector_compression}, {','.join(columns)}) ENGINE = {self.engine} ORDER BY (bits) {settings} "
-                f"SETTINGS index_granularity = 128")
+                f"{self.vector_compression}, {','.join(columns)}) ENGINE = {self.engine} ORDER BY (bits) {settings}")
 
     def _prepare_columns_config(self, dataset: Dataset):
         columns = []
