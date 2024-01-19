@@ -7,11 +7,11 @@
       "algorithm": "FLAT"
     },
     "search_params": [
-      { "parallel": 1 },
-      { "parallel": 2 },
-      { "parallel": 4 },
-      { "parallel": 8 },
-      { "parallel": 100 }
+      { "parallel": 1, "exact": true },
+      { "parallel": 2, "exact": true },
+      { "parallel": 4, "exact": true },
+      { "parallel": 8, "exact": true },
+      { "parallel": 100, "exact": true }
     ],
     "upload_params": { "parallel": 16, "batch_size": 1024 }
   },
