@@ -58,7 +58,7 @@ class ElasticSearcher(BaseSearcher):
         if "exact" in cls.search_params and cls.search_params["exact"]:
             res = cls.client.search(index=ELASTIC_INDEX, query={
                 "script_score": {
-                    "query": { "match_all": {} } if meta_conditions is None else meta_conditions,
+                    "query": { "match_all": {} } if meta_conditions is None or not meta_conditions else meta_conditions,
                     "script": {
                         "source": cls.DISTANCE_SCRIPTS[cls.distance],
                         "params": {
