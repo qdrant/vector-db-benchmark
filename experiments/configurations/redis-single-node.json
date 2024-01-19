@@ -1,5 +1,21 @@
 [
   {
+    "name": "redis-exact",
+    "engine": "redis",
+    "connection_params": {},
+    "collection_params": {
+      "algorithm": "FLAT"
+    },
+    "search_params": [
+      { "parallel": 1 },
+      { "parallel": 2 },
+      { "parallel": 4 },
+      { "parallel": 8 },
+      { "parallel": 100 }
+    ],
+    "upload_params": { "parallel": 16, "batch_size": 1024 }
+  },
+  {
     "name": "redis-default",
     "engine": "redis",
     "connection_params": {},

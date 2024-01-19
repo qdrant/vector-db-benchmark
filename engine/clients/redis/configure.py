@@ -79,7 +79,7 @@ class RedisConfigurator(BaseConfigurator):
         index_fields = [
             VectorField(
                 name="vector",
-                algorithm="HNSW",
+                algorithm=self.collection_params.get("algorithm", "HNSW"),
                 attributes={
                     "TYPE": "FLOAT32",
                     "DIM": dataset.config.vector_size,
