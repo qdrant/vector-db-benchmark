@@ -39,7 +39,7 @@ class RedisUploader(BaseUploader):
             if meta is not None:
                 for k, v in meta.items():
                     # This is a patch for arxiv-titles dataset where we have a list of "labels", and
-                    # we want to index all of them under the same TAG field (whose seperator is ';').
+                    # we want to index all of them under the same TAG field (whose separator is ';').
                     if k == "labels":
                         payload[k] = ";".join(v)
                     if (
