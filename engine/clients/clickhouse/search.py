@@ -85,7 +85,7 @@ class ClickHouseSearcher(BaseSearcher):
             LIMIT {top}
             """
         else:
-            statement = (f"SELECT id, {cls.distance}(vector, {vector}) as score FROM {CLICKHOUSE_TABLE} "
+            statement = (f"SELECT id, {cls.distance}(vector, {vector}::Array(Float32)) as score FROM {CLICKHOUSE_TABLE} "
                          f"WHERE {where_condition} ORDER BY score ASC LIMIT {top}")
         response = cls.client.query(statement, settings=cls.search_params)
         return [
