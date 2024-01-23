@@ -127,6 +127,7 @@ column_names = [cd.name for cd in column_defs]
 column_types = [cd.ch_type for cd in column_defs]
 
 client.insert("vector_bench_summary", data, column_names=column_names, column_types=column_types)
+print(f"Inserted {len(data)} summary rows")
 client.command("DROP TABLE IF EXISTS vector_bench_results")
 client.command("CREATE TABLE IF NOT EXISTS vector_bench_results ("
                "test_name LowCardinality(String),"
@@ -147,7 +148,15 @@ client.command("CREATE TABLE IF NOT EXISTS vector_bench_results ("
                "batch_size UInt32,"
                "precision Float64, "
                "query_index UInt32) ENGINE = MergeTree ORDER BY (date_search, engine, dataset)")
+
+describe_result = client.query(f'DESCRIBE TABLE vector_bench_results')
+column_defs = [ColumnDef(**row) for row in describe_result.named_results()
+               if row['default_type'] not in ('ALIAS', 'MATERIALIZED')]
+column_names = [cd.name for cd in column_defs]
+column_types = [cd.ch_type for cd in column_defs]
+
 data = []
+t = 0
 for index, row in joined_df.reset_index().iterrows():
     for i, latency in enumerate(row["results"]["latencies"]):
         data.append(
@@ -172,10 +181,11 @@ for index, row in joined_df.reset_index().iterrows():
                 i,
             ]
         )
-
-describe_result = client.query(f'DESCRIBE TABLE vector_bench_results')
-column_defs = [ColumnDef(**row) for row in describe_result.named_results()
-               if row['default_type'] not in ('ALIAS', 'MATERIALIZED')]
-column_names = [cd.name for cd in column_defs]
-column_types = [cd.ch_type for cd in column_defs]
+        t+=1
+        if len(data) == 1000:
+            print(f"Inserted {t} result rows")
+            client.insert("vector_bench_results", data, column_names=column_names, column_types=column_types)
+            data = []
 client.insert("vector_bench_results", data, column_names=column_names, column_types=column_types)
+print(f"Inserted {t} result rows")
+client.close()
