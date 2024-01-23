@@ -157,6 +157,11 @@ column_types = [cd.ch_type for cd in column_defs]
 
 data = []
 t = 0
+total = 0
+for _, _ in joined_df.reset_index().iterrows():
+    total += len(row["results"]["latencies"])
+print(f"{total} rows to insert...")
+
 for index, row in joined_df.reset_index().iterrows():
     for i, latency in enumerate(row["results"]["latencies"]):
         data.append(
@@ -182,7 +187,7 @@ for index, row in joined_df.reset_index().iterrows():
             ]
         )
         t+=1
-        if len(data) == 1000:
+        if len(data) == 10000:
             print(f"Inserted {t} result rows")
             client.insert("vector_bench_results", data, column_names=column_names, column_types=column_types)
             data = []
