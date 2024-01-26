@@ -39,7 +39,7 @@
         "upload_params": { "parallel": 16 }
     },
     {
-        "name": "qdrant-m-32-ef-128",
+        "name": "pgvector-m-32-ef-128",
         "engine": "qdrant",
         "connection_params": {},
         "collection_params": {
@@ -52,7 +52,7 @@
         "upload_params": { "parallel": 16 }
     },
     {
-        "name": "qdrant-m-32-ef-256",
+        "name": "pgvector-m-32-ef-256",
         "engine": "qdrant",
         "connection_params": {},
         "collection_params": {
@@ -65,7 +65,7 @@
         "upload_params": { "parallel": 16 }
     },
     {
-        "name": "qdrant-m-32-ef-512",
+        "name": "pgvector-m-32-ef-512",
         "engine": "qdrant",
         "connection_params": {},
         "collection_params": {
@@ -78,7 +78,7 @@
         "upload_params": { "parallel": 16 }
     },
     {
-        "name": "qdrant-m-64-ef-256",
+        "name": "pgvector-m-64-ef-256",
         "engine": "qdrant",
         "connection_params": {},
         "collection_params": {
@@ -91,7 +91,7 @@
         "upload_params": { "parallel": 16 }
     },
     {
-        "name": "qdrant-m-64-ef-512",
+        "name": "pgvector-m-64-ef-512",
         "engine": "qdrant",
         "connection_params": {},
         "collection_params": {
