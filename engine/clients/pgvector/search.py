@@ -23,7 +23,9 @@ class PgVectorSearcher(BaseSearcher):
         cls.conn = psycopg.connect(**get_db_config(host, connection_params))
         register_vector(cls.conn)
         cls.cur = cls.conn.cursor()
-        cls.cur.execute(f"SET hnsw.ef_search = {search_params['search_params']['hnsw_ef']}")
+        cls.cur.execute(
+            f"SET hnsw.ef_search = {search_params['search_params']['hnsw_ef']}"
+        )
         if distance == Distance.COSINE:
             cls.query = f"SELECT id, embedding <=> %s AS _score FROM items ORDER BY _score LIMIT %s"
         elif distance == Distance.L2:
@@ -33,12 +35,7 @@ class PgVectorSearcher(BaseSearcher):
 
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
-        cls.cur.execute(
-            cls.query,
-            (np.array(vector), top),
-            binary=True,
-            prepare=True
-        )
+        cls.cur.execute(cls.query, (np.array(vector), top), binary=True, prepare=True)
         return cls.cur.fetchall()
 
     @classmethod

@@ -32,7 +32,9 @@ class PgVectorUploader(BaseUploader):
         vectors = np.array(vectors)
 
         # Copy is faster than insert
-        with cls.cur.copy("COPY items (id, embedding) FROM STDIN WITH (FORMAT BINARY)") as copy:
+        with cls.cur.copy(
+            "COPY items (id, embedding) FROM STDIN WITH (FORMAT BINARY)"
+        ) as copy:
             copy.set_types(["integer", "vector"])
             for i, embedding in zip(ids, vectors):
                 copy.write_row((i, embedding))
@@ -42,9 +44,7 @@ class PgVectorUploader(BaseUploader):
         try:
             hnsw_distance_type = cls.DISTANCE_MAPPING[distance]
         except KeyError:
-            raise IncompatibilityError(
-                f"Unsupported distance metric: {distance}"
-            )
+            raise IncompatibilityError(f"Unsupported distance metric: {distance}")
 
         cls.conn.execute("SET max_parallel_workers = 128")
         cls.conn.execute("SET max_parallel_maintenance_workers = 128")
