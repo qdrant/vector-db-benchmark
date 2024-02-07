@@ -24,6 +24,22 @@
     "link": "http://ann-benchmarks.com/deep-image-96-angular.hdf5"
   },
   {
+    "name": "deep-image-96-angular-50M",
+    "vector_size": 96,
+    "distance": "cosine",
+    "type": "h5",
+    "path": "deep-image-96-angular-50M/deep-image-96-angular-50M.hdf5",
+    "link": ""
+  },
+  {
+    "name": "deep-image-96-angular-100M",
+    "vector_size": 96,
+    "distance": "cosine",
+    "type": "h5",
+    "path": "deep-image-96-angular-100M/deep-image-96-angular-100M.hdf5",
+    "link": ""
+  },
+  {
     "name": "gist-960-euclidean",
     "vector_size": 960,
     "distance": "l2",

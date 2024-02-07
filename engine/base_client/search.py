@@ -8,7 +8,6 @@ import tqdm
 import os
 
 from dataset_reader.base_reader import Query
-from swagger_client.models.import_queries_request import ImportQueriesRequest
 
 
 DEFAULT_TOP = 10

@@ -52,6 +52,11 @@ class GSIUploader(BaseUploader):
         if search_type == "hnsw":
             m = cls.upload_params["m"] or None
             efc = cls.upload_params["efConstruction"] or None
+            
+        keys = ["centroids_hamming_k", "centroid_rerank", "hamming_k", "num_of_boards", "num_of_clusters"]
+        for key in keys:
+            if key not in cls.upload_params.keys():
+                cls.upload_params[key] = None
 
         # convert dataset to float32...
         data = np.load(GSI_DEFAULT_DATA_PATH)
