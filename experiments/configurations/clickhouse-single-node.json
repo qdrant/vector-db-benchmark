@@ -41,7 +41,7 @@
     "name": "clickhouse-exact",
     "engine": "clickhouse",
     "connection_params": {
-      "compression": 0
+      "send_receive_timeout": 3000
     },
     "collection_params": {},
     "search_params": [
