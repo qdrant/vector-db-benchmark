@@ -2,10 +2,11 @@ import os
 import shutil
 import tarfile
 import urllib.request
+import uuid
 from dataclasses import dataclass, field
 from typing import Dict, Optional
 
-from benchmark import DATASETS_DIR
+from benchmark import DATASETS_DIR, TEMP_DIR
 from dataset_reader.ann_compound_reader import AnnCompoundReader
 from dataset_reader.ann_h5_reader import AnnH5Reader
 from dataset_reader.base_reader import BaseReader
@@ -39,7 +40,10 @@ class Dataset:
 
         if self.config.link:
             print(f"Downloading {self.config.link}...")
-            tmp_path, _ = urllib.request.urlretrieve(self.config.link)
+
+            if not os.path.exists(TEMP_DIR):
+                os.mkdir(TEMP_DIR)
+            tmp_path, _ = urllib.request.urlretrieve(self.config.link, filename=os.path.join(TEMP_DIR, str(uuid.uuid4())))
 
             if self.config.link.endswith(".tgz") or self.config.link.endswith(
                 ".tar.gz"
