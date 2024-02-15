@@ -25,7 +25,7 @@ class MilvusSearcher(BaseSearcher):
         cls.client = connections.connect(
             alias=MILVUS_DEFAULT_ALIAS,
             host=host,
-            port=str(connection_params.pop("port", MILVUS_DEFAULT_PORT)),
+            port=str(connection_params.get("port", MILVUS_DEFAULT_PORT)),
             **connection_params
         )
         cls.collection = Collection(MILVUS_COLLECTION_NAME, using=MILVUS_DEFAULT_ALIAS)
