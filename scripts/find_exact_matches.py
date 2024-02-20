@@ -1,7 +1,6 @@
 import json
 import clickhouse_connect
 
-
 client = clickhouse_connect.get_client(host='localhost', port=8123, username='default', password='')
 
 with open('queries.jsonl', 'r') as queries_file, open('neighbours.jsonl', 'w') as neighbours_file:
