@@ -3,13 +3,18 @@ version: '3.7'
 services:
   qdrant_bench:
     image: qdrant/qdrant:${QDRANT_VERSION:-v1.5.1}
-    network_mode: host
     logging:
       driver: "json-file"
       options:
         max-file: 1
         max-size: 10m
+    volumes:
+      - ./data/qdrant/storage:/qdrant/storage
+      - ./data/qdrant/snapshots:/qdrant/snapshots
     deploy:
       resources:
         limits:
           memory: 25Gb
+    ports:
+      - "6333:6333"
+      - "6334:6334"

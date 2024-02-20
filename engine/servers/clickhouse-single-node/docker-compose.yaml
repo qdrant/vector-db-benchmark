@@ -25,6 +25,3 @@ services:
       resources:
         limits:
           memory: 25Gb
-
-volumes:
-  clickhouse-data:  # Define the named volume
