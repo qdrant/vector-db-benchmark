@@ -4,12 +4,14 @@ services:
   redis:
     image: redislabs/redisearch:2.8.8
     ports:
-      - '6380:6379'
+      - '6379:6379'
     logging:
       driver: "json-file"
       options:
         max-file: 1
         max-size: 10m
+    volumes:
+      - ./data:/data
     deploy:
       resources:
         limits:
