@@ -22,6 +22,12 @@ services:
     ports:
       - "9200:9200"
       - "9300:9300"
+    volumes:
+      - ./data:/usr/share/elasticsearch/data
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
     logging:
       driver: "json-file"
       options:
