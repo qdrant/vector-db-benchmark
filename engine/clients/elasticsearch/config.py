@@ -1,4 +1,5 @@
 import os
+
 from elasticsearch import Elasticsearch
 
 ELASTIC_PORT = int(os.getenv("ELASTIC_PORT", 9200))
