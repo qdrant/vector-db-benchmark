@@ -1,3 +1,4 @@
+import copy
 import multiprocessing as mp
 import uuid
 from typing import List, Tuple
@@ -34,7 +35,9 @@ class ElasticSearcher(BaseSearcher):
             **connection_params,
         }
         cls.client = get_es_client(host, connection_params)
-        cls.search_params = search_params
+        cls.search_params = copy.deepcopy(search_params)
+        # pop parallel
+        cls.search_params.pop("parallel", "1")
 
     @classmethod
     def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
