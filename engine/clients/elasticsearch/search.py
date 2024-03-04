@@ -7,9 +7,7 @@ from elasticsearch import Elasticsearch
 from engine.base_client.search import BaseSearcher
 from engine.clients.elasticsearch.config import (
     ELASTIC_INDEX,
-    ELASTIC_PASSWORD,
-    ELASTIC_PORT,
-    ELASTIC_USER,
+    get_es_client,
 )
 from engine.clients.elasticsearch.parser import ElasticConditionParser
 
@@ -38,11 +36,7 @@ class ElasticSearcher(BaseSearcher):
             },
             **connection_params,
         }
-        cls.client: Elasticsearch = Elasticsearch(
-            f"http://{host}:{ELASTIC_PORT}",
-            basic_auth=(ELASTIC_USER, ELASTIC_PASSWORD),
-            **init_params,
-        )
+        cls.client = get_es_client(host, connection_params)
         cls.search_params = search_params
 
     @classmethod

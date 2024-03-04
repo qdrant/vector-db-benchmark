@@ -7,9 +7,7 @@ from elasticsearch import Elasticsearch
 from engine.base_client.upload import BaseUploader
 from engine.clients.elasticsearch.config import (
     ELASTIC_INDEX,
-    ELASTIC_PASSWORD,
-    ELASTIC_PORT,
-    ELASTIC_USER,
+    get_es_client,
 )
 
 
@@ -28,19 +26,7 @@ class ElasticUploader(BaseUploader):
 
     @classmethod
     def init_client(cls, host, distance, connection_params, upload_params):
-        init_params = {
-            **{
-                "verify_certs": False,
-                "request_timeout": 90,
-                "retry_on_timeout": True,
-            },
-            **connection_params,
-        }
-        cls.client = Elasticsearch(
-            f"http://{host}:{ELASTIC_PORT}",
-            basic_auth=(ELASTIC_USER, ELASTIC_PASSWORD),
-            **init_params,
-        )
+        cls.client = get_es_client(host, connection_params)
         cls.upload_params = upload_params
 
     @classmethod
