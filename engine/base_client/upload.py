@@ -53,12 +53,15 @@ class BaseUploader:
                     self.upload_params,
                 ),
             ) as pool:
-                latencies = list(
-                    pool.imap(
-                        self.__class__._upload_batch,
-                        iter_batches(tqdm.tqdm(records), batch_size),
+                try:
+                    latencies = list(
+                        pool.imap(
+                            self.__class__._upload_batch,
+                            iter_batches(tqdm.tqdm(records), batch_size),
+                        )
                     )
-                )
+                except Exception as e:
+                    raise e
 
         upload_time = time.perf_counter() - start
 
@@ -77,6 +80,8 @@ class BaseUploader:
             "upload_time": upload_time,
             "total_time": total_time,
             "latencies": latencies,
+            "parallel": parallel,
+            "batch_size": batch_size,
         }
 
     @classmethod

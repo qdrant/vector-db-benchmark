@@ -60,6 +60,7 @@ class BaseClient:
         skip_upload: bool = False,
         skip_search: bool = False,
         skip_if_exists: bool = True,
+        parallels: [int] = [],
     ):
         execution_params = self.configurator.execution_params(
             distance=dataset.config.distance, vector_size=dataset.config.vector_size
@@ -96,7 +97,6 @@ class BaseClient:
         if not skip_search:
             print("Experiment stage: Search")
             for search_id, searcher in enumerate(self.searchers):
-
                 if skip_if_exists:
                     glob_pattern = (
                         f"{self.name}-{dataset.config.name}-search-{search_id}-*.json"
@@ -110,12 +110,25 @@ class BaseClient:
                         continue
 
                 search_params = {**searcher.search_params}
+                ef = "default"
+                if "search_params" in search_params:
+                    ef = search_params["search_params"].get("ef", "default")
+                client_count = search_params.get("parallel", 1)
+                filter_client_count = len(parallels) > 0
+                if filter_client_count and (client_count not in parallels):
+                    print(f"\tSkipping ef runtime: {ef}; #clients {client_count}")
+                    continue
+                print(f"\tRunning ef runtime: {ef}; #clients {client_count}")
+
                 search_stats = searcher.search_all(
                     dataset.config.distance, reader.read_queries()
                 )
+                # ensure we specify the client count in the results
+                search_params["parallel"] = client_count
                 self.save_search_results(
                     dataset.config.name, search_stats, search_id, search_params
                 )
+
         print("Experiment stage: Done")
         print("Results saved to: ", RESULTS_DIR)
 
