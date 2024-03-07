@@ -13,7 +13,7 @@ class WeaviateUploader(BaseUploader):
 
     @classmethod
     def init_client(cls, host, distance, connection_params, upload_params):
-        url = f"http://{host}:{connection_params.pop('port', WEAVIATE_DEFAULT_PORT)}"
+        url = f"http://{host}:{connection_params.get('port', WEAVIATE_DEFAULT_PORT)}"
         cls.client = Client(url, **connection_params)
 
         cls.upload_params = upload_params
@@ -24,9 +24,9 @@ class WeaviateUploader(BaseUploader):
         keys = data_object.keys()
         for key in keys:
             if isinstance(data_object[key], dict):
-                if lat := data_object[key].pop("lat", None):
+                if lat := data_object[key].get("lat", None):
                     data_object[key]["latitude"] = lat
-                if lon := data_object[key].pop("lon", None):
+                if lon := data_object[key].get("lon", None):
                     data_object[key]["longitude"] = lon
 
         return data_object

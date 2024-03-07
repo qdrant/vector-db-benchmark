@@ -22,7 +22,7 @@ class WeaviateConfigurator(BaseConfigurator):
 
     def __init__(self, host, collection_params: dict, connection_params: dict):
         super().__init__(host, collection_params, connection_params)
-        url = f"http://{host}:{connection_params.pop('port', WEAVIATE_DEFAULT_PORT)}"
+        url = f"http://{host}:{connection_params.get('port', WEAVIATE_DEFAULT_PORT)}"
         self.client = Client(url, **connection_params)
 
     def clean(self):
