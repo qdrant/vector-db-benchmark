@@ -2,8 +2,8 @@ import uuid
 from typing import List, Optional
 
 from weaviate import WeaviateClient
-from weaviate.connect import ConnectionParams
 from weaviate.classes.data import DataObject
+from weaviate.connect import ConnectionParams
 
 from engine.base_client.upload import BaseUploader
 from engine.clients.weaviate.config import WEAVIATE_CLASS_NAME, WEAVIATE_DEFAULT_PORT

@@ -2,10 +2,10 @@ import uuid
 from typing import List, Tuple
 
 from weaviate import WeaviateClient
+from weaviate.classes.config import Reconfigure
+from weaviate.classes.query import MetadataQuery
 from weaviate.collections import Collection
 from weaviate.connect import ConnectionParams
-from weaviate.classes.query import MetadataQuery
-from weaviate.classes.config import Reconfigure
 
 from engine.base_client.search import BaseSearcher
 from engine.clients.weaviate.config import WEAVIATE_CLASS_NAME, WEAVIATE_DEFAULT_PORT

@@ -1,9 +1,9 @@
 from typing import Any, Dict, List, Optional
 
+import weaviate.classes as wvc
 from weaviate.collections.classes.filters import _Filters
 
 from engine.base_client.parser import BaseConditionParser, FieldValue
-import weaviate.classes as wvc
 
 
 class WeaviateConditionParser(BaseConditionParser):
