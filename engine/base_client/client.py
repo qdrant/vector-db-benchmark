@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import List
@@ -11,6 +12,8 @@ from engine.base_client.upload import BaseUploader
 
 RESULTS_DIR = ROOT_DIR / "results"
 RESULTS_DIR.mkdir(exist_ok=True)
+
+DETAILED_RESULTS = bool(int(os.getenv("DETAILED_RESULTS", False)))
 
 
 class BaseClient:
@@ -49,7 +52,11 @@ class BaseClient:
         experiments_file = f"{self.name}-{dataset_name}-upload-{timestamp}.json"
         with open(RESULTS_DIR / experiments_file, "w") as out:
             upload_stats = {
-                "params": upload_params,
+                "params": {
+                    "engine": self.name,
+                    "dataset": dataset_name,
+                    **upload_params
+                },
                 "results": results,
             }
             out.write(json.dumps(upload_stats, indent=2))
@@ -84,6 +91,11 @@ class BaseClient:
             upload_stats = self.uploader.upload(
                 distance=dataset.config.distance, records=reader.read_data()
             )
+
+            if not DETAILED_RESULTS:
+                # Remove verbose stats from upload results
+                upload_stats.pop("latencies", None)
+
             self.save_upload_results(
                 dataset.config.name,
                 upload_stats,
@@ -113,6 +125,11 @@ class BaseClient:
                 search_stats = searcher.search_all(
                     dataset.config.distance, reader.read_queries()
                 )
+                if not DETAILED_RESULTS:
+                    # Remove verbose stats from search results
+                    search_stats.pop("latencies", None)
+                    search_stats.pop("precisions", None)
+
                 self.save_search_results(
                     dataset.config.name, search_stats, search_id, search_params
                 )

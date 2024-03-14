@@ -1,10 +1,33 @@
 [
   {
-    "name": "qdrant-proposed-config",
+    "name": "proposed-config-qdrant-latency",
     "engine": "qdrant",
     "connection_params": { "timeout": 60 },
     "collection_params": {
       "optimizers_config": { "memmap_threshold":10000000 },
+      "hnsw_config": { "m": 32, "ef_construct": 256 }
+    },
+    "search_params": [
+     { "parallel": 1, "vectorIndexConfig": { "ef": 16} },
+     { "parallel": 1, "vectorIndexConfig": { "ef": 32} },
+     { "parallel": 1, "vectorIndexConfig": { "ef": 64} },
+     { "parallel": 1, "vectorIndexConfig": { "ef": 128} },
+     { "parallel": 1, "vectorIndexConfig": { "ef": 256} },
+     { "parallel": 1, "vectorIndexConfig": { "ef": 512} },
+     { "parallel": 1, "vectorIndexConfig": { "ef": 768} }
+    ],
+    "upload_params": { "parallel": 8, "batch_size": 1024 }
+  },
+  {
+    "name": "proposed-config-qdrant-rps",
+    "engine": "qdrant",
+    "connection_params": { "timeout": 60 },
+    "collection_params": {
+      "optimizers_config": {
+        "memmap_threshold":10000000,
+        "max_segment_size": 1000000,
+        "default_segment_number":2
+      },
       "hnsw_config": { "m": 32, "ef_construct": 256 }
     },
     "search_params": [
@@ -19,7 +42,7 @@
     "upload_params": { "parallel": 8, "batch_size": 1024 }
   },
   {
-   "name": "weaviate-proposed-config",
+   "name": "proposed-config-weaviate",
    "engine": "weaviate",
    "connection_params": {
      "timeout_config": 60
@@ -31,13 +54,21 @@
        }
    },
    "search_params": [
+
      { "parallel": 100, "vectorIndexConfig": { "ef": 16} },
      { "parallel": 100, "vectorIndexConfig": { "ef": 32} },
      { "parallel": 100, "vectorIndexConfig": { "ef": 64} },
      { "parallel": 100, "vectorIndexConfig": { "ef": 128} },
      { "parallel": 100, "vectorIndexConfig": { "ef": 256} },
      { "parallel": 100, "vectorIndexConfig": { "ef": 512} },
-     { "parallel": 100, "vectorIndexConfig": { "ef": 768} }
+     { "parallel": 100, "vectorIndexConfig": { "ef": 768} },
+     { "parallel": 1, "vectorIndexConfig": { "ef": 16} },
+     { "parallel": 1, "vectorIndexConfig": { "ef": 32} },
+     { "parallel": 1, "vectorIndexConfig": { "ef": 64} },
+     { "parallel": 1, "vectorIndexConfig": { "ef": 128} },
+     { "parallel": 1, "vectorIndexConfig": { "ef": 256} },
+     { "parallel": 1, "vectorIndexConfig": { "ef": 512} },
+     { "parallel": 1, "vectorIndexConfig": { "ef": 768} }
    ],
    "upload_params": { "parallel": 8, "batch_size": 1024 }
   }
