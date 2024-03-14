@@ -1,0 +1,44 @@
+[
+  {
+    "name": "qdrant-proposed-config",
+    "engine": "qdrant",
+    "connection_params": { "timeout": 60 },
+    "collection_params": {
+      "optimizers_config": { "memmap_threshold":10000000 },
+      "hnsw_config": { "m": 32, "ef_construct": 256 }
+    },
+    "search_params": [
+      { "parallel": 100, "search_params": { "hnsw_ef": 16 } },
+      { "parallel": 100, "search_params": { "hnsw_ef": 32 } },
+      { "parallel": 100, "search_params": { "hnsw_ef": 64 } },
+      { "parallel": 100, "search_params": { "hnsw_ef": 128 } },
+      { "parallel": 100, "search_params": { "hnsw_ef": 256 } },
+      { "parallel": 100, "search_params": { "hnsw_ef": 512 } },
+      { "parallel": 100, "search_params": { "hnsw_ef": 768 } }
+    ],
+    "upload_params": { "parallel": 8, "batch_size": 1024 }
+  },
+  {
+   "name": "weaviate-proposed-config",
+   "engine": "weaviate",
+   "connection_params": {
+     "timeout_config": 60
+   },
+   "collection_params": {
+       "vectorIndexConfig": {
+           "efConstruction": 256,
+           "maxConnections": 32
+       }
+   },
+   "search_params": [
+     { "parallel": 100, "vectorIndexConfig": { "ef": 16} },
+     { "parallel": 100, "vectorIndexConfig": { "ef": 32} },
+     { "parallel": 100, "vectorIndexConfig": { "ef": 64} },
+     { "parallel": 100, "vectorIndexConfig": { "ef": 128} },
+     { "parallel": 100, "vectorIndexConfig": { "ef": 256} },
+     { "parallel": 100, "vectorIndexConfig": { "ef": 512} },
+     { "parallel": 100, "vectorIndexConfig": { "ef": 768} }
+   ],
+   "upload_params": { "parallel": 8, "batch_size": 1024 }
+  }
+]
