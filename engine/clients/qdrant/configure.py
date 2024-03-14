@@ -41,7 +41,7 @@ class QdrantConfigurator(BaseConfigurator):
         self.client.update_collection(
             collection_name=QDRANT_COLLECTION_NAME,
             optimizer_config=rest.OptimizersConfigDiff(
-                max_optimization_threads=0,
+                indexing_threshold=10000000,
             ),
         )
         for field_name, field_type in dataset.config.schema.items():
