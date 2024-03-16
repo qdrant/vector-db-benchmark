@@ -42,7 +42,10 @@
       { "parallel": 100, "search_params": { "hnsw_ef": 256, "quantization": { "rescore": true, "oversampling": 32.0 } } },
       { "parallel": 100, "search_params": { "hnsw_ef": 512, "quantization": { "rescore": true, "oversampling": 8.0 } } },
       { "parallel": 100, "search_params": { "hnsw_ef": 512, "quantization": { "rescore": true, "oversampling": 16.0 } } },
-      { "parallel": 100, "search_params": { "hnsw_ef": 512, "quantization": { "rescore": true, "oversampling": 32.0 } } }
+      { "parallel": 100, "search_params": { "hnsw_ef": 512, "quantization": { "rescore": true, "oversampling": 32.0 } } },
+      { "parallel": 100, "search_params": { "hnsw_ef": 768, "quantization": { "rescore": true, "oversampling": 8.0 } } },
+      { "parallel": 100, "search_params": { "hnsw_ef": 768, "quantization": { "rescore": true, "oversampling": 16.0 } } },
+      { "parallel": 100, "search_params": { "hnsw_ef": 768, "quantization": { "rescore": true, "oversampling": 32.0 } } }
     ],
     "upload_params": { "parallel": 8, "batch_size": 1024 }
   },
