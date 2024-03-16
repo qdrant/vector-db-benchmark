@@ -20,6 +20,7 @@ class BaseClient:
     def __init__(
         self,
         name: str,  # name of the experiment
+        engine: str,  # name of the engine
         configurator: BaseConfigurator,
         uploader: BaseUploader,
         searchers: List[BaseSearcher],
@@ -28,6 +29,7 @@ class BaseClient:
         self.configurator = configurator
         self.uploader = uploader
         self.searchers = searchers
+        self.engine = engine
 
     def save_search_results(
         self, dataset_name: str, results: dict, search_id: int, search_params: dict
@@ -40,7 +42,15 @@ class BaseClient:
         result_path = RESULTS_DIR / experiments_file
         with open(result_path, "w") as out:
             out.write(
-                json.dumps({"params": search_params, "results": results}, indent=2)
+                json.dumps({
+                    "params": {
+                        "dataset": dataset_name,
+                        "experiment": self.name,
+                        "engine": self.engine,
+                        **search_params
+                    },
+                    "results": results
+                }, indent=2)
             )
         return result_path
 
@@ -53,7 +63,8 @@ class BaseClient:
         with open(RESULTS_DIR / experiments_file, "w") as out:
             upload_stats = {
                 "params": {
-                    "engine": self.name,
+                    "experiment": self.name,
+                    "engine": self.engine,
                     "dataset": dataset_name,
                     **upload_params
                 },
