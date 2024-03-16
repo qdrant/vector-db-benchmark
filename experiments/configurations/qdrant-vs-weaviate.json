@@ -5,7 +5,7 @@
     "connection_params": { "timeout": 60 },
     "collection_params": {
       "quantization_config": { "binary": { "always_ram": true } },
-      "optimizers_config": { "memmap_threshold":10000000 },
+      "optimizers_config": { },
       "hnsw_config": { "m": 32, "ef_construct": 256 }
     },
     "search_params": [
@@ -28,8 +28,7 @@
     "collection_params": {
       "quantization_config": { "binary": { "always_ram": true } },
       "optimizers_config": { 
-        "memmap_threshold":10000000,
-        "max_segment_size": 10000000,
+        "max_segment_size": 100000000,
         "default_segment_number":2
       },
       "hnsw_config": { "m": 32, "ef_construct": 256 }
@@ -52,7 +51,7 @@
     "engine": "qdrant",
     "connection_params": { "timeout": 60 },
     "collection_params": {
-      "optimizers_config": { "memmap_threshold":10000000 },
+      "optimizers_config": { },
       "hnsw_config": { "m": 32, "ef_construct": 256 }
     },
     "search_params": [
@@ -72,8 +71,7 @@
     "connection_params": { "timeout": 60 },
     "collection_params": {
       "optimizers_config": {
-        "memmap_threshold":10000000,
-        "max_segment_size": 1000000,
+        "max_segment_size": 100000000,
         "default_segment_number":2
       },
       "hnsw_config": { "m": 32, "ef_construct": 256 }
