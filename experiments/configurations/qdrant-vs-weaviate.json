@@ -1,5 +1,5 @@
 [
-  { 
+  {
     "name": "proposed-config-qdrant-bq-latency",
     "engine": "qdrant",
     "connection_params": { "timeout": 60 },
@@ -27,7 +27,7 @@
     "connection_params": { "timeout": 60 },
     "collection_params": {
       "quantization_config": { "binary": { "always_ram": true } },
-      "optimizers_config": { 
+      "optimizers_config": {
         "max_segment_size": 100000000,
         "default_segment_number":2
       },
