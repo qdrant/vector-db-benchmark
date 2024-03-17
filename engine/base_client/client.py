@@ -15,7 +15,7 @@ RESULTS_DIR.mkdir(exist_ok=True)
 
 DETAILED_RESULTS = bool(int(os.getenv("DETAILED_RESULTS", False)))
 
-
+ 
 class BaseClient:
     def __init__(
         self,

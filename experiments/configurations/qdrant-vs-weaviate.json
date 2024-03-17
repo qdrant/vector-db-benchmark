@@ -1,5 +1,5 @@
 [
-  {
+  { 
     "name": "proposed-config-qdrant-bq-latency",
     "engine": "qdrant",
     "connection_params": { "timeout": 60 },
