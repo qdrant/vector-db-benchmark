@@ -15,7 +15,7 @@ RESULTS_DIR.mkdir(exist_ok=True)
 
 DETAILED_RESULTS = bool(int(os.getenv("DETAILED_RESULTS", False)))
 
- 
+
 class BaseClient:
     def __init__(
         self,
@@ -42,15 +42,18 @@ class BaseClient:
         result_path = RESULTS_DIR / experiments_file
         with open(result_path, "w") as out:
             out.write(
-                json.dumps({
-                    "params": {
-                        "dataset": dataset_name,
-                        "experiment": self.name,
-                        "engine": self.engine,
-                        **search_params
+                json.dumps(
+                    {
+                        "params": {
+                            "dataset": dataset_name,
+                            "experiment": self.name,
+                            "engine": self.engine,
+                            **search_params,
+                        },
+                        "results": results,
                     },
-                    "results": results
-                }, indent=2)
+                    indent=2,
+                )
             )
         return result_path
 
@@ -66,7 +69,7 @@ class BaseClient:
                     "experiment": self.name,
                     "engine": self.engine,
                     "dataset": dataset_name,
-                    **upload_params
+                    **upload_params,
                 },
                 "results": results,
             }
