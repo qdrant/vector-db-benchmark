@@ -122,7 +122,6 @@ class BaseClient:
         if not skip_search:
             print("Experiment stage: Search")
             for search_id, searcher in enumerate(self.searchers):
-
                 if skip_if_exists:
                     glob_pattern = (
                         f"{self.name}-{dataset.config.name}-search-{search_id}-*.json"
