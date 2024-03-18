@@ -4,7 +4,8 @@ on:
   repository_dispatch:
   workflow_dispatch:
   schedule:
-    - cron: "00 23 * * *"
+    # Run every 4 hours
+    - cron: "0 */4 * * *"
 
 jobs:
   runBenchmark:
