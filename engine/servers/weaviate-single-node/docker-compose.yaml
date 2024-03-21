@@ -8,9 +8,8 @@ services:
     - '8090'
     - --scheme
     - http
-    image: semitechnologies/weaviate:1.21.5
-    ports:
-    - "8090:8090"
+    image: semitechnologies/weaviate:1.24.1
+    network_mode: host
     logging:
       driver: "json-file"
       options:
@@ -24,7 +23,6 @@ services:
       ENABLE_MODULES: ''
       CLUSTER_HOSTNAME: 'node1'
       GOMEMLIMIT: 25GiB # https://weaviate.io/blog/gomemlimit-a-game-changer-for-high-memory-applications
-      GOGC: 50
     deploy:
       resources:
         limits:

@@ -31,8 +31,8 @@ class BaseUploader:
     ) -> dict:
         latencies = []
         start = time.perf_counter()
-        parallel = self.upload_params.pop("parallel", 1)
-        batch_size = self.upload_params.pop("batch_size", 64)
+        parallel = self.upload_params.get("parallel", 1)
+        batch_size = self.upload_params.get("batch_size", 64)
 
         self.init_client(
             self.host, distance, self.connection_params, self.upload_params

@@ -60,8 +60,8 @@ class BaseSearcher:
         distance,
         queries: Iterable[Query],
     ):
-        parallel = self.search_params.pop("parallel", 1)
-        top = self.search_params.pop("top", None)
+        parallel = self.search_params.get("parallel", 1)
+        top = self.search_params.get("top", None)
 
         # setup_search may require initialized client
         self.init_client(

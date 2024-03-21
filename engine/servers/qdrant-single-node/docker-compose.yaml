@@ -2,13 +2,16 @@ version: '3.7'
 
 services:
   qdrant_bench:
-    image: ${CONTAINER_REGISTRY:-docker.io}/qdrant/qdrant:v1.7.3
+    image: ${CONTAINER_REGISTRY:-docker.io}/qdrant/qdrant:v1.8.2
     network_mode: host
     logging:
       driver: "json-file"
       options:
         max-file: 1
         max-size: 10m
+    environment:
+      - QDRANT__STORAGE__PERFORMANCE__OPTIMIZER_CPU_BUDGET=8
+      - QDRANT__STORAGE__PERFORMANCE__MAX_SEARCH_THREADS=8
     deploy:
       resources:
         limits:

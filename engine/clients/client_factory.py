@@ -65,8 +65,10 @@ ENGINE_SEARCHERS = {
 class ClientFactory(ABC):
     def __init__(self, host):
         self.host = host
+        self.engine = None
 
     def _create_configurator(self, experiment) -> BaseConfigurator:
+        self.engine = experiment["engine"]
         engine_configurator_class = ENGINE_CONFIGURATORS[experiment["engine"]]
         engine_configurator = engine_configurator_class(
             self.host,
@@ -103,6 +105,7 @@ class ClientFactory(ABC):
     def build_client(self, experiment):
         return BaseClient(
             name=experiment["name"],
+            engine=experiment["engine"],
             configurator=self._create_configurator(experiment),
             uploader=self._create_uploader(experiment),
             searchers=self._create_searchers(experiment),

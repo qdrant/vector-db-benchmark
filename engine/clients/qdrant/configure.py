@@ -41,6 +41,7 @@ class QdrantConfigurator(BaseConfigurator):
         self.client.update_collection(
             collection_name=QDRANT_COLLECTION_NAME,
             optimizer_config=rest.OptimizersConfigDiff(
+                # indexing_threshold=10000000,
                 max_optimization_threads=0,
             ),
         )

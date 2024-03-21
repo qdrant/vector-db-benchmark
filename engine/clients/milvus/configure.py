@@ -35,7 +35,7 @@ class MilvusConfigurator(BaseConfigurator):
         self.client = connections.connect(
             alias=MILVUS_DEFAULT_ALIAS,
             host=host,
-            port=str(connection_params.pop("port", MILVUS_DEFAULT_PORT)),
+            port=str(connection_params.get("port", MILVUS_DEFAULT_PORT)),
             **connection_params,
         )
         print("established connection")
