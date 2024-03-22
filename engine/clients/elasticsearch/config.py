@@ -13,11 +13,9 @@ ELASTIC_TIMEOUT = int(os.getenv("ELASTIC_TIMEOUT", 90))
 def get_es_client(host, connection_params):
     client: Elasticsearch = None
     init_params = {
-        **{
-            "verify_certs": False,
-            "request_timeout": ELASTIC_TIMEOUT,
-            "retry_on_timeout": True,
-        },
+        "verify_certs": False,
+        "request_timeout": ELASTIC_TIMEOUT,
+        "retry_on_timeout": True,
         **connection_params,
     }
     if host.startswith("http"):
