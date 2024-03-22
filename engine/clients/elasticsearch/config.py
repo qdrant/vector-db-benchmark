@@ -23,15 +23,6 @@ def get_es_client(host, connection_params):
         url = "http://"
     url += f"{host}:{ELASTIC_PORT}"
     if ELASTIC_API_KEY is None:
-        client = Elasticsearch(
-            url,
-            basic_auth=(ELASTIC_USER, ELASTIC_PASSWORD),
-            **init_params,
-        )
+        return Elasticsearch(url, basic_auth=(ELASTIC_USER, ELASTIC_PASSWORD), **init_params)
     else:
-        client = Elasticsearch(
-            url,
-            api_key=ELASTIC_API_KEY,
-            **init_params,
-        )
-    return client
+        return Elasticsearch(url, api_key=ELASTIC_API_KEY, **init_params)
