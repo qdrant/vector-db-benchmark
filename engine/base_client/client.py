@@ -110,9 +110,7 @@ class BaseClient:
                         continue
 
                 search_params = {**searcher.search_params}
-                ef = "default"
-                if "search_params" in search_params:
-                    ef = search_params["search_params"].get("ef", "default")
+                ef = search_params.get("search_params", {}).get("ef", "default")
                 client_count = search_params.get("parallel", 1)
                 filter_client_count = len(parallels) > 0
                 if filter_client_count and (client_count not in parallels):
