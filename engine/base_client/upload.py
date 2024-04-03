@@ -80,12 +80,9 @@ class BaseUploader:
         }
 
     @classmethod
-    def _upload_batch(
-        cls, batch: Tuple[List[int], List[list], List[Optional[dict]]]
-    ) -> float:
-        ids, vectors, metadata = batch
+    def _upload_batch(cls, batch: List[Record]) -> float:
         start = time.perf_counter()
-        cls.upload_batch(ids, vectors, metadata)
+        cls.upload_batch(batch)
         return time.perf_counter() - start
 
     @classmethod

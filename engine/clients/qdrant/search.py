@@ -6,9 +6,11 @@ import httpx
 from qdrant_client import QdrantClient
 from qdrant_client.http import models as rest
 
+from dataset_reader.base_reader import Query
 from engine.base_client.search import BaseSearcher
 from engine.clients.qdrant.config import QDRANT_COLLECTION_NAME
 from engine.clients.qdrant.parser import QdrantConditionParser
+from engine.clients.qdrant.utils import csr_to_sparse_vector
 
 
 class QdrantSearcher(BaseSearcher):
@@ -34,11 +36,18 @@ class QdrantSearcher(BaseSearcher):
     #     return "forkserver" if "forkserver" in mp.get_all_start_methods() else "spawn"
 
     @classmethod
-    def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
+    def search_one(cls, query: Query, top) -> List[Tuple[int, float]]:
+        if query.sparse_vector is not None:
+            query_vector = rest.NamedSparseVector(
+                name="sparse", vector=csr_to_sparse_vector(query.sparse_vector)
+            )
+        else:
+            query_vector = query.vector
+
         res = cls.client.search(
             collection_name=QDRANT_COLLECTION_NAME,
-            query_vector=vector,
-            query_filter=cls.parser.parse(meta_conditions),
+            query_vector=query_vector,
+            query_filter=cls.parser.parse(query.meta_conditions),
             limit=top,
             search_params=rest.SearchParams(
                 **cls.search_params.get("search_params", {})

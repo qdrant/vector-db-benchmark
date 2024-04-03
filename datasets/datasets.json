@@ -67,6 +67,13 @@
     "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/dbpedia_openai_1M.tgz"
   },
   {
+    "name": "msmarco-sparse-100K",
+    "distance": "cosine",
+    "type": "sparse",
+    "path": "msmarco-sparse/small",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/msmacro-sparse-small.tar.gz"
+  },
+  {
     "name": "h-and-m-2048-angular-filters",
     "vector_size": 2048,
     "distance": "cosine",
