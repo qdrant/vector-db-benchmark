@@ -68,7 +68,6 @@
   },
   {
     "name": "msmarco-sparse-100K",
-    "distance": "cosine",
     "type": "sparse",
     "path": "msmarco-sparse/small",
     "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/msmacro-sparse-small.tar.gz"

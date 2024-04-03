@@ -37,6 +37,7 @@ class QdrantSearcher(BaseSearcher):
 
     @classmethod
     def search_one(cls, query: Query, top) -> List[Tuple[int, float]]:
+        # Can query only one till we introduce re-ranking in the benchmarks
         if query.sparse_vector is not None:
             query_vector = rest.NamedSparseVector(
                 name="sparse", vector=csr_to_sparse_vector(query.sparse_vector)
