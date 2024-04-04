@@ -2,10 +2,15 @@ import multiprocessing as mp
 import uuid
 from typing import List, Optional
 
-from elasticsearch import Elasticsearch
+import elastic_transport
+from elasticsearch import ApiError, Elasticsearch
 
 from engine.base_client.upload import BaseUploader
-from engine.clients.elasticsearch.config import ELASTIC_INDEX, get_es_client
+from engine.clients.elasticsearch.config import (
+    ELASTIC_INDEX,
+    _wait_for_es_status,
+    get_es_client,
+)
 
 
 class ClosableElastic(Elasticsearch):
@@ -48,7 +53,23 @@ class ElasticUploader(BaseUploader):
 
     @classmethod
     def post_upload(cls, _distance):
-        cls.client.indices.forcemerge(
-            index=ELASTIC_INDEX, wait_for_completion=True, max_num_segments=1
-        )
+        print("forcing the merge into 1 segment...")
+        tries = 30
+        for i in range(tries + 1):
+            try:
+                cls.client.indices.forcemerge(
+                    index=ELASTIC_INDEX, wait_for_completion=True, max_num_segments=1
+                )
+            except (elastic_transport.TlsError, ApiError) as e:
+                if i < tries:
+                    print(
+                        "Received the following error during retry {}/{} while waiting for ES index to be ready... {}".format(
+                            i, tries, e.__str__()
+                        )
+                    )
+                    continue
+                else:
+                    raise
+            _wait_for_es_status(cls.client)
+            break
         return {}

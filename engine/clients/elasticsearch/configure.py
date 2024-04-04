@@ -1,10 +1,15 @@
-from elasticsearch import Elasticsearch, NotFoundError
+from elasticsearch import NotFoundError
 
 from benchmark.dataset import Dataset
 from engine.base_client import IncompatibilityError
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
-from engine.clients.elasticsearch.config import ELASTIC_INDEX, get_es_client
+from engine.clients.elasticsearch.config import (
+    ELASTIC_INDEX,
+    ELASTIC_INDEX_REFRESH_INTERVAL,
+    ELASTIC_INDEX_TIMEOUT,
+    get_es_client,
+)
 
 
 class ElasticConfigurator(BaseConfigurator):
@@ -23,12 +28,16 @@ class ElasticConfigurator(BaseConfigurator):
         self.client = get_es_client(host, connection_params)
 
     def clean(self):
+        print("Ensuring the index does not exist...")
         try:
             self.client.indices.delete(
-                index=ELASTIC_INDEX, timeout="5m", master_timeout="5m"
+                index=ELASTIC_INDEX,
+                timeout=ELASTIC_INDEX_TIMEOUT,
+                master_timeout=ELASTIC_INDEX_TIMEOUT,
             )
         except NotFoundError:
             pass
+        print("Finished ensuring the index does not exist...")
 
     def recreate(self, dataset: Dataset, collection_params):
         if dataset.config.distance == Distance.DOT:
@@ -39,11 +48,14 @@ class ElasticConfigurator(BaseConfigurator):
 
         self.client.indices.create(
             index=ELASTIC_INDEX,
+            timeout=ELASTIC_INDEX_TIMEOUT,
+            master_timeout=ELASTIC_INDEX_TIMEOUT,
+            wait_for_active_shards="all",
             settings={
                 "index": {
                     "number_of_shards": 1,
                     "number_of_replicas": 0,
-                    "refresh_interval": -1,
+                    "refresh_interval": ELASTIC_INDEX_REFRESH_INTERVAL,
                 }
             },
             mappings={
