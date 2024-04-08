@@ -3,12 +3,16 @@ import time
 from typing import List
 
 from qdrant_client import QdrantClient
-from qdrant_client.http.models import Batch, CollectionStatus, OptimizersConfigDiff
+from qdrant_client.http.models import (
+    Batch,
+    CollectionStatus,
+    OptimizersConfigDiff,
+    SparseVector,
+)
 
 from dataset_reader.base_reader import Record
 from engine.base_client.upload import BaseUploader
 from engine.clients.qdrant.config import QDRANT_COLLECTION_NAME
-from engine.clients.qdrant.utils import csr_to_sparse_vector
 
 
 class QdrantUploader(BaseUploader):
@@ -30,7 +34,10 @@ class QdrantUploader(BaseUploader):
             if point.vector is not None:
                 vector[""] = point.vector
             if point.sparse_vector is not None:
-                vector["sparse"] = csr_to_sparse_vector(point.sparse_vector)
+                vector["sparse"] = SparseVector(
+                    indices=point.sparse_vector.indices,
+                    values=point.sparse_vector.values,
+                )
 
             vectors.append(vector)
 

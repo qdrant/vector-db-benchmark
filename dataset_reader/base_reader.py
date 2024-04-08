@@ -1,14 +1,20 @@
 from dataclasses import dataclass
 from typing import Iterator, List, Optional
 
-from scipy.sparse import spmatrix as SparseMatrix
+import numpy as np
+
+
+@dataclass
+class SparseVector:
+    indices: np.array
+    values: np.array
 
 
 @dataclass
 class Record:
     id: int
     vector: Optional[List[float]]
-    sparse_vector: Optional[SparseMatrix]
+    sparse_vector: Optional[SparseVector]
     metadata: Optional[dict]
 
     def __post__init__(self):
@@ -25,7 +31,7 @@ class Record:
 @dataclass
 class Query:
     vector: Optional[List[float]]
-    sparse_vector: Optional[SparseMatrix]
+    sparse_vector: Optional[SparseVector]
     meta_conditions: Optional[dict]
     expected_result: Optional[List[int]]
     expected_scores: Optional[List[float]] = None

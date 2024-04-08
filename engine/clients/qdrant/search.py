@@ -10,7 +10,6 @@ from dataset_reader.base_reader import Query
 from engine.base_client.search import BaseSearcher
 from engine.clients.qdrant.config import QDRANT_COLLECTION_NAME
 from engine.clients.qdrant.parser import QdrantConditionParser
-from engine.clients.qdrant.utils import csr_to_sparse_vector
 
 
 class QdrantSearcher(BaseSearcher):
@@ -40,7 +39,11 @@ class QdrantSearcher(BaseSearcher):
         # Can query only one till we introduce re-ranking in the benchmarks
         if query.sparse_vector is not None:
             query_vector = rest.NamedSparseVector(
-                name="sparse", vector=csr_to_sparse_vector(query.sparse_vector)
+                name="sparse",
+                vector=rest.SparseVector(
+                    indices=query.sparse_vector.indices,
+                    values=query.sparse_vector.values,
+                ),
             )
         else:
             query_vector = query.vector
