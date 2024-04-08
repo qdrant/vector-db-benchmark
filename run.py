@@ -20,13 +20,13 @@ def run(
     host: str = "localhost",
     skip_upload: bool = False,
     skip_search: bool = False,
-    skip_if_exists: bool = True,
+    skip_if_exists: bool = False,
     exit_on_error: bool = True,
     timeout: float = 86400.0,
 ):
     """
     Example:
-        python3 run.py --engines *-m-16-* --engines qdrant-* --datasets glove-*
+        python3 run.py --engines "*-m-16-*" --engines "qdrant-*" --datasets "glove-*"
     """
     all_engines = read_engine_configs()
     all_datasets = read_dataset_config()
@@ -49,6 +49,12 @@ def run(
             dataset = Dataset(dataset_config)
             dataset.download()
             try:
+                if dataset_config["type"] == "sparse":
+                    if engine_config.get("vector_type") != "sparse":
+                        raise IncompatibilityError(
+                            f"{engine_name} engine config does not support sparse vectors"
+                        )
+
                 with stopit.ThreadingTimeout(timeout) as tt:
                     client.run_experiment(
                         dataset, skip_upload, skip_search, skip_if_exists
@@ -66,7 +72,9 @@ def run(
                     )
                     exit(2)
             except IncompatibilityError as e:
-                print(f"Skipping {engine_name} - {dataset_name}, incompatible params")
+                print(
+                    f"Skipping {engine_name} - {dataset_name}, incompatible params:", e
+                )
                 continue
             except KeyboardInterrupt as e:
                 traceback.print_exc()
