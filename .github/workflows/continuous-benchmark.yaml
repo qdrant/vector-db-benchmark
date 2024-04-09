@@ -17,7 +17,7 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Benches
         run: |
-          DATASETS_TO_RUN=("laion-small-clip" "msmarco-sparse-100K")
+          DATASETS_TO_RUN=("laion-small-clip" "msmarco-sparse-1M")
           for dataset in "${DATASETS_TO_RUN[@]}"; do
             export DATASETS=$dataset
             export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}

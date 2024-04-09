@@ -46,6 +46,26 @@
     "upload_params": { "parallel": 16, "batch_size": 1024 }
   },
   {
+    "name": "qdrant-sparse-vector",
+    "engine": "qdrant",
+    "vector_type": "sparse",
+    "connection_params": { "timeout": 30 },
+    "collection_params": {
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "default_segment_number": 3,
+        "memmap_threshold": 10000000
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 8,
+        "search_params": {}
+      }
+    ],
+    "upload_params": { "parallel": 16, "batch_size": 1024 }
+  },
+  {
     "name": "qdrant-parallel",
     "engine": "qdrant",
     "connection_params": { "timeout": 30 },
