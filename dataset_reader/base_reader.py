@@ -1,13 +1,11 @@
 from dataclasses import dataclass
 from typing import Iterator, List, Optional
 
-import numpy as np
-
 
 @dataclass
 class SparseVector:
-    indices: np.array
-    values: np.array
+    indices: List[int]
+    values: List[float]
 
 
 @dataclass
