@@ -4,6 +4,7 @@ from typing import List, Tuple
 
 from opensearchpy import OpenSearch
 
+from dataset_reader.base_reader import Query
 from engine.base_client.search import BaseSearcher
 from engine.clients.opensearch.config import (
     OPENSEARCH_INDEX,
@@ -46,11 +47,11 @@ class OpenSearchSearcher(BaseSearcher):
         cls.search_params = search_params
 
     @classmethod
-    def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
+    def search_one(cls, query: Query, top: int) -> List[Tuple[int, float]]:
         query = {
             "knn": {
                 "vector": {
-                    "vector": vector,
+                    "vector": query.vector,
                     "k": top,
                 }
             }

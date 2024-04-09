@@ -7,6 +7,7 @@ from weaviate.classes.query import MetadataQuery
 from weaviate.collections import Collection
 from weaviate.connect import ConnectionParams
 
+from dataset_reader.base_reader import Query
 from engine.base_client.search import BaseSearcher
 from engine.clients.weaviate.config import WEAVIATE_CLASS_NAME, WEAVIATE_DEFAULT_PORT
 from engine.clients.weaviate.parser import WeaviateConditionParser
@@ -32,10 +33,10 @@ class WeaviateSearcher(BaseSearcher):
         cls.client = client
 
     @classmethod
-    def search_one(self, vector, meta_conditions, top) -> List[Tuple[int, float]]:
+    def search_one(self, query: Query, top: int) -> List[Tuple[int, float]]:
         res = self.collection.query.near_vector(
-            near_vector=vector,
-            filters=self.parser.parse(meta_conditions),
+            near_vector=query.vector,
+            filters=self.parser.parse(query.meta_conditions),
             limit=top,
             return_metadata=MetadataQuery(distance=True),
             return_properties=[],

@@ -3,8 +3,9 @@ from typing import List, Tuple
 
 import numpy as np
 from redis import Redis, RedisCluster
-from redis.commands.search.query import Query
+from redis.commands.search.query import Query as RedisQuery
 
+from dataset_reader.base_reader import Query as DatasetQuery
 from engine.base_client.search import BaseSearcher
 from engine.clients.redis.config import (
     REDIS_AUTH,
@@ -41,8 +42,8 @@ class RedisSearcher(BaseSearcher):
         cls._ft = cls.conns[random.randint(0, len(cls.conns)) - 1].ft()
 
     @classmethod
-    def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
-        conditions = cls.parser.parse(meta_conditions)
+    def search_one(cls, query: DatasetQuery, top: int) -> List[Tuple[int, float]]:
+        conditions = cls.parser.parse(query.meta_conditions)
         if conditions is None:
             prefilter_condition = "*"
             params = {}
@@ -50,7 +51,7 @@ class RedisSearcher(BaseSearcher):
             prefilter_condition, params = conditions
 
         q = (
-            Query(
+            RedisQuery(
                 f"{prefilter_condition}=>[KNN $K @vector $vec_param {cls.knn_conditions} AS vector_score]"
             )
             .sort_by("vector_score", asc=True)
@@ -62,7 +63,7 @@ class RedisSearcher(BaseSearcher):
             .timeout(REDIS_QUERY_TIMEOUT)
         )
         params_dict = {
-            "vec_param": np.array(vector).astype(np.float32).tobytes(),
+            "vec_param": np.array(query.vector).astype(np.float32).tobytes(),
             "K": top,
             "EF": cls.search_params["search_params"]["ef"],
             **params,

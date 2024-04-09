@@ -8,6 +8,7 @@ from pymilvus import (
     wait_for_index_building_complete,
 )
 
+from dataset_reader.base_reader import Record
 from engine.base_client.upload import BaseUploader
 from engine.clients.milvus.config import (
     DISTANCE_MAPPING,
@@ -41,20 +42,22 @@ class MilvusUploader(BaseUploader):
         cls.distance = DISTANCE_MAPPING[distance]
 
     @classmethod
-    def upload_batch(
-        cls, ids: List[int], vectors: List[list], metadata: Optional[List[dict]]
-    ):
-        if metadata is not None:
+    def upload_batch(cls, batch: List[Record]):
+        has_metadata = any(record.metadata for record in batch)
+        if has_metadata:
             field_values = [
                 [
-                    payload.get(field_schema.name) or DTYPE_DEFAULT[field_schema.dtype]
-                    for payload in metadata
+                    record.metadata.get(field_schema.name)
+                    or DTYPE_DEFAULT[field_schema.dtype]
+                    for record in batch
                 ]
                 for field_schema in cls.collection.schema.fields
                 if field_schema.name not in ["id", "vector"]
             ]
         else:
             field_values = []
+        ids = [record.idx for record in batch]
+        vectors = [record.vector for record in batch]
         cls.collection.insert([ids, vectors] + field_values)
 
     @classmethod

@@ -5,6 +5,7 @@ from weaviate import WeaviateClient
 from weaviate.classes.data import DataObject
 from weaviate.connect import ConnectionParams
 
+from dataset_reader.base_reader import Record
 from engine.base_client.upload import BaseUploader
 from engine.clients.weaviate.config import WEAVIATE_CLASS_NAME, WEAVIATE_DEFAULT_PORT
 
@@ -28,14 +29,14 @@ class WeaviateUploader(BaseUploader):
         )
 
     @classmethod
-    def upload_batch(
-        cls, ids: List[int], vectors: List[list], metadata: List[Optional[dict]]
-    ):
+    def upload_batch(cls, batch: List[Record]):
         objects = []
-        for i in range(len(ids)):
-            id = uuid.UUID(int=ids[i])
-            property = metadata[i] or {}
-            objects.append(DataObject(properties=property, vector=vectors[i], uuid=id))
+        for record in batch:
+            id = uuid.UUID(int=record.id)
+            property = record.metadata or {}
+            objects.append(
+                DataObject(properties=property, vector=record.vector, uuid=id)
+            )
         if len(objects) > 0:
             cls.collection.data.insert_many(objects)
 
