@@ -33,6 +33,7 @@ class AnnCompoundReader(JSONReader):
                     vector /= np.linalg.norm(vector)
                 yield Query(
                     vector=vector.tolist(),
+                    sparse_vector=None,
                     meta_conditions=row_json["conditions"],
                     expected_result=row_json["closest_ids"],
                     expected_scores=row_json["closest_scores"],

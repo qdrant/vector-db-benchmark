@@ -22,6 +22,7 @@ class AnnH5Reader(BaseReader):
                 vector /= np.linalg.norm(vector)
             yield Query(
                 vector=vector.tolist(),
+                sparse_vector=None,
                 meta_conditions=None,
                 expected_result=expected_result.tolist(),
                 expected_scores=expected_scores.tolist(),

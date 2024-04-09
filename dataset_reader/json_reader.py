@@ -58,7 +58,12 @@ class JSONReader(BaseReader):
         ):
             # ToDo: add meta_conditions
 
-            yield Query(vector=vector, meta_conditions=None, expected_result=neighbours)
+            yield Query(
+                vector=vector,
+                sparse_vector=None,
+                meta_conditions=None,
+                expected_result=neighbours,
+            )
 
     def read_data(self) -> Iterator[Record]:
         for idx, (vector, payload) in enumerate(
