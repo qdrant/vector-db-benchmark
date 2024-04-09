@@ -1,6 +1,6 @@
 import time
 from multiprocessing import get_context
-from typing import Iterable, List, Optional, Tuple
+from typing import Iterable, List, Optional
 
 import tqdm
 

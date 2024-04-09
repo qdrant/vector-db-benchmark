@@ -1,4 +1,4 @@
-from typing import Any, Iterable
+from typing import Iterable
 
 from dataset_reader.base_reader import Record
 

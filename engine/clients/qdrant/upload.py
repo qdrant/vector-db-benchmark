@@ -46,7 +46,7 @@ class QdrantUploader(BaseUploader):
             vectors.append(vector)
             payloads.append(point.metadata or {})
 
-        res = cls.client.upsert(
+        _ = cls.client.upsert(
             collection_name=QDRANT_COLLECTION_NAME,
             points=Batch.model_construct(
                 ids=ids,

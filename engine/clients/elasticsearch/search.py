@@ -55,7 +55,7 @@ class ElasticSearcher(BaseSearcher):
             **{"num_candidates": 100, **cls.search_params},
         }
 
-        meta_conditions = cls.parser.parse(meta_conditions)
+        meta_conditions = cls.parser.parse(query.meta_conditions)
         if meta_conditions:
             knn["filter"] = meta_conditions
 

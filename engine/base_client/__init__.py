@@ -6,3 +6,12 @@ from engine.base_client.upload import BaseUploader
 
 class IncompatibilityError(Exception):
     pass
+
+
+__all__ = [
+    "BaseClient",
+    "BaseConfigurator",
+    "BaseSearcher",
+    "BaseUploader",
+    "IncompatibilityError",
+]

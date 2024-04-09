@@ -46,8 +46,6 @@ class OpenSearchUploader(BaseUploader):
 
     @classmethod
     def upload_batch(cls, batch: List[Record]):
-        if metadata is None:
-            metadata = [{}] * len(batch)
         operations = []
         for record in batch:
             vector_id = uuid.UUID(int=record.id).hex

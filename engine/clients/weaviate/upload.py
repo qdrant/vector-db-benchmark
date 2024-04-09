@@ -1,5 +1,5 @@
 import uuid
-from typing import List, Optional
+from typing import List
 
 from weaviate import WeaviateClient
 from weaviate.classes.data import DataObject

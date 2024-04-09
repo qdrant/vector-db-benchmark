@@ -1,6 +1,6 @@
 import multiprocessing as mp
 import uuid
-from typing import List, Optional
+from typing import List
 
 from elasticsearch import Elasticsearch
 
@@ -46,8 +46,6 @@ class ElasticUploader(BaseUploader):
 
     @classmethod
     def upload_batch(cls, batch: List[Record]):
-        if metadata is None:
-            metadata = [{}] * len(batch)
         operations = []
         for record in batch:
             vector_id = uuid.UUID(int=record.idx).hex

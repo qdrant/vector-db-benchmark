@@ -1,5 +1,5 @@
 import multiprocessing as mp
-from typing import List, Optional
+from typing import List
 
 from pymilvus import (
     Collection,

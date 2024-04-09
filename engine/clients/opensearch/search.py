@@ -57,7 +57,7 @@ class OpenSearchSearcher(BaseSearcher):
             }
         }
 
-        meta_conditions = cls.parser.parse(meta_conditions)
+        meta_conditions = cls.parser.parse(query.meta_conditions)
         if meta_conditions:
             query = {
                 "bool": {

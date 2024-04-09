@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 
 import numpy as np
 import psycopg
@@ -23,12 +23,10 @@ class PgVectorUploader(BaseUploader):
 
     @classmethod
     def upload_batch(cls, batch: List[Record]):
-        vectors = np.array(vectors)
-
         # Copy is faster than insert
         with cls.cur.copy("COPY items (id, embedding) FROM STDIN") as copy:
             for record in batch:
-                copy.write_row((record.id, record.vector))
+                copy.write_row((record.id, np.array(record.vector)))
 
     @classmethod
     def delete_client(cls):
