@@ -1,13 +1,15 @@
 import os
 from pathlib import Path
-from typing import Iterator, Tuple, Union, List
+from typing import Iterator, List, Tuple, Union
 
 import numpy as np
 
 from dataset_reader.base_reader import BaseReader, Query, Record, SparseVector
 
 
-def read_sparse_matrix_fields(filename: Union[Path, str]) -> Tuple[np.array, np.array, np.array]:
+def read_sparse_matrix_fields(
+    filename: Union[Path, str]
+) -> Tuple[np.array, np.array, np.array]:
     """Read the fields of a CSR matrix without instantiating it"""
 
     with open(filename, "rb") as f:
@@ -21,7 +23,9 @@ def read_sparse_matrix_fields(filename: Union[Path, str]) -> Tuple[np.array, np.
         return values, columns, index_pointer
 
 
-def csr_to_sparse_vectors(values: List[float], columns: List[int], index_pointer: List[int]) -> Iterator[SparseVector]:
+def csr_to_sparse_vectors(
+    values: List[float], columns: List[int], index_pointer: List[int]
+) -> Iterator[SparseVector]:
     num_rows = len(index_pointer) - 1
 
     for i in range(num_rows):
@@ -44,7 +48,9 @@ def read_csr_matrix(filename: Union[Path, str]) -> Iterator[SparseVector]:
     yield from csr_to_sparse_vectors(values, columns, index_pointer)
 
 
-def knn_result_read(filename: Union[Path, str]) -> Tuple[List[List[int]], List[List[float]]]:
+def knn_result_read(
+    filename: Union[Path, str]
+) -> Tuple[List[List[int]], List[List[float]]]:
     n, d = map(int, np.fromfile(filename, dtype="uint32", count=2))
     assert os.stat(filename).st_size == 8 + n * d * (4 + 4)
     with open(filename, "rb") as f:
@@ -82,7 +88,7 @@ class SparseReader(BaseReader):
             yield Record(id=i, vector=None, sparse_vector=sparse_vector, metadata=None)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     vals = [1, 3, 2, 3, 6, 4, 5]
     cols = [0, 2, 2, 1, 3, 0, 2]
     pointers = [0, 2, 3, 5, 7]
@@ -92,4 +98,3 @@ if __name__ == '__main__':
     assert vecs[1] == SparseVector(indices=[2], values=[2])
     assert vecs[2] == SparseVector(indices=[1, 3], values=[3, 6])
     assert vecs[3] == SparseVector(indices=[0, 2], values=[4, 5])
-
