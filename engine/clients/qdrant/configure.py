@@ -30,10 +30,9 @@ class QdrantConfigurator(BaseConfigurator):
         self.client.delete_collection(collection_name=QDRANT_COLLECTION_NAME)
 
     def recreate(self, dataset: Dataset, collection_params):
-        vector_config = {}
         if dataset.config.type == "sparse":
-            vector_config = {
-                "vectors_config": None,
+            vectors_config = {
+                "vectors_config": {},
                 "sparse_vectors_config": {
                     "sparse": rest.SparseVectorParams(
                         index=rest.SparseIndexParams(
@@ -43,7 +42,7 @@ class QdrantConfigurator(BaseConfigurator):
                 },
             }
         else:
-            vector_config = {
+            vectors_config = {
                 "vectors_config": (
                     rest.VectorParams(
                         size=dataset.config.vector_size,
@@ -54,7 +53,7 @@ class QdrantConfigurator(BaseConfigurator):
 
         self.client.recreate_collection(
             collection_name=QDRANT_COLLECTION_NAME,
-            **vector_config,
+            **vectors_config,
             **self.collection_params
         )
         self.client.update_collection(

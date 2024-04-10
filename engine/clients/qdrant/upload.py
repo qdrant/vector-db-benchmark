@@ -28,25 +28,28 @@ class QdrantUploader(BaseUploader):
 
     @classmethod
     def upload_batch(cls, batch: List[Record]):
-        vectors = []
+        ids, vectors, payloads = [], [], []
         for point in batch:
-            vector = {}
-            if point.vector is not None:
-                vector[""] = point.vector
-            if point.sparse_vector is not None:
-                vector["sparse"] = SparseVector(
-                    indices=point.sparse_vector.indices,
-                    values=point.sparse_vector.values,
-                )
+            if point.sparse_vector is None:
+                vector = point.vector
+            else:
+                vector = {
+                    "sparse": SparseVector(
+                        indices=point.sparse_vector.indices,
+                        values=point.sparse_vector.values,
+                    )
+                }
 
+            ids.append(point.id)
             vectors.append(vector)
+            payloads.append(point.metadata or {})
 
         res = cls.client.upsert(
             collection_name=QDRANT_COLLECTION_NAME,
             points=Batch.model_construct(
-                ids=[point.id for point in batch],
+                ids=ids,
                 vectors=vectors,
-                payloads=[point.metadata or {} for point in batch],
+                payloads=payloads,
             ),
             wait=False,
         )

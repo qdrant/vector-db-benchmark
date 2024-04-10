@@ -48,7 +48,6 @@
   {
     "name": "qdrant-sparse-vector",
     "engine": "qdrant",
-    "vector_type": "sparse",
     "connection_params": { "timeout": 30 },
     "collection_params": {
       "optimizers_config": {

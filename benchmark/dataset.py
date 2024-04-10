@@ -1,4 +1,3 @@
-import gzip
 import os
 import shutil
 import tarfile
