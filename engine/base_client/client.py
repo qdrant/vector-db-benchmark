@@ -24,14 +24,16 @@ class BaseClient:
         configurator: BaseConfigurator,
         uploader: BaseUploader,
         searchers: List[BaseSearcher],
-        supports_sparse_vectors: bool,
     ):
         self.name = name
         self.configurator = configurator
         self.uploader = uploader
         self.searchers = searchers
         self.engine = engine
-        self.supports_sparse_vectors = supports_sparse_vectors
+
+    @property
+    def sparse_vector_support(self):
+        return self.configurator.SPARSE_VECTOR_SUPPORT
 
     def save_search_results(
         self, dataset_name: str, results: dict, search_id: int, search_params: dict

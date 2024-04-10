@@ -61,8 +61,6 @@ ENGINE_SEARCHERS = {
     "pgvector": PgVectorSearcher,
 }
 
-ENGINES_WITH_SPARSE_VECTOR_SUPPORT = ["qdrant"]
-
 
 class ClientFactory(ABC):
     def __init__(self, host):
@@ -111,7 +109,4 @@ class ClientFactory(ABC):
             configurator=self._create_configurator(experiment),
             uploader=self._create_uploader(experiment),
             searchers=self._create_searchers(experiment),
-            supports_sparse_vectors=(
-                experiment["engine"] in ENGINES_WITH_SPARSE_VECTOR_SUPPORT
-            ),
         )
