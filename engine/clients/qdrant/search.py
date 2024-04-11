@@ -1,9 +1,9 @@
-import multiprocessing as mp
 import os
 from typing import List, Tuple
 
 import httpx
 from qdrant_client import QdrantClient
+from qdrant_client._pydantic_compat import construct
 from qdrant_client.http import models as rest
 
 from dataset_reader.base_reader import Query
@@ -40,9 +40,11 @@ class QdrantSearcher(BaseSearcher):
         if query.sparse_vector is None:
             query_vector = query.vector
         else:
-            query_vector = rest.NamedSparseVector(
+            query_vector = construct(
+                rest.NamedSparseVector,
                 name="sparse",
-                vector=rest.SparseVector(
+                vector=construct(
+                    rest.SparseVector,
                     indices=query.sparse_vector.indices,
                     values=query.sparse_vector.values,
                 ),

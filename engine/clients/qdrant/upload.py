@@ -3,6 +3,7 @@ import time
 from typing import List
 
 from qdrant_client import QdrantClient
+from qdrant_client._pydantic_compat import construct
 from qdrant_client.http.models import (
     Batch,
     CollectionStatus,
@@ -34,7 +35,8 @@ class QdrantUploader(BaseUploader):
                 vector = point.vector
             else:
                 vector = {
-                    "sparse": SparseVector(
+                    "sparse": construct(
+                        SparseVector,
                         indices=point.sparse_vector.indices,
                         values=point.sparse_vector.values,
                     )
