@@ -5,10 +5,8 @@ from typing import List, Optional
 from elasticsearch import Elasticsearch
 
 from engine.base_client.upload import BaseUploader
-from engine.clients.elasticsearch.config import get_es_client
-from engine.clients.elasticsearch.config import (
-    ELASTIC_INDEX,
-)
+from engine.clients.elasticsearch.config import ELASTIC_INDEX, get_es_client
+
 
 class ClosableElastic(Elasticsearch):
     def __del__(self):
