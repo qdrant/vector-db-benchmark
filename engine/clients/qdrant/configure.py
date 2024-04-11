@@ -8,6 +8,7 @@ from engine.clients.qdrant.config import QDRANT_COLLECTION_NAME
 
 
 class QdrantConfigurator(BaseConfigurator):
+    SPARSE_VECTOR_SUPPORT = True
     DISTANCE_MAPPING = {
         Distance.L2: rest.Distance.EUCLID,
         Distance.COSINE: rest.Distance.COSINE,

@@ -47,15 +47,12 @@ def run(
             print(f"Running experiment: {engine_name} - {dataset_name}")
             client = ClientFactory(host).build_client(engine_config)
             try:
-                if (
-                    dataset_config["type"] == "sparse"
-                    and not client.supports_sparse_vectors
-                ):
+
+                dataset = Dataset(dataset_config)
+                if dataset_config.type == "sparse" and not client.sparse_vector_support:
                     raise IncompatibilityError(
                         f"{client.name} engine does not support sparse vectors"
                     )
-
-                dataset = Dataset(dataset_config)
                 dataset.download()
 
                 with stopit.ThreadingTimeout(timeout) as tt:
