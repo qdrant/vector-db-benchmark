@@ -72,12 +72,8 @@ class ElasticConfigurator(BaseConfigurator):
                         "index": True,
                         "similarity": self.DISTANCE_MAPPING[dataset.config.distance],
                         "index_options": {
-                            **{
-                                "type": "hnsw",
-                                "m": 16,
-                                "ef_construction": 100,
-                            },
-                            **collection_params.get("index_options"),
+                            "type": "hnsw",
+                            **collection_params["index_options"],
                         },
                     },
                     **self._prepare_fields_config(dataset),
