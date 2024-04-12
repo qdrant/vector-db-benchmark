@@ -24,7 +24,7 @@ class PgVectorSearcher(BaseSearcher):
         register_vector(cls.conn)
         cls.cur = cls.conn.cursor()
         cls.cur.execute(
-            f"SET hnsw.ef_search = {search_params['search_params']['hnsw_ef']}"
+            f"SET hnsw.ef_search = {search_params['params']['hnsw_ef']}"
         )
         if distance == Distance.COSINE:
             cls.query = f"SELECT id, embedding <=> %s AS _score FROM items ORDER BY _score LIMIT %s"
