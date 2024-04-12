@@ -6,9 +6,7 @@ from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
 from engine.clients.elasticsearch.config import (
     ELASTIC_INDEX,
-    ELASTIC_PASSWORD,
-    ELASTIC_PORT,
-    ELASTIC_USER,
+    get_es_client
 )
 
 
@@ -18,6 +16,7 @@ class ElasticConfigurator(BaseConfigurator):
         Distance.COSINE: "cosine",
         Distance.DOT: "dot_product",
     }
+    # TODO: Add other types
     INDEX_TYPE_MAPPING = {
         "int": "long",
         "geo": "geo_point",
@@ -25,19 +24,7 @@ class ElasticConfigurator(BaseConfigurator):
 
     def __init__(self, host, collection_params: dict, connection_params: dict):
         super().__init__(host, collection_params, connection_params)
-        init_params = {
-            **{
-                "verify_certs": False,
-                "request_timeout": 90,
-                "retry_on_timeout": True,
-            },
-            **connection_params,
-        }
-        self.client = Elasticsearch(
-            f"http://{host}:{ELASTIC_PORT}",
-            basic_auth=(ELASTIC_USER, ELASTIC_PASSWORD),
-            **init_params,
-        )
+        self.client = get_es_client(host, connection_params)
 
     def clean(self):
         try:
@@ -60,7 +47,7 @@ class ElasticConfigurator(BaseConfigurator):
                 "index": {
                     "number_of_shards": 1,
                     "number_of_replicas": 0,
-                    "refresh_interval": -1,
+                    "refresh_interval": -1, # no refresh is required because we index all the data at once
                 }
             },
             mappings={

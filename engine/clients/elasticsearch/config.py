@@ -7,16 +7,10 @@ ELASTIC_INDEX = os.getenv("ELASTIC_INDEX", "bench")
 ELASTIC_USER = os.getenv("ELASTIC_USER", "elastic")
 ELASTIC_PASSWORD = os.getenv("ELASTIC_PASSWORD", "passwd")
 
-ELASTIC_TIMEOUT = int(os.getenv("ELASTIC_TIMEOUT", 300))
-ELASTIC_INDEX_TIMEOUT = os.getenv("ELASTIC_INDEX_TIMEOUT", "30m")
-ELASTIC_INDEX_REFRESH_INTERVAL = os.getenv("ELASTIC_INDEX_REFRESH_INTERVAL", "-1")
-
 
 def get_es_client(host, connection_params):
-    client: Elasticsearch = None
     init_params = {
         "verify_certs": False,
-        "request_timeout": ELASTIC_TIMEOUT,
         "retry_on_timeout": True,
         "ssl_show_warn": False,
         **connection_params,
