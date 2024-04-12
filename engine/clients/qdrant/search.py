@@ -40,8 +40,6 @@ class QdrantSearcher(BaseSearcher):
             query_vector=vector,
             query_filter=cls.parser.parse(meta_conditions),
             limit=top,
-            search_params=rest.SearchParams(
-                **cls.search_params.get("params", {})
-            ),
+            search_params=rest.SearchParams(**cls.search_params.get("params", {})),
         )
         return [(hit.id, hit.score) for hit in res]
