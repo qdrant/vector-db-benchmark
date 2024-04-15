@@ -13,7 +13,6 @@ class ElasticConfigurator(BaseConfigurator):
         Distance.COSINE: "cosine",
         Distance.DOT: "dot_product",
     }
-    # TODO: Add other types
     INDEX_TYPE_MAPPING = {
         "int": "long",
         "geo": "geo_point",
