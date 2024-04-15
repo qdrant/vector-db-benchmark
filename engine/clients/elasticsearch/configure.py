@@ -15,6 +15,9 @@ class ElasticConfigurator(BaseConfigurator):
     }
     INDEX_TYPE_MAPPING = {
         "int": "long",
+        "keyword": "keyword",
+        "text": "text",
+        "float": "double",
         "geo": "geo_point",
     }
 
