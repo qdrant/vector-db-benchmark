@@ -51,7 +51,7 @@ class ElasticSearcher(BaseSearcher):
             "field": "vector",
             "query_vector": vector,
             "k": top,
-            **{"num_candidates": 100, **cls.search_params},
+            **cls.search_params["config"],
         }
 
         meta_conditions = cls.parser.parse(meta_conditions)

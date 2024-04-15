@@ -5,8 +5,8 @@
     "connection_params": {},
     "collection_params": {},
     "search_params": [
-      { "parallel": 1, "params": { "ef": 128 } }, { "parallel": 1, "params": { "ef": 256 } }, { "parallel": 1, "params": { "ef": 512 } },
-      { "parallel": 100, "params": { "ef": 128 } }, { "parallel": 100, "params": { "ef": 256 } }, { "parallel": 100, "params": { "ef": 512 } }
+      { "parallel": 1, "config": { "ef": 128 } }, { "parallel": 1, "config": { "ef": 256 } }, { "parallel": 1, "config": { "ef": 512 } },
+      { "parallel": 100, "config": { "ef": 128 } }, { "parallel": 100, "config": { "ef": 256 } }, { "parallel": 100, "config": { "ef": 512 } }
     ],
     "upload_params": { "parallel": 16, "index_params": { "efConstruction": 100, "M": 16 } }
   },
@@ -16,8 +16,8 @@
     "connection_params": {},
     "collection_params": {},
     "search_params": [
-      { "parallel": 1, "params": { "ef": 128 } }, { "parallel": 1, "params": { "ef": 256 } }, { "parallel": 1, "params": { "ef": 512 } },
-      { "parallel": 100, "params": { "ef": 128 } }, { "parallel": 100, "params": { "ef": 256 } }, { "parallel": 100, "params": { "ef": 512 } }
+      { "parallel": 1, "config": { "ef": 128 } }, { "parallel": 1, "config": { "ef": 256 } }, { "parallel": 1, "config": { "ef": 512 } },
+      { "parallel": 100, "config": { "ef": 128 } }, { "parallel": 100, "config": { "ef": 256 } }, { "parallel": 100, "config": { "ef": 512 } }
     ],
     "upload_params": { "parallel": 16, "index_params": { "efConstruction": 128, "M": 16 } }
   },
@@ -27,8 +27,8 @@
     "connection_params": {},
     "collection_params": {},
     "search_params": [
-      { "parallel": 1, "params": { "ef": 128 } }, { "parallel": 1, "params": { "ef": 256 } }, { "parallel": 1, "params": { "ef": 512 } },
-      { "parallel": 100, "params": { "ef": 128 } }, { "parallel": 100, "params": { "ef": 256 } }, { "parallel": 100, "params": { "ef": 512 } }
+      { "parallel": 1, "config": { "ef": 128 } }, { "parallel": 1, "config": { "ef": 256 } }, { "parallel": 1, "config": { "ef": 512 } },
+      { "parallel": 100, "config": { "ef": 128 } }, { "parallel": 100, "config": { "ef": 256 } }, { "parallel": 100, "config": { "ef": 512 } }
     ],
     "upload_params": { "parallel": 16, "index_params": { "efConstruction": 128, "M": 32 } }
   },
@@ -38,8 +38,8 @@
     "connection_params": {},
     "collection_params": {},
     "search_params": [
-      { "parallel": 1, "params": { "ef": 128 } }, { "parallel": 1, "params": { "ef": 256 } }, { "parallel": 1, "params": { "ef": 512 } },
-      { "parallel": 100, "params": { "ef": 128 } }, { "parallel": 100, "params": { "ef": 256 } }, { "parallel": 100, "params": { "ef": 512 } }
+      { "parallel": 1, "config": { "ef": 128 } }, { "parallel": 1, "config": { "ef": 256 } }, { "parallel": 1, "config": { "ef": 512 } },
+      { "parallel": 100, "config": { "ef": 128 } }, { "parallel": 100, "config": { "ef": 256 } }, { "parallel": 100, "config": { "ef": 512 } }
     ],
     "upload_params": { "parallel": 16, "index_params": { "efConstruction": 256, "M": 32 } }
   },
@@ -49,8 +49,8 @@
     "connection_params": {},
     "collection_params": {},
     "search_params": [
-      { "parallel": 1, "params": { "ef": 128 } }, { "parallel": 1, "params": { "ef": 256 } }, { "parallel": 1, "params": { "ef": 512 } },
-      { "parallel": 100, "params": { "ef": 128 } }, { "parallel": 100, "params": { "ef": 256 } }, { "parallel": 100, "params": { "ef": 512 } }
+      { "parallel": 1, "config": { "ef": 128 } }, { "parallel": 1, "config": { "ef": 256 } }, { "parallel": 1, "config": { "ef": 512 } },
+      { "parallel": 100, "config": { "ef": 128 } }, { "parallel": 100, "config": { "ef": 256 } }, { "parallel": 100, "config": { "ef": 512 } }
     ],
     "upload_params": { "parallel": 16, "index_params": { "efConstruction": 512, "M": 32 } }
   },
@@ -60,8 +60,8 @@
     "connection_params": {},
     "collection_params": {},
     "search_params": [
-      { "parallel": 1, "params": { "ef": 128 } }, { "parallel": 1, "params": { "ef": 256 } }, { "parallel": 1, "params": { "ef": 512 } },
-      { "parallel": 100, "params": { "ef": 128 } }, { "parallel": 100, "params": { "ef": 256 } }, { "parallel": 100, "params": { "ef": 512 } }
+      { "parallel": 1, "config": { "ef": 128 } }, { "parallel": 1, "config": { "ef": 256 } }, { "parallel": 1, "config": { "ef": 512 } },
+      { "parallel": 100, "config": { "ef": 128 } }, { "parallel": 100, "config": { "ef": 256 } }, { "parallel": 100, "config": { "ef": 512 } }
     ],
     "upload_params": { "parallel": 16, "index_params": { "efConstruction": 256, "M": 64 } }
   },
@@ -71,8 +71,8 @@
     "connection_params": {},
     "collection_params": {},
     "search_params": [
-      { "parallel": 1, "params": { "ef": 128 } }, { "parallel": 1, "params": { "ef": 256 } }, { "parallel": 1, "params": { "ef": 512 } },
-      { "parallel": 100, "params": { "ef": 128 } }, { "parallel": 100, "params": { "ef": 256 } }, { "parallel": 100, "params": { "ef": 512 } }
+      { "parallel": 1, "config": { "ef": 128 } }, { "parallel": 1, "config": { "ef": 256 } }, { "parallel": 1, "config": { "ef": 512 } },
+      { "parallel": 100, "config": { "ef": 128 } }, { "parallel": 100, "config": { "ef": 256 } }, { "parallel": 100, "config": { "ef": 512 } }
     ],
     "upload_params": { "parallel": 16, "index_params": { "efConstruction": 512, "M": 64 } }
   }
