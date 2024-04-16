@@ -1,9 +1,9 @@
-from typing import Iterable
+from typing import Iterable, List
 
 from dataset_reader.base_reader import Record
 
 
-def iter_batches(records: Iterable[Record], n: int) -> Iterable[Record]:
+def iter_batches(records: Iterable[Record], n: int) -> Iterable[List[Record]]:
     batch = []
 
     for record in records:
