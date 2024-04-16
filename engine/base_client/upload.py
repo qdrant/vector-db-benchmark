@@ -1,6 +1,6 @@
 import time
 from multiprocessing import get_context
-from typing import Iterable, List, Optional
+from typing import Iterable, List
 
 import tqdm
 
@@ -90,9 +90,7 @@ class BaseUploader:
         return {}
 
     @classmethod
-    def upload_batch(
-        cls, ids: List[int], vectors: List[list], metadata: List[Optional[dict]]
-    ):
+    def upload_batch(cls, batch: List[Record]):
         raise NotImplementedError()
 
     @classmethod

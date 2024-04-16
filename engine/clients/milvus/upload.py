@@ -44,6 +44,7 @@ class MilvusUploader(BaseUploader):
     @classmethod
     def upload_batch(cls, batch: List[Record]):
         has_metadata = any(record.metadata for record in batch)
+        field_values = []
         if has_metadata:
             field_values = [
                 [
@@ -56,8 +57,12 @@ class MilvusUploader(BaseUploader):
             ]
         else:
             field_values = []
-        ids = [record.idx for record in batch]
-        vectors = [record.vector for record in batch]
+
+        ids, vectors = [], []
+        for record in batch:
+            ids.append(record.idx)
+            vectors.append(record.vector)
+
         cls.collection.insert([ids, vectors] + field_values)
 
     @classmethod

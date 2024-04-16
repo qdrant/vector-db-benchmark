@@ -32,10 +32,10 @@ class WeaviateUploader(BaseUploader):
     def upload_batch(cls, batch: List[Record]):
         objects = []
         for record in batch:
-            id = uuid.UUID(int=record.id)
-            property = record.metadata or {}
+            _id = uuid.UUID(int=record.id)
+            _property = record.metadata or {}
             objects.append(
-                DataObject(properties=property, vector=record.vector, uuid=id)
+                DataObject(properties=_property, vector=record.vector, uuid=_id)
             )
         if len(objects) > 0:
             cls.collection.data.insert_many(objects)
