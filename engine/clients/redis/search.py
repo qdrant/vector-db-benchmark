@@ -1,9 +1,10 @@
 import random
-from typing import List, Tuple
+from typing import List, Tuple, Optional, Union
 
 import numpy as np
 from redis import Redis, RedisCluster
 from redis.commands.search.query import Query as RedisQuery
+from redis.commands.search import Search as RedisSearchIndex
 
 from dataset_reader.base_reader import Query as DatasetQuery
 from engine.base_client.search import BaseSearcher
@@ -19,8 +20,13 @@ from engine.clients.redis.parser import RedisConditionParser
 
 class RedisSearcher(BaseSearcher):
     search_params = {}
-    client = None
+    client: Union[RedisCluster, Redis] = None
     parser = RedisConditionParser()
+
+    knn_conditions: str
+    is_cluster: bool
+    conns: List[Union[RedisCluster, Redis]]
+    search_namespace: RedisSearchIndex
 
     @classmethod
     def init_client(cls, host, distance, connection_params: dict, search_params: dict):
@@ -29,17 +35,20 @@ class RedisSearcher(BaseSearcher):
             host=host, port=REDIS_PORT, password=REDIS_AUTH, username=REDIS_USER
         )
         cls.search_params = search_params
-        cls.knn_conditions = "EF_RUNTIME $EF"
-        cls._is_cluster = True if REDIS_CLUSTER else False
+
         # In the case of CLUSTER API enabled we randomly select the starting primary shard
         # when doing the client initialization to evenly distribute the load among the cluster
-        cls.conns = [cls.client]
-        if cls._is_cluster:
+        if REDIS_CLUSTER:
             cls.conns = [
                 cls.client.get_redis_connection(node)
                 for node in cls.client.get_primaries()
             ]
-        cls._ft = cls.conns[random.randint(0, len(cls.conns)) - 1].ft()
+        else:
+            cls.conns = [cls.client]
+
+        cls.is_cluster = REDIS_CLUSTER
+        cls.search_namespace = random.choice(cls.conns).ft()
+        cls.knn_conditions = "EF_RUNTIME $EF"
 
     @classmethod
     def search_one(cls, query: DatasetQuery, top: int) -> List[Tuple[int, float]]:
@@ -68,6 +77,6 @@ class RedisSearcher(BaseSearcher):
             "EF": cls.search_params["search_params"]["ef"],
             **params,
         }
-        results = cls._ft.search(q, query_params=params_dict)
+        results = cls.search_namespace.search(q, query_params=params_dict)
 
         return [(int(result.id), float(result.vector_score)) for result in results.docs]
