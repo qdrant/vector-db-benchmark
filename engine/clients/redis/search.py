@@ -22,8 +22,8 @@ class RedisSearcher(BaseSearcher):
     search_params = {}
     client: Union[RedisCluster, Redis] = None
     parser = RedisConditionParser()
+    knn_conditions = "EF_RUNTIME $EF"
 
-    knn_conditions: str
     is_cluster: bool
     conns: List[Union[RedisCluster, Redis]]
     search_namespace: RedisSearchIndex
@@ -48,7 +48,6 @@ class RedisSearcher(BaseSearcher):
 
         cls.is_cluster = REDIS_CLUSTER
         cls.search_namespace = random.choice(cls.conns).ft()
-        cls.knn_conditions = "EF_RUNTIME $EF"
 
     @classmethod
     def search_one(cls, query: DatasetQuery, top: int) -> List[Tuple[int, float]]:
