@@ -1,9 +1,10 @@
 import multiprocessing as mp
 import uuid
-from typing import List, Optional
+from typing import List
 
 from elasticsearch import Elasticsearch
 
+from dataset_reader.base_reader import Record
 from engine.base_client.upload import BaseUploader
 from engine.clients.elasticsearch.config import (
     ELASTIC_INDEX,
@@ -44,19 +45,12 @@ class ElasticUploader(BaseUploader):
         cls.upload_params = upload_params
 
     @classmethod
-    def upload_batch(
-        cls, ids: List[int], vectors: List[list], metadata: Optional[List[dict]]
-    ):
-        if metadata is None:
-            metadata = [{}] * len(vectors)
+    def upload_batch(cls, batch: List[Record]):
         operations = []
-        for idx, vector, payload in zip(ids, vectors, metadata):
-            vector_id = uuid.UUID(int=idx).hex
+        for record in batch:
+            vector_id = uuid.UUID(int=record.id).hex
             operations.append({"index": {"_id": vector_id}})
-            if payload:
-                operations.append({"vector": vector, **payload})
-            else:
-                operations.append({"vector": vector})
+            operations.append({"vector": record.vector, **(record.metadata or {})})
 
         cls.client.bulk(
             index=ELASTIC_INDEX,

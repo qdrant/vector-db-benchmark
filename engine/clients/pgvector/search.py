@@ -1,10 +1,10 @@
-import multiprocessing as mp
 from typing import List, Tuple
 
 import numpy as np
 import psycopg
 from pgvector.psycopg import register_vector
 
+from dataset_reader.base_reader import Query
 from engine.base_client.distances import Distance
 from engine.base_client.search import BaseSearcher
 from engine.clients.pgvector.config import get_db_config
@@ -27,19 +27,19 @@ class PgVectorSearcher(BaseSearcher):
         cls.search_params = search_params["search_params"]
 
     @classmethod
-    def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
+    def search_one(cls, query: Query, top: int) -> List[Tuple[int, float]]:
         cls.cur.execute(f"SET hnsw.ef_search = {cls.search_params['hnsw_ef']}")
 
         if cls.distance == Distance.COSINE:
-            query = f"SELECT id, embedding <=> %s AS _score FROM items ORDER BY _score LIMIT {top};"
+            sql_query = f"SELECT id, embedding <=> %s AS _score FROM items ORDER BY _score LIMIT {top};"
         elif cls.distance == Distance.L2:
-            query = f"SELECT id, embedding <-> %s AS _score FROM items ORDER BY _score LIMIT {top};"
+            sql_query = f"SELECT id, embedding <-> %s AS _score FROM items ORDER BY _score LIMIT {top};"
         else:
             raise NotImplementedError(f"Unsupported distance metric {cls.distance}")
 
         cls.cur.execute(
-            query,
-            (np.array(vector),),
+            sql_query,
+            (np.array(query.vector),),
         )
         return cls.cur.fetchall()
 

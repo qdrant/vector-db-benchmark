@@ -76,7 +76,7 @@ def run(
                     f"Skipping {engine_name} - {dataset_name}, incompatible params:", e
                 )
                 continue
-            except KeyboardInterrupt as e:
+            except KeyboardInterrupt:
                 traceback.print_exc()
                 exit(1)
             except Exception as e:

@@ -1,9 +1,10 @@
-from typing import List, Optional
+from typing import List
 
 import numpy as np
 import psycopg
 from pgvector.psycopg import register_vector
 
+from dataset_reader.base_reader import Record
 from engine.base_client.upload import BaseUploader
 from engine.clients.pgvector.config import get_db_config
 
@@ -21,15 +22,11 @@ class PgVectorUploader(BaseUploader):
         cls.upload_params = upload_params
 
     @classmethod
-    def upload_batch(
-        cls, ids: List[int], vectors: List[list], metadata: Optional[List[dict]]
-    ):
-        vectors = np.array(vectors)
-
+    def upload_batch(cls, batch: List[Record]):
         # Copy is faster than insert
         with cls.cur.copy("COPY items (id, embedding) FROM STDIN") as copy:
-            for i, embedding in zip(ids, vectors):
-                copy.write_row((i, embedding))
+            for record in batch:
+                copy.write_row((record.id, np.array(record.vector)))
 
     @classmethod
     def delete_client(cls):
