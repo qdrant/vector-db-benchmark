@@ -46,7 +46,9 @@ class PgVectorConfigurator(BaseConfigurator):
             )
 
         self.conn.execute(
-            f"CREATE INDEX on items USING hnsw(embedding {hnsw_distance_type}) WITH (m = {collection_params['hnsw_config']['m']}, ef_construction = {collection_params['hnsw_config']['ef_construct']})"
+            f"CREATE INDEX on items USING hnsw(embedding {hnsw_distance_type}) WITH "
+            f"(m = {collection_params['hnsw_config']['m']}, "
+            f"ef_construction = {collection_params['hnsw_config']['ef_construct']})"
         )
 
         self.conn.close()

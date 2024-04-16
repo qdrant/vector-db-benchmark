@@ -48,7 +48,7 @@ class OpenSearchSearcher(BaseSearcher):
 
     @classmethod
     def search_one(cls, query: Query, top: int) -> List[Tuple[int, float]]:
-        query = {
+        opensearch_query = {
             "knn": {
                 "vector": {
                     "vector": query.vector,
@@ -59,9 +59,9 @@ class OpenSearchSearcher(BaseSearcher):
 
         meta_conditions = cls.parser.parse(query.meta_conditions)
         if meta_conditions:
-            query = {
+            opensearch_query = {
                 "bool": {
-                    "must": [query],
+                    "must": [opensearch_query],
                     "filter": meta_conditions,
                 }
             }
@@ -69,7 +69,7 @@ class OpenSearchSearcher(BaseSearcher):
         res = cls.client.search(
             index=OPENSEARCH_INDEX,
             body={
-                "query": query,
+                "query": opensearch_query,
                 "size": top,
             },
             params={

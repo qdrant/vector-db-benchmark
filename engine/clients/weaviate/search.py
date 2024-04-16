@@ -32,10 +32,10 @@ class WeaviateSearcher(BaseSearcher):
         cls.client = client
 
     @classmethod
-    def search_one(self, query: Query, top: int) -> List[Tuple[int, float]]:
-        res = self.collection.query.near_vector(
+    def search_one(cls, query: Query, top: int) -> List[Tuple[int, float]]:
+        res = cls.collection.query.near_vector(
             near_vector=query.vector,
-            filters=self.parser.parse(query.meta_conditions),
+            filters=cls.parser.parse(query.meta_conditions),
             limit=top,
             return_metadata=MetadataQuery(distance=True),
             return_properties=[],

@@ -48,7 +48,7 @@ class ElasticUploader(BaseUploader):
     def upload_batch(cls, batch: List[Record]):
         operations = []
         for record in batch:
-            vector_id = uuid.UUID(int=record.idx).hex
+            vector_id = uuid.UUID(int=record.id).hex
             operations.append({"index": {"_id": vector_id}})
             operations.append({"vector": record.vector, **(record.metadata or {})})
 

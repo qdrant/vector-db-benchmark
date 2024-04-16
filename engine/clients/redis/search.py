@@ -1,5 +1,5 @@
 import random
-from typing import List, Optional, Tuple, Union
+from typing import List, Tuple, Union
 
 import numpy as np
 from redis import Redis, RedisCluster
