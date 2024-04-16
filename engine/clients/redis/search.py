@@ -1,10 +1,10 @@
 import random
-from typing import List, Tuple, Optional, Union
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 from redis import Redis, RedisCluster
-from redis.commands.search.query import Query as RedisQuery
 from redis.commands.search import Search as RedisSearchIndex
+from redis.commands.search.query import Query as RedisQuery
 
 from dataset_reader.base_reader import Query as DatasetQuery
 from engine.base_client.search import BaseSearcher
