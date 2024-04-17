@@ -1,0 +1,189 @@
+name: Manual All Engines Default Benchmarks
+
+on:
+  push:
+    branches:
+     - "ci/benchmark-all-engines"
+
+jobs:
+  elasticsearchBenchmark:
+    name: benchmark - elasticsearch-default - ${{ inputs.dataset }} against elasticsearch-single-node
+    timeout-minutes: 60
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install poetry
+        run: pip install poetry
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "poetry"
+
+      - name: Install deps
+        run: poetry install --no-root
+
+      - uses: hoverkraft-tech/compose-action@v2.0.0
+        with:
+          compose-file: "engine/servers/elasticsearch-single-node/docker-compose.yaml"
+      - name: Execution
+        run: |
+          source $(poetry env info -p)/bin/activate
+          poetry run python3 run.py --engines "elasticsearch-default" --datasets "glove-100-angular"
+
+  milvusBenchmark:
+    name: benchmark - milvus-default - ${{ inputs.dataset }} against milvus-single-node
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install poetry
+        run: pip install poetry
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "poetry"
+
+      - name: Install deps
+        run: poetry install
+
+      - uses: hoverkraft-tech/compose-action@v2.0.0
+        with:
+          compose-file: "engine/servers/milvus-single-node/docker-compose.yaml"
+      - name: Execution
+        run: |
+          source $(poetry env info -p)/bin/activate
+          poetry run python3 run.py --engines "milvus-default" --datasets "glove-100-angular"
+
+  opensearchBenchmark:
+    name: benchmark - opensearch-default - opensearch-default against opensearch-single-node
+    timeout-minutes: 60
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install poetry
+        run: pip install poetry
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "poetry"
+
+      - name: Install deps
+        run: poetry install
+
+      - uses: hoverkraft-tech/compose-action@v2.0.0
+        with:
+          compose-file: "engine/servers/opensearch-single-node/docker-compose.yaml"
+      - name: Execution
+        run: |
+          source $(poetry env info -p)/bin/activate
+          poetry run python3 run.py --engines "opensearch-default" --datasets "glove-100-angular"  
+
+  pgvectorBenchmark:
+    name: benchmark - pgvector - pgvector-default against pgvector-single-node
+    timeout-minutes: 60
+    runs-on: [self-hosted, linux, x64]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install poetry
+        run: pip install poetry
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "poetry"
+
+      - name: Install deps
+        run: poetry install
+
+      - uses: hoverkraft-tech/compose-action@v2.0.0
+        with:
+          compose-file: "engine/servers/pgvector-single-node/docker-compose.yaml"
+      - name: Execution
+        run: |
+          source $(poetry env info -p)/bin/activate
+          poetry run python3 run.py --engines "pgvector-default" --datasets "glove-100-angular" 
+
+  qdrantBenchmark:
+    name: benchmark - qdrant - qdrant-default against qdrant-single-node
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install poetry
+        run: pip install poetry
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "poetry"
+
+      - name: Install deps
+        run: poetry install
+
+      - uses: hoverkraft-tech/compose-action@v2.0.0
+        with:
+          compose-file: "engine/servers/qdrant-single-node/docker-compose.yaml"
+      - name: Execution
+        run: |
+          source $(poetry env info -p)/bin/activate
+          poetry run python3 run.py --engines "qdrant-default" --datasets "glove-100-angular" 
+
+  redisBenchmark:
+    name: benchmark - redis - redis-default against redis-single-node
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install poetry
+        run: pip install poetry
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "poetry"
+
+      - name: Install deps
+        run: poetry install
+
+      - uses: hoverkraft-tech/compose-action@v2.0.0
+        with:
+          compose-file: "engine/servers/redis-single-node/docker-compose.yaml"
+      - name: Execution
+        run: |
+          source $(poetry env info -p)/bin/activate
+          poetry run python3 run.py --engines "redis-default" --datasets "glove-100-angular" 
+
+  weaviateBenchmark:
+    name: benchmark - weaviate - weaviate-default against weaviate-single-node
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install poetry
+        run: pip install poetry
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "poetry"
+
+      - name: Install deps
+        run: poetry install
+
+      - uses: hoverkraft-tech/compose-action@v2.0.0
+        with:
+          compose-file: "engine/servers/weaviate-single-node/docker-compose.yaml"
+      - name: Execution
+        run: |
+          source $(poetry env info -p)/bin/activate
+          poetry run python3 run.py --engines "weaviate-default" --datasets "glove-100-angular"
