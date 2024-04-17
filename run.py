@@ -49,7 +49,7 @@ def run(
             try:
 
                 dataset = Dataset(dataset_config)
-                if dataset_config.type == "sparse" and not client.sparse_vector_support:
+                if dataset.config.type == "sparse" and not client.sparse_vector_support:
                     raise IncompatibilityError(
                         f"{client.name} engine does not support sparse vectors"
                     )
