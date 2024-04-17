@@ -9,8 +9,6 @@ SCRIPT_PATH=$(dirname "$SCRIPT")
 
 bash -x "${SCRIPT_PATH}/run_remote_benchmark.sh"
 
-./mc cp results/* qdrant/vector-search-engines-benchmark/results/ci/qdrant/
-
 # Upload to postgres
 # -t sorts by modification time
 export SEARCH_RESULTS_FILE=$(ls -t results/*-search-*.json | head -n 1)

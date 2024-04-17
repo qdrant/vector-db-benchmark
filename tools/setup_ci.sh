@@ -14,9 +14,3 @@ wget https://github.com/hetznercloud/cli/releases/download/${HCVERSION}/hcloud-l
 tar xzf hcloud-linux-amd64.tar.gz
 
 sudo mv hcloud /usr/local/bin
-
-# Install mc
-
-wget https://dl.min.io/client/mc/release/linux-amd64/mc
-chmod +x mc
-./mc alias set qdrant https://storage.googleapis.com "${GCS_KEY}" "${GCS_SECRET}"
