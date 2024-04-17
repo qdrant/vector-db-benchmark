@@ -26,14 +26,18 @@ def read_sparse_matrix_fields(
 def mmap_sparse_matrix_fields(fname):
     """mmap the fields of a CSR matrix without instantiating it"""
     with open(fname, "rb") as f:
-        sizes = np.fromfile(f, dtype='int64', count=3)
+        sizes = np.fromfile(f, dtype="int64", count=3)
         n_row, n_col, n_non_zero = sizes
     offset = sizes.nbytes
-    index_pointer = np.memmap(fname, dtype='int64', mode='r', offset=offset, shape=n_row + 1)
+    index_pointer = np.memmap(
+        fname, dtype="int64", mode="r", offset=offset, shape=n_row + 1
+    )
     offset += index_pointer.nbytes
-    columns = np.memmap(fname, dtype='int32', mode='r', offset=offset, shape=n_non_zero)
+    columns = np.memmap(fname, dtype="int32", mode="r", offset=offset, shape=n_non_zero)
     offset += columns.nbytes
-    values = np.memmap(fname, dtype='float32', mode='r', offset=offset, shape=n_non_zero)
+    values = np.memmap(
+        fname, dtype="float32", mode="r", offset=offset, shape=n_non_zero
+    )
     return values, columns, index_pointer
 
 
