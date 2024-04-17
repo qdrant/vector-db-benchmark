@@ -18,8 +18,6 @@ jobs:
       - name: Benches
         run: |
             export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
-            export GCS_KEY=${{ secrets.GCS_KEY }}
-            export GCS_SECRET=${{ secrets.GCS_SECRET }}
             export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
             bash -x tools/setup_ci.sh
