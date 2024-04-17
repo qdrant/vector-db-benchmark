@@ -63,9 +63,6 @@ def read_csr_matrix(filename: Union[Path, str], do_mmap=True) -> Iterator[Sparse
         values, columns, index_pointer = mmap_sparse_matrix_fields(filename)
     else:
         values, columns, index_pointer = read_sparse_matrix_fields(filename)
-    values = values.tolist()
-    columns = columns.tolist()
-    index_pointer = index_pointer.tolist()
 
     yield from csr_to_sparse_vectors(values, columns, index_pointer)
 
