@@ -34,6 +34,7 @@ jobs:
           compose-file: "engine/servers/elasticsearch-single-node/docker-compose.yaml"
       - name: Execution
         run: |
+          bash -x tools/wait_for_elasticsearch_green_status.sh
           source $(poetry env info -p)/bin/activate
           poetry run python3 run.py --engines "elasticsearch-default" --datasets "random-100"
 
@@ -86,6 +87,7 @@ jobs:
           compose-file: "engine/servers/opensearch-single-node/docker-compose.yaml"
       - name: Execution
         run: |
+          bash -x tools/wait_for_opensearch.sh
           source $(poetry env info -p)/bin/activate
           poetry run python3 run.py --engines "opensearch-default" --datasets "random-100"  
 
