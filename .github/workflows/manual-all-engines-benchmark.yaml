@@ -12,7 +12,7 @@ on:
 
 jobs:
   elasticsearchBenchmark:
-    name: benchmark - elasticsearch-default against elasticsearch-single-node
+    name: benchmark - elasticsearch-default against elasticsearch-single-node-ci
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
@@ -31,10 +31,10 @@ jobs:
 
       - uses: hoverkraft-tech/compose-action@v2.0.0
         with:
-          compose-file: "engine/servers/elasticsearch-single-node/docker-compose.yaml"
+          compose-file: "engine/servers/elasticsearch-single-node-ci/docker-compose.yaml"
       - name: Execution
         run: |
-          bash -x tools/wait_for_elasticsearch_green_status.sh
+          ./tools/wait_for_elasticsearch_green_status.sh
           source $(poetry env info -p)/bin/activate
           poetry run python3 run.py --engines "elasticsearch-default" --datasets "random-100"
 
@@ -65,7 +65,7 @@ jobs:
           poetry run python3 run.py --engines "milvus-default" --datasets "random-100"
 
   opensearchBenchmark:
-    name: benchmark - opensearch-default against opensearch-single-node
+    name: benchmark - opensearch-default against opensearch-single-node-ci
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
@@ -84,10 +84,10 @@ jobs:
 
       - uses: hoverkraft-tech/compose-action@v2.0.0
         with:
-          compose-file: "engine/servers/opensearch-single-node/docker-compose.yaml"
+          compose-file: "engine/servers/opensearch-single-node-ci/docker-compose.yaml"
       - name: Execution
         run: |
-          bash -x tools/wait_for_opensearch.sh
+          ./tools/wait_for_opensearch.sh
           source $(poetry env info -p)/bin/activate
           poetry run python3 run.py --engines "opensearch-default" --datasets "random-100"  
 

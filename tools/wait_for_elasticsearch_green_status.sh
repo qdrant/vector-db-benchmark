@@ -19,12 +19,12 @@ done
 
 # Wait for ES status to turn to Green
 health="$(curl -fsSL "$ES_HOST/_cat/health?h=status")"
-health="$(echo "$health" | sed -r 's/^[[:space:]]+|[[:space:]]+$//g')" # trim whitespace (otherwise we'll have "green ")
+health="$(echo "$health" | sed -r 's/^[[:space:]]+|[[:space:]]+$//g')"
 
 until [ "$health" = 'green' ]; do
     health="$(curl -fsSL "$ES_HOST/_cat/health?h=status")"
-    health="$(echo "$health" | sed -r 's/^[[:space:]]+|[[:space:]]+$//g')" # trim whitespace (otherwise we'll have "green ")
-    >&2 echo "Elastic Search is unavailable - sleeping"
+    health="$(echo "$health" | sed -r 's/^[[:space:]]+|[[:space:]]+$//g')"
+    >&2 echo "Elastic Search is yet unavailable, sleep 1"
     sleep 1
 done
 

@@ -8,3 +8,5 @@ until $(curl --output /dev/null --silent --head --fail "$ES_HOST"); do
     printf '.'
     sleep 1
 done
+
+>&2 echo "Open Search is up"
