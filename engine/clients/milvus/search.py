@@ -3,6 +3,7 @@ from typing import List, Tuple
 
 from pymilvus import Collection, connections
 
+from dataset_reader.base_reader import Query
 from engine.base_client.search import BaseSearcher
 from engine.clients.milvus.config import (
     DISTANCE_MAPPING,
@@ -37,15 +38,15 @@ class MilvusSearcher(BaseSearcher):
         return "forkserver" if "forkserver" in mp.get_all_start_methods() else "spawn"
 
     @classmethod
-    def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
+    def search_one(cls, query: Query, top: int) -> List[Tuple[int, float]]:
         param = {"metric_type": cls.distance, "params": cls.search_params["config"]}
         try:
             res = cls.collection.search(
-                data=[vector],
+                data=[query.vector],
                 anns_field="vector",
                 param=param,
                 limit=top,
-                expr=cls.parser.parse(meta_conditions),
+                expr=cls.parser.parse(query.meta_conditions),
             )
         except Exception as e:
             import ipdb

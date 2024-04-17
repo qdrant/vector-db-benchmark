@@ -3,15 +3,23 @@ from typing import Iterator, List, Optional
 
 
 @dataclass
+class SparseVector:
+    indices: List[int]
+    values: List[float]
+
+
+@dataclass
 class Record:
     id: int
-    vector: List[float]
+    vector: Optional[List[float]]
+    sparse_vector: Optional[SparseVector]
     metadata: Optional[dict]
 
 
 @dataclass
 class Query:
-    vector: List[float]
+    vector: Optional[List[float]]
+    sparse_vector: Optional[SparseVector]
     meta_conditions: Optional[dict]
     expected_result: Optional[List[int]]
     expected_scores: Optional[List[float]] = None

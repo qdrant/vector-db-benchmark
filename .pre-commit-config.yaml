@@ -28,3 +28,10 @@ repos:
       - id: isort
         name: "Sort Imports"
         args: ["--profile", "black"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.5
+    hooks:
+      # Run the linter.
+      - id: ruff
+        args: [ --fix ]

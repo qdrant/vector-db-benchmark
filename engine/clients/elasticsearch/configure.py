@@ -1,4 +1,4 @@
-from elasticsearch import Elasticsearch, NotFoundError
+from elasticsearch import NotFoundError
 
 from benchmark.dataset import Dataset
 from engine.base_client import IncompatibilityError

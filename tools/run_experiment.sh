@@ -1,6 +1,8 @@
 #!/bin/bash
 
-ENGINE_NAME=${ENGINE_NAME:-"qdrant-default"}
+set -e
+
+ENGINE_NAME=${ENGINE_NAME:-"qdrant-continuous-benchmark"}
 
 DATASETS=${DATASETS:-""}
 

@@ -4,6 +4,7 @@ from typing import List, Tuple
 
 from elasticsearch import Elasticsearch
 
+from dataset_reader.base_reader import Query
 from engine.base_client.search import BaseSearcher
 from engine.clients.elasticsearch.config import ELASTIC_INDEX, get_es_client
 from engine.clients.elasticsearch.parser import ElasticConditionParser
@@ -29,15 +30,15 @@ class ElasticSearcher(BaseSearcher):
         cls.search_params = search_params
 
     @classmethod
-    def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
+    def search_one(cls, query: Query, top: int) -> List[Tuple[int, float]]:
         knn = {
             "field": "vector",
-            "query_vector": vector,
+            "query_vector": query.vector,
             "k": top,
             **cls.search_params["config"],
         }
 
-        meta_conditions = cls.parser.parse(meta_conditions)
+        meta_conditions = cls.parser.parse(query.meta_conditions)
         if meta_conditions:
             knn["filter"] = meta_conditions
 

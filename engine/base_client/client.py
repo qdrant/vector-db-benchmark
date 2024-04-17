@@ -1,7 +1,6 @@
 import json
 import os
 from datetime import datetime
-from pathlib import Path
 from typing import List
 
 from benchmark import ROOT_DIR
@@ -30,6 +29,10 @@ class BaseClient:
         self.uploader = uploader
         self.searchers = searchers
         self.engine = engine
+
+    @property
+    def sparse_vector_support(self):
+        return self.configurator.SPARSE_VECTOR_SUPPORT
 
     def save_search_results(
         self, dataset_name: str, results: dict, search_id: int, search_params: dict

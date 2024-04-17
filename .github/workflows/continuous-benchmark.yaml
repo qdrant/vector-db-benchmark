@@ -15,18 +15,29 @@ jobs:
       - uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Setup CI
+        run: bash -x tools/setup_ci.sh
       - name: Benches
         run: |
-          export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
-          export GCS_KEY=${{ secrets.GCS_KEY }}
-          export GCS_SECRET=${{ secrets.GCS_SECRET }}
-          export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-          export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+            export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
+            export GCS_KEY=${{ secrets.GCS_KEY }}
+            export GCS_SECRET=${{ secrets.GCS_SECRET }}
+            export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
 
-          # Benchmark the dev branch:
-          export QDRANT_VERSION=ghcr/dev
-          bash -x tools/run_ci.sh
+            declare -A DATASET_TO_ENGINE
+            DATASET_TO_ENGINE["laion-small-clip"]="qdrant-continuous-benchmark"
+            DATASET_TO_ENGINE["msmarco-sparse-1M"]="qdrant-sparse-vector"
 
-          # Benchmark the master branch:
-          export QDRANT_VERSION=docker/master
-          bash -x tools/run_ci.sh
+            for dataset in "${!DATASET_TO_ENGINE[@]}"; do
+              export ENGINE_NAME=${DATASET_TO_ENGINE[$dataset]}
+              export DATASETS=$dataset
+
+              # Benchmark the dev branch:
+              export QDRANT_VERSION=ghcr/dev
+              bash -x tools/run_ci.sh
+
+              # Benchmark the master branch:
+              export QDRANT_VERSION=docker/master
+              bash -x tools/run_ci.sh
+            done
