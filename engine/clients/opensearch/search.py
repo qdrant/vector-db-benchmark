@@ -85,5 +85,5 @@ class OpenSearchSearcher(BaseSearcher):
     def setup_search(cls):
         if cls.search_params:
             cls.client.indices.put_settings(
-                body=cls.search_params, index=OPENSEARCH_INDEX
+                body=cls.search_params["config"], index=OPENSEARCH_INDEX
             )

@@ -39,7 +39,7 @@ class MilvusSearcher(BaseSearcher):
 
     @classmethod
     def search_one(cls, query: Query, top: int) -> List[Tuple[int, float]]:
-        param = {"metric_type": cls.distance, "params": cls.search_params["params"]}
+        param = {"metric_type": cls.distance, "params": cls.search_params["config"]}
         try:
             res = cls.collection.search(
                 data=[query.vector],

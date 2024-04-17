@@ -73,7 +73,7 @@ class RedisSearcher(BaseSearcher):
         params_dict = {
             "vec_param": np.array(query.vector).astype(np.float32).tobytes(),
             "K": top,
-            "EF": cls.search_params["search_params"]["ef"],
+            **cls.search_params["config"],
             **params,
         }
         results = cls.search_namespace.search(q, query_params=params_dict)
