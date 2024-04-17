@@ -4,12 +4,17 @@ on:
   push:
     branches:
      - "ci/benchmark-all-engines"
+  workflow_dispatch:
+    inputs:
+        dataset:
+            description: "Dataset to benchmark"
+            default: random-100    
 
 jobs:
   elasticsearchBenchmark:
-    name: benchmark - elasticsearch-default - ${{ inputs.dataset }} against elasticsearch-single-node
+    name: benchmark - elasticsearch-default against elasticsearch-single-node
     timeout-minutes: 60
-    runs-on: [self-hosted, linux, x64]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
@@ -30,10 +35,10 @@ jobs:
       - name: Execution
         run: |
           source $(poetry env info -p)/bin/activate
-          poetry run python3 run.py --engines "elasticsearch-default" --datasets "glove-100-angular"
+          poetry run python3 run.py --engines "elasticsearch-default" --datasets "random-100"
 
   milvusBenchmark:
-    name: benchmark - milvus-default - ${{ inputs.dataset }} against milvus-single-node
+    name: benchmark - milvus-default against milvus-single-node
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
@@ -56,12 +61,12 @@ jobs:
       - name: Execution
         run: |
           source $(poetry env info -p)/bin/activate
-          poetry run python3 run.py --engines "milvus-default" --datasets "glove-100-angular"
+          poetry run python3 run.py --engines "milvus-default" --datasets "random-100"
 
   opensearchBenchmark:
-    name: benchmark - opensearch-default - opensearch-default against opensearch-single-node
+    name: benchmark - opensearch-default against opensearch-single-node
     timeout-minutes: 60
-    runs-on: [self-hosted, linux, x64]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
@@ -82,12 +87,12 @@ jobs:
       - name: Execution
         run: |
           source $(poetry env info -p)/bin/activate
-          poetry run python3 run.py --engines "opensearch-default" --datasets "glove-100-angular"  
+          poetry run python3 run.py --engines "opensearch-default" --datasets "random-100"  
 
   pgvectorBenchmark:
-    name: benchmark - pgvector - pgvector-default against pgvector-single-node
+    name: benchmark - pgvector-default against pgvector-single-node
     timeout-minutes: 60
-    runs-on: [self-hosted, linux, x64]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
@@ -108,10 +113,10 @@ jobs:
       - name: Execution
         run: |
           source $(poetry env info -p)/bin/activate
-          poetry run python3 run.py --engines "pgvector-default" --datasets "glove-100-angular" 
+          poetry run python3 run.py --engines "pgvector-default" --datasets "random-100" 
 
   qdrantBenchmark:
-    name: benchmark - qdrant - qdrant-default against qdrant-single-node
+    name: benchmark - qdrant-default against qdrant-single-node
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
@@ -134,10 +139,10 @@ jobs:
       - name: Execution
         run: |
           source $(poetry env info -p)/bin/activate
-          poetry run python3 run.py --engines "qdrant-default" --datasets "glove-100-angular" 
+          poetry run python3 run.py --engines "qdrant-default" --datasets "random-100" 
 
   redisBenchmark:
-    name: benchmark - redis - redis-default against redis-single-node
+    name: benchmark - redis-default against redis-single-node
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
@@ -160,10 +165,10 @@ jobs:
       - name: Execution
         run: |
           source $(poetry env info -p)/bin/activate
-          poetry run python3 run.py --engines "redis-default" --datasets "glove-100-angular" 
+          poetry run python3 run.py --engines "redis-default" --datasets "random-100" 
 
   weaviateBenchmark:
-    name: benchmark - weaviate - weaviate-default against weaviate-single-node
+    name: benchmark - weaviate-default against weaviate-single-node
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
@@ -186,4 +191,4 @@ jobs:
       - name: Execution
         run: |
           source $(poetry env info -p)/bin/activate
-          poetry run python3 run.py --engines "weaviate-default" --datasets "glove-100-angular"
+          poetry run python3 run.py --engines "weaviate-default" --datasets "random-100"
