@@ -30,9 +30,9 @@ class PgVectorUploader(BaseUploader):
     def upload_batch(cls, batch: List[Record]):
         ids, vectors = [], []
         for record in batch:
-          ids.append(record.id)
-          vectors.append(record.vector)
-  
+            ids.append(record.id)
+            vectors.append(record.vector)
+
         vectors = np.array(vectors)
         # Copy is faster than insert
         with cls.cur.copy(

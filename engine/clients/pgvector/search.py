@@ -34,7 +34,9 @@ class PgVectorSearcher(BaseSearcher):
     @classmethod
     def search_one(cls, query: Query, top) -> List[Tuple[int, float]]:
         # TODO: Use query.metaconditions for datasets with filtering
-        cls.cur.execute(cls.query, (np.array(query.vector), top), binary=True, prepare=True) 
+        cls.cur.execute(
+            cls.query, (np.array(query.vector), top), binary=True, prepare=True
+        )
         return cls.cur.fetchall()
 
     @classmethod
