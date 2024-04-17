@@ -25,9 +25,9 @@ class PgVectorSearcher(BaseSearcher):
         cls.cur = cls.conn.cursor()
         cls.cur.execute(f"SET hnsw.ef_search = {search_params['config']['hnsw_ef']}")
         if distance == Distance.COSINE:
-            cls.query = f"SELECT id, embedding <=> %s AS _score FROM items ORDER BY _score LIMIT %s"
+            cls.query = "SELECT id, embedding <=> %s AS _score FROM items ORDER BY _score LIMIT %s"
         elif distance == Distance.L2:
-            cls.query = f"SELECT id, embedding <-> %s AS _score FROM items ORDER BY _score LIMIT %s"
+            cls.query = "SELECT id, embedding <-> %s AS _score FROM items ORDER BY _score LIMIT %s"
         else:
             raise NotImplementedError(f"Unsupported distance metric {cls.distance}")
 
