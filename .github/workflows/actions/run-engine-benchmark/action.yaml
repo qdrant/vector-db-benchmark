@@ -30,8 +30,8 @@ runs:
     - name: Execution
       shell: bash
       run: |
-        flag="${{ inputs.engine }}"
-        if [[ "$flag" == *"elasticsearch"* || "$flag" == *"opensearch"* ]]; then
+        engine="${{ inputs.engine }}"
+        if [[ "$engine" == *"elasticsearch"* || "$engine" == *"opensearch"* ]]; then
           ./tools/wait_for_green_status.sh
         fi
         source $(poetry env info -p)/bin/activate

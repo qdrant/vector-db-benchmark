@@ -12,6 +12,12 @@ on:
 
 jobs:
   elasticsearchBenchmark:
+    if: >
+      (
+      startsWith(github.event.head_commit.modified, 'engine/clients/elasticsearch') ||
+      startsWith(github.event.head_commit.modified, 'engine/servers/elasticsearch') ||
+      startsWith(github.event.head_commit.modified, 'engine/base_client/')
+      )
     name: benchmark - elasticsearch-default - random-100 - against elasticsearch-single-node-ci
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -24,6 +30,12 @@ jobs:
           compose_file: "engine/servers/elasticsearch-single-node-ci/docker-compose.yaml"
 
   milvusBenchmark:
+    if: >
+      (
+      startsWith(github.event.head_commit.modified, 'engine/clients/milvus') ||
+      startsWith(github.event.head_commit.modified, 'engine/servers/milvus') ||
+      startsWith(github.event.head_commit.modified, 'engine/base_client/')
+      )
     name: benchmark - milvus-default - random-100 - against milvus-single-node
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -36,6 +48,12 @@ jobs:
           compose_file: "engine/servers/milvus-single-node/docker-compose.yaml"
 
   opensearchBenchmark:
+    if: >
+      (
+      startsWith(github.event.head_commit.modified, 'engine/clients/opensearch') ||
+      startsWith(github.event.head_commit.modified, 'engine/servers/opensearch') ||
+      startsWith(github.event.head_commit.modified, 'engine/base_client/')
+      )
     name: benchmark - opensearch-default - glove-25-angular - against opensearch-single-node-ci
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -48,6 +66,12 @@ jobs:
           compose_file: "engine/servers/opensearch-single-node-ci/docker-compose.yaml"
 
   pgvectorBenchmark:
+    if: >
+      (
+      startsWith(github.event.head_commit.modified, 'engine/clients/pgvector') ||
+      startsWith(github.event.head_commit.modified, 'engine/servers/pgvector') ||
+      startsWith(github.event.head_commit.modified, 'engine/base_client/')
+      )
     name: benchmark - pgvector-default - random-100 - against pgvector-single-node
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -60,6 +84,12 @@ jobs:
           compose_file: "engine/servers/pgvector-single-node/docker-compose.yaml"
 
   qdrantBenchmark:
+    if: >
+      (
+      startsWith(github.event.head_commit.modified, 'engine/clients/qdrant') ||
+      startsWith(github.event.head_commit.modified, 'engine/servers/qdrant') ||
+      startsWith(github.event.head_commit.modified, 'engine/base_client/')
+      )
     name: benchmark - qdrant-default - random-100 - against qdrant-single-node
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -72,6 +102,12 @@ jobs:
           compose_file: "engine/servers/qdrant-single-node/docker-compose.yaml"
 
   redisBenchmark:
+    if: >
+      (
+      startsWith(github.event.head_commit.modified, 'engine/clients/redis') ||
+      startsWith(github.event.head_commit.modified, 'engine/servers/redis') ||
+      startsWith(github.event.head_commit.modified, 'engine/base_client/')
+      )
     name: benchmark - redis-default - random-100 - against redis-single-node
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -84,6 +120,12 @@ jobs:
           compose_file: "engine/servers/redis-single-node/docker-compose.yaml"
 
   weaviateBenchmark:
+    if: >
+      (
+      startsWith(github.event.head_commit.modified, 'engine/clients/weaviate') ||
+      startsWith(github.event.head_commit.modified, 'engine/servers/weaviate') ||
+      startsWith(github.event.head_commit.modified, 'engine/base_client/')
+      )
     name: benchmark - weaviate-default - random-100 - against weaviate-single-node
     runs-on: ubuntu-latest
     timeout-minutes: 30
