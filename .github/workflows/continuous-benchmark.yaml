@@ -24,7 +24,7 @@ jobs:
 
             declare -A DATASET_TO_ENGINE
             DATASET_TO_ENGINE["laion-small-clip"]="qdrant-continuous-benchmark"
-            DATASET_TO_ENGINE["msmarco-sparse-1M"]="qdrant-sparse-vector"
+            DATASET_TO_ENGINE["msmarco-sparse-100K"]="qdrant-sparse-vector"
 
             for dataset in "${!DATASET_TO_ENGINE[@]}"; do
               export ENGINE_NAME=${DATASET_TO_ENGINE[$dataset]}
