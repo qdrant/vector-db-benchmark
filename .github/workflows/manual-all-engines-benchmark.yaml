@@ -3,7 +3,11 @@ name: Manual All Engines Default Benchmarks
 on:
   push:
     branches:
-     - "ci/benchmark-all-engines"
+     - "master"
+  pull_request:
+    types:
+      - opened
+      - reopened
   workflow_dispatch:
 
 jobs:
