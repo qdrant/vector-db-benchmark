@@ -6,7 +6,7 @@ services:
     environment:
       discovery.type: "single-node"
       plugins.security.disabled: true
-      OPENSEARCH_JAVA_OPTS: "-Xms4g -Xmx4g"
+      OPENSEARCH_JAVA_OPTS: "-Xms2g -Xmx2g"
     ports:
       - "9200:9200"
       - "9300:9300"
@@ -18,4 +18,4 @@ services:
     deploy:
       resources:
         limits:
-          memory: 8Gb
+          memory: 4Gb
