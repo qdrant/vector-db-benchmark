@@ -36,7 +36,6 @@
       "hnsw_config": { "m": 16, "ef_construct": 128 }
     },
     "search_params": [
-      { "parallel": 1, "config": { "hnsw_ef": 64 } }, { "parallel": 1, "config": { "hnsw_ef": 128 } }, { "parallel": 1, "config": { "hnsw_ef": 256 } }, { "parallel": 1, "config": { "hnsw_ef": 512 } },
       { "parallel": 100, "config": { "hnsw_ef": 64 } }, { "parallel": 100, "config": { "hnsw_ef": 128 } }, { "parallel": 100, "config": { "hnsw_ef": 256 } }, { "parallel": 100, "config": { "hnsw_ef": 512 } }
     ],
     "upload_params": { "parallel": 16 }
@@ -50,7 +49,6 @@
       "hnsw_config": { "m": 32, "ef_construct": 128 }
     },
     "search_params": [
-      { "parallel": 1, "config": { "hnsw_ef": 64 } }, { "parallel": 1, "config": { "hnsw_ef": 128 } }, { "parallel": 1, "config": { "hnsw_ef": 256 } }, { "parallel": 1, "config": { "hnsw_ef": 512 } },
       { "parallel": 100, "config": { "hnsw_ef": 64 } }, { "parallel": 100, "config": { "hnsw_ef": 128 } }, { "parallel": 100, "config": { "hnsw_ef": 256 } }, { "parallel": 100, "config": { "hnsw_ef": 512 } }
     ],
     "upload_params": { "parallel": 16 }
@@ -64,7 +62,6 @@
       "hnsw_config": { "m": 32, "ef_construct": 256 }
     },
     "search_params": [
-      { "parallel": 1, "config": { "hnsw_ef": 64 } }, { "parallel": 1, "config": { "hnsw_ef": 128 } }, { "parallel": 1, "config": { "hnsw_ef": 256 } }, { "parallel": 1, "config": { "hnsw_ef": 512 } },
       { "parallel": 100, "config": { "hnsw_ef": 64 } }, { "parallel": 100, "config": { "hnsw_ef": 128 } }, { "parallel": 100, "config": { "hnsw_ef": 256 } }, { "parallel": 100, "config": { "hnsw_ef": 512 } }
     ],
     "upload_params": { "parallel": 16 }
@@ -78,7 +75,6 @@
       "hnsw_config": { "m": 32, "ef_construct": 512 }
     },
     "search_params": [
-      { "parallel": 1, "config": { "hnsw_ef": 64 } }, { "parallel": 1, "config": { "hnsw_ef": 128 } }, { "parallel": 1, "config": { "hnsw_ef": 256 } }, { "parallel": 1, "config": { "hnsw_ef": 512 } },
       { "parallel": 100, "config": { "hnsw_ef": 64 } }, { "parallel": 100, "config": { "hnsw_ef": 128 } }, { "parallel": 100, "config": { "hnsw_ef": 256 } }, { "parallel": 100, "config": { "hnsw_ef": 512 } }
     ],
     "upload_params": { "parallel": 16 }
@@ -92,7 +88,6 @@
       "hnsw_config": { "m": 64, "ef_construct": 256 }
     },
     "search_params": [
-      { "parallel": 1, "config": { "hnsw_ef": 64 } }, { "parallel": 1, "config": { "hnsw_ef": 128 } }, { "parallel": 1, "config": { "hnsw_ef": 256 } }, { "parallel": 1, "config": { "hnsw_ef": 512 } },
       { "parallel": 100, "config": { "hnsw_ef": 64 } }, { "parallel": 100, "config": { "hnsw_ef": 128 } }, { "parallel": 100, "config": { "hnsw_ef": 256 } }, { "parallel": 100, "config": { "hnsw_ef": 512 } }
     ],
     "upload_params": { "parallel": 16 }
@@ -106,7 +101,6 @@
       "hnsw_config": { "m": 64, "ef_construct": 512 }
     },
     "search_params": [
-      { "parallel": 1, "config": { "hnsw_ef": 64 } }, { "parallel": 1, "config": { "hnsw_ef": 128 } }, { "parallel": 1, "config": { "hnsw_ef": 256 } }, { "parallel": 1, "config": { "hnsw_ef": 512 } },
       { "parallel": 100, "config": { "hnsw_ef": 64 } }, { "parallel": 100, "config": { "hnsw_ef": 128 } }, { "parallel": 100, "config": { "hnsw_ef": 256 } }, { "parallel": 100, "config": { "hnsw_ef": 512 } }
     ],
     "upload_params": { "parallel": 16 }
