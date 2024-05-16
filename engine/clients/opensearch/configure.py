@@ -1,4 +1,4 @@
-from opensearchpy import NotFoundError, OpenSearch
+from opensearchpy import NotFoundError
 
 from benchmark.dataset import Dataset
 from engine.base_client import IncompatibilityError
