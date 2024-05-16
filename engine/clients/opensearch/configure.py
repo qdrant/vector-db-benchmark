@@ -6,9 +6,8 @@ from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
 from engine.clients.opensearch.config import (
     OPENSEARCH_INDEX,
-    OPENSEARCH_PASSWORD,
-    OPENSEARCH_PORT,
-    OPENSEARCH_USER,
+    OPENSEARCH_INDEX_TIMEOUT,
+    get_opensearch_client,
 )
 
 
@@ -25,26 +24,14 @@ class OpenSearchConfigurator(BaseConfigurator):
 
     def __init__(self, host, collection_params: dict, connection_params: dict):
         super().__init__(host, collection_params, connection_params)
-        init_params = {
-            **{
-                "verify_certs": False,
-                "request_timeout": 90,
-                "retry_on_timeout": True,
-            },
-            **connection_params,
-        }
-        self.client = OpenSearch(
-            f"http://{host}:{OPENSEARCH_PORT}",
-            basic_auth=(OPENSEARCH_USER, OPENSEARCH_PASSWORD),
-            **init_params,
-        )
+        self.client = get_opensearch_client(host, connection_params)
 
     def clean(self):
         try:
             self.client.indices.delete(
                 index=OPENSEARCH_INDEX,
                 params={
-                    "timeout": 300,
+                    "timeout": OPENSEARCH_INDEX_TIMEOUT,
                 },
             )
         except NotFoundError:
@@ -53,7 +40,7 @@ class OpenSearchConfigurator(BaseConfigurator):
     def recreate(self, dataset: Dataset, collection_params):
         if dataset.config.distance == Distance.DOT:
             raise IncompatibilityError
-        if dataset.config.vector_size > 1024:
+        if dataset.config.vector_size > 2048:
             raise IncompatibilityError
 
         self.client.indices.create(

@@ -8,9 +8,7 @@ from dataset_reader.base_reader import Query
 from engine.base_client.search import BaseSearcher
 from engine.clients.opensearch.config import (
     OPENSEARCH_INDEX,
-    OPENSEARCH_PASSWORD,
-    OPENSEARCH_PORT,
-    OPENSEARCH_USER,
+    get_opensearch_client,
 )
 from engine.clients.opensearch.parser import OpenSearchConditionParser
 
@@ -31,19 +29,7 @@ class OpenSearchSearcher(BaseSearcher):
 
     @classmethod
     def init_client(cls, host, distance, connection_params: dict, search_params: dict):
-        init_params = {
-            **{
-                "verify_certs": False,
-                "request_timeout": 90,
-                "retry_on_timeout": True,
-            },
-            **connection_params,
-        }
-        cls.client: OpenSearch = OpenSearch(
-            f"http://{host}:{OPENSEARCH_PORT}",
-            basic_auth=(OPENSEARCH_USER, OPENSEARCH_PASSWORD),
-            **init_params,
-        )
+        cls.client = get_opensearch_client(host, connection_params)
         cls.search_params = search_params
 
     @classmethod
