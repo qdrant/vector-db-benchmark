@@ -6,10 +6,7 @@ from opensearchpy import OpenSearch
 
 from dataset_reader.base_reader import Record
 from engine.base_client.upload import BaseUploader
-from engine.clients.opensearch.config import (
-    OPENSEARCH_INDEX,
-    get_opensearch_client,
-)
+from engine.clients.opensearch.config import OPENSEARCH_INDEX, get_opensearch_client
 
 
 class ClosableOpenSearch(OpenSearch):

@@ -1,6 +1,6 @@
-from opensearchpy import NotFoundError, OpenSearch
 import os
 
+from opensearchpy import OpenSearch
 
 OPENSEARCH_PORT = int(os.getenv("OPENSEARCH_PORT", 9200))
 OPENSEARCH_INDEX = os.getenv("OPENSEARCH_INDEX", "bench")

@@ -6,10 +6,7 @@ from opensearchpy import OpenSearch
 
 from dataset_reader.base_reader import Query
 from engine.base_client.search import BaseSearcher
-from engine.clients.opensearch.config import (
-    OPENSEARCH_INDEX,
-    get_opensearch_client,
-)
+from engine.clients.opensearch.config import OPENSEARCH_INDEX, get_opensearch_client
 from engine.clients.opensearch.parser import OpenSearchConditionParser
 
 
