@@ -40,7 +40,7 @@ class OpenSearchConfigurator(BaseConfigurator):
 
     def recreate(self, dataset: Dataset, collection_params):
         # The knn_vector data type supports a vector of floats that can have a dimension count of up to 16,000 for the NMSLIB, Faiss, and Lucene engines, as set by the dimension mapping parameter.
-        # Source
+        # Source: https://opensearch.org/docs/latest/search-plugins/knn/approximate-knn/
         if dataset.config.vector_size > 16000:
             raise IncompatibilityError
 
