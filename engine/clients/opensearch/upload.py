@@ -63,7 +63,7 @@ class OpenSearchUploader(BaseUploader):
             except Exception as e:
                 if i < tries:  # i is zero indexed
                     print(
-                        "Received the following error during retry {}/{} while waiting for ES index to be ready... {}".format(
+                        "Received the following error during retry {}/{} while waiting for OpenSearch index to be ready... {}".format(
                             i, tries, e.__str__()
                         )
                     )

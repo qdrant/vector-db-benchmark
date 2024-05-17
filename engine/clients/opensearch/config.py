@@ -1,6 +1,5 @@
 import os
 import time
-
 from opensearchpy import OpenSearch
 
 OPENSEARCH_PORT = int(os.getenv("OPENSEARCH_PORT", 9200))
@@ -44,7 +43,7 @@ def get_opensearch_client(host, connection_params):
 
 
 def _wait_for_es_status(client, status="yellow"):
-    print(f"waiting for ES {status} status...")
+    print(f"waiting for OpenSearch cluster health {status} status...")
     for _ in range(100):
         try:
             client.cluster.health(wait_for_status=status)
@@ -53,4 +52,4 @@ def _wait_for_es_status(client, status="yellow"):
             time.sleep(0.1)
     else:
         # timeout
-        raise Exception("Elasticsearch failed to start.")
+        raise Exception("OpenSearch failed to start.")
