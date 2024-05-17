@@ -34,7 +34,7 @@ def get_opensearch_client(host, connection_params):
         url = "http://"
     url += f"{host}:{OPENSEARCH_PORT}"
     client = OpenSearch(
-        f"http://{host}:{OPENSEARCH_PORT}",
+        url,
         **init_params,
     )
     assert client.ping()
