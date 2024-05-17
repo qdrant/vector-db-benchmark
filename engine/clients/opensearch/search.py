@@ -40,13 +40,13 @@ class OpenSearchSearcher(BaseSearcher):
             f"Backing off OpenSearch query for {details['wait']} seconds after {details['tries']} tries due to {details['exception']}"
         )
 
+    @classmethod
     @backoff.on_exception(
         backoff.expo,
         TransportError,
         max_time=OPENSEARCH_TIMEOUT,
         on_backoff=_search_backoff_handler,
     )
-    @classmethod
     def search_one(cls, query: Query, top: int) -> List[Tuple[int, float]]:
         opensearch_query = {
             "knn": {
@@ -73,7 +73,7 @@ class OpenSearchSearcher(BaseSearcher):
                 "size": top,
             },
             params={
-                "timeout": 60,
+                "timeout": OPENSEARCH_TIMEOUT,
             },
         )
         return [
