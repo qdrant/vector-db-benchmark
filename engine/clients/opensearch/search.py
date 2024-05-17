@@ -2,11 +2,17 @@ import multiprocessing as mp
 import uuid
 from typing import List, Tuple
 
+import backoff
 from opensearchpy import OpenSearch
+from opensearchpy.exceptions import TransportError
 
 from dataset_reader.base_reader import Query
 from engine.base_client.search import BaseSearcher
-from engine.clients.opensearch.config import OPENSEARCH_INDEX, get_opensearch_client
+from engine.clients.opensearch.config import (
+    OPENSEARCH_INDEX,
+    OPENSEARCH_TIMEOUT,
+    get_opensearch_client,
+)
 from engine.clients.opensearch.parser import OpenSearchConditionParser
 
 
@@ -29,6 +35,17 @@ class OpenSearchSearcher(BaseSearcher):
         cls.client = get_opensearch_client(host, connection_params)
         cls.search_params = search_params
 
+    def _search_backoff_handler(details):
+        print(
+            f"Backing off OpenSearch query for {details['wait']} seconds after {details['tries']} tries due to {details['exception']}"
+        )
+
+    @backoff.on_exception(
+        backoff.expo,
+        TransportError,
+        max_time=OPENSEARCH_TIMEOUT,
+        on_backoff=_search_backoff_handler,
+    )
     @classmethod
     def search_one(cls, query: Query, top: int) -> List[Tuple[int, float]]:
         opensearch_query = {
