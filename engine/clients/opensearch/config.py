@@ -20,7 +20,10 @@ def get_opensearch_client(host, connection_params):
         **connection_params,
     }
     if OPENSEARCH_USER != "" and OPENSEARCH_PASSWORD != "":
+        print("Enabling basic auth on opensearch client")
         init_params["basic_auth"] = (OPENSEARCH_USER, OPENSEARCH_PASSWORD)
+    else:
+        print("Using anonymous auth on opensearch client")
     if host.startswith("http"):
         url = ""
     else:
