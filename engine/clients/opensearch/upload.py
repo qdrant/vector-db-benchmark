@@ -9,8 +9,8 @@ from engine.base_client.upload import BaseUploader
 from engine.clients.opensearch.config import (
     OPENSEARCH_INDEX,
     OPENSEARCH_INDEX_TIMEOUT,
-    get_opensearch_client,
     _wait_for_es_status,
+    get_opensearch_client,
 )
 
 

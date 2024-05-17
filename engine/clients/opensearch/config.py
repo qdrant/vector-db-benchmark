@@ -1,5 +1,6 @@
 import os
 import time
+
 from opensearchpy import OpenSearch
 
 OPENSEARCH_PORT = int(os.getenv("OPENSEARCH_PORT", 9200))
