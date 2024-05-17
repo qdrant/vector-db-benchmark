@@ -20,23 +20,6 @@ jobs:
       - uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-      - name: Setup monitoring script
-        run: |
-          echo '#!/bin/bash' > monitor.sh
-          echo 'while true; do' >> monitor.sh
-          echo '  echo "CPU usage at $(date):" >> system_resources.log' >> monitor.sh
-          echo '  top -b -n 1 | head -n 20 >> system_resources.log' >> monitor.sh
-          echo '  echo "" >> system_resources.log' >> monitor.sh
-          echo '  echo "Memory usage at $(date):" >> system_resources.log' >> monitor.sh
-          echo '  free -h >> system_resources.log' >> monitor.sh
-          echo '  echo "" >> system_resources.log' >> monitor.sh
-          echo '  echo "Disk usage at $(date):" >> system_resources.log' >> monitor.sh
-          echo '  df -h >> system_resources.log' >> monitor.sh
-          echo '  sleep 10' >> monitor.sh
-          echo 'done' >> monitor.sh
-          chmod +x monitor.sh
-      - name: Start monitoring in background
-        run: ./monitor.sh &
       - name: Benches
         run: |
           export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
@@ -47,13 +30,3 @@ jobs:
           export POSTGRES_TABLE=benchmark_manual
           bash -x tools/setup_ci.sh
           bash -x tools/run_ci.sh
-      - name: Stop monitoring
-        run: |
-          pkill -f monitor.sh
-      - name: Display resource log
-        run: cat system_resources.log
-      - name: Upload system resource log
-        uses: actions/upload-artifact@v2
-        with:
-          name: system-resources-log
-          path: system_resources.log
