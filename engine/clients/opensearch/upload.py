@@ -6,7 +6,12 @@ from opensearchpy import OpenSearch
 
 from dataset_reader.base_reader import Record
 from engine.base_client.upload import BaseUploader
-from engine.clients.opensearch.config import OPENSEARCH_INDEX, get_opensearch_client
+from engine.clients.opensearch.config import (
+    OPENSEARCH_INDEX,
+    OPENSEARCH_INDEX_TIMEOUT,
+    get_opensearch_client,
+    _wait_for_es_status,
+)
 
 
 class ClosableOpenSearch(OpenSearch):
@@ -39,16 +44,29 @@ class OpenSearchUploader(BaseUploader):
             index=OPENSEARCH_INDEX,
             body=operations,
             params={
-                "timeout": 300,
+                "timeout": OPENSEARCH_INDEX_TIMEOUT,
             },
         )
 
     @classmethod
     def post_upload(cls, _distance):
-        cls.client.indices.forcemerge(
-            index=OPENSEARCH_INDEX,
-            params={
-                "timeout": 300,
-            },
-        )
+        print("forcing the merge into 1 segment...")
+        tries = 30
+        for i in range(tries + 1):
+            try:
+                cls.client.indices.forcemerge(
+                    index=OPENSEARCH_INDEX, wait_for_completion=True
+                )
+            except Exception as e:
+                if i < tries:  # i is zero indexed
+                    print(
+                        "Received the following error during retry {}/{} while waiting for ES index to be ready... {}".format(
+                            i, tries, e.__str__()
+                        )
+                    )
+                    continue
+                else:
+                    raise
+            _wait_for_es_status(cls.client)
+            break
         return {}
