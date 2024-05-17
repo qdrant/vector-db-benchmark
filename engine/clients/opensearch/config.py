@@ -19,15 +19,15 @@ def get_opensearch_client(host, connection_params):
         },
         **connection_params,
     }
+    if OPENSEARCH_USER != "" and OPENSEARCH_PASSWORD != "":
+        init_params["basic_auth"] = (OPENSEARCH_USER, OPENSEARCH_PASSWORD)
     if host.startswith("http"):
         url = ""
     else:
         url = "http://"
     url += f"{host}:{OPENSEARCH_PORT}"
-
     client = OpenSearch(
         f"http://{host}:{OPENSEARCH_PORT}",
-        basic_auth=(OPENSEARCH_USER, OPENSEARCH_PASSWORD),
         **init_params,
     )
     assert client.ping()
