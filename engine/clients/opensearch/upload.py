@@ -55,7 +55,10 @@ class OpenSearchUploader(BaseUploader):
         for i in range(tries + 1):
             try:
                 cls.client.indices.forcemerge(
-                    index=OPENSEARCH_INDEX, wait_for_completion=True
+                    index=OPENSEARCH_INDEX,
+                    params={
+                        "timeout": OPENSEARCH_INDEX_TIMEOUT,
+                    },
                 )
             except Exception as e:
                 if i < tries:  # i is zero indexed
