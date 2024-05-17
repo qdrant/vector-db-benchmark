@@ -15,6 +15,7 @@ class OpenSearchConfigurator(BaseConfigurator):
     DISTANCE_MAPPING = {
         Distance.L2: "l2",
         Distance.COSINE: "cosinesimil",
+        # innerproduct (supported for Lucene in OpenSearch version 2.13 and later)
         Distance.DOT: "innerproduct",
     }
     INDEX_TYPE_MAPPING = {
@@ -38,8 +39,6 @@ class OpenSearchConfigurator(BaseConfigurator):
             pass
 
     def recreate(self, dataset: Dataset, collection_params):
-        if dataset.config.distance == Distance.DOT:
-            raise IncompatibilityError
         # The knn_vector data type supports a vector of floats that can have a dimension count of up to 16,000 for the NMSLIB, Faiss, and Lucene engines, as set by the dimension mapping parameter.
         # Source
         if dataset.config.vector_size > 16000:
