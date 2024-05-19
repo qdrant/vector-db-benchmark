@@ -84,3 +84,11 @@ class OpenSearchUploader(BaseUploader):
         )
         _wait_for_es_status(cls.client)
         return {}
+
+    def get_memory_usage(cls):
+        index_stats = cls.client.indices.stats(index=OPENSEARCH_INDEX)
+        size_in_bytes = index_stats["_all"]["primaries"]["store"]["size_in_bytes"]
+        return {
+            "size_in_bytes": size_in_bytes,
+            "index_info": index_stats,
+        }
