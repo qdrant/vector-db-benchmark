@@ -6,7 +6,7 @@ from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
 from engine.clients.opensearch.config import (
     OPENSEARCH_INDEX,
-    OPENSEARCH_INDEX_TIMEOUT,
+    OPENSEARCH_DELETE_INDEX_TIMEOUT,
     get_opensearch_client,
 )
 
@@ -32,7 +32,7 @@ class OpenSearchConfigurator(BaseConfigurator):
             self.client.indices.delete(
                 index=OPENSEARCH_INDEX,
                 params={
-                    "timeout": OPENSEARCH_INDEX_TIMEOUT,
+                    "timeout": OPENSEARCH_DELETE_INDEX_TIMEOUT,
                 },
             )
         except NotFoundError:
