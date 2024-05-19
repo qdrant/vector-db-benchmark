@@ -8,7 +8,7 @@ OPENSEARCH_INDEX = os.getenv("OPENSEARCH_INDEX", "bench")
 OPENSEARCH_USER = os.getenv("OPENSEARCH_USER", "opensearch")
 OPENSEARCH_PASSWORD = os.getenv("OPENSEARCH_PASSWORD", "passwd")
 OPENSEARCH_TIMEOUT = int(os.getenv("OPENSEARCH_TIMEOUT", 300))
-OPENSEARCH_INDEX_TIMEOUT = int(os.getenv("OPENSEARCH_INDEX_TIMEOUT", 300))
+OPENSEARCH_INDEX_TIMEOUT = int(os.getenv("OPENSEARCH_INDEX_TIMEOUT", 1200))
 
 
 def get_opensearch_client(host, connection_params):

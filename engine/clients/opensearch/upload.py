@@ -56,6 +56,7 @@ class OpenSearchUploader(BaseUploader):
             try:
                 cls.client.indices.forcemerge(
                     index=OPENSEARCH_INDEX,
+                    max_num_segments=1,
                     params={
                         "timeout": OPENSEARCH_INDEX_TIMEOUT,
                     },
@@ -72,4 +73,14 @@ class OpenSearchUploader(BaseUploader):
                     raise
             _wait_for_es_status(cls.client)
             break
+        print(
+            "Updated the index settings back to the default and waiting for indexing to be completed."
+        )
+        # Update the index settings back to the default
+        refresh_interval = "1s"
+        response = cls.client.indices.put_settings(
+            index=OPENSEARCH_INDEX,
+            body={"index": {"refresh_interval": refresh_interval}},
+        )
+        _wait_for_es_status(cls.client)
         return {}

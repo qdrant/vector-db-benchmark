@@ -44,12 +44,17 @@ class OpenSearchConfigurator(BaseConfigurator):
         if dataset.config.vector_size > 16000:
             raise IncompatibilityError
 
+        # Followed the bellow link for tuning for ingestion and querying
+        # https://opensearch.org/docs/1.1/search-plugins/knn/performance-tuning/#indexing-performance-tuning
         self.client.indices.create(
             index=OPENSEARCH_INDEX,
             body={
                 "settings": {
                     "index": {
                         "knn": True,
+                        "number_of_shards": 1,
+                        "number_of_replicas": 0,
+                        "refresh_interval": -1,  # no refresh is required because we index all the data at once
                     }
                 },
                 "mappings": {
