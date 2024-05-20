@@ -5,8 +5,8 @@ from engine.base_client import IncompatibilityError
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
 from engine.clients.opensearch.config import (
-    OPENSEARCH_INDEX,
     OPENSEARCH_DELETE_INDEX_TIMEOUT,
+    OPENSEARCH_INDEX,
     get_opensearch_client,
 )
 

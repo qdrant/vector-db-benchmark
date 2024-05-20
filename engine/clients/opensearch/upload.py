@@ -9,9 +9,9 @@ from opensearchpy.exceptions import TransportError
 from dataset_reader.base_reader import Record
 from engine.base_client.upload import BaseUploader
 from engine.clients.opensearch.config import (
-    OPENSEARCH_INDEX,
     OPENSEARCH_BULK_INDEX_TIMEOUT,
     OPENSEARCH_FULL_INDEX_TIMEOUT,
+    OPENSEARCH_INDEX,
     _wait_for_es_status,
     get_opensearch_client,
 )
