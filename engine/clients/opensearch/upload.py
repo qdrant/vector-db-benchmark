@@ -40,6 +40,11 @@ class OpenSearchUploader(BaseUploader):
             f"Backing off OpenSearch bulk upload for {details['wait']} seconds after {details['tries']} tries due to {details['exception']}"
         )
 
+    def _index_backoff_handler(details):
+        print(
+            f"Backing off OpenSearch indexing for {details['wait']} seconds after {details['tries']} tries due to {details['exception']}"
+        )
+
     @classmethod
     @backoff.on_exception(
         backoff.expo,
@@ -63,36 +68,19 @@ class OpenSearchUploader(BaseUploader):
         )
 
     @classmethod
+    @backoff.on_exception(
+        backoff.expo,
+        TransportError,
+        max_time=OPENSEARCH_FULL_INDEX_TIMEOUT,
+        on_backoff=_index_backoff_handler,
+    )
     def post_upload(cls, _distance):
-        print("forcing the merge into 1 segment...")
-        tries = 30
-        for i in range(tries + 1):
-            try:
-                cls.client.indices.forcemerge(
-                    index=OPENSEARCH_INDEX,
-                    max_num_segments=1,
-                    params={
-                        "timeout": OPENSEARCH_FULL_INDEX_TIMEOUT,
-                    },
-                )
-            except Exception as e:
-                if i < tries:  # i is zero indexed
-                    print(
-                        "Received the following error during retry {}/{} while waiting for OpenSearch index to be ready... {}".format(
-                            i, tries, e.__str__()
-                        )
-                    )
-                    continue
-                else:
-                    raise
-            _wait_for_es_status(cls.client)
-            break
         print(
             "Updated the index settings back to the default and waiting for indexing to be completed."
         )
         # Update the index settings back to the default
         refresh_interval = "1s"
-        response = cls.client.indices.put_settings(
+        cls.client.indices.put_settings(
             index=OPENSEARCH_INDEX,
             body={"index": {"refresh_interval": refresh_interval}},
         )
