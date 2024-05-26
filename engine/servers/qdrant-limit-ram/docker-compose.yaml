@@ -5,7 +5,7 @@ services:
     image: qdrant/qdrant:v1.7.3
     ports:
       - "6333:6333"
-      - "6334:6334" 
+      - "6334:6334"
     logging:
       driver: "json-file"
       options:
