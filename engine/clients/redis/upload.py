@@ -16,6 +16,7 @@ from engine.clients.redis.helper import convert_to_redis_coords
 
 class RedisUploader(BaseUploader):
     client = None
+    client_decode = None
     upload_params = {}
 
     @classmethod
@@ -23,6 +24,13 @@ class RedisUploader(BaseUploader):
         redis_constructor = RedisCluster if REDIS_CLUSTER else Redis
         cls.client = redis_constructor(
             host=host, port=REDIS_PORT, password=REDIS_AUTH, username=REDIS_USER
+        )
+        cls.client_decode = redis_constructor(
+            host=host,
+            port=REDIS_PORT,
+            password=REDIS_AUTH,
+            username=REDIS_USER,
+            decode_responses=True,
         )
         cls.upload_params = upload_params
 
@@ -67,3 +75,8 @@ class RedisUploader(BaseUploader):
     @classmethod
     def post_upload(cls, _distance):
         return {}
+
+    def get_memory_usage(cls):
+        used_memory = cls.client_decode.info("memory")["used_memory"]
+        index_info = cls.client_decode.ft().info()
+        return {"used_memory": used_memory, "index_info": index_info}
