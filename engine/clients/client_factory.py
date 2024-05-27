@@ -31,6 +31,12 @@ from engine.clients.weaviate import (
     WeaviateUploader,
 )
 
+from engine.clients.mongodb import (
+    MongoConfigurator,
+    MongoSearcher,
+    MongoUploader,
+)
+
 ENGINE_CONFIGURATORS = {
     "qdrant": QdrantConfigurator,
     "weaviate": WeaviateConfigurator,
@@ -39,6 +45,7 @@ ENGINE_CONFIGURATORS = {
     "opensearch": OpenSearchConfigurator,
     "redis": RedisConfigurator,
     "pgvector": PgVectorConfigurator,
+    "mongodb": MongoConfigurator,
 }
 
 ENGINE_UPLOADERS = {
@@ -49,6 +56,7 @@ ENGINE_UPLOADERS = {
     "opensearch": OpenSearchUploader,
     "redis": RedisUploader,
     "pgvector": PgVectorUploader,
+    "mongodb": MongoUploader,
 }
 
 ENGINE_SEARCHERS = {
@@ -59,6 +67,7 @@ ENGINE_SEARCHERS = {
     "opensearch": OpenSearchSearcher,
     "redis": RedisSearcher,
     "pgvector": PgVectorSearcher,
+    "mongodb": MongoSearcher,
 }
 
 
