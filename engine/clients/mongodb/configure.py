@@ -1,15 +1,15 @@
+import time
+
 from benchmark.dataset import Dataset
-from engine.base_client import IncompatibilityError
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
 from engine.clients.mongodb.config import (
-    get_mongo_client,
-    EMBEDDING_FIELD_NAME,
     ATLAS_COLLECTION_NAME,
-    ATLAS_VECTOR_SEARCH_INDEX_NAME,
     ATLAS_DB_NAME,
+    ATLAS_VECTOR_SEARCH_INDEX_NAME,
+    EMBEDDING_FIELD_NAME,
+    get_mongo_client,
 )
-import time
 
 
 class MongoConfigurator(BaseConfigurator):

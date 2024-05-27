@@ -1,16 +1,16 @@
+import time
 from typing import List, Optional
-import numpy as np
+
 from pymongo import InsertOne
 
 from engine.base_client.upload import BaseUploader
 from engine.clients.mongodb.config import (
-    get_mongo_client,
-    EMBEDDING_FIELD_NAME,
     ATLAS_COLLECTION_NAME,
     ATLAS_DB_NAME,
     ATLAS_VECTOR_SEARCH_INDEX_NAME,
+    EMBEDDING_FIELD_NAME,
+    get_mongo_client,
 )
-import time
 
 
 class MongoUploader(BaseUploader):
@@ -70,9 +70,4 @@ class MongoUploader(BaseUploader):
 
     @classmethod
     def get_memory_usage(cls):
-        # sleeping for 60 seconds given on Mongodb Atlas the index takes longer to be fully indexed
-        print(
-            "sleeping for 60 seconds given on Mongodb Atlas the index takes longer to be fully indexed"
-        )
-        time.sleep(60)
         return {}

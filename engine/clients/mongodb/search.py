@@ -1,14 +1,15 @@
+import copy
+from typing import List, Tuple
+
 from engine.base_client.distances import Distance
 from engine.base_client.search import BaseSearcher
 from engine.clients.mongodb.config import (
-    ATLAS_VECTOR_SEARCH_INDEX_NAME,
-    get_mongo_client,
-    EMBEDDING_FIELD_NAME,
-    ATLAS_DB_NAME,
     ATLAS_COLLECTION_NAME,
+    ATLAS_DB_NAME,
+    ATLAS_VECTOR_SEARCH_INDEX_NAME,
+    EMBEDDING_FIELD_NAME,
+    get_mongo_client,
 )
-import copy
-from typing import List, Tuple
 
 
 class MongoSearcher(BaseSearcher):
