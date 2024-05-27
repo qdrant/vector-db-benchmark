@@ -13,6 +13,7 @@ from engine.clients.elasticsearch import (
     ElasticUploader,
 )
 from engine.clients.milvus import MilvusConfigurator, MilvusSearcher, MilvusUploader
+from engine.clients.mongodb import MongoConfigurator, MongoSearcher, MongoUploader
 from engine.clients.opensearch import (
     OpenSearchConfigurator,
     OpenSearchSearcher,
@@ -29,12 +30,6 @@ from engine.clients.weaviate import (
     WeaviateConfigurator,
     WeaviateSearcher,
     WeaviateUploader,
-)
-
-from engine.clients.mongodb import (
-    MongoConfigurator,
-    MongoSearcher,
-    MongoUploader,
 )
 
 ENGINE_CONFIGURATORS = {
