@@ -46,6 +46,33 @@
     "upload_params": { "parallel": 16, "batch_size": 1024 }
   },
   {
+    "name": "qdrant-bq-continuous-benchmark",
+    "engine": "qdrant",
+    "connection_params": { "timeout": 30 },
+    "collection_params": {
+      "hnsw_config": {
+        "m": 32,
+        "ef_construct": 256
+      },
+      "quantization_config": { "binary": {"always_ram": true} },
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "default_segment_number": 3,
+        "memmap_threshold": 10000000
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 8,
+        "config": {
+          "hnsw_ef": 256,
+          "quantization": { "rescore": true, "oversampling": 2.0 }
+        }
+      }
+    ],
+    "upload_params": { "parallel": 16, "batch_size": 1024 }
+  },
+  {
     "name": "qdrant-sparse-vector",
     "engine": "qdrant",
     "connection_params": { "timeout": 30 },
