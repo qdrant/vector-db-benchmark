@@ -26,6 +26,7 @@ jobs:
             DATASET_TO_ENGINE["laion-small-clip"]="qdrant-continuous-benchmark"
             DATASET_TO_ENGINE["msmarco-sparse-100K"]="qdrant-sparse-vector"
             DATASET_TO_ENGINE["h-and-m-2048-angular-filters"]="qdrant-continuous-benchmark"
+            DATASET_TO_ENGINE["dbpedia-openai-1M-1536-angular"]="qdrant-bq-continuous-benchmark"
 
             for dataset in "${!DATASET_TO_ENGINE[@]}"; do
               export ENGINE_NAME=${DATASET_TO_ENGINE[$dataset]}
