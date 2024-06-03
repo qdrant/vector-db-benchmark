@@ -9,7 +9,9 @@ services:
     - --scheme
     - http
     image: cr.weaviate.io/semitechnologies/weaviate:1.24.1
-    network_mode: host
+    ports:
+      - "8090:8090"
+      - "50051:50051"
     logging:
       driver: "json-file"
       options:
