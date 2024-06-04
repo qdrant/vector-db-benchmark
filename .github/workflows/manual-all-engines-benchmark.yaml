@@ -4,11 +4,11 @@ on:
   push:
     branches:
      - "master"
-     - "ci/fix-triggers"
   pull_request:
     types:
       - opened
       - reopened
+      - edited
   workflow_dispatch:
 
 jobs:
