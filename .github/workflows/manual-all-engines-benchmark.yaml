@@ -122,9 +122,9 @@ jobs:
   weaviateBenchmark:
     if: >
       (
-      startsWith(github.event.head_commit.modified, 'engine/clients/weaviate') ||
-      startsWith(github.event.head_commit.modified, 'engine/servers/weaviate') ||
-      startsWith(github.event.head_commit.modified, 'engine/base_client/')
+        contains(join(github.event.head_commit.modified, ','), 'engine/clients/weaviate') ||
+        contains(join(github.event.head_commit.modified, ','), 'engine/servers/weaviate') ||
+        contains(join(github.event.head_commit.modified, ','), 'engine/base_client/')
       )
     name: benchmark - weaviate-default - random-100 - against weaviate-single-node
     runs-on: ubuntu-latest
