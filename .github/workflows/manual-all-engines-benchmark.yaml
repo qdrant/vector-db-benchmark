@@ -25,13 +25,14 @@ jobs:
               - 'engine/clients/weaviate/**'
               - 'engine/servers/weaviate-single-node/**'
               - 'engine/base_client/**'
-      - name: see me
+      - name: see me if pull_request
+        if: ( ${{ steps.changes.outputs.weaviate == 'true' || github.event_name == 'pull_request' }} )
         run: |
-          echo "${{ steps.changes.outputs.weaviate == 'true' || github.event_name == 'workflow_dispatch' }}"
+          echo "${{ steps.changes.outputs.weaviate == 'true' || github.event_name == 'pull_request' }}"
           echo "${{ steps.changes.outputs.weaviate }}"
           echo "${{ steps.changes.outputs.weaviate == 'true' }}"
           echo "${{ github.event_name }}"
-          echo "${{ github.event_name == 'workflow_dispatch' }}"
+          echo "${{ github.event_name == 'pull_request' }}"
       - name: see me if manual
         if: ( ${{ steps.changes.outputs.weaviate == 'true' || github.event_name == 'workflow_dispatch' }} )
         run: |
