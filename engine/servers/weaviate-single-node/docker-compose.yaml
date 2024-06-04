@@ -26,4 +26,4 @@ services:
     deploy:
       resources:
         limits:
-          memory: 27Gb
+          memory: 27Gb # new comment to debug
