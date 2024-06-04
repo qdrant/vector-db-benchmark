@@ -26,4 +26,4 @@ services:
     deploy:
       resources:
         limits:
-          memory: 27Gb # debug comment to check github triggers
+          memory: 27Gb
