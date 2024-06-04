@@ -4,6 +4,7 @@ on:
   push:
     branches:
      - "master"
+     - "ci/fix-triggers"
   pull_request:
     types:
       - opened
@@ -118,6 +119,14 @@ jobs:
           engine: "redis-default"
           dataset: "random-100"
           compose_file: "engine/servers/redis-single-node/docker-compose.yaml"
+
+  check-modified-files:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print modified files
+        run: |
+          echo "${{ toJson(github.event.head_commit.modified) }}"
+          echo "${{ toJson(join(github.event.head_commit.modified, ',')) }}"
 
   weaviateBenchmark:
     if: >
