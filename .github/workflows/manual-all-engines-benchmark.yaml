@@ -27,7 +27,16 @@ jobs:
               - 'engine/base_client/**'
       - name: see me
         run: |
+          echo "${{ steps.changes.outputs.weaviate == 'true' }} || ${{ github.event_name == 'workflow_dispatch' }}"
           echo "${{ steps.changes.outputs.weaviate }}"
-          echo ""
+          echo "${{ steps.changes.outputs.weaviate == 'true' }}"
+          echo "${{ github.event_name }}"
+          echo "${{ github.event_name == 'workflow_dispatch' }}"
+      - name: see me if manual
+        if: ( ${{ steps.changes.outputs.weaviate == 'true' }} || ${{ github.event_name == 'workflow_dispatch' }} )
+        run: |
+          echo "${{ steps.changes.outputs.weaviate == 'true' }} || ${{ github.event_name == 'workflow_dispatch' }}"
+          echo "${{ steps.changes.outputs.weaviate }}"
+          echo "${{ steps.changes.outputs.weaviate == 'true' }}"
           echo "${{ github.event_name }}"
           echo "${{ github.event_name == 'workflow_dispatch' }}"
