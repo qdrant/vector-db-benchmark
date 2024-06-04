@@ -28,7 +28,7 @@ jobs:
               - 'engine/servers/elasticsearch-single-node-ci/**'
               - 'engine/base_client/**'
       - uses: ./.github/workflows/actions/run-engine-benchmark
-        if: steps.changes.outputs.elasticsearch == 'true' || ${{ github.event_name == 'workflow_dispatch' }}
+        if: ${{ steps.changes.outputs.elasticsearch == 'true' || github.event_name == 'workflow_dispatch' }}
         with:
           engine: "elasticsearch-default"
           dataset: "random-100"
@@ -50,7 +50,7 @@ jobs:
               - 'engine/servers/milvus-limit-ram/**'
               - 'engine/base_client/**'
       - uses: ./.github/workflows/actions/run-engine-benchmark
-        if: steps.changes.outputs.milvus == 'true' || ${{ github.event_name == 'workflow_dispatch' }}
+        if: ${{ steps.changes.outputs.milvus == 'true' || github.event_name == 'workflow_dispatch' }}
         with:
           engine: "milvus-default"
           dataset: "random-100"
@@ -72,7 +72,7 @@ jobs:
               - 'engine/servers/opensearch-single-node-ci/**'
               - 'engine/base_client/**'
       - uses: ./.github/workflows/actions/run-engine-benchmark
-        if: steps.changes.outputs.opensearch == 'true' || ${{ github.event_name == 'workflow_dispatch' }}
+        if: ${{ steps.changes.outputs.opensearch == 'true' || github.event_name == 'workflow_dispatch' }}
         with:
           engine: "opensearch-default"
           dataset: "glove-25-angular"
@@ -93,7 +93,7 @@ jobs:
               - 'engine/servers/pgvector-single-node/**'
               - 'engine/base_client/**'
       - uses: ./.github/workflows/actions/run-engine-benchmark
-        if: steps.changes.outputs.pgvector == 'true' || ${{ github.event_name == 'workflow_dispatch' }}
+        if: ${{ steps.changes.outputs.pgvector == 'true' || github.event_name == 'workflow_dispatch' }}
         with:
           engine: "pgvector-default"
           dataset: "random-100"
@@ -118,7 +118,7 @@ jobs:
               - 'engine/servers/qdrant-continuous-benchmarks/**'
               - 'engine/base_client/**'
       - uses: ./.github/workflows/actions/run-engine-benchmark
-        if: steps.changes.outputs.qdrant == 'true' || ${{ github.event_name == 'workflow_dispatch' }}
+        if: ${{ steps.changes.outputs.qdrant == 'true' || github.event_name == 'workflow_dispatch' }}
         with:
           engine: "qdrant-default"
           dataset: "random-100"
@@ -139,7 +139,7 @@ jobs:
               - 'engine/servers/redis-single-node/**'
               - 'engine/base_client/**'
       - uses: ./.github/workflows/actions/run-engine-benchmark
-        if: steps.changes.outputs.weaviate == 'true' || ${{ github.event_name == 'workflow_dispatch' }}
+        if: ${{ steps.changes.outputs.weaviate == 'true' || github.event_name == 'workflow_dispatch' }}
         with:
           engine: "redis-default"
           dataset: "random-100"
@@ -160,7 +160,7 @@ jobs:
               - 'engine/servers/weaviate-single-node/**'
               - 'engine/base_client/**'
       - uses: ./.github/workflows/actions/run-engine-benchmark
-        if: steps.changes.outputs.weaviate == 'true' || ${{ github.event_name == 'workflow_dispatch' }}
+        if: ${{ steps.changes.outputs.weaviate == 'true' || github.event_name == 'workflow_dispatch' }}
         with:
           engine: "weaviate-default"
           dataset: "random-100"
