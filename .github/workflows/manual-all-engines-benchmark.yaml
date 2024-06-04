@@ -125,6 +125,7 @@ jobs:
     steps:
       - name: Print modified files
         run: |
+          echo "${{ toJson(github.event) }}"
           echo "${{ toJson(github.event.head_commit.modified) }}"
           echo "${{ toJson(join(github.event.head_commit.modified, ',')) }}"
 
