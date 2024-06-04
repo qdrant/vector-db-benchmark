@@ -58,7 +58,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 25Gb
+          memory: 25Gb # cooment to debug
 
 networks:
   default:
