@@ -67,5 +67,4 @@ jobs:
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.CI_ALERTS_CHANNEL_WEBHOOK_URL }}
-        if: steps.benches.outputs.failed == 'error'
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
