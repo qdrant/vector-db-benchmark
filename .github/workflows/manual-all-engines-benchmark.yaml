@@ -3,7 +3,7 @@ name: Manual All Engines Default Benchmarks
 on:
   push:
     branches:
-     - "master"
+     - "test-fork-fix"
   pull_request:
     types:
       - opened
