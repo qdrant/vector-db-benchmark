@@ -2,6 +2,19 @@
 
 set -e
 
+function handle_error() {
+  echo "Error occured ${QDRANT_VERSION[@]} ${ENGINE_NAME[@]} ${DATASETS[@]}"
+  echo "::set-output name=failed::true"
+}
+
+function handle_term() {
+  echo "Timeout occured ${QDRANT_VERSION[@]} ${ENGINE_NAME[@]} ${DATASETS[@]}"
+  echo "::set-output name=failed::true"
+}
+
+trap handle_err ERR
+trap handle_term TERM
+
 # Script, that runs benchmark within the GitHub Actions CI environment
 
 SCRIPT=$(realpath "$0")
