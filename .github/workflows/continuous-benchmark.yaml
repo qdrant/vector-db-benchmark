@@ -46,7 +46,7 @@ jobs:
 
             set -e
       - name: Fail job if any of the benches failed
-        if: steps.benches.outputs.failed == 'true'
+        if: steps.benches.outputs.failed == 'error' || steps.benches.outputs.failed == 'timeout'
         run: exit 1
       - name: Send Notification
         if: failure() || cancelled()
@@ -60,11 +60,12 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "CI benchmarks failed or timed out.\nView the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
+                    "text": "CI benchmarks failed because of ${{ steps.benches.outputs.failed }}.\nView the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
                   }
                 }
               ]
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.CI_ALERTS_CHANNEL_WEBHOOK_URL }}
+        if: steps.benches.outputs.failed == 'error'
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

@@ -3,13 +3,13 @@
 set -e
 
 function handle_error() {
-  echo "Error occured ${QDRANT_VERSION[@]} ${ENGINE_NAME[@]} ${DATASETS[@]}"
-  echo "::set-output name=failed::true"
+  echo "Error occured ${QDRANT_VERSION@A} ${ENGINE_NAME@A} ${DATASETS@A}"
+  echo "{failed}={error}" >> $GITHUB_OUTPUT
 }
 
 function handle_term() {
-  echo "Timeout occured ${QDRANT_VERSION[@]} ${ENGINE_NAME[@]} ${DATASETS[@]}"
-  echo "::set-output name=failed::true"
+  echo "Timeout occured ${QDRANT_VERSION@A} ${ENGINE_NAME@A} ${DATASETS@A}"
+  echo "{failed}={timeout}" >> $GITHUB_OUTPUT
 }
 
 trap 'handle_err' ERR
