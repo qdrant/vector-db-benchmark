@@ -3,12 +3,15 @@
 set -e
 
 function handle_err() {
-  echo "Error occured ${QDRANT_VERSION@A} ${ENGINE_NAME@A} ${DATASETS@A}"
+  local exit_code=$?
+  local line_no=${BASH_LINENO[0]}
+  echo "Error occurred line=$line_no exit_code=$exit_code"
+  echo "Error in benchmarking ${QDRANT_VERSION@A} ${ENGINE_NAME@A} ${DATASETS@A}"
   echo "{failed}={error}" >> $GITHUB_OUTPUT
 }
 
 function handle_term() {
-  echo "Timeout occured ${QDRANT_VERSION@A} ${ENGINE_NAME@A} ${DATASETS@A}"
+  echo "Timeout in benchmarking ${QDRANT_VERSION@A} ${ENGINE_NAME@A} ${DATASETS@A}"
   echo "{failed}={timeout}" >> $GITHUB_OUTPUT
 }
 
