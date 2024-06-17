@@ -1,6 +1,7 @@
 #!/bin/bash
 
-set -e
+PS4='ts=$(date "+%Y-%m-%dT%H:%M:%SZ") level=DEBUG line=$LINENO '
+set -euo pipefail
 
 ENGINE_NAME=${ENGINE_NAME:-"qdrant-continuous-benchmark"}
 

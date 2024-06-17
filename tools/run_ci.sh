@@ -1,6 +1,7 @@
 #!/bin/bash
 
-set -e
+PS4='ts=$(date "+%Y-%m-%dT%H:%M:%SZ") level=DEBUG line=$LINENO '
+set -euo pipefail
 
 function handle_err() {
   echo "Error occured ${QDRANT_VERSION@A} ${ENGINE_NAME@A} ${DATASETS@A}"

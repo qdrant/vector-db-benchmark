@@ -1,6 +1,7 @@
 #!/bin/bash
 
-set -e
+PS4='ts=$(date "+%Y-%m-%dT%H:%M:%SZ") level=DEBUG line=$LINENO '
+set -euo pipefail
 
 CLOUD_NAME=${CLOUD_NAME:-"hetzner"}
 SERVER_USERNAME=${SERVER_USERNAME:-"root"}

@@ -1,6 +1,7 @@
 #!/bin/bash
 
-set -e
+PS4='ts=$(date "+%Y-%m-%dT%H:%M:%SZ") level=DEBUG line=$LINENO '
+set -euo pipefail
 
 # Setup 2 machines in Hetzner Cloud
 # One machine will be used as a server, another one as a client
