@@ -1,0 +1,23 @@
+version: '3.5'
+
+services:
+  es:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
+    environment:
+      ELASTIC_PASSWORD: "passwd"
+      KIBANA_PASSWORD: "passwd"
+      SERVER_SSL_ENABLED: "false"
+      discovery.type: "single-node"
+      xpack.security.enabled: "false"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    logging:
+      driver: "json-file"
+      options:
+        max-file: 1
+        max-size: 10m
+    deploy:
+      resources:
+        limits:
+          memory: 4Gb

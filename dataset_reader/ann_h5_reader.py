@@ -22,6 +22,7 @@ class AnnH5Reader(BaseReader):
                 vector /= np.linalg.norm(vector)
             yield Query(
                 vector=vector.tolist(),
+                sparse_vector=None,
                 meta_conditions=None,
                 expected_result=expected_result.tolist(),
                 expected_scores=expected_scores.tolist(),
@@ -33,7 +34,9 @@ class AnnH5Reader(BaseReader):
         for idx, vector in enumerate(data["train"]):
             if self.normalize:
                 vector /= np.linalg.norm(vector)
-            yield Record(id=idx, vector=vector.tolist(), metadata=None)
+            yield Record(
+                id=idx, vector=vector.tolist(), sparse_vector=None, metadata=None
+            )
 
 
 if __name__ == "__main__":

@@ -30,13 +30,11 @@ class BaseSearcher:
         return None
 
     @classmethod
-    def search_one(
-        cls, vector: List[float], meta_conditions, top: Optional[int]
-    ) -> List[Tuple[int, float]]:
+    def search_one(cls, query: Query, top: Optional[int]) -> List[Tuple[int, float]]:
         raise NotImplementedError()
 
     @classmethod
-    def _search_one(cls, query, top: Optional[int] = None):
+    def _search_one(cls, query: Query, top: Optional[int] = None):
         if top is None:
             top = (
                 len(query.expected_result)
@@ -45,7 +43,7 @@ class BaseSearcher:
             )
 
         start = time.perf_counter()
-        search_res = cls.search_one(query.vector, query.meta_conditions, top)
+        search_res = cls.search_one(query, top)
         end = time.perf_counter()
 
         precision = 1.0

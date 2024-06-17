@@ -4,13 +4,9 @@ from typing import List, Tuple
 
 from elasticsearch import Elasticsearch
 
+from dataset_reader.base_reader import Query
 from engine.base_client.search import BaseSearcher
-from engine.clients.elasticsearch.config import (
-    ELASTIC_INDEX,
-    ELASTIC_PASSWORD,
-    ELASTIC_PORT,
-    ELASTIC_USER,
-)
+from engine.clients.elasticsearch.config import ELASTIC_INDEX, get_es_client
 from engine.clients.elasticsearch.parser import ElasticConditionParser
 
 
@@ -29,32 +25,20 @@ class ElasticSearcher(BaseSearcher):
         return "forkserver" if "forkserver" in mp.get_all_start_methods() else "spawn"
 
     @classmethod
-    def init_client(cls, host, distance, connection_params: dict, search_params: dict):
-        init_params = {
-            **{
-                "verify_certs": False,
-                "request_timeout": 90,
-                "retry_on_timeout": True,
-            },
-            **connection_params,
-        }
-        cls.client: Elasticsearch = Elasticsearch(
-            f"http://{host}:{ELASTIC_PORT}",
-            basic_auth=(ELASTIC_USER, ELASTIC_PASSWORD),
-            **init_params,
-        )
+    def init_client(cls, host, _distance, connection_params: dict, search_params: dict):
+        cls.client = get_es_client(host, connection_params)
         cls.search_params = search_params
 
     @classmethod
-    def search_one(cls, vector, meta_conditions, top) -> List[Tuple[int, float]]:
+    def search_one(cls, query: Query, top: int) -> List[Tuple[int, float]]:
         knn = {
             "field": "vector",
-            "query_vector": vector,
+            "query_vector": query.vector,
             "k": top,
-            **{"num_candidates": 100, **cls.search_params},
+            **cls.search_params["config"],
         }
 
-        meta_conditions = cls.parser.parse(meta_conditions)
+        meta_conditions = cls.parser.parse(query.meta_conditions)
         if meta_conditions:
             knn["filter"] = meta_conditions
 

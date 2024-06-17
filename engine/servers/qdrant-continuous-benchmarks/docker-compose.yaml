@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   qdrant_bench:
-    image: qdrant/qdrant:${QDRANT_VERSION}
+    image: ${CONTAINER_REGISTRY:-docker.io}/qdrant/qdrant:${QDRANT_VERSION}
     container_name: qdrant-continuous
     network_mode: host
     logging:

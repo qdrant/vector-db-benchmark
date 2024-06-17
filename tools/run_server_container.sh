@@ -2,7 +2,7 @@
 
 set -e
 
-# Examples: qdrant-single-node
+# Examples: qdrant-continuous-benchmarks
 CONTAINER_NAME=$1
 
 CLOUD_NAME=${CLOUD_NAME:-"hetzner"}
@@ -20,7 +20,7 @@ IP_OF_THE_SERVER=$(bash "${SCRIPT_PATH}/${CLOUD_NAME}/get_public_ip.sh" "$BENCH_
 
 bash -x "${SCRIPT_PATH}/sync_servers.sh" "root@$IP_OF_THE_SERVER"
 
-# if version is dev or if starts with "docker" or "ghcr", use container
+# if version is starts with "docker" or "ghcr", use container
 if [[ ${QDRANT_VERSION} == docker/* ]] || [[ ${QDRANT_VERSION} == ghcr/* ]]; then
 
     if [[ ${QDRANT_VERSION} == docker/* ]]; then
@@ -33,11 +33,9 @@ if [[ ${QDRANT_VERSION} == docker/* ]] || [[ ${QDRANT_VERSION} == ghcr/* ]]; the
         CONTAINER_REGISTRY='ghcr.io'
     fi
 
-    DOCKER_COMPOSE="export QDRANT_VERSION=${QDRANT_VERSION}; export CONTAINER_REGISTRY=${CONTAINER_REGISTRY}; docker compose down ; pkill qdrant ; docker rmi ${CONTAINER_REGISTRY}/qdrant/qdrant:${QDRANT_VERSION} || true ; docker compose up -d"
-    ssh -t "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "cd ./projects/vector-db-benchmark/engine/servers/${CONTAINER_NAME} ; $DOCKER_COMPOSE"
+    DOCKER_COMPOSE="export QDRANT_VERSION=${QDRANT_VERSION}; export CONTAINER_REGISTRY=${CONTAINER_REGISTRY}; docker compose down; pkill qdrant ; docker rmi ${CONTAINER_REGISTRY}/qdrant/qdrant:${QDRANT_VERSION} || true ; docker compose up -d; docker container ls"
+    ssh -t  -o ServerAliveInterval=60 -o ServerAliveCountMax=3 "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "cd ./projects/vector-db-benchmark/engine/servers/${CONTAINER_NAME} ; $DOCKER_COMPOSE"
 else
-    # else run natively in the server
-    DOCKER_QDRANT_STOP="docker stop qdrant-continuous || true"
-    QDRANT_BUILD="source ~/.cargo/env; git fetch --tags; git checkout ${QDRANT_VERSION}; git pull; mold -run cargo run --bin qdrant --release"
-    ssh -t "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "cd ./projects/qdrant; ${DOCKER_QDRANT_STOP}; $QDRANT_BUILD"
+    echo "Error: unknown version ${QDRANT_VERSION}. Version name should start with 'docker/' or 'ghcr/'"
+    exit 1
 fi
