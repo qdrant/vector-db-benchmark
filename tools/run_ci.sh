@@ -1,15 +1,15 @@
 #!/bin/bash
 
-PS4='ts=$(date "+%Y-%m-%dT%H:%M:%SZ") level=DEBUG line=$LINENO '
+PS4='ts=$(date "+%Y-%m-%dT%H:%M:%SZ") level=DEBUG line=$LINENO file=$BASH_SOURCE func=${FUNCNAME[0]} '
 set -euo pipefail
 
 function handle_err() {
-  echo "Error occured ${QDRANT_VERSION@A} ${ENGINE_NAME@A} ${DATASETS@A}"
+  echo "Error occured qdrant_version=${QDRANT_VERSION} engine_name=${ENGINE_NAME} dataset=${DATASETS}"
   echo "{failed}={error}" >> $GITHUB_OUTPUT
 }
 
 function handle_term() {
-  echo "Timeout occured ${QDRANT_VERSION@A} ${ENGINE_NAME@A} ${DATASETS@A}"
+  echo "Timeout occured qdrant_version=${QDRANT_VERSION} engine_name=${ENGINE_NAME} dataset=${DATASETS}"
   echo "{failed}={timeout}" >> $GITHUB_OUTPUT
 }
 

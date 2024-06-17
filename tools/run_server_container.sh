@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PS4='ts=$(date "+%Y-%m-%dT%H:%M:%SZ") level=DEBUG line=$LINENO '
+PS4='ts=$(date "+%Y-%m-%dT%H:%M:%SZ") level=DEBUG line=$LINENO file=$BASH_SOURCE func=${FUNCNAME[0]} '
 set -euo pipefail
 
 # Examples: qdrant-continuous-benchmarks
