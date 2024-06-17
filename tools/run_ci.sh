@@ -2,7 +2,7 @@
 
 set -e
 
-function handle_error() {
+function handle_err() {
   echo "Error occured ${QDRANT_VERSION@A} ${ENGINE_NAME@A} ${DATASETS@A}"
   echo "{failed}={error}" >> $GITHUB_OUTPUT
 }
