@@ -59,12 +59,7 @@ class OpenSearchSearcher(BaseSearcher):
 
         meta_conditions = cls.parser.parse(query.meta_conditions)
         if meta_conditions:
-            opensearch_query = {
-                "bool": {
-                    "must": [opensearch_query],
-                    "filter": meta_conditions,
-                }
-            }
+            opensearch_query["knn"]["vector"]["filter"] = meta_conditions
 
         res = cls.client.search(
             index=OPENSEARCH_INDEX,
