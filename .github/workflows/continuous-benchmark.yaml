@@ -37,11 +37,11 @@ jobs:
 
               # Benchmark the dev branch:
               export QDRANT_VERSION=ghcr/dev
-              timeout 15m bash -x tools/run_ci.sh
+              timeout 30m bash -x tools/run_ci.sh
 
               # Benchmark the master branch:
               export QDRANT_VERSION=docker/master
-              timeout 15m bash -x tools/run_ci.sh
+              timeout 30m bash -x tools/run_ci.sh
             done
 
             set -e
