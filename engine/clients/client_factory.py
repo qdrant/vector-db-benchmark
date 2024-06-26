@@ -30,6 +30,12 @@ from engine.clients.weaviate import (
     WeaviateSearcher,
     WeaviateUploader,
 )
+from engine.clients.azure_ai import (
+    AzureAIConfigurator,
+    AzureAISearcher,
+    AzureAIUploader,
+)
+
 
 ENGINE_CONFIGURATORS = {
     "qdrant": QdrantConfigurator,
@@ -39,6 +45,7 @@ ENGINE_CONFIGURATORS = {
     "opensearch": OpenSearchConfigurator,
     "redis": RedisConfigurator,
     "pgvector": PgVectorConfigurator,
+    "azureai": AzureAIConfigurator,
 }
 
 ENGINE_UPLOADERS = {
@@ -49,6 +56,7 @@ ENGINE_UPLOADERS = {
     "opensearch": OpenSearchUploader,
     "redis": RedisUploader,
     "pgvector": PgVectorUploader,
+    "azureai": AzureAIUploader,
 }
 
 ENGINE_SEARCHERS = {
@@ -59,6 +67,7 @@ ENGINE_SEARCHERS = {
     "opensearch": OpenSearchSearcher,
     "redis": RedisSearcher,
     "pgvector": PgVectorSearcher,
+    "azureai": AzureAISearcher,
 }
 
 
