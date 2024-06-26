@@ -33,13 +33,12 @@ class AzureAIConfigurator(BaseConfigurator):
 
     def clean(self):
         indices = list_indices(self.service_endpoint, self.api_version, AZUREAI_API_KEY)
-        len_indices = len(indices["value"])
         for index in indices["value"]:
             if index["name"] == AZUREAI_INDEX_NAME:
                 print(
                     f"Found existing index with name {AZUREAI_INDEX_NAME}. deleting it..."
                 )
-                res = delete_index(
+                delete_index(
                     self.service_endpoint,
                     self.api_version,
                     AZUREAI_INDEX_NAME,

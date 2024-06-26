@@ -7,6 +7,11 @@ from engine.base_client.client import (
     BaseSearcher,
     BaseUploader,
 )
+from engine.clients.azure_ai import (
+    AzureAIConfigurator,
+    AzureAISearcher,
+    AzureAIUploader,
+)
 from engine.clients.elasticsearch import (
     ElasticConfigurator,
     ElasticSearcher,
@@ -30,12 +35,6 @@ from engine.clients.weaviate import (
     WeaviateSearcher,
     WeaviateUploader,
 )
-from engine.clients.azure_ai import (
-    AzureAIConfigurator,
-    AzureAISearcher,
-    AzureAIUploader,
-)
-
 
 ENGINE_CONFIGURATORS = {
     "qdrant": QdrantConfigurator,
