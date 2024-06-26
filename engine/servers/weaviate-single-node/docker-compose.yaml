@@ -8,13 +8,13 @@ services:
     - '8090'
     - --scheme
     - http
-    image: semitechnologies/weaviate:1.24.1
+    image: cr.weaviate.io/semitechnologies/weaviate:1.25.1
     network_mode: host
     logging:
       driver: "json-file"
       options:
-        max-file: 1
-        max-size: 10m
+        max-file: "1"
+        max-size: "10m"
     environment:
       QUERY_DEFAULTS_LIMIT: 10
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'

@@ -9,11 +9,6 @@ from engine.clients.pgvector.config import get_db_config
 
 
 class PgVectorConfigurator(BaseConfigurator):
-    DISTANCE_MAPPING = {
-        Distance.L2: "vector_l2_ops",
-        Distance.COSINE: "vector_cosine_ops",
-    }
-
     def __init__(self, host, collection_params: dict, connection_params: dict):
         super().__init__(host, collection_params, connection_params)
         self.conn = psycopg.connect(**get_db_config(host, connection_params))
@@ -37,18 +32,6 @@ class PgVectorConfigurator(BaseConfigurator):
             );"""
         )
         self.conn.execute("ALTER TABLE items ALTER COLUMN embedding SET STORAGE PLAIN")
-
-        try:
-            hnsw_distance_type = self.DISTANCE_MAPPING[dataset.config.distance]
-        except KeyError:
-            raise IncompatibilityError(
-                f"Unsupported distance metric: {dataset.config.distance}"
-            )
-
-        self.conn.execute(
-            f"CREATE INDEX on items USING hnsw(embedding {hnsw_distance_type}) WITH (m = {collection_params['hnsw_config']['m']}, ef_construction = {collection_params['hnsw_config']['ef_construct']})"
-        )
-
         self.conn.close()
 
     def delete_client(self):

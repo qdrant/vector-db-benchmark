@@ -1,16 +1,12 @@
 import multiprocessing as mp
 import uuid
-from typing import List, Optional
+from typing import List
 
 from elasticsearch import Elasticsearch
 
+from dataset_reader.base_reader import Record
 from engine.base_client.upload import BaseUploader
-from engine.clients.elasticsearch.config import (
-    ELASTIC_INDEX,
-    ELASTIC_PASSWORD,
-    ELASTIC_PORT,
-    ELASTIC_USER,
-)
+from engine.clients.elasticsearch.config import ELASTIC_INDEX, get_es_client
 
 
 class ClosableElastic(Elasticsearch):
@@ -27,36 +23,17 @@ class ElasticUploader(BaseUploader):
         return "forkserver" if "forkserver" in mp.get_all_start_methods() else "spawn"
 
     @classmethod
-    def init_client(cls, host, distance, connection_params, upload_params):
-        init_params = {
-            **{
-                "verify_certs": False,
-                "request_timeout": 90,
-                "retry_on_timeout": True,
-            },
-            **connection_params,
-        }
-        cls.client = Elasticsearch(
-            f"http://{host}:{ELASTIC_PORT}",
-            basic_auth=(ELASTIC_USER, ELASTIC_PASSWORD),
-            **init_params,
-        )
+    def init_client(cls, host, _distance, connection_params, upload_params):
+        cls.client = get_es_client(host, connection_params)
         cls.upload_params = upload_params
 
     @classmethod
-    def upload_batch(
-        cls, ids: List[int], vectors: List[list], metadata: Optional[List[dict]]
-    ):
-        if metadata is None:
-            metadata = [{}] * len(vectors)
+    def upload_batch(cls, batch: List[Record]):
         operations = []
-        for idx, vector, payload in zip(ids, vectors, metadata):
-            vector_id = uuid.UUID(int=idx).hex
+        for record in batch:
+            vector_id = uuid.UUID(int=record.id).hex
             operations.append({"index": {"_id": vector_id}})
-            if payload:
-                operations.append({"vector": vector, **payload})
-            else:
-                operations.append({"vector": vector})
+            operations.append({"vector": record.vector, **(record.metadata or {})})
 
         cls.client.bulk(
             index=ELASTIC_INDEX,

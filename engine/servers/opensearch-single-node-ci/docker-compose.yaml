@@ -1,0 +1,21 @@
+version: '3.5'
+
+services:
+  opensearch:
+    image: opensearchproject/opensearch:2.10.0
+    environment:
+      discovery.type: "single-node"
+      plugins.security.disabled: true
+      OPENSEARCH_JAVA_OPTS: "-Xms2g -Xmx2g"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    logging:
+      driver: "json-file"
+      options:
+        max-file: 1
+        max-size: 10m
+    deploy:
+      resources:
+        limits:
+          memory: 4Gb

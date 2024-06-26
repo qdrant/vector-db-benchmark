@@ -2,11 +2,11 @@
 name = "vector-db-benchmark"
 version = "0.1.0"
 description = ""
-authors = ["Kacper Łukawski <kacper.lukawski@qdrant.com>"]
+authors = ["Qdrant Team <info@qdrant.tech>"]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.12"
-qdrant-client = "^1.8.0"
+qdrant-client = "^1.9.0"
 typer = "^0.6.1"
 jsons = "^1.6.3"
 h5py = "^3.7.0"
@@ -20,7 +20,6 @@ opensearch-py = "^2.3.2"
 tqdm = "^4.66.1"
 psycopg = {extras = ["binary"], version = "^3.1.17"}
 pgvector = "^0.2.4"
-
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.20.0"

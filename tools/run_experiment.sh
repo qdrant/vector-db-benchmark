@@ -1,6 +1,8 @@
 #!/bin/bash
 
-ENGINE_NAME=${ENGINE_NAME:-"qdrant-default"}
+set -e
+
+ENGINE_NAME=${ENGINE_NAME:-"qdrant-continuous-benchmark"}
 
 DATASETS=${DATASETS:-""}
 
@@ -21,7 +23,7 @@ if [[ -z "$PRIVATE_IP_OF_THE_SERVER" ]]; then
   exit 1
 fi
 
-docker rmi qdrant/vector-db-benchmark:latest || true
+docker rmi --force qdrant/vector-db-benchmark:latest || true
 
 docker run \
   --rm \

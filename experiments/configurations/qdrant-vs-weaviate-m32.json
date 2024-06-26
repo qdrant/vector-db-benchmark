@@ -1,0 +1,132 @@
+[
+  {
+    "name": "latest-qdrant-bq-latency-m-32",
+    "engine": "qdrant",
+    "connection_params": { "timeout": 60 },
+    "collection_params": {
+      "quantization_config": { "binary": { "always_ram": true } },
+      "optimizers_config": { },
+      "hnsw_config": { "m": 64, "ef_construct": 512 }
+    },
+    "search_params": [
+      { "parallel": 1, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 8.0 }  } },
+      { "parallel": 1, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 16.0 }  } },
+      { "parallel": 1, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 32.0 }  } },
+      { "parallel": 1, "config": { "hnsw_ef": 256, "quantization": { "rescore": true, "oversampling": 8.0 } } },
+      { "parallel": 1, "config": { "hnsw_ef": 256, "quantization": { "rescore": true, "oversampling": 16.0 } } },
+      { "parallel": 1, "config": { "hnsw_ef": 256, "quantization": { "rescore": true, "oversampling": 32.0 } } },
+      { "parallel": 1, "config": { "hnsw_ef": 512, "quantization": { "rescore": true, "oversampling": 8.0 } } },
+      { "parallel": 1, "config": { "hnsw_ef": 512, "quantization": { "rescore": true, "oversampling": 16.0 } } },
+      { "parallel": 1, "config": { "hnsw_ef": 512, "quantization": { "rescore": true, "oversampling": 32.0 } } }
+    ],
+    "upload_params": { "parallel": 8, "batch_size": 1024 }
+  },
+  {
+    "name": "latest-qdrant-bq-rps-m-32",
+    "engine": "qdrant",
+    "connection_params": { "timeout": 60 },
+    "collection_params": {
+      "quantization_config": { "binary": { "always_ram": true } },
+      "optimizers_config": {
+        "max_segment_size": 100000000,
+        "default_segment_number": 2
+      },
+      "hnsw_config": { "m": 64, "ef_construct": 512 }
+    },
+    "search_params": [
+      { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 8.0 }  } },
+      { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 16.0 }  } },
+      { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 32.0 }  } },
+      { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 64.0 }  } },
+      { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 128.0 }  } },
+      { "parallel": 100, "config": { "hnsw_ef": 256, "quantization": { "rescore": true, "oversampling": 8.0 } } },
+      { "parallel": 100, "config": { "hnsw_ef": 256, "quantization": { "rescore": true, "oversampling": 16.0 } } },
+      { "parallel": 100, "config": { "hnsw_ef": 256, "quantization": { "rescore": true, "oversampling": 32.0 } } },
+      { "parallel": 100, "config": { "hnsw_ef": 256, "quantization": { "rescore": true, "oversampling": 64.0 } } },
+      { "parallel": 100, "config": { "hnsw_ef": 256, "quantization": { "rescore": true, "oversampling": 128.0 } } },
+      { "parallel": 100, "config": { "hnsw_ef": 512, "quantization": { "rescore": true, "oversampling": 8.0 } } },
+      { "parallel": 100, "config": { "hnsw_ef": 512, "quantization": { "rescore": true, "oversampling": 16.0 } } },
+      { "parallel": 100, "config": { "hnsw_ef": 512, "quantization": { "rescore": true, "oversampling": 32.0 } } },
+      { "parallel": 100, "config": { "hnsw_ef": 512, "quantization": { "rescore": true, "oversampling": 64.0 } } },
+      { "parallel": 100, "config": { "hnsw_ef": 512, "quantization": { "rescore": true, "oversampling": 128.0 } } },
+      { "parallel": 100, "config": { "hnsw_ef": 768, "quantization": { "rescore": true, "oversampling": 8.0 } } },
+      { "parallel": 100, "config": { "hnsw_ef": 768, "quantization": { "rescore": true, "oversampling": 16.0 } } },
+      { "parallel": 100, "config": { "hnsw_ef": 768, "quantization": { "rescore": true, "oversampling": 32.0 } } },
+      { "parallel": 100, "config": { "hnsw_ef": 768, "quantization": { "rescore": true, "oversampling": 64.0 } } },
+      { "parallel": 100, "config": { "hnsw_ef": 768, "quantization": { "rescore": true, "oversampling": 128.0 } } }
+    ],
+    "upload_params": { "parallel": 8, "batch_size": 1024 }
+  },
+  {
+    "name": "latest-qdrant-rps-m-32",
+    "engine": "qdrant",
+    "connection_params": { "timeout": 60 },
+    "collection_params": {
+      "optimizers_config": { },
+      "hnsw_config": { "m": 64, "ef_construct": 512 }
+    },
+    "search_params": [
+      { "parallel": 1, "config": { "hnsw_ef": 16 } },
+      { "parallel": 1, "config": { "hnsw_ef": 32 } },
+      { "parallel": 1, "config": { "hnsw_ef": 64 } },
+      { "parallel": 1, "config": { "hnsw_ef": 128 } },
+      { "parallel": 1, "config": { "hnsw_ef": 256 } },
+      { "parallel": 1, "config": { "hnsw_ef": 512 } },
+      { "parallel": 1, "config": { "hnsw_ef": 768 } }
+    ],
+    "upload_params": { "parallel": 8, "batch_size": 1024 }
+  },
+  {
+    "name": "latest-qdrant-rps-m32",
+    "engine": "qdrant",
+    "connection_params": { "timeout": 60 },
+    "collection_params": {
+      "optimizers_config": {
+        "max_segment_size": 100000000,
+        "default_segment_number":2
+      },
+      "hnsw_config": { "m": 64, "ef_construct": 512 }
+    },
+    "search_params": [
+      { "parallel": 100, "config": { "hnsw_ef": 16 } },
+      { "parallel": 100, "config": { "hnsw_ef": 32 } },
+      { "parallel": 100, "config": { "hnsw_ef": 64 } },
+      { "parallel": 100, "config": { "hnsw_ef": 128 } },
+      { "parallel": 100, "config": { "hnsw_ef": 256 } },
+      { "parallel": 100, "config": { "hnsw_ef": 512 } },
+      { "parallel": 100, "config": { "hnsw_ef": 768 } }
+    ],
+    "upload_params": { "parallel": 8, "batch_size": 1024 }
+  },
+  {
+   "name": "latest-weaviate-m32",
+   "engine": "weaviate",
+   "connection_params": {
+     "timeout_config": 60
+   },
+   "collection_params": {
+       "vectorIndexConfig": {
+           "efConstruction": 512,
+           "maxConnections": 64
+       }
+   },
+   "search_params": [
+
+     { "parallel": 100, "config": { "ef": 16} },
+     { "parallel": 100, "config": { "ef": 32} },
+     { "parallel": 100, "config": { "ef": 64} },
+     { "parallel": 100, "config": { "ef": 128} },
+     { "parallel": 100, "config": { "ef": 256} },
+     { "parallel": 100, "config": { "ef": 512} },
+     { "parallel": 100, "config": { "ef": 768} },
+     { "parallel": 1, "config": { "ef": 16} },
+     { "parallel": 1, "config": { "ef": 32} },
+     { "parallel": 1, "config": { "ef": 64} },
+     { "parallel": 1, "config": { "ef": 128} },
+     { "parallel": 1, "config": { "ef": 256} },
+     { "parallel": 1, "config": { "ef": 512} },
+     { "parallel": 1, "config": { "ef": 768} }
+   ],
+   "upload_params": { "parallel": 8, "batch_size": 1024 }
+  }
+]

@@ -8,6 +8,7 @@ from engine.clients.qdrant.config import QDRANT_COLLECTION_NAME
 
 
 class QdrantConfigurator(BaseConfigurator):
+    SPARSE_VECTOR_SUPPORT = True
     DISTANCE_MAPPING = {
         Distance.L2: rest.Distance.EUCLID,
         Distance.COSINE: rest.Distance.COSINE,
@@ -30,12 +31,30 @@ class QdrantConfigurator(BaseConfigurator):
         self.client.delete_collection(collection_name=QDRANT_COLLECTION_NAME)
 
     def recreate(self, dataset: Dataset, collection_params):
+        if dataset.config.type == "sparse":
+            vectors_config = {
+                "vectors_config": {},
+                "sparse_vectors_config": {
+                    "sparse": rest.SparseVectorParams(
+                        index=rest.SparseIndexParams(
+                            on_disk=False,
+                        )
+                    )
+                },
+            }
+        else:
+            vectors_config = {
+                "vectors_config": (
+                    rest.VectorParams(
+                        size=dataset.config.vector_size,
+                        distance=self.DISTANCE_MAPPING.get(dataset.config.distance),
+                    )
+                )
+            }
+
         self.client.recreate_collection(
             collection_name=QDRANT_COLLECTION_NAME,
-            vectors_config=rest.VectorParams(
-                size=dataset.config.vector_size,
-                distance=self.DISTANCE_MAPPING.get(dataset.config.distance),
-            ),
+            **vectors_config,
             **self.collection_params
         )
         self.client.update_collection(

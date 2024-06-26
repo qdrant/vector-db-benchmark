@@ -16,17 +16,55 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Benches
+        id: benches
         run: |
-          export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
-          export GCS_KEY=${{ secrets.GCS_KEY }}
-          export GCS_SECRET=${{ secrets.GCS_SECRET }}
-          export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-          export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+            export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
+            export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+            bash -x tools/setup_ci.sh
 
-          # Benchmark the dev branch:
-          export QDRANT_VERSION=ghcr/dev
-          bash -x tools/run_ci.sh
+            declare -A DATASET_TO_ENGINE
+            DATASET_TO_ENGINE["laion-small-clip"]="qdrant-continuous-benchmark"
+            DATASET_TO_ENGINE["msmarco-sparse-100K"]="qdrant-sparse-vector"
+            DATASET_TO_ENGINE["h-and-m-2048-angular-filters"]="qdrant-continuous-benchmark"
+            DATASET_TO_ENGINE["dbpedia-openai-100K-1536-angular"]="qdrant-bq-continuous-benchmark"
 
-          # Benchmark the master branch:
-          export QDRANT_VERSION=docker/master
-          bash -x tools/run_ci.sh
+            set +e
+
+            for dataset in "${!DATASET_TO_ENGINE[@]}"; do
+              export ENGINE_NAME=${DATASET_TO_ENGINE[$dataset]}
+              export DATASETS=$dataset
+
+              # Benchmark the dev branch:
+              export QDRANT_VERSION=ghcr/dev
+              timeout 30m bash -x tools/run_ci.sh
+
+              # Benchmark the master branch:
+              export QDRANT_VERSION=docker/master
+              timeout 30m bash -x tools/run_ci.sh
+            done
+
+            set -e
+      - name: Fail job if any of the benches failed
+        if: steps.benches.outputs.failed == 'error' || steps.benches.outputs.failed == 'timeout'
+        run: exit 1
+      - name: Send Notification
+        if: failure() || cancelled()
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          payload: |
+            {
+              "text": "CI benchmarks run status: ${{ job.status }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "CI benchmarks failed because of ${{ steps.benches.outputs.failed }}.\nView the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.CI_ALERTS_CHANNEL_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
