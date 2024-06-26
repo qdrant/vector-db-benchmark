@@ -1,4 +1,3 @@
-import time
 from typing import List, Optional
 
 from pymongo import InsertOne
