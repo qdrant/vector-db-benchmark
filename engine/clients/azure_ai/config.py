@@ -111,8 +111,3 @@ def search_azure(service_endpoint, index_name, api_version, api_key, query):
         raise Exception(
             f"Error while searching: {response.status_code} - {response.text}"
         )
-
-
-def cosineScoreToSimilarity(score):
-    cosineDistance = float(1.0 - score) / score
-    return cosineDistance
