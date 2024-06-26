@@ -1,8 +1,6 @@
-import os
 from typing import List, Tuple
 
 from dataset_reader.base_reader import Query
-from engine.base_client.distances import Distance
 from engine.base_client.search import BaseSearcher
 from engine.clients.azure_ai.config import (
     AZUREAI_API_KEY,
@@ -10,7 +8,6 @@ from engine.clients.azure_ai.config import (
     AZUREAI_EXHAUSTIVE_KNN,
     AZUREAI_INDEX_NAME,
     AZUREAI_SERVICE_NAME,
-    cosineScoreToSimilarity,
     search_azure,
 )
 
