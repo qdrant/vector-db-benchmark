@@ -3,11 +3,7 @@ import multiprocessing as mp
 from typing import List
 
 import backoff
-from pymilvus import (
-    Collection,
-    MilvusException,
-    wait_for_index_building_complete,
-)
+from pymilvus import Collection, MilvusException, wait_for_index_building_complete
 
 from dataset_reader.base_reader import Record
 from engine.base_client.upload import BaseUploader

@@ -1,9 +1,4 @@
-from pymilvus import (
-    Collection,
-    CollectionSchema,
-    DataType,
-    FieldSchema,
-)
+from pymilvus import Collection, CollectionSchema, DataType, FieldSchema
 from pymilvus.exceptions import DataTypeNotSupportException
 from pymilvus.orm import utility
 
