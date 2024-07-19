@@ -1,5 +1,7 @@
-from pymilvus import DataType, connections
 import os
+
+from pymilvus import DataType, connections
+
 from engine.base_client.distances import Distance
 
 MILVUS_COLLECTION_NAME = "Benchmark"
@@ -26,6 +28,7 @@ DTYPE_DEFAULT = {
     DataType.INT64: 0,
     DataType.VARCHAR: "---MILVUS DOES NOT ACCEPT EMPTY STRINGS---",
     DataType.FLOAT: 0.0,
+    DataType.DOUBLE: 0.0,
 }
 
 

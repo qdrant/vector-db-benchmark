@@ -3,8 +3,6 @@ from pymilvus import (
     CollectionSchema,
     DataType,
     FieldSchema,
-    MilvusException,
-    connections,
 )
 from pymilvus.exceptions import DataTypeNotSupportException
 from pymilvus.orm import utility
