@@ -1,5 +1,7 @@
+import logging
 import multiprocessing as mp
-from typing import List
+from typing import List, Optional
+import backoff
 
 from pymilvus import (
     Collection,
@@ -8,14 +10,13 @@ from pymilvus import (
     wait_for_index_building_complete,
 )
 
-from dataset_reader.base_reader import Record
 from engine.base_client.upload import BaseUploader
 from engine.clients.milvus.config import (
     DISTANCE_MAPPING,
     DTYPE_DEFAULT,
     MILVUS_COLLECTION_NAME,
     MILVUS_DEFAULT_ALIAS,
-    MILVUS_DEFAULT_PORT,
+    get_milvus_client,
 )
 
 
@@ -31,37 +32,33 @@ class MilvusUploader(BaseUploader):
 
     @classmethod
     def init_client(cls, host, distance, connection_params, upload_params):
-        cls.client = connections.connect(
-            alias=MILVUS_DEFAULT_ALIAS,
-            host=host,
-            port=str(connection_params.get("port", MILVUS_DEFAULT_PORT)),
-            **connection_params
-        )
+        cls.client = get_milvus_client(connection_params, host, MILVUS_DEFAULT_ALIAS)
         cls.collection = Collection(MILVUS_COLLECTION_NAME, using=MILVUS_DEFAULT_ALIAS)
         cls.upload_params = upload_params
         cls.distance = DISTANCE_MAPPING[distance]
 
     @classmethod
-    def upload_batch(cls, batch: List[Record]):
-        has_metadata = any(record.metadata for record in batch)
-        if has_metadata:
+    def upload_batch(
+        cls, ids: List[int], vectors: List[list], metadata: Optional[List[dict]]
+    ):
+        if metadata is not None:
             field_values = [
                 [
-                    record.metadata.get(field_schema.name)
-                    or DTYPE_DEFAULT[field_schema.dtype]
-                    for record in batch
+                    payload.get(field_schema.name) or DTYPE_DEFAULT[field_schema.dtype]
+                    for payload in metadata
                 ]
                 for field_schema in cls.collection.schema.fields
                 if field_schema.name not in ["id", "vector"]
             ]
         else:
             field_values = []
+        cls.upload_with_backoff(field_values, ids, vectors)
 
-        ids, vectors = [], []
-        for record in batch:
-            ids.append(record.id)
-            vectors.append(record.vector)
-
+    @classmethod
+    @backoff.on_exception(
+        backoff.expo, MilvusException, max_time=600, backoff_log_level=logging.WARN
+    )
+    def upload_with_backoff(cls, field_values, ids, vectors):
         cls.collection.insert([ids, vectors] + field_values)
 
     @classmethod
