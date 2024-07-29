@@ -25,7 +25,11 @@ class OpenSearchConditionParser(BaseConditionParser):
         lte: Optional[FieldValue],
         gte: Optional[FieldValue],
     ) -> Any:
-        field_filters = {k: v for k, v in {"lt": lt, "gt": gt, "lte": lte, "gte": gte}.items() if v is not None}
+        field_filters = {
+            k: v
+            for k, v in {"lt": lt, "gt": gt, "lte": lte, "gte": gte}.items()
+            if v is not None
+        }
         return {"range": {field_name: field_filters}}
 
     def build_geo_filter(
