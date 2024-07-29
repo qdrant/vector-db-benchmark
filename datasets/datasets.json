@@ -138,7 +138,8 @@
     "schema": {
       "update_date_ts": "int",
       "labels": "keyword",
-      "submitter": "keyword"
+      "submitter": "keyword",
+      "id": "keyword"
     }
   },
     {
