@@ -3,7 +3,7 @@ import shutil
 import tarfile
 import urllib.request
 from dataclasses import dataclass, field
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 from benchmark import DATASETS_DIR
 from dataset_reader.ann_compound_reader import AnnCompoundReader
@@ -21,6 +21,7 @@ class DatasetConfig:
 
     link: Optional[str] = None
     schema: Optional[Dict[str, str]] = field(default_factory=dict)
+    tenants: Optional[List[str]] = field(default_factory=list)
     # None in case of sparse vectors:
     vector_size: Optional[int] = None
     distance: Optional[str] = None

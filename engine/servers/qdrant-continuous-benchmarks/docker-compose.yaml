@@ -15,4 +15,4 @@ services:
     deploy:
       resources:
         limits:
-          memory: 25Gb
+          memory: ${CONTAINER_MEM_LIMIT:-25Gb}

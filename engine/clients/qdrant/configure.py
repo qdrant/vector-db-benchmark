@@ -1,3 +1,4 @@
+import requests
 from qdrant_client import QdrantClient
 from qdrant_client.http import models as rest
 
@@ -43,11 +44,17 @@ class QdrantConfigurator(BaseConfigurator):
                 },
             }
         else:
+            is_vectors_on_disk = False
+            if "vectors_config" in self.collection_params.keys():
+                is_vectors_on_disk = self.collection_params.get("vectors_config").get("on_disk", False)
+                self.collection_params.__delitem__("vectors_config")
+
             vectors_config = {
                 "vectors_config": (
                     rest.VectorParams(
                         size=dataset.config.vector_size,
                         distance=self.DISTANCE_MAPPING.get(dataset.config.distance),
+                        on_disk=is_vectors_on_disk
                     )
                 )
             }
@@ -65,6 +72,20 @@ class QdrantConfigurator(BaseConfigurator):
             ),
         )
         for field_name, field_type in dataset.config.schema.items():
+            # todo: uncomment when client is ready
+            # is_tenant = True if field_name in dataset.config.tenants else False
+            # if is_tenant:
+            #     self.client.create_payload_index(
+            #         collection_name=QDRANT_COLLECTION_NAME,
+            #         field_name=field_name,
+            #         field_schema=rest.PayloadFieldSchema(
+            #             type=self.INDEX_TYPE_MAPPING.get(field_type),
+            #             is_tenant=is_tenant
+            #         ),
+            #     )
+            # else:
+            # create simple payload index
+
             self.client.create_payload_index(
                 collection_name=QDRANT_COLLECTION_NAME,
                 field_name=field_name,

@@ -11,5 +11,20 @@
       { "parallel": 8, "config": { "hnsw_ef": 128 } }
     ],
     "upload_params": { "parallel": 4 }
+  },
+  {
+    "name": "qdrant-everything-on-disk",
+    "engine": "qdrant",
+    "connection_params": {},
+    "collection_params": {
+      "quantization_config": { "scalar": {"type": "int8", "quantile": 0.99, "always_ram": false} },
+      "vectors_config": { "on_disk": true },
+      "hnsw_config": { "on_disk": true },
+      "on_disk_payload": true
+    },
+    "search_params": [
+      { "parallel": 1 }
+    ],
+    "upload_params": { "parallel": 4 }
   }
 ]
