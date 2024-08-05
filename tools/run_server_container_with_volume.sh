@@ -1,11 +1,11 @@
 #!/bin/bash
 
-PS4='ts=$(date "+%Y-%m-%dT%H:%M:%SZ") level=DEBUG line=$LINENO file=$BASH_SOURCE '
-set -euo pipefail
+set -e
 
-# Examples: qdrant-continuous-benchmarks
+# Examples: qdrant-continuous-benchmarks-with-volume
 CONTAINER_NAME=$1
 CONTAINER_MEM_LIMIT=${2:-"25Gb"}
+EXECUTION_MODE=${3:-"init"}
 
 CLOUD_NAME=${CLOUD_NAME:-"hetzner"}
 SERVER_USERNAME=${SERVER_USERNAME:-"root"}
@@ -35,7 +35,16 @@ if [[ ${QDRANT_VERSION} == docker/* ]] || [[ ${QDRANT_VERSION} == ghcr/* ]]; the
         CONTAINER_REGISTRY='ghcr.io'
     fi
 
-    DOCKER_COMPOSE="export QDRANT_VERSION=${QDRANT_VERSION}; export CONTAINER_REGISTRY=${CONTAINER_REGISTRY}; export CONTAINER_MEM_LIMIT=${CONTAINER_MEM_LIMIT}; docker compose down; pkill qdrant ; docker rmi ${CONTAINER_REGISTRY}/qdrant/qdrant:${QDRANT_VERSION} || true ; docker compose up -d; docker container ls"
+    if [[ "$EXECUTION_MODE" == "init" ]]; then
+      # create volume qdrant_storage
+      echo "Initialize qdrant from scratch"
+      DOCKER_COMPOSE="export QDRANT_VERSION=${QDRANT_VERSION}; export CONTAINER_REGISTRY=${CONTAINER_REGISTRY}; export CONTAINER_MEM_LIMIT=${CONTAINER_MEM_LIMIT}; docker compose down; pkill qdrant ; docker rmi ${CONTAINER_REGISTRY}/qdrant/qdrant:${QDRANT_VERSION} || true ; sudo rm -rf qdrant_storage; mkdir qdrant_storage; docker compose up -d; docker container ls"
+    else
+      # suggest that folder qdrant_storage exist and start qdrant
+      echo "Reload qdrant with existing data"
+      DOCKER_COMPOSE="export QDRANT_VERSION=${QDRANT_VERSION}; export CONTAINER_REGISTRY=${CONTAINER_REGISTRY}; export CONTAINER_MEM_LIMIT=${CONTAINER_MEM_LIMIT}; docker compose down; pkill qdrant ; docker rmi ${CONTAINER_REGISTRY}/qdrant/qdrant:${QDRANT_VERSION} || true ; docker compose up -d; docker container ls; sudo bash -c 'sync; echo 1 > /proc/sys/vm/drop_caches'"
+    fi
+
     ssh -t  -o ServerAliveInterval=60 -o ServerAliveCountMax=3 "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "cd ./projects/vector-db-benchmark/engine/servers/${CONTAINER_NAME} ; $DOCKER_COMPOSE"
 else
     echo "Error: unknown version ${QDRANT_VERSION}. Version name should start with 'docker/' or 'ghcr/'"

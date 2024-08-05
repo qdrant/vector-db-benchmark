@@ -3,6 +3,9 @@
 PS4='ts=$(date "+%Y-%m-%dT%H:%M:%SZ") level=DEBUG line=$LINENO file=$BASH_SOURCE '
 set -euo pipefail
 
+# Possible values are: full|upload|search
+EXPERIMENT_MODE=${1:-"full"}
+
 CLOUD_NAME=${CLOUD_NAME:-"hetzner"}
 SERVER_USERNAME=${SERVER_USERNAME:-"root"}
 
@@ -22,7 +25,7 @@ DATASETS=${DATASETS:-"laion-small-clip"}
 
 PRIVATE_IP_OF_THE_SERVER=$(bash "${SCRIPT_PATH}/${CLOUD_NAME}/get_private_ip.sh" "$BENCH_SERVER_NAME")
 
-RUN_EXPERIMENT="ENGINE_NAME=${ENGINE_NAME} DATASETS=${DATASETS} PRIVATE_IP_OF_THE_SERVER=${PRIVATE_IP_OF_THE_SERVER} bash ~/run_experiment.sh"
+RUN_EXPERIMENT="ENGINE_NAME=${ENGINE_NAME} DATASETS=${DATASETS} PRIVATE_IP_OF_THE_SERVER=${PRIVATE_IP_OF_THE_SERVER} EXPERIMENT_MODE=${EXPERIMENT_MODE} bash ~/run_experiment.sh"
 
 ssh -tt -o ServerAliveInterval=60 -o ServerAliveCountMax=3 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "${RUN_EXPERIMENT}"
 
