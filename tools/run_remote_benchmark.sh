@@ -1,12 +1,13 @@
 #!/bin/bash
 
-set -e
+PS4='ts=$(date "+%Y-%m-%dT%H:%M:%SZ") level=DEBUG line=$LINENO file=$BASH_SOURCE '
+set -euo pipefail
 
 # Setup 2 machines in Hetzner Cloud
 # One machine will be used as a server, another one as a client
 
 cleanup() {
-  echo "cleaning up..."
+  echo "cleaning up file=$BASH_SOURCE"
   #  bash -x "${SCRIPT_PATH}/tear_down.sh"
 }
 

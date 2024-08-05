@@ -1,6 +1,7 @@
 #!/bin/bash
 
-set -e
+PS4='ts=$(date "+%Y-%m-%dT%H:%M:%SZ") level=DEBUG line=$LINENO file=$BASH_SOURCE '
+set -euo pipefail
 
 # Examples: qdrant-single-node, qdrant-single-node-rps
 CONTAINER_NAME=$1
