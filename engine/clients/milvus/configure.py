@@ -1,11 +1,4 @@
-from pymilvus import (
-    Collection,
-    CollectionSchema,
-    DataType,
-    FieldSchema,
-    MilvusException,
-    connections,
-)
+from pymilvus import Collection, CollectionSchema, DataType, FieldSchema
 from pymilvus.exceptions import DataTypeNotSupportException
 from pymilvus.orm import utility
 
@@ -17,7 +10,7 @@ from engine.clients.milvus.config import (
     DTYPE_EXTRAS,
     MILVUS_COLLECTION_NAME,
     MILVUS_DEFAULT_ALIAS,
-    MILVUS_DEFAULT_PORT,
+    get_milvus_client,
 )
 
 
@@ -32,20 +25,18 @@ class MilvusConfigurator(BaseConfigurator):
 
     def __init__(self, host, collection_params: dict, connection_params: dict):
         super().__init__(host, collection_params, connection_params)
-        self.client = connections.connect(
-            alias=MILVUS_DEFAULT_ALIAS,
-            host=host,
-            port=str(connection_params.get("port", MILVUS_DEFAULT_PORT)),
-            **connection_params,
-        )
+        self.client = get_milvus_client(connection_params, host, MILVUS_DEFAULT_ALIAS)
         print("established connection")
 
     def clean(self):
-        try:
+        if utility.has_collection(MILVUS_COLLECTION_NAME, using=MILVUS_DEFAULT_ALIAS):
+            print("dropping collection named {MILVUS_COLLECTION_NAME}...")
             utility.drop_collection(MILVUS_COLLECTION_NAME, using=MILVUS_DEFAULT_ALIAS)
+            print("dropped collection named {MILVUS_COLLECTION_NAME}...")
+        assert (
             utility.has_collection(MILVUS_COLLECTION_NAME, using=MILVUS_DEFAULT_ALIAS)
-        except MilvusException:
-            pass
+            is False
+        )
 
     def recreate(self, dataset: Dataset, collection_params):
         idx = FieldSchema(

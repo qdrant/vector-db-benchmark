@@ -9,7 +9,7 @@ from engine.clients.milvus.config import (
     DISTANCE_MAPPING,
     MILVUS_COLLECTION_NAME,
     MILVUS_DEFAULT_ALIAS,
-    MILVUS_DEFAULT_PORT,
+    get_milvus_client,
 )
 from engine.clients.milvus.parser import MilvusConditionParser
 
@@ -23,12 +23,7 @@ class MilvusSearcher(BaseSearcher):
 
     @classmethod
     def init_client(cls, host, distance, connection_params: dict, search_params: dict):
-        cls.client = connections.connect(
-            alias=MILVUS_DEFAULT_ALIAS,
-            host=host,
-            port=str(connection_params.get("port", MILVUS_DEFAULT_PORT)),
-            **connection_params
-        )
+        cls.client = get_milvus_client(connection_params, host, MILVUS_DEFAULT_ALIAS)
         cls.collection = Collection(MILVUS_COLLECTION_NAME, using=MILVUS_DEFAULT_ALIAS)
         cls.search_params = search_params
         cls.distance = DISTANCE_MAPPING[distance]
