@@ -33,7 +33,7 @@ RSS_ANON_MEMORY_USAGE_FILE=$(ssh "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "ls -t
 
 mkdir -p results
 
-for RESULT_FILE in $SEARCH_RESULT_FILE $UPLOAD_RESULT_FILE $MEMORY_USAGE_FILE; do
+for RESULT_FILE in $SEARCH_RESULT_FILE $UPLOAD_RESULT_FILE $VM_RSS_MEMORY_USAGE_FILE $RSS_ANON_MEMORY_USAGE_FILE; do
     # -p preseves modification time, access time, and modes (but not change time)
     scp -p "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/${RESULT_FILE}" "./results"
 done
