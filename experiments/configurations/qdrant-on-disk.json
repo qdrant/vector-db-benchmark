@@ -24,7 +24,7 @@
       "on_disk_payload": true
     },
     "search_params": [
-      { "parallel": 1 }
+      { "parallel": 8 }
     ],
     "upload_params": { "parallel": 4 }
   }

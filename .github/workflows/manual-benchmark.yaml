@@ -44,6 +44,7 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Benches
         id: benches
+        timeout-minutes: 120
         run: |
             export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
             export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
@@ -62,11 +63,11 @@ jobs:
 
               # Benchmark the dev branch:
               export QDRANT_VERSION=ghcr/dev
-              timeout 45m bash -x tools/run_ci.sh
+              timeout 55m bash -x tools/run_ci.sh
 
               # Benchmark the master branch:
               export QDRANT_VERSION=docker/master
-              timeout 45m bash -x tools/run_ci.sh
+              timeout 55m bash -x tools/run_ci.sh
             done
 
             set -e

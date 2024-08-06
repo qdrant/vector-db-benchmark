@@ -21,3 +21,9 @@ services:
 
 volumes:
   qdrant_storage:
+    name: "qdrant_storage"
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}/qdrant_storage
+      o: bind

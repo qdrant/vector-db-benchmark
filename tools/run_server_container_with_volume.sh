@@ -38,7 +38,8 @@ if [[ ${QDRANT_VERSION} == docker/* ]] || [[ ${QDRANT_VERSION} == ghcr/* ]]; the
     if [[ "$EXECUTION_MODE" == "init" ]]; then
       # create volume qdrant_storage
       echo "Initialize qdrant from scratch"
-      DOCKER_COMPOSE="export QDRANT_VERSION=${QDRANT_VERSION}; export CONTAINER_REGISTRY=${CONTAINER_REGISTRY}; export CONTAINER_MEM_LIMIT=${CONTAINER_MEM_LIMIT}; docker compose down; pkill qdrant ; docker rmi ${CONTAINER_REGISTRY}/qdrant/qdrant:${QDRANT_VERSION} || true ; sudo rm -rf qdrant_storage; mkdir qdrant_storage; docker compose up -d; docker container ls"
+      DOCKER_VOLUME_SET_UP="docker volume rm -f qdrant_storage; sudo rm -rf qdrant_storage; mkdir qdrant_storage"
+      DOCKER_COMPOSE="export QDRANT_VERSION=${QDRANT_VERSION}; export CONTAINER_REGISTRY=${CONTAINER_REGISTRY}; export CONTAINER_MEM_LIMIT=${CONTAINER_MEM_LIMIT}; docker compose down; pkill qdrant ; docker rmi ${CONTAINER_REGISTRY}/qdrant/qdrant:${QDRANT_VERSION} || true ; ${DOCKER_VOLUME_SET_UP}; docker compose up -d; docker container ls"
     else
       # suggest that folder qdrant_storage exist and start qdrant
       echo "Reload qdrant with existing data"
