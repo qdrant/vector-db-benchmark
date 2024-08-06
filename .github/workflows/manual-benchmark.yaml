@@ -51,7 +51,7 @@ jobs:
             bash -x tools/setup_ci.sh
 
             declare -A DATASET_TO_ENGINE
-            DATASET_TO_ENGINE["random-768-10-tenants"]="qdrant-everything-on-disk"
+            DATASET_TO_ENGINE["random-768-10-tenants"]="qdrant-all-on-disk-scalar-q"
 
             set +e
 
@@ -62,11 +62,11 @@ jobs:
 
               # Benchmark the dev branch:
               export QDRANT_VERSION=ghcr/dev
-              timeout 30m bash -x tools/run_ci.sh
+              timeout 45m bash -x tools/run_ci.sh
 
               # Benchmark the master branch:
               export QDRANT_VERSION=docker/master
-              timeout 30m bash -x tools/run_ci.sh
+              timeout 45m bash -x tools/run_ci.sh
             done
 
             set -e
