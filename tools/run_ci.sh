@@ -16,9 +16,6 @@ function handle_term() {
 trap 'handle_err' ERR INT EXIT
 trap 'handle_term' TERM
 
-# temporarily throw error intentionally:
-exit 1
-
 # Script, that runs benchmark within the GitHub Actions CI environment
 
 SCRIPT=$(realpath "$0")
