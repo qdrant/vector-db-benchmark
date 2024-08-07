@@ -24,11 +24,15 @@ if [[ -z "$PRIVATE_IP_OF_THE_SERVER" ]]; then
   exit 1
 fi
 
+docker container rm -f ci-benchmark-upload || true
+docker container rm -f ci-benchmark-search || true
+
 docker rmi --force qdrant/vector-db-benchmark:latest || true
 
 docker run \
   --rm \
   -it \
+  --name ci-benchmark-upload \
   -v "$HOME/results:/code/results" \
   qdrant/vector-db-benchmark:latest \
   python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-search
@@ -36,6 +40,7 @@ docker run \
 docker run \
   --rm \
   -it \
+  --name ci-benchmark-search \
   -v "$HOME/results:/code/results" \
   qdrant/vector-db-benchmark:latest \
   python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-upload
