@@ -13,7 +13,7 @@ function handle_term() {
   echo "failed=timeout" >> $GITHUB_OUTPUT
 }
 
-trap 'handle_err' ERR
+trap 'handle_err' ERR INT EXIT
 trap 'handle_term' TERM
 
 # temporarily throw error intentionally:
