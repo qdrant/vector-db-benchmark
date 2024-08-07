@@ -5,15 +5,15 @@ set -euo pipefail
 
 function handle_err() {
   echo "Error occured qdrant_version=${QDRANT_VERSION} engine_name=${ENGINE_NAME} dataset=${DATASETS}"
-  echo "{failed}={error}" >> $GITHUB_OUTPUT
+  echo "failed=error" >> $GITHUB_OUTPUT
 }
 
 function handle_term() {
   echo "Timeout occured qdrant_version=${QDRANT_VERSION} engine_name=${ENGINE_NAME} dataset=${DATASETS}"
-  echo "{failed}={timeout}" >> $GITHUB_OUTPUT
+  echo "failed=timeout" >> $GITHUB_OUTPUT
 }
 
-trap 'handle_err' ERR
+trap 'handle_err' ERR INT EXIT
 trap 'handle_term' TERM
 
 # Script, that runs benchmark within the GitHub Actions CI environment
