@@ -4,7 +4,10 @@ from qdrant_client.http import models as rest
 from benchmark.dataset import Dataset
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
-from engine.clients.qdrant.config import QDRANT_COLLECTION_NAME
+from engine.clients.qdrant.config import (
+    QDRANT_COLLECTION_NAME,
+    retry_with_exponential_backoff,
+)
 
 
 class QdrantConfigurator(BaseConfigurator):
@@ -52,7 +55,8 @@ class QdrantConfigurator(BaseConfigurator):
                 )
             }
 
-        self.client.recreate_collection(
+        retry_with_exponential_backoff(
+            self.client.recreate_collection,
             collection_name=QDRANT_COLLECTION_NAME,
             **vectors_config,
             **self.collection_params
