@@ -15,27 +15,8 @@ on:
             default: qdrant-continuous-benchmark
 
 jobs:
-#  runManualBenchmark:
-#    name: manual benchmark - ${{ inputs.qdrant_version }} - ${{ inputs.dataset }}
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v3
-#      - uses: webfactory/ssh-agent@v0.8.0
-#        with:
-#          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-#      - name: Benches
-#        run: |
-#          export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
-#          export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-#          export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
-#          export QDRANT_VERSION=${{ inputs.qdrant_version }}
-#          export DATASETS=${{ inputs.dataset }}
-#          export ENGINE_NAME=${{ inputs.engine_config }}
-#          export POSTGRES_TABLE=benchmark_manual
-#          bash -x tools/setup_ci.sh
-#          bash -x tools/run_ci.sh
-
-  runTenantsBenchmark:
+  runManualBenchmark:
+    name: manual benchmark - ${{ inputs.qdrant_version }} - ${{ inputs.dataset }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -43,34 +24,13 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Benches
-        id: benches
-        timeout-minutes: 120
         run: |
-            export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
-            export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-            export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
-            bash -x tools/setup_ci.sh
-
-            declare -A DATASET_TO_ENGINE
-            DATASET_TO_ENGINE["random-768-10-tenants"]="qdrant-all-on-disk-scalar-q"
-
-            set +e
-
-            for dataset in "${!DATASET_TO_ENGINE[@]}"; do
-              export ENGINE_NAME=${DATASET_TO_ENGINE[$dataset]}
-              export DATASETS=$dataset
-              export CONTAINER_MEM_LIMIT=400mb
-
-              # Benchmark the dev branch:
-              export QDRANT_VERSION=ghcr/dev
-              timeout 55m bash -x tools/run_ci.sh
-
-              # Benchmark the master branch:
-              export QDRANT_VERSION=docker/master
-              timeout 55m bash -x tools/run_ci.sh
-            done
-
-            set -e
-      - name: Fail job if any of the benches failed
-        if: steps.benches.outputs.failed == 'error' || steps.benches.outputs.failed == 'timeout'
-        run: exit 1
+          export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
+          export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+          export QDRANT_VERSION=${{ inputs.qdrant_version }}
+          export DATASETS=${{ inputs.dataset }}
+          export ENGINE_NAME=${{ inputs.engine_config }}
+          export POSTGRES_TABLE=benchmark_manual
+          bash -x tools/setup_ci.sh
+          bash -x tools/run_ci.sh

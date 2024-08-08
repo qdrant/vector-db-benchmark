@@ -3,7 +3,7 @@ import shutil
 import tarfile
 import urllib.request
 from dataclasses import dataclass, field
-from typing import Dict, Optional, List
+from typing import Dict, List, Optional
 
 from benchmark import DATASETS_DIR
 from dataset_reader.ann_compound_reader import AnnCompoundReader

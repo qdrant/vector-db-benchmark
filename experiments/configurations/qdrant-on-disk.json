@@ -20,7 +20,7 @@
       "optimizers_config": { "default_segment_number": 17 },
       "quantization_config": { "scalar": {"type": "int8", "quantile": 0.99, "always_ram": false} },
       "vectors_config": { "on_disk": true },
-      "hnsw_config": { "on_disk": true },
+      "hnsw_config": { "on_disk": true, "m": 0, "payload_m": 16 },
       "on_disk_payload": true
     },
     "search_params": [
