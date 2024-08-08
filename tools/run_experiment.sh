@@ -30,14 +30,17 @@ if [[ -z "$EXPERIMENT_MODE" ]]; then
   echo "EXPERIMENT_MODE is not set"
   exit 1
 fi
+docker container rm -f ci-benchmark-upload || true
+docker container rm -f ci-benchmark-search || true
 
-docker rmi --force /qdrant/vector-db-benchmark:latest || true
+docker rmi --force qdrant/vector-db-benchmark:latest || true
 
 if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "upload" ]]; then
   echo "EXPERIMENT_MODE=$EXPERIMENT_MODE"
   docker run \
     --rm \
     -it \
+    --name ci-benchmark-upload \
     -v "$HOME/results:/code/results" \
     ghcr.io/qdrant/vector-db-benchmark:el_latest \
     python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-search
@@ -49,6 +52,7 @@ if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "search" ]]; t
   docker run \
     --rm \
     -it \
+    --name ci-benchmark-search \
     -v "$HOME/results:/code/results" \
     ghcr.io/qdrant/vector-db-benchmark:el_latest \
     python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-upload
