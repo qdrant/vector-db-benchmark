@@ -34,7 +34,7 @@ trap 'cleanup' EXIT
 SERVER_NAME=$BENCH_SERVER_NAME bash -x "${SCRIPT_PATH}/${CLOUD_NAME}/check_ssh_connection.sh"
 SERVER_NAME=$BENCH_CLIENT_NAME bash -x "${SCRIPT_PATH}/${CLOUD_NAME}/check_ssh_connection.sh"
 
-if [[ -z "$CONTAINER_MEM_LIMIT" ]]; then
+if [[ -z "${CONTAINER_MEM_LIMIT:-}" ]]; then
   echo "CONTAINER_MEM_LIMIT is not set, run without memory limit"
 
   SERVER_CONTAINER_NAME=${SERVER_CONTAINER_NAME:-"qdrant-continuous-benchmarks"}

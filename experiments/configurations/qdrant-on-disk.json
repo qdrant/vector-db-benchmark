@@ -23,6 +23,9 @@
       "hnsw_config": { "on_disk": true, "m": 0, "payload_m": 16 },
       "on_disk_payload": true
     },
+    "payload_index_params": {
+      "on_disk": true
+    },
     "search_params": [
       { "parallel": 8 }
     ],

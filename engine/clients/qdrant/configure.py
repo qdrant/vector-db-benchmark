@@ -21,16 +21,31 @@ class QdrantConfigurator(BaseConfigurator):
         "float": rest.PayloadSchemaType.FLOAT,
         "geo": rest.PayloadSchemaType.GEO,
     }
+    INDEX_PARAMS_TYPE_MAPPING = {
+        "int": rest.IntegerIndexParams,
+        "keyword": rest.KeywordIndexParams,
+        "text": rest.TextIndexParams,
+        "float": rest.FloatIndexParams,
+        "geo": rest.GeoIndexParams,
+    }
 
-    def __init__(self, host, collection_params: dict, connection_params: dict):
-        super().__init__(host, collection_params, connection_params)
+    def __init__(
+        self,
+        host,
+        collection_params: dict,
+        connection_params: dict,
+        payload_index_params: dict,
+    ):
+        super().__init__(
+            host, collection_params, connection_params, payload_index_params
+        )
 
         self.client = QdrantClient(host=host, **connection_params)
 
     def clean(self):
         self.client.delete_collection(collection_name=QDRANT_COLLECTION_NAME)
 
-    def recreate(self, dataset: Dataset, collection_params):
+    def recreate(self, dataset: Dataset, collection_params, payload_index_params):
         if dataset.config.type == "sparse":
             vectors_config = {
                 "vectors_config": {},
@@ -73,22 +88,20 @@ class QdrantConfigurator(BaseConfigurator):
             ),
         )
         for field_name, field_type in dataset.config.schema.items():
-            # todo: uncomment when client is ready
-            # is_tenant = True if field_name in dataset.config.tenants else False
-            # if is_tenant:
-            #     self.client.create_payload_index(
-            #         collection_name=QDRANT_COLLECTION_NAME,
-            #         field_name=field_name,
-            #         field_schema=rest.PayloadFieldSchema(
-            #             type=self.INDEX_TYPE_MAPPING.get(field_type),
-            #             is_tenant=is_tenant
-            #         ),
-            #     )
-            # else:
-            # create simple payload index
-
-            self.client.create_payload_index(
-                collection_name=QDRANT_COLLECTION_NAME,
-                field_name=field_name,
-                field_schema=self.INDEX_TYPE_MAPPING.get(field_type),
-            )
+            is_tenant = True if field_name in dataset.config.tenants else False
+            if field_type in ["keyword", "uuid"]:
+                self.client.create_payload_index(
+                    collection_name=QDRANT_COLLECTION_NAME,
+                    field_name=field_name,
+                    field_schema=self.INDEX_PARAMS_TYPE_MAPPING.get(field_type)(
+                        type=self.INDEX_TYPE_MAPPING.get(field_type),
+                        is_tenant=is_tenant,
+                        on_disk=self.payload_index_params.get("on_disk", False),
+                    ),
+                )
+            else:
+                self.client.create_payload_index(
+                    collection_name=QDRANT_COLLECTION_NAME,
+                    field_name=field_name,
+                    field_schema=self.INDEX_TYPE_MAPPING.get(field_type),
+                )

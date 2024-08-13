@@ -9,8 +9,16 @@ from engine.clients.pgvector.config import get_db_config
 
 
 class PgVectorConfigurator(BaseConfigurator):
-    def __init__(self, host, collection_params: dict, connection_params: dict):
-        super().__init__(host, collection_params, connection_params)
+    def __init__(
+        self,
+        host,
+        collection_params: dict,
+        connection_params: dict,
+        payload_index_params: dict,
+    ):
+        super().__init__(
+            host, collection_params, connection_params, payload_index_params
+        )
         self.conn = psycopg.connect(**get_db_config(host, connection_params))
         print("configure connection created")
         self.conn.execute("CREATE EXTENSION IF NOT EXISTS vector;")
@@ -21,7 +29,7 @@ class PgVectorConfigurator(BaseConfigurator):
             "DROP TABLE IF EXISTS items CASCADE;",
         )
 
-    def recreate(self, dataset: Dataset, collection_params):
+    def recreate(self, dataset: Dataset, collection_params, payload_index_params):
         if dataset.config.distance == Distance.DOT:
             raise IncompatibilityError
 

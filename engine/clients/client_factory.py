@@ -74,6 +74,7 @@ class ClientFactory(ABC):
             self.host,
             collection_params={**experiment.get("collection_params", {})},
             connection_params={**experiment.get("connection_params", {})},
+            payload_index_params={**experiment.get("payload_index_params", {})},
         )
         return engine_configurator
 
