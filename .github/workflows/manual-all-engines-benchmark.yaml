@@ -26,6 +26,9 @@ jobs:
               - 'engine/servers/elasticsearch-single-node/**'
               - 'engine/servers/elasticsearch-single-node-ci/**'
               - 'engine/base_client/**'
+            poetry:
+              - 'poetry.lock'
+              - 'pyproject.toml'
       - uses: ./.github/workflows/actions/run-engine-benchmark
         if: ${{ steps.changes.outputs.elasticsearch == 'true' || github.event_name == 'workflow_dispatch' }}
         with:
@@ -48,6 +51,9 @@ jobs:
               - 'engine/servers/milvus-single-node/**'
               - 'engine/servers/milvus-limit-ram/**'
               - 'engine/base_client/**'
+            poetry:
+              - 'poetry.lock'
+              - 'pyproject.toml'
       - uses: ./.github/workflows/actions/run-engine-benchmark
         if: ${{ steps.changes.outputs.milvus == 'true' || github.event_name == 'workflow_dispatch' }}
         with:
@@ -70,6 +76,9 @@ jobs:
               - 'engine/servers/opensearch-single-node/**'
               - 'engine/servers/opensearch-single-node-ci/**'
               - 'engine/base_client/**'
+            poetry:
+              - 'poetry.lock'
+              - 'pyproject.toml'
       - uses: ./.github/workflows/actions/run-engine-benchmark
         if: ${{ steps.changes.outputs.opensearch == 'true' || github.event_name == 'workflow_dispatch' }}
         with:
@@ -91,6 +100,9 @@ jobs:
               - 'engine/clients/pgvector/**'
               - 'engine/servers/pgvector-single-node/**'
               - 'engine/base_client/**'
+            poetry:
+              - 'poetry.lock'
+              - 'pyproject.toml'
       - uses: ./.github/workflows/actions/run-engine-benchmark
         if: ${{ steps.changes.outputs.pgvector == 'true' || github.event_name == 'workflow_dispatch' }}
         with:
@@ -116,6 +128,9 @@ jobs:
               - 'engine/servers/qdrant-cluster-mode/**'
               - 'engine/servers/qdrant-continuous-benchmarks/**'
               - 'engine/base_client/**'
+            poetry:
+              - 'poetry.lock'
+              - 'pyproject.toml'
       - uses: ./.github/workflows/actions/run-engine-benchmark
         if: ${{ steps.changes.outputs.qdrant == 'true' || github.event_name == 'workflow_dispatch' }}
         with:
@@ -137,6 +152,9 @@ jobs:
               - 'engine/clients/redis/**'
               - 'engine/servers/redis-single-node/**'
               - 'engine/base_client/**'
+            poetry:
+              - 'poetry.lock'
+              - 'pyproject.toml'
       - uses: ./.github/workflows/actions/run-engine-benchmark
         if: ${{ steps.changes.outputs.weaviate == 'true' || github.event_name == 'workflow_dispatch' }}
         with:
@@ -158,6 +176,9 @@ jobs:
               - 'engine/clients/weaviate/**'
               - 'engine/servers/weaviate-single-node/**'
               - 'engine/base_client/**'
+            poetry:
+              - 'poetry.lock'
+              - 'pyproject.toml'
       - uses: ./.github/workflows/actions/run-engine-benchmark
         if: ${{ steps.changes.outputs.weaviate == 'true' || github.event_name == 'workflow_dispatch' }}
         with:
