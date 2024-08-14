@@ -42,18 +42,24 @@ if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "upload" ]]; t
     -it \
     --name ci-benchmark-upload \
     -v "$HOME/results:/code/results" \
-    qdrant/vector-db-benchmark:latest \
+    ghcr.io/qdrant/vector-db-benchmark:el_latest \
     python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-search
 fi
 
 
 if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "search" ]]; then
   echo "EXPERIMENT_MODE=$EXPERIMENT_MODE"
+
+  if [[ "$EXPERIMENT_MODE" == "search" ]]; then
+    echo "Drop caches before running the experiment"
+    sudo bash -c 'sync; echo 1 > /proc/sys/vm/drop_caches'
+  fi
+
   docker run \
     --rm \
     -it \
     --name ci-benchmark-search \
     -v "$HOME/results:/code/results" \
-    qdrant/vector-db-benchmark:latest \
+    ghcr.io/qdrant/vector-db-benchmark:el_latest \
     python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-upload
 fi

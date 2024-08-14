@@ -43,7 +43,7 @@ if [[ ${QDRANT_VERSION} == docker/* ]] || [[ ${QDRANT_VERSION} == ghcr/* ]]; the
     else
       # suggest that volume qdrant_storage exist and start qdrant
       echo "Reload qdrant with existing data"
-      DOCKER_COMPOSE="export QDRANT_VERSION=${QDRANT_VERSION}; export CONTAINER_REGISTRY=${CONTAINER_REGISTRY}; export CONTAINER_MEM_LIMIT=${CONTAINER_MEM_LIMIT}; docker compose down; pkill qdrant; docker rm -f qdrant-continuous || true; docker rmi -f ${CONTAINER_REGISTRY}/qdrant/qdrant:${QDRANT_VERSION} || true ; docker compose up -d; docker container ls -a; sudo bash -c 'sync; echo 1 > /proc/sys/vm/drop_caches'"
+      DOCKER_COMPOSE="export QDRANT_VERSION=${QDRANT_VERSION}; export CONTAINER_REGISTRY=${CONTAINER_REGISTRY}; export CONTAINER_MEM_LIMIT=${CONTAINER_MEM_LIMIT}; docker compose down; pkill qdrant; docker rm -f qdrant-continuous || true; docker rmi -f ${CONTAINER_REGISTRY}/qdrant/qdrant:${QDRANT_VERSION} || true ; sudo bash -c 'sync; echo 1 > /proc/sys/vm/drop_caches'; docker compose up -d; docker container ls -a"
     fi
 
     ssh -t  -o ServerAliveInterval=60 -o ServerAliveCountMax=3 "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "cd ./projects/vector-db-benchmark/engine/servers/${CONTAINER_NAME} ; $DOCKER_COMPOSE"
