@@ -46,8 +46,6 @@ if [[ -z "${CONTAINER_MEM_LIMIT:-}" ]]; then
   bash -x "${SCRIPT_PATH}/qdrant_collect_stats.sh" "$SERVER_CONTAINER_NAME"
 
 else
-  CONTAINER_MEM_LIMIT=${CONTAINER_MEM_LIMIT:-"700mb"}
-
   echo "CONTAINER_MEM_LIMIT is set, run search with memory limit: ${CONTAINER_MEM_LIMIT}"
 
   SERVER_CONTAINER_NAME=${SERVER_CONTAINER_NAME:-"qdrant-continuous-benchmarks-with-volume"}
