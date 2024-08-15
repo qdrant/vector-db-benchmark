@@ -337,6 +337,17 @@
     }
   },
   {
+    "name": "random-768-100-tenants",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "tar",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/random_keywords_1m_768_vocab_100.tgz",
+    "path": "random-768-100-tenants/random_keywords_1m_768_vocab_100",
+    "schema": {
+      "a": "keyword"
+    }
+  },
+  {
     "name": "random-100-match-kw-small-vocab-no-filters",
     "vector_size": 256,
     "distance": "cosine",

@@ -9,6 +9,8 @@ DATASETS=${DATASETS:-""}
 
 PRIVATE_IP_OF_THE_SERVER=${PRIVATE_IP_OF_THE_SERVER:-""}
 
+EXPERIMENT_MODE=${EXPERIMENT_MODE:-"full"}
+
 if [[ -z "$ENGINE_NAME" ]]; then
   echo "ENGINE_NAME is not set"
   exit 1
@@ -24,23 +26,40 @@ if [[ -z "$PRIVATE_IP_OF_THE_SERVER" ]]; then
   exit 1
 fi
 
+if [[ -z "$EXPERIMENT_MODE" ]]; then
+  echo "EXPERIMENT_MODE is not set, possible values are: full | upload | search"
+  exit 1
+fi
 docker container rm -f ci-benchmark-upload || true
 docker container rm -f ci-benchmark-search || true
 
 docker rmi --force qdrant/vector-db-benchmark:latest || true
 
-docker run \
-  --rm \
-  -it \
-  --name ci-benchmark-upload \
-  -v "$HOME/results:/code/results" \
-  qdrant/vector-db-benchmark:latest \
-  python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-search
+if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "upload" ]]; then
+  echo "EXPERIMENT_MODE=$EXPERIMENT_MODE"
+  docker run \
+    --rm \
+    -it \
+    --name ci-benchmark-upload \
+    -v "$HOME/results:/code/results" \
+    qdrant/vector-db-benchmark:latest \
+    python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-search
+fi
 
-docker run \
-  --rm \
-  -it \
-  --name ci-benchmark-search \
-  -v "$HOME/results:/code/results" \
-  qdrant/vector-db-benchmark:latest \
-  python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-upload
+
+if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "search" ]]; then
+  echo "EXPERIMENT_MODE=$EXPERIMENT_MODE"
+
+  if [[ "$EXPERIMENT_MODE" == "search" ]]; then
+    echo "Drop caches before running the experiment"
+    sudo bash -c 'sync; echo 1 > /proc/sys/vm/drop_caches'
+  fi
+
+  docker run \
+    --rm \
+    -it \
+    --name ci-benchmark-search \
+    -v "$HOME/results:/code/results" \
+    qdrant/vector-db-benchmark:latest \
+    python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-upload
+fi
