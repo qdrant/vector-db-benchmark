@@ -50,7 +50,9 @@ class QdrantConfigurator(BaseConfigurator):
                 },
             }
         else:
-            is_vectors_on_disk = self.collection_params.get("vectors_config", {}).get("on_disk", False)
+            is_vectors_on_disk = self.collection_params.get("vectors_config", {}).get(
+                "on_disk", False
+            )
             self.collection_params.pop("vectors_config", None)
 
             vectors_config = {
@@ -82,7 +84,9 @@ class QdrantConfigurator(BaseConfigurator):
         )
         for field_name, field_type in dataset.config.schema.items():
             if field_type in ["keyword", "uuid"]:
-                is_tenant = payload_index_params.get(field_name, {}).get("is_tenant", None)
+                is_tenant = payload_index_params.get(field_name, {}).get(
+                    "is_tenant", None
+                )
                 on_disk = payload_index_params.get(field_name, {}).get("on_disk", None)
 
                 self.client.create_payload_index(
