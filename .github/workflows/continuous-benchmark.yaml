@@ -44,6 +44,49 @@ jobs:
               timeout 30m bash -x tools/run_ci.sh
             done
 
+            set -e
+      - name: Fail job if any of the benches failed
+        if: steps.benches.outputs.failed == 'error' || steps.benches.outputs.failed == 'timeout'
+        run: exit 1
+      - name: Send Notification
+        if: failure() || cancelled()
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          payload: |
+            {
+              "text": "CI benchmarks run status: ${{ job.status }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "CI benchmarks failed because of ${{ steps.benches.outputs.failed }}.\nView the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.CI_ALERTS_CHANNEL_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+  runTenantsBenchmark:
+    runs-on: ubuntu-latest
+    needs: runBenchmark
+    if: ${{ always() }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Benches
+        id: benches
+        run: |
+            export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
+            export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+            bash -x tools/setup_ci.sh
+
+            set +e
+
             # Benchmark filtered search by tenants with mem limitation
 
             export ENGINE_NAME="qdrant-all-on-disk-scalar-q"
@@ -68,13 +111,13 @@ jobs:
         with:
           payload: |
             {
-              "text": "CI benchmarks run status: ${{ job.status }}",
+              "text": "CI tenants benchmarks run status: ${{ job.status }}",
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "CI benchmarks failed because of ${{ steps.benches.outputs.failed }}.\nView the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
+                    "text": "CI tenants benchmarks failed because of ${{ steps.benches.outputs.failed }}.\nView the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
                   }
                 }
               ]
