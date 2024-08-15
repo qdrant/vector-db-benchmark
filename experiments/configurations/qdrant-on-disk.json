@@ -21,10 +21,10 @@
       "quantization_config": { "scalar": {"type": "int8", "quantile": 0.99, "always_ram": false} },
       "vectors_config": { "on_disk": true },
       "hnsw_config": { "on_disk": true, "m": 0, "payload_m": 16 },
-      "on_disk_payload": true
-    },
-    "payload_index_params": {
-      "on_disk": true
+      "on_disk_payload": true,
+      "payload_index_params": {
+        "a": { "is_tenant": true, "on_disk": true }
+      }
     },
     "search_params": [
       { "parallel": 8 }

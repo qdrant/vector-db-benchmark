@@ -345,8 +345,7 @@
     "path": "random-768-100-tenants/random_keywords_1m_768_vocab_100",
     "schema": {
       "a": "keyword"
-    },
-    "tenants": [ "a" ]
+    }
   },
   {
     "name": "random-100-match-kw-small-vocab-no-filters",

@@ -21,16 +21,8 @@ class WeaviateConfigurator(BaseConfigurator):
         "geo": "geoCoordinates",
     }
 
-    def __init__(
-        self,
-        host,
-        collection_params: dict,
-        connection_params: dict,
-        payload_index_params,
-    ):
-        super().__init__(
-            host, collection_params, connection_params, payload_index_params
-        )
+    def __init__(self, host, collection_params: dict, connection_params: dict):
+        super().__init__(host, collection_params, connection_params)
         url = f"http://{host}:{connection_params.get('port', WEAVIATE_DEFAULT_PORT)}"
         client = WeaviateClient(
             ConnectionParams.from_url(url, 50051), skip_init_checks=True
@@ -41,7 +33,7 @@ class WeaviateConfigurator(BaseConfigurator):
     def clean(self):
         self.client.collections.delete(WEAVIATE_CLASS_NAME)
 
-    def recreate(self, dataset: Dataset, collection_params, payload_index_params):
+    def recreate(self, dataset: Dataset, collection_params):
         self.client.collections.create_from_dict(
             {
                 "class": WEAVIATE_CLASS_NAME,

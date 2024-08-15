@@ -33,16 +33,8 @@ class RedisConfigurator(BaseConfigurator):
         "geo": GeoField,
     }
 
-    def __init__(
-        self,
-        host,
-        collection_params: dict,
-        connection_params: dict,
-        payload_index_params: dict,
-    ):
-        super().__init__(
-            host, collection_params, connection_params, payload_index_params
-        )
+    def __init__(self, host, collection_params: dict, connection_params: dict):
+        super().__init__(host, collection_params, connection_params)
         redis_constructor = RedisCluster if REDIS_CLUSTER else Redis
         self.is_cluster = REDIS_CLUSTER
         self.client = redis_constructor(
@@ -64,7 +56,7 @@ class RedisConfigurator(BaseConfigurator):
                 if "Unknown Index name" not in str(e):
                     print(e)
 
-    def recreate(self, dataset: Dataset, collection_params, payload_index_params):
+    def recreate(self, dataset: Dataset, collection_params):
         self.clean()
 
         payload_fields = [

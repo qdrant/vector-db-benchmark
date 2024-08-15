@@ -29,23 +29,15 @@ class QdrantConfigurator(BaseConfigurator):
         "geo": rest.GeoIndexParams,
     }
 
-    def __init__(
-        self,
-        host,
-        collection_params: dict,
-        connection_params: dict,
-        payload_index_params: dict,
-    ):
-        super().__init__(
-            host, collection_params, connection_params, payload_index_params
-        )
+    def __init__(self, host, collection_params: dict, connection_params: dict):
+        super().__init__(host, collection_params, connection_params)
 
         self.client = QdrantClient(host=host, **connection_params)
 
     def clean(self):
         self.client.delete_collection(collection_name=QDRANT_COLLECTION_NAME)
 
-    def recreate(self, dataset: Dataset, collection_params, payload_index_params):
+    def recreate(self, dataset: Dataset, collection_params):
         if dataset.config.type == "sparse":
             vectors_config = {
                 "vectors_config": {},
@@ -58,12 +50,8 @@ class QdrantConfigurator(BaseConfigurator):
                 },
             }
         else:
-            is_vectors_on_disk = False
-            if "vectors_config" in self.collection_params.keys():
-                is_vectors_on_disk = self.collection_params.get("vectors_config").get(
-                    "on_disk", False
-                )
-                self.collection_params.__delitem__("vectors_config")
+            is_vectors_on_disk = self.collection_params.get("vectors_config", {}).get("on_disk", False)
+            self.collection_params.pop("vectors_config", None)
 
             vectors_config = {
                 "vectors_config": (
@@ -74,6 +62,11 @@ class QdrantConfigurator(BaseConfigurator):
                     )
                 )
             }
+
+        payload_index_params = self.collection_params.get("payload_index_params", {})
+        self.collection_params.pop("payload_index_params", None)
+        if not set(payload_index_params.keys()).issubset(dataset.config.schema.keys()):
+            raise ValueError("payload_index_params are not found in dataset schema")
 
         self.client.recreate_collection(
             collection_name=QDRANT_COLLECTION_NAME,
@@ -88,15 +81,17 @@ class QdrantConfigurator(BaseConfigurator):
             ),
         )
         for field_name, field_type in dataset.config.schema.items():
-            is_tenant = True if field_name in dataset.config.tenants else False
             if field_type in ["keyword", "uuid"]:
+                is_tenant = payload_index_params.get(field_name, {}).get("is_tenant", None)
+                on_disk = payload_index_params.get(field_name, {}).get("on_disk", None)
+
                 self.client.create_payload_index(
                     collection_name=QDRANT_COLLECTION_NAME,
                     field_name=field_name,
                     field_schema=self.INDEX_PARAMS_TYPE_MAPPING.get(field_type)(
                         type=self.INDEX_TYPE_MAPPING.get(field_type),
                         is_tenant=is_tenant,
-                        on_disk=self.payload_index_params.get("on_disk", False),
+                        on_disk=on_disk,
                     ),
                 )
             else:

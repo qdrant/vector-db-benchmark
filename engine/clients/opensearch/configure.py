@@ -23,16 +23,8 @@ class OpenSearchConfigurator(BaseConfigurator):
         "geo": "geo_point",
     }
 
-    def __init__(
-        self,
-        host,
-        collection_params: dict,
-        connection_params: dict,
-        payload_index_params: dict,
-    ):
-        super().__init__(
-            host, collection_params, connection_params, payload_index_params
-        )
+    def __init__(self, host, collection_params: dict, connection_params: dict):
+        super().__init__(host, collection_params, connection_params)
         init_params = {
             **{
                 "verify_certs": False,
@@ -58,7 +50,7 @@ class OpenSearchConfigurator(BaseConfigurator):
         except NotFoundError:
             pass
 
-    def recreate(self, dataset: Dataset, collection_params, payload_index_params):
+    def recreate(self, dataset: Dataset, collection_params):
         if dataset.config.distance == Distance.DOT:
             raise IncompatibilityError
         if dataset.config.vector_size > 1024:

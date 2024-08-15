@@ -30,16 +30,8 @@ class MilvusConfigurator(BaseConfigurator):
         "geo": DataType.UNKNOWN,
     }
 
-    def __init__(
-        self,
-        host,
-        collection_params: dict,
-        connection_params: dict,
-        payload_index_params: dict,
-    ):
-        super().__init__(
-            host, collection_params, connection_params, payload_index_params
-        )
+    def __init__(self, host, collection_params: dict, connection_params: dict):
+        super().__init__(host, collection_params, connection_params)
         self.client = connections.connect(
             alias=MILVUS_DEFAULT_ALIAS,
             host=host,
@@ -55,7 +47,7 @@ class MilvusConfigurator(BaseConfigurator):
         except MilvusException:
             pass
 
-    def recreate(self, dataset: Dataset, collection_params, payload_index_params):
+    def recreate(self, dataset: Dataset, collection_params):
         idx = FieldSchema(
             name="id",
             dtype=DataType.INT64,
