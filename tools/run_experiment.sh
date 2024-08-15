@@ -42,7 +42,7 @@ if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "upload" ]]; t
     -it \
     --name ci-benchmark-upload \
     -v "$HOME/results:/code/results" \
-    ghcr.io/qdrant/vector-db-benchmark:el_latest \
+    qdrant/vector-db-benchmark:latest \
     python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-search
 fi
 
@@ -60,6 +60,6 @@ if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "search" ]]; t
     -it \
     --name ci-benchmark-search \
     -v "$HOME/results:/code/results" \
-    ghcr.io/qdrant/vector-db-benchmark:el_latest \
+    qdrant/vector-db-benchmark:latest \
     python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-upload
 fi

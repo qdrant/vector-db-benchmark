@@ -65,8 +65,7 @@ class QdrantConfigurator(BaseConfigurator):
                 )
             }
 
-        payload_index_params = self.collection_params.get("payload_index_params", {})
-        self.collection_params.pop("payload_index_params", None)
+        payload_index_params = self.collection_params.pop("payload_index_params", {})
         if not set(payload_index_params.keys()).issubset(dataset.config.schema.keys()):
             raise ValueError("payload_index_params are not found in dataset schema")
 
