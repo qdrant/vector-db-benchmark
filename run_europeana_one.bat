@@ -6,9 +6,9 @@ set DATASETS="random-100"
 rem all milvusw m-16
 rem set ENGINE_NAME="milvusw-m-16-*"
 rem all redisw m-16
-set ENGINE_NAME="redisw-m-16-*"
-rem all qdrant m-16
-rem set ENGINE_NAME="qdrantw-m-16-*"
+rem set ENGINE_NAME="redisw-m-16-*"
+rem all qdrantw m-16
+set ENGINE_NAME="qdrantw-m-16-*"
 rem all milvus
 rem ENGINE_NAME="milvusw-m-*"
 
