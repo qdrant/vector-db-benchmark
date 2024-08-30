@@ -1,0 +1,16 @@
+version: "3.7"
+
+services:
+  redis:
+    image: redislabs/redisearch:2.8.8
+    ports:
+      - '6379:6379'
+    logging:
+      driver: "json-file"
+      options:
+        max-file: 1
+        max-size: 10m
+    deploy:
+      resources:
+        limits:
+          memory: 4Gb
