@@ -1,0 +1,92 @@
+[
+  {
+    "name": "redisw-default",
+    "engine": "redis",
+    "connection_params": {},
+    "collection_params": {
+    },
+    "search_params": [
+      { "parallel": 1, "config": { "EF": 64 } }, { "parallel": 1, "config": { "EF": 128 } }, { "parallel": 1, "config": { "EF": 256 } }, { "parallel": 1, "config": { "EF": 512 } },
+      { "parallel": 50, "config": { "EF": 64 } }, { "parallel": 50, "config": { "EF": 128 } }, { "parallel": 50, "config": { "EF": 256 } }, { "parallel": 50, "config": { "EF": 512 } }
+    ],
+    "upload_params": { "parallel": 16, "batch_size": 1024 }
+  },
+  {
+    "name": "redisw-m-16-ef-128",
+    "engine": "redis",
+    "connection_params": {},
+    "collection_params": {
+      "hnsw_config": { "M": 16, "EF_CONSTRUCTION": 128 }
+    },
+    "search_params": [
+      { "parallel": 1, "config": { "EF": 64 } }, { "parallel": 1, "config": { "EF": 128 } }, { "parallel": 1, "config": { "EF": 256 } }, { "parallel": 1, "config": { "EF": 512 } },
+      { "parallel": 50, "config": { "EF": 64 } }, { "parallel": 50, "config": { "EF": 128 } }, { "parallel": 50, "config": { "EF": 256 } }, { "parallel": 50, "config": { "EF": 512 } }
+    ],
+    "upload_params": { "parallel": 16 }
+  },
+  {
+    "name": "redisw-m-32-ef-128",
+    "engine": "redis",
+    "connection_params": {},
+    "collection_params": {
+      "hnsw_config": { "M": 32, "EF_CONSTRUCTION": 128 }
+    },
+    "search_params": [
+      { "parallel": 1, "config": { "EF": 64 } }, { "parallel": 1, "config": { "EF": 128 } }, { "parallel": 1, "config": { "EF": 256 } }, { "parallel": 1, "config": { "EF": 512 } },
+      { "parallel": 50, "config": { "EF": 64 } }, { "parallel": 50, "config": { "EF": 128 } }, { "parallel": 50, "config": { "EF": 256 } }, { "parallel": 50, "config": { "EF": 512 } }
+    ],
+    "upload_params": { "parallel": 16 }
+  },
+  {
+    "name": "redisw-m-32-ef-256",
+    "engine": "redis",
+    "connection_params": {},
+    "collection_params": {
+      "hnsw_config": { "M": 32, "EF_CONSTRUCTION": 256 }
+    },
+    "search_params": [
+      { "parallel": 1, "config": { "EF": 64 } }, { "parallel": 1, "config": { "EF": 128 } }, { "parallel": 1, "config": { "EF": 256 } }, { "parallel": 1, "config": { "EF": 512 } },
+      { "parallel": 50, "config": { "EF": 64 } }, { "parallel": 50, "config": { "EF": 128 } }, { "parallel": 50, "config": { "EF": 256 } }, { "parallel": 50, "config": { "EF": 512 } }
+    ],
+    "upload_params": { "parallel": 16 }
+  },
+  {
+    "name": "redisw-m-32-ef-512",
+    "engine": "redis",
+    "connection_params": {},
+    "collection_params": {
+      "hnsw_config": { "M": 32, "EF_CONSTRUCTION": 512 }
+    },
+    "search_params": [
+      { "parallel": 1, "config": { "EF": 64 } }, { "parallel": 1, "config": { "EF": 128 } }, { "parallel": 1, "config": { "EF": 256 } }, { "parallel": 1, "config": { "EF": 512 } },
+      { "parallel": 50, "config": { "EF": 64 } }, { "parallel": 50, "config": { "EF": 128 } }, { "parallel": 50, "config": { "EF": 256 } }, { "parallel": 50, "config": { "EF": 512 } }
+    ],
+    "upload_params": { "parallel": 16 }
+  },
+  {
+    "name": "redisw-m-64-ef-256",
+    "engine": "redis",
+    "connection_params": {},
+    "collection_params": {
+      "hnsw_config": { "M": 64, "EF_CONSTRUCTION": 256 }
+    },
+    "search_params": [
+      { "parallel": 1, "config": { "EF": 64 } }, { "parallel": 1, "config": { "EF": 128 } }, { "parallel": 1, "config": { "EF": 256 } }, { "parallel": 1, "config": { "EF": 512 } },
+      { "parallel": 50, "config": { "EF": 64 } }, { "parallel": 50, "config": { "EF": 128 } }, { "parallel": 50, "config": { "EF": 256 } }, { "parallel": 50, "config": { "EF": 512 } }
+    ],
+    "upload_params": { "parallel": 16 }
+  },
+  {
+    "name": "redisw-m-64-ef-512",
+    "engine": "redis",
+    "connection_params": {},
+    "collection_params": {
+      "hnsw_config": { "M": 64, "EF_CONSTRUCTION": 512 }
+    },
+    "search_params": [
+      { "parallel": 1, "config": { "EF": 64 } }, { "parallel": 1, "config": { "EF": 128 } }, { "parallel": 1, "config": { "EF": 256 } }, { "parallel": 1, "config": { "EF": 512 } },
+      { "parallel": 50, "config": { "EF": 64 } }, { "parallel": 50, "config": { "EF": 128 } }, { "parallel": 50, "config": { "EF": 256 } }, { "parallel": 50, "config": { "EF": 512 } }
+    ],
+    "upload_params": { "parallel": 16 }
+  }
+]
