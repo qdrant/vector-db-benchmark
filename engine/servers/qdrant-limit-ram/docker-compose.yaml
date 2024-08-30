@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   qdrant_bench:
-    image: qdrant/qdrant:${QDRANT_VERSION:-v1.11.0}
+    image: qdrant/qdrant:${QDRANT_VERSION:-v1.11.3}
     ports:
       - "6333:6333"
       - "6334:6334"
