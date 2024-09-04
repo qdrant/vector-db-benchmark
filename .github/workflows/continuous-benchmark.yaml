@@ -91,7 +91,7 @@ jobs:
 
             export ENGINE_NAME="qdrant-all-on-disk-scalar-q"
             export DATASETS="random-768-100-tenants"
-            export CONTAINER_MEM_LIMIT=150mb
+            export CONTAINER_MEM_LIMIT=160mb
 
             # Benchmark the dev branch:
             export QDRANT_VERSION=ghcr/dev
