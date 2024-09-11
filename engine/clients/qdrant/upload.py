@@ -1,10 +1,17 @@
 import os
 import time
-from typing import List, Optional
+from typing import List
 
 from qdrant_client import QdrantClient
-from qdrant_client.http.models import Batch, CollectionStatus, OptimizersConfigDiff
+from qdrant_client._pydantic_compat import construct
+from qdrant_client.http.models import (
+    Batch,
+    CollectionStatus,
+    OptimizersConfigDiff,
+    SparseVector,
+)
 
+from dataset_reader.base_reader import Record
 from engine.base_client.upload import BaseUploader
 from engine.clients.qdrant.config import QDRANT_COLLECTION_NAME
 
@@ -21,15 +28,30 @@ class QdrantUploader(BaseUploader):
         cls.upload_params = upload_params
 
     @classmethod
-    def upload_batch(
-        cls, ids: List[int], vectors: List[list], metadata: Optional[List[dict]]
-    ):
-        cls.client.upsert(
+    def upload_batch(cls, batch: List[Record]):
+        ids, vectors, payloads = [], [], []
+        for point in batch:
+            if point.sparse_vector is None:
+                vector = point.vector
+            else:
+                vector = {
+                    "sparse": construct(
+                        SparseVector,
+                        indices=point.sparse_vector.indices,
+                        values=point.sparse_vector.values,
+                    )
+                }
+
+            ids.append(point.id)
+            vectors.append(vector)
+            payloads.append(point.metadata or {})
+
+        _ = cls.client.upsert(
             collection_name=QDRANT_COLLECTION_NAME,
-            points=Batch.construct(
+            points=Batch.model_construct(
                 ids=ids,
                 vectors=vectors,
-                payloads=[payload or {} for payload in metadata],
+                payloads=payloads,
             ),
             wait=False,
         )
@@ -39,6 +61,7 @@ class QdrantUploader(BaseUploader):
         cls.client.update_collection(
             collection_name=QDRANT_COLLECTION_NAME,
             optimizer_config=OptimizersConfigDiff(
+                # indexing_threshold=10_000,
                 max_optimization_threads=1,
             ),
         )

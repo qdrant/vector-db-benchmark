@@ -19,6 +19,11 @@ from engine.clients.opensearch import (
     OpenSearchSearcher,
     OpenSearchUploader,
 )
+from engine.clients.pgvector import (
+    PgVectorConfigurator,
+    PgVectorSearcher,
+    PgVectorUploader,
+)
 from engine.clients.qdrant import QdrantConfigurator, QdrantSearcher, QdrantUploader
 from engine.clients.redis import RedisConfigurator, RedisSearcher, RedisUploader
 from engine.clients.weaviate import (
@@ -35,6 +40,7 @@ ENGINE_CONFIGURATORS = {
     "opensearch": OpenSearchConfigurator,
     "redis": RedisConfigurator,
     "clickhouse": ClickHouseConfigurator
+    "pgvector": PgVectorConfigurator,
 }
 
 ENGINE_UPLOADERS = {
@@ -45,6 +51,7 @@ ENGINE_UPLOADERS = {
     "opensearch": OpenSearchUploader,
     "redis": RedisUploader,
     "clickhouse": ClickHouseUploader
+    "pgvector": PgVectorUploader,
 }
 
 ENGINE_SEARCHERS = {
@@ -55,14 +62,17 @@ ENGINE_SEARCHERS = {
     "opensearch": OpenSearchSearcher,
     "redis": RedisSearcher,
     "clickhouse": ClickHouseSearcher
+    "pgvector": PgVectorSearcher,
 }
 
 
 class ClientFactory(ABC):
     def __init__(self, host):
         self.host = host
+        self.engine = None
 
     def _create_configurator(self, experiment) -> BaseConfigurator:
+        self.engine = experiment["engine"]
         engine_configurator_class = ENGINE_CONFIGURATORS[experiment["engine"]]
         engine_configurator = engine_configurator_class(
             self.host,
@@ -99,6 +109,7 @@ class ClientFactory(ABC):
     def build_client(self, experiment):
         return BaseClient(
             name=experiment["name"],
+            engine=experiment["engine"],
             configurator=self._create_configurator(experiment),
             uploader=self._create_uploader(experiment),
             searchers=self._create_searchers(experiment),

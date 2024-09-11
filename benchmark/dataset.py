@@ -11,20 +11,28 @@ from dataset_reader.ann_compound_reader import AnnCompoundReader
 from dataset_reader.ann_h5_reader import AnnH5Reader
 from dataset_reader.base_reader import BaseReader
 from dataset_reader.json_reader import JSONReader
+from dataset_reader.sparse_reader import SparseReader
 
 
 @dataclass
 class DatasetConfig:
-    vector_size: int
-    distance: str
     name: str
     type: str
     path: str
+
     link: Optional[str] = None
     schema: Optional[Dict[str, str]] = field(default_factory=dict)
+    # None in case of sparse vectors:
+    vector_size: Optional[int] = None
+    distance: Optional[str] = None
 
 
-READER_TYPE = {"h5": AnnH5Reader, "jsonl": JSONReader, "tar": AnnCompoundReader}
+READER_TYPE = {
+    "h5": AnnH5Reader,
+    "jsonl": JSONReader,
+    "tar": AnnCompoundReader,
+    "sparse": SparseReader,
+}
 
 
 class Dataset:

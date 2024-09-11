@@ -1,4 +1,5 @@
-from weaviate import Client
+from weaviate import WeaviateClient
+from weaviate.connect import ConnectionParams
 
 from benchmark.dataset import Dataset
 from engine.base_client.configure import BaseConfigurator
@@ -21,17 +22,18 @@ class WeaviateConfigurator(BaseConfigurator):
 
     def __init__(self, host, collection_params: dict, connection_params: dict):
         super().__init__(host, collection_params, connection_params)
-        url = f"http://{host}:{connection_params.pop('port', WEAVIATE_DEFAULT_PORT)}"
-        self.client = Client(url, **connection_params)
+        url = f"http://{host}:{connection_params.get('port', WEAVIATE_DEFAULT_PORT)}"
+        client = WeaviateClient(
+            ConnectionParams.from_url(url, 50051), skip_init_checks=True
+        )
+        client.connect()
+        self.client = client
 
     def clean(self):
-        classes = self.client.schema.get()
-        for cl in classes["classes"]:
-            if cl["class"] == WEAVIATE_CLASS_NAME:
-                self.client.schema.delete_class(WEAVIATE_CLASS_NAME)
+        self.client.collections.delete(WEAVIATE_CLASS_NAME)
 
     def recreate(self, dataset: Dataset, collection_params):
-        self.client.schema.create_class(
+        self.client.collections.create_from_dict(
             {
                 "class": WEAVIATE_CLASS_NAME,
                 "vectorizer": "none",
@@ -55,6 +57,8 @@ class WeaviateConfigurator(BaseConfigurator):
                 },
             }
         )
-        self.client.schema.update_config(WEAVIATE_CLASS_NAME, {
+        self.client.close()
 
-        })
+    def __del__(self):
+        if self.client.is_connected():
+            self.client.close()

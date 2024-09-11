@@ -20,13 +20,13 @@ def run(
     host: str = "localhost",
     skip_upload: bool = False,
     skip_search: bool = False,
-    skip_if_exists: bool = True,
+    skip_if_exists: bool = False,
     exit_on_error: bool = True,
     timeout: float = 86400.0,
 ):
     """
     Example:
-        python3 run.py --engines *-m-16-* --engines qdrant-* --datasets glove-*
+        python3 run.py --engines "*-m-16-*" --engines "qdrant-*" --datasets "glove-*"
     """
     all_engines = read_engine_configs()
     all_datasets = read_dataset_config()
@@ -46,13 +46,20 @@ def run(
         for dataset_name, dataset_config in selected_datasets.items():
             print(f"Running experiment: {engine_name} - {dataset_name}")
             client = ClientFactory(host).build_client(engine_config)
-            dataset = Dataset(dataset_config)
-            dataset.download()
             try:
+
+                dataset = Dataset(dataset_config)
+                if dataset.config.type == "sparse" and not client.sparse_vector_support:
+                    raise IncompatibilityError(
+                        f"{client.name} engine does not support sparse vectors"
+                    )
+                dataset.download()
+
                 with stopit.ThreadingTimeout(timeout) as tt:
                     client.run_experiment(
                         dataset, skip_upload, skip_search, skip_if_exists
                     )
+                client.delete_client()
 
                 # If the timeout is reached, the server might be still in the
                 # middle of some background processing, like creating the index.
@@ -65,9 +72,11 @@ def run(
                     )
                     exit(2)
             except IncompatibilityError as e:
-                print(f"Skipping {engine_name} - {dataset_name}, incompatible params")
+                print(
+                    f"Skipping {engine_name} - {dataset_name}, incompatible params:", e
+                )
                 continue
-            except KeyboardInterrupt as e:
+            except KeyboardInterrupt:
                 traceback.print_exc()
                 exit(1)
             except Exception as e:

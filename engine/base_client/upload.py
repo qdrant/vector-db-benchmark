@@ -1,6 +1,6 @@
 import time
 from multiprocessing import get_context
-from typing import Iterable, List, Optional, Tuple
+from typing import Iterable, List
 
 import tqdm
 
@@ -31,8 +31,8 @@ class BaseUploader:
     ) -> dict:
         latencies = []
         start = time.perf_counter()
-        parallel = self.upload_params.pop("parallel", 1)
-        batch_size = self.upload_params.pop("batch_size", 64)
+        parallel = self.upload_params.get("parallel", 1)
+        batch_size = self.upload_params.get("batch_size", 64)
 
         self.init_client(
             self.host, distance, self.connection_params, self.upload_params
@@ -82,12 +82,9 @@ class BaseUploader:
         }
 
     @classmethod
-    def _upload_batch(
-        cls, batch: Tuple[List[int], List[list], List[Optional[dict]]]
-    ) -> float:
-        ids, vectors, metadata = batch
+    def _upload_batch(cls, batch: List[Record]) -> float:
         start = time.perf_counter()
-        cls.upload_batch(ids, vectors, metadata)
+        cls.upload_batch(batch)
         return time.perf_counter() - start
 
     @classmethod
@@ -95,9 +92,7 @@ class BaseUploader:
         return {}
 
     @classmethod
-    def upload_batch(
-        cls, ids: List[int], vectors: List[list], metadata: List[Optional[dict]]
-    ):
+    def upload_batch(cls, batch: List[Record]):
         raise NotImplementedError()
 
     @classmethod

@@ -1,10 +1,15 @@
 #!/bin/bash
 
-ENGINE_NAME=${ENGINE_NAME:-"qdrant-default"}
+PS4='ts=$(date "+%Y-%m-%dT%H:%M:%SZ") level=DEBUG line=$LINENO file=$BASH_SOURCE '
+set -euo pipefail
+
+ENGINE_NAME=${ENGINE_NAME:-"qdrant-continuous-benchmark"}
 
 DATASETS=${DATASETS:-""}
 
 PRIVATE_IP_OF_THE_SERVER=${PRIVATE_IP_OF_THE_SERVER:-""}
+
+EXPERIMENT_MODE=${EXPERIMENT_MODE:-"full"}
 
 if [[ -z "$ENGINE_NAME" ]]; then
   echo "ENGINE_NAME is not set"
@@ -21,18 +26,40 @@ if [[ -z "$PRIVATE_IP_OF_THE_SERVER" ]]; then
   exit 1
 fi
 
-docker rmi qdrant/vector-db-benchmark:latest || true
+if [[ -z "$EXPERIMENT_MODE" ]]; then
+  echo "EXPERIMENT_MODE is not set, possible values are: full | upload | search"
+  exit 1
+fi
+docker container rm -f ci-benchmark-upload || true
+docker container rm -f ci-benchmark-search || true
 
-docker run \
-  --rm \
-  -it \
-  -v "$HOME/results:/code/results" \
-  qdrant/vector-db-benchmark:latest \
-  python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-search
+docker rmi --force qdrant/vector-db-benchmark:latest || true
 
-docker run \
-  --rm \
-  -it \
-  -v "$HOME/results:/code/results" \
-  qdrant/vector-db-benchmark:latest \
-  python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-upload
+if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "upload" ]]; then
+  echo "EXPERIMENT_MODE=$EXPERIMENT_MODE"
+  docker run \
+    --rm \
+    -it \
+    --name ci-benchmark-upload \
+    -v "$HOME/results:/code/results" \
+    qdrant/vector-db-benchmark:latest \
+    python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-search
+fi
+
+
+if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "search" ]]; then
+  echo "EXPERIMENT_MODE=$EXPERIMENT_MODE"
+
+  if [[ "$EXPERIMENT_MODE" == "search" ]]; then
+    echo "Drop caches before running the experiment"
+    sudo bash -c 'sync; echo 1 > /proc/sys/vm/drop_caches'
+  fi
+
+  docker run \
+    --rm \
+    -it \
+    --name ci-benchmark-search \
+    -v "$HOME/results:/code/results" \
+    qdrant/vector-db-benchmark:latest \
+    python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-upload
+fi

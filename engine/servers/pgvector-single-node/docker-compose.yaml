@@ -1,0 +1,27 @@
+version: '3.7'
+
+services:
+  pgvector:
+    container_name: pgvector
+    image: pgvector/pgvector:0.6.2-pg16
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=passwd
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    # shared_buffers should be 25% of memory
+    # maintenance_work_mem should be ~65%
+    command: postgres -c shared_buffers=6GB -c maintenance_work_mem=16GB -c max_connections=200
+    # shm_size should be shared_buffers + maintenance_work_mem
+    shm_size: 22g
+    ports:
+      - 5432:5432
+    logging:
+      driver: "json-file"
+      options:
+        max-file: 1
+        max-size: 10m
+    deploy:
+      resources:
+        limits:
+          memory: 25Gb

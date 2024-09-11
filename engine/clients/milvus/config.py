@@ -10,7 +10,7 @@ DISTANCE_MAPPING = {
     Distance.L2: "L2",
     Distance.DOT: "IP",
     # Milvus does not support cosine. Cosine is equal to IP of normalized vectors
-    Distance.COSINE: "IP"
+    Distance.COSINE: "IP",
     # Jaccard, Tanimoto, Hamming distance, Superstructure and Substructure are also available
 }
 
@@ -23,4 +23,5 @@ DTYPE_DEFAULT = {
     DataType.INT64: 0,
     DataType.VARCHAR: "---MILVUS DOES NOT ACCEPT EMPTY STRINGS---",
     DataType.FLOAT: 0.0,
+    DataType.DOUBLE: 0.0,
 }

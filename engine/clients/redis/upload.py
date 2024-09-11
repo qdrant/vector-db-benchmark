@@ -1,8 +1,9 @@
-from typing import List, Optional
+from typing import List
 
 import numpy as np
 from redis import Redis, RedisCluster
 
+from dataset_reader.base_reader import Record
 from engine.base_client.upload import BaseUploader
 from engine.clients.redis.config import (
     REDIS_AUTH,
@@ -26,20 +27,18 @@ class RedisUploader(BaseUploader):
         cls.upload_params = upload_params
 
     @classmethod
-    def upload_batch(
-        cls, ids: List[int], vectors: List[list], metadata: Optional[List[dict]]
-    ):
+    def upload_batch(cls, batch: List[Record]):
         p = cls.client.pipeline(transaction=False)
-        for i in range(len(ids)):
-            idx = ids[i]
-            vec = vectors[i]
-            meta = metadata[i] if metadata else {}
+        for record in batch:
+            idx = record.id
+            vec = record.vector
+            meta = record.metadata or {}
             geopoints = {}
             payload = {}
             if meta is not None:
                 for k, v in meta.items():
                     # This is a patch for arxiv-titles dataset where we have a list of "labels", and
-                    # we want to index all of them under the same TAG field (whose seperator is ';').
+                    # we want to index all of them under the same TAG field (whose separator is ';').
                     if k == "labels":
                         payload[k] = ";".join(v)
                     if (

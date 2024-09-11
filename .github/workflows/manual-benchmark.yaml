@@ -5,11 +5,14 @@ on:
   workflow_dispatch:
     inputs:
         qdrant_version:
-            description: "Version of qdrant to benchmark (tags/v1.6.1, <commit-id>, my-branch, docker/v1.5.1)"
-            default: dev
+            description: "Version of qdrant to benchmark (tags/v1.6.1, <commit-id>, my-branch, docker/v1.5.1, ghcr/dev)"
+            default: ghcr/dev
         dataset:
             description: "Dataset to benchmark"
             default: laion-small-clip
+        engine_config:
+            description: "Engine config to benchmark"
+            default: qdrant-continuous-benchmark
 
 jobs:
   runManualBenchmark:
@@ -23,11 +26,11 @@ jobs:
       - name: Benches
         run: |
           export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
-          export GCS_KEY=${{ secrets.GCS_KEY }}
-          export GCS_SECRET=${{ secrets.GCS_SECRET }}
           export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
           export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
           export QDRANT_VERSION=${{ inputs.qdrant_version }}
           export DATASETS=${{ inputs.dataset }}
+          export ENGINE_NAME=${{ inputs.engine_config }}
           export POSTGRES_TABLE=benchmark_manual
+          bash -x tools/setup_ci.sh
           bash -x tools/run_ci.sh

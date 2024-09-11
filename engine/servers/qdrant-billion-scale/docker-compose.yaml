@@ -2,8 +2,10 @@ version: '3.7'
 
 services:
   qdrant_bench:
-    image: qdrant/qdrant:dev
-    network_mode: host
+    image: qdrant/qdrant:${QDRANT_VERSION:-v1.11.0}
+    ports:
+      - "6333:6333"
+      - "6334:6334"
     volumes:
       - ./storage:/qdrant/storage
     environment:

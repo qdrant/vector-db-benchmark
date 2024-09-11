@@ -1,0 +1,16 @@
+version: '3.7'
+
+services:
+  qdrant_bench:
+    image: qdrant/qdrant:${QDRANT_VERSION:-v1.11.0}
+    network_mode: host
+    logging:
+      driver: "json-file"
+      options:
+        max-file: 1
+        max-size: 10m
+    deploy:
+      resources:
+        limits:
+          # memory: 25Gb
+          cpus: '${QDRANT_CPU_LIMIT:-10000}' # this forces you to set a limit while running

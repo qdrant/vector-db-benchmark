@@ -1,6 +1,6 @@
 import json
+import os
 from datetime import datetime
-from pathlib import Path
 from typing import List
 
 from benchmark import ROOT_DIR
@@ -12,19 +12,27 @@ from engine.base_client.upload import BaseUploader
 RESULTS_DIR = ROOT_DIR / "results"
 RESULTS_DIR.mkdir(exist_ok=True)
 
+DETAILED_RESULTS = bool(int(os.getenv("DETAILED_RESULTS", False)))
+
 
 class BaseClient:
     def __init__(
-            self,
-            name: str,  # name of the experiment
-            configurator: BaseConfigurator,
-            uploader: BaseUploader,
-            searchers: List[BaseSearcher],
+        self,
+        name: str,  # name of the experiment
+        engine: str,  # name of the engine
+        configurator: BaseConfigurator,
+        uploader: BaseUploader,
+        searchers: List[BaseSearcher],
     ):
         self.name = name
         self.configurator = configurator
         self.uploader = uploader
         self.searchers = searchers
+        self.engine = engine
+
+    @property
+    def sparse_vector_support(self):
+        return self.configurator.SPARSE_VECTOR_SUPPORT
 
     def save_search_results(
             self, dataset_name: str, results: dict, search_id: int, search_params: dict
@@ -41,13 +49,17 @@ class BaseClient:
                     {
                         "test_name": self.name,
                         "operation": "search",
-                        "dataset_name": dataset_name,
-                        "params": search_params,
+                        "params": {
+                            "dataset": dataset_name,
+                            "experiment": self.name,
+                            "engine": self.engine,
+                            **search_params,
+                        },
                         "results": results,
                         "timestamp": timestamp,
                         "search_id": search_id,
-                    },
-                    indent=2)
+                    }
+                )
             )
         return result_path
 
@@ -59,11 +71,16 @@ class BaseClient:
         experiments_file = f"{self.name}-{dataset_name}-upload-{timestamp}.json"
         with open(RESULTS_DIR / experiments_file, "w") as out:
             upload_stats = {
+
                 "test_name": self.name,
                 "operation": "upload",
-                "dataset_name": dataset_name,
                 "timestamp": timestamp,
-                "params": upload_params,
+                "params": {
+                    "experiment": self.name,
+                    "engine": self.engine,
+                    "dataset": dataset_name,
+                    **upload_params,
+                },
                 "results": results,
             }
             out.write(json.dumps(upload_stats, indent=2))
@@ -98,6 +115,11 @@ class BaseClient:
             upload_stats = self.uploader.upload(
                 distance=dataset.config.distance, records=reader.read_data()
             )
+
+            if not DETAILED_RESULTS:
+                # Remove verbose stats from upload results
+                upload_stats.pop("latencies", None)
+
             self.save_upload_results(
                 dataset.config.name,
                 upload_stats,
@@ -127,8 +149,20 @@ class BaseClient:
                 search_stats = searcher.search_all(
                     dataset.config.distance, reader.read_queries()
                 )
+                if not DETAILED_RESULTS:
+                    # Remove verbose stats from search results
+                    search_stats.pop("latencies", None)
+                    search_stats.pop("precisions", None)
+
                 self.save_search_results(
                     dataset.config.name, search_stats, search_id, search_params
                 )
         print("Experiment stage: Done")
         print("Results saved to: ", RESULTS_DIR)
+
+    def delete_client(self):
+        self.uploader.delete_client()
+        self.configurator.delete_client()
+
+        for s in self.searchers:
+            s.delete_client()

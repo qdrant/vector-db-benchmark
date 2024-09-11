@@ -4,6 +4,7 @@ from benchmark.dataset import Dataset
 
 
 class BaseConfigurator:
+    SPARSE_VECTOR_SUPPORT: bool = False
     DISTANCE_MAPPING = {}
 
     def __init__(self, host, collection_params: dict, connection_params: dict):
@@ -23,3 +24,6 @@ class BaseConfigurator:
 
     def execution_params(self, distance, vector_size) -> dict:
         return {}
+
+    def delete_client(self):
+        pass

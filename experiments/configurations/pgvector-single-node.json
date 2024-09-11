@@ -1,0 +1,90 @@
+[
+    {
+        "name": "pgvector-default",
+        "engine": "pgvector",
+        "connection_params": {},
+        "collection_params": {},
+        "search_params": [
+          { "parallel": 8, "config": { "hnsw_ef": 128 } }
+        ],
+        "upload_params": { "parallel": 16, "batch_size": 1024, "hnsw_config": { "m": 16, "ef_construct": 128 } }
+    },
+    {
+      "name": "pgvector-parallel",
+      "engine": "pgvector",
+      "connection_params": {},
+      "collection_params": {},
+      "search_params": [
+        { "parallel": 8, "config": { "hnsw_ef": 128 } },
+        { "parallel": 16, "config": { "hnsw_ef": 128 } },
+        { "parallel": 100, "config": { "hnsw_ef": 128 } }
+      ],
+      "upload_params": { "parallel": 1, "batch_size": 1024, "hnsw_config": { "m": 16, "ef_construct": 128 } }
+    },
+    {
+        "name": "pgvector-m-16-ef-128",
+        "engine": "pgvector",
+        "connection_params": {},
+        "collection_params": {},
+        "search_params": [
+          { "parallel": 1, "config": { "hnsw_ef": 64 } }, { "parallel": 1, "config": { "hnsw_ef": 128 } }, { "parallel": 1, "config": { "hnsw_ef": 256 } }, { "parallel": 1, "config": { "hnsw_ef": 512 } },
+          { "parallel": 100, "config": { "hnsw_ef": 64 } }, { "parallel": 100, "config": { "hnsw_ef": 128 } }, { "parallel": 100, "config": { "hnsw_ef": 256 } }, { "parallel": 100, "config": { "hnsw_ef": 512 } }
+        ],
+        "upload_params": { "parallel": 16, "hnsw_config": { "m": 16, "ef_construct": 128 } }
+    },
+    {
+        "name": "pgvector-m-32-ef-128",
+        "engine": "pgvector",
+        "connection_params": {},
+        "collection_params": {},
+        "search_params": [
+          { "parallel": 1, "config": { "hnsw_ef": 64 } }, { "parallel": 1, "config": { "hnsw_ef": 128 } }, { "parallel": 1, "config": { "hnsw_ef": 256 } }, { "parallel": 1, "config": { "hnsw_ef": 512 } },
+          { "parallel": 100, "config": { "hnsw_ef": 64 } }, { "parallel": 100, "config": { "hnsw_ef": 128 } }, { "parallel": 100, "config": { "hnsw_ef": 256 } }, { "parallel": 100, "config": { "hnsw_ef": 512 } }
+        ],
+        "upload_params": { "parallel": 16, "hnsw_config": { "m": 32, "ef_construct": 128 } }
+    },
+    {
+        "name": "pgvector-m-32-ef-256",
+        "engine": "pgvector",
+        "connection_params": {},
+        "collection_params": {},
+        "search_params": [
+          { "parallel": 1, "config": { "hnsw_ef": 64 } }, { "parallel": 1, "config": { "hnsw_ef": 128 } }, { "parallel": 1, "config": { "hnsw_ef": 256 } }, { "parallel": 1, "config": { "hnsw_ef": 512 } },
+          { "parallel": 100, "config": { "hnsw_ef": 64 } }, { "parallel": 100, "config": { "hnsw_ef": 128 } }, { "parallel": 100, "config": { "hnsw_ef": 256 } }, { "parallel": 100, "config": { "hnsw_ef": 512 } }
+        ],
+        "upload_params": { "parallel": 16, "hnsw_config": { "m": 32, "ef_construct": 256 } }
+    },
+    {
+        "name": "pgvector-m-32-ef-512",
+        "engine": "pgvector",
+        "connection_params": {},
+        "collection_params": {},
+        "search_params": [
+          { "parallel": 1, "config": { "hnsw_ef": 64 } }, { "parallel": 1, "config": { "hnsw_ef": 128 } }, { "parallel": 1, "config": { "hnsw_ef": 256 } }, { "parallel": 1, "config": { "hnsw_ef": 512 } },
+          { "parallel": 100, "config": { "hnsw_ef": 64 } }, { "parallel": 100, "config": { "hnsw_ef": 128 } }, { "parallel": 100, "config": { "hnsw_ef": 256 } }, { "parallel": 100, "config": { "hnsw_ef": 512 } }
+        ],
+        "upload_params": { "parallel": 16, "hnsw_config": { "m": 32, "ef_construct": 512 } }
+    },
+    {
+        "name": "pgvector-m-64-ef-256",
+        "engine": "pgvector",
+        "connection_params": {},
+        "collection_params": {},
+        "search_params": [
+          { "parallel": 1, "config": { "hnsw_ef": 64 } }, { "parallel": 1, "config": { "hnsw_ef": 128 } }, { "parallel": 1, "config": { "hnsw_ef": 256 } }, { "parallel": 1, "config": { "hnsw_ef": 512 } },
+          { "parallel": 100, "config": { "hnsw_ef": 64 } }, { "parallel": 100, "config": { "hnsw_ef": 128 } }, { "parallel": 100, "config": { "hnsw_ef": 256 } }, { "parallel": 100, "config": { "hnsw_ef": 512 } }
+        ],
+        "upload_params": { "parallel": 16, "hnsw_config": { "m": 64, "ef_construct": 256 } }
+    },
+    {
+        "name": "pgvector-m-64-ef-512",
+        "engine": "pgvector",
+        "connection_params": {},
+        "collection_params": {},
+        "search_params": [
+          { "parallel": 1, "config": { "hnsw_ef": 64 } }, { "parallel": 1, "config": { "hnsw_ef": 128 } }, { "parallel": 1, "config": { "hnsw_ef": 256 } }, { "parallel": 1, "config": { "hnsw_ef": 512 } },
+          { "parallel": 100, "config": { "hnsw_ef": 64 } }, { "parallel": 100, "config": { "hnsw_ef": 128 } }, { "parallel": 100, "config": { "hnsw_ef": 256 } }, { "parallel": 100, "config": { "hnsw_ef": 512 } }
+        ],
+        "upload_params": { "parallel": 16, "hnsw_config": { "m": 64, "ef_construct": 512 } }
+    }
+]

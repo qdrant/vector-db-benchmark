@@ -1,0 +1,187 @@
+name: Manual All Engines Default Benchmarks
+
+on:
+  push:
+    branches:
+     - "master"
+  pull_request:
+    types:
+      - opened
+      - reopened
+  workflow_dispatch:
+
+jobs:
+  elasticsearchBenchmark:
+    name: benchmark - elasticsearch-default - random-100 - against elasticsearch-single-node-ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            elasticsearch:
+              - 'engine/clients/elasticsearch/**'
+              - 'engine/servers/elasticsearch-single-node/**'
+              - 'engine/servers/elasticsearch-single-node-ci/**'
+              - 'engine/base_client/**'
+            poetry:
+              - 'poetry.lock'
+              - 'pyproject.toml'
+      - uses: ./.github/workflows/actions/run-engine-benchmark
+        if: ${{ steps.changes.outputs.elasticsearch == 'true' || github.event_name == 'workflow_dispatch' }}
+        with:
+          engine: "elasticsearch-default"
+          dataset: "random-100"
+          compose_file: "engine/servers/elasticsearch-single-node-ci/docker-compose.yaml"
+
+  milvusBenchmark:
+    name: benchmark - milvus-default - random-100 - against milvus-single-node
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            milvus:
+              - 'engine/clients/milvus/**'
+              - 'engine/servers/milvus-single-node/**'
+              - 'engine/servers/milvus-limit-ram/**'
+              - 'engine/base_client/**'
+            poetry:
+              - 'poetry.lock'
+              - 'pyproject.toml'
+      - uses: ./.github/workflows/actions/run-engine-benchmark
+        if: ${{ steps.changes.outputs.milvus == 'true' || github.event_name == 'workflow_dispatch' }}
+        with:
+          engine: "milvus-default"
+          dataset: "random-100"
+          compose_file: "engine/servers/milvus-single-node/docker-compose.yaml"
+
+  opensearchBenchmark:
+    name: benchmark - opensearch-default - glove-25-angular - against opensearch-single-node-ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            opensearch:
+              - 'engine/clients/opensearch/**'
+              - 'engine/servers/opensearch-single-node/**'
+              - 'engine/servers/opensearch-single-node-ci/**'
+              - 'engine/base_client/**'
+            poetry:
+              - 'poetry.lock'
+              - 'pyproject.toml'
+      - uses: ./.github/workflows/actions/run-engine-benchmark
+        if: ${{ steps.changes.outputs.opensearch == 'true' || github.event_name == 'workflow_dispatch' }}
+        with:
+          engine: "opensearch-default"
+          dataset: "glove-25-angular"
+          compose_file: "engine/servers/opensearch-single-node-ci/docker-compose.yaml"
+
+  pgvectorBenchmark:
+    name: benchmark - pgvector-default - random-100 - against pgvector-single-node
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            pgvector:
+              - 'engine/clients/pgvector/**'
+              - 'engine/servers/pgvector-single-node/**'
+              - 'engine/base_client/**'
+            poetry:
+              - 'poetry.lock'
+              - 'pyproject.toml'
+      - uses: ./.github/workflows/actions/run-engine-benchmark
+        if: ${{ steps.changes.outputs.pgvector == 'true' || github.event_name == 'workflow_dispatch' }}
+        with:
+          engine: "pgvector-default"
+          dataset: "random-100"
+          compose_file: "engine/servers/pgvector-single-node/docker-compose.yaml"
+
+  qdrantBenchmark:
+    name: benchmark - qdrant-default - random-100 - against qdrant-single-node
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            qdrant:
+              - 'engine/clients/qdrant/**'
+              - 'engine/servers/qdrant-single-node/**'
+              - 'engine/servers/qdrant-limit-ram/**'
+              - 'engine/servers/qdrant-billion-scale/**'
+              - 'engine/servers/qdrant-cluster-mode/**'
+              - 'engine/servers/qdrant-continuous-benchmarks/**'
+              - 'engine/base_client/**'
+            poetry:
+              - 'poetry.lock'
+              - 'pyproject.toml'
+      - uses: ./.github/workflows/actions/run-engine-benchmark
+        if: ${{ steps.changes.outputs.qdrant == 'true' || github.event_name == 'workflow_dispatch' }}
+        with:
+          engine: "qdrant-default"
+          dataset: "random-100"
+          compose_file: "engine/servers/qdrant-single-node/docker-compose.yaml"
+
+  redisBenchmark:
+    name: benchmark - redis-default - random-100 - against redis-single-node
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            redis:
+              - 'engine/clients/redis/**'
+              - 'engine/servers/redis-single-node/**'
+              - 'engine/base_client/**'
+            poetry:
+              - 'poetry.lock'
+              - 'pyproject.toml'
+      - uses: ./.github/workflows/actions/run-engine-benchmark
+        if: ${{ steps.changes.outputs.weaviate == 'true' || github.event_name == 'workflow_dispatch' }}
+        with:
+          engine: "redis-default"
+          dataset: "random-100"
+          compose_file: "engine/servers/redis-single-node/docker-compose.yaml"
+
+  weaviateBenchmark:
+    name: benchmark - weaviate-default - random-100 - against weaviate-single-node
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            weaviate:
+              - 'engine/clients/weaviate/**'
+              - 'engine/servers/weaviate-single-node/**'
+              - 'engine/base_client/**'
+            poetry:
+              - 'poetry.lock'
+              - 'pyproject.toml'
+      - uses: ./.github/workflows/actions/run-engine-benchmark
+        if: ${{ steps.changes.outputs.weaviate == 'true' || github.event_name == 'workflow_dispatch' }}
+        with:
+          engine: "weaviate-default"
+          dataset: "random-100"
+          compose_file: "engine/servers/weaviate-single-node/docker-compose.yaml"
