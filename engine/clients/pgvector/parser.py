@@ -18,7 +18,7 @@ class PgVectorConditionParser(BaseConditionParser):
         return " AND ".join(clauses)
 
     def build_exact_match_filter(self, field_name: str, value: FieldValue) -> Any:
-        raise f"{field_name} == {json.dumps(value)}"
+        return f"{field_name} == {json.dumps(value)}"
 
     def build_range_filter(
         self,
