@@ -1,4 +1,5 @@
 import json
+
 from pymilvus import Collection, connections
 
 milvus_host="localhost"
