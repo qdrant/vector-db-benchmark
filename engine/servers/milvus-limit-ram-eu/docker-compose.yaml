@@ -2,12 +2,12 @@ version: '3.5'
 
 services:
   etcd:
-    container_name: milvus-etcd
+    container_name: milvus-etcd-benchmark
     image: quay.io/coreos/etcd:v3.5.5
     environment:
       - ETCD_AUTO_COMPACTION_MODE=revision
       - ETCD_AUTO_COMPACTION_RETENTION=1000
-      - ETCD_QUOTA_BACKEND_BYTES=4294967296
+      - ETCD_QUOTA_BACKEND_BYTES=4294967296     
     volumes:
       - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/etcd:/etcd
     logging:
@@ -18,7 +18,7 @@ services:
     command: etcd -advertise-client-urls=http://127.0.0.1:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
 
   minio:
-    container_name: milvus-minio
+    container_name: milvus-minio-benchmark
     image: minio/minio:RELEASE.2022-03-17T06-34-49Z
     environment:
       MINIO_ACCESS_KEY: minioadmin
@@ -38,14 +38,14 @@ services:
       retries: 3
 
   standalone:
-    container_name: milvus-standalone
-    image: milvusdb/milvus:v2.4.9
+    container_name: milvus-standalone-benchmark
+    image: milvusdb/milvus:v2.4.10
     command: ["milvus", "run", "standalone"]
     environment:
       ETCD_ENDPOINTS: etcd:2379
       MINIO_ADDRESS: minio:9000
     volumes:
-      - /opt/milvus-limit-ram-eu/milvus.yaml:/milvus/configs/milvus.yaml
+      - ./milvus.yaml:/milvus/configs/milvus.yaml
       - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/milvus:/var/lib/milvus
     logging:
       driver: "json-file"
