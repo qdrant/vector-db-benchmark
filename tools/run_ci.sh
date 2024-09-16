@@ -18,6 +18,8 @@ trap 'handle_term' TERM
 
 # Script, that runs benchmark within the GitHub Actions CI environment
 
+BENCHMARK_STRATEGY=${BENCHMARK_STRATEGY:-"default"}
+
 SCRIPT=$(realpath "$0")
 SCRIPT_PATH=$(dirname "$SCRIPT")
 
@@ -30,5 +32,9 @@ export UPLOAD_RESULTS_FILE=$(ls -t results/*-upload-*.json | head -n 1)
 export VM_RSS_MEMORY_USAGE_FILE=$(ls -t results/vm-rss-memory-usage-*.txt | head -n 1)
 export RSS_ANON_MEMORY_USAGE_FILE=$(ls -t results/rss-anon-memory-usage-*.txt | head -n 1)
 export ROOT_API_RESPONSE_FILE=$(ls -t results/root-api-*.json | head -n 1)
+
+if [[ "$BENCHMARK_STRATEGY" == "collection-reload" ]]; then
+  export TELEMETRY_API_RESPONSE_FILE=$(ls -t results/telemetry-api-*.json | head -n 1)
+fi
 
 bash -x "${SCRIPT_PATH}/upload_results_postgres.sh"
