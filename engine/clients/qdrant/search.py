@@ -50,7 +50,6 @@ class QdrantSearcher(BaseSearcher):
                 ),
             )
 
-        res = []
         try:
             res = cls.client.search(
                 collection_name=QDRANT_COLLECTION_NAME,
@@ -61,4 +60,5 @@ class QdrantSearcher(BaseSearcher):
             )
         except Exception as ex:
             print(f"Something went wrong during search: {ex}")
+            raise ex
         return [(hit.id, hit.score) for hit in res]
