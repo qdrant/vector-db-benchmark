@@ -33,7 +33,12 @@ POSTGRES_TABLE=${POSTGRES_TABLE:-"benchmark"}
 QDRANT_VERSION=${QDRANT_VERSION:-"dev"}
 DATASETS=${DATASETS:-"laion-small-clip"}
 
-if [[ -z "$SEARCH_RESULTS_FILE" ]]; then
+if [[ -z "$TELEMETRY_API_RESPONSE_FILE" ]] && [[ "$BENCHMARK_STRATEGY" == "collection-reload" ]]; then
+  echo "TELEMETRY_API_RESPONSE_FILE is not set"
+  exit 1
+fi
+
+if [[ -z "$SEARCH_RESULTS_FILE" ]] && [[ "$BENCHMARK_STRATEGY" != "collection-reload" ]]; then
   echo "SEARCH_RESULTS_FILE is not set"
   exit 1
 fi
@@ -61,16 +66,20 @@ if [[ -z "$ROOT_API_RESPONSE_FILE" ]]; then
 fi
 
 COLLECTION_LOAD_TIME=NULL
-if [[ -z "$TELEMETRY_API_RESPONSE_FILE" ]]; then
-  echo "Skip telemetry results"
-else
-  COLLECTION_LOAD_TIME=$(jq -r '.result.collections.collections[] | select(.id == "benchmark") | .init_time_ms' "$TELEMETRY_API_RESPONSE_FILE")
-fi
+RPS=NULL
+MEAN_PRECISIONS=NULL
+P95_TIME=NULL
+P99_TIME=NULL
 
-RPS=$(jq -r '.results.rps' "$SEARCH_RESULTS_FILE")
-MEAN_PRECISIONS=$(jq -r '.results.mean_precisions' "$SEARCH_RESULTS_FILE")
-P95_TIME=$(jq -r '.results.p95_time' "$SEARCH_RESULTS_FILE")
-P99_TIME=$(jq -r '.results.p99_time' "$SEARCH_RESULTS_FILE")
+if [[ "$BENCHMARK_STRATEGY" == "collection-reload" ]]; then
+  COLLECTION_LOAD_TIME=$(jq -r '.result.collections.collections[] | select(.id == "benchmark") | .init_time_ms' "$TELEMETRY_API_RESPONSE_FILE")
+else
+  # any other strategies are considered to have search results
+  RPS=$(jq -r '.results.rps' "$SEARCH_RESULTS_FILE")
+  MEAN_PRECISIONS=$(jq -r '.results.mean_precisions' "$SEARCH_RESULTS_FILE")
+  P95_TIME=$(jq -r '.results.p95_time' "$SEARCH_RESULTS_FILE")
+  P99_TIME=$(jq -r '.results.p99_time' "$SEARCH_RESULTS_FILE")
+fi
 
 UPLOAD_TIME=$(jq -r '.results.upload_time' "$UPLOAD_RESULTS_FILE")
 INDEXING_TIME=$(jq -r '.results.total_time' "$UPLOAD_RESULTS_FILE")
