@@ -13,12 +13,12 @@ class PgVectorConditionParser(BaseConditionParser):
         if or_subfilters is not None and len(or_subfilters) > 0:
             clauses.append(f"( {' OR '.join(or_subfilters)} )")
         if and_subfilters is not None and len(and_subfilters) > 0:
-            clauses.append(f"( {' AND '.join(or_subfilters)} )")
+            clauses.append(f"( {' AND '.join(and_subfilters)} )")
 
         return " AND ".join(clauses)
 
     def build_exact_match_filter(self, field_name: str, value: FieldValue) -> Any:
-        raise f"{field_name} == {json.dumps(value)}"
+        return f"{field_name} == {json.dumps(value)}"
 
     def build_range_filter(
         self,
