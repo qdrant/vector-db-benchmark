@@ -46,6 +46,11 @@ if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "upload" ]]; t
     python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-search
 fi
 
+if [[ "$EXPERIMENT_MODE" == "snapshot" ]]; then
+  echo "EXPERIMENT_MODE=$EXPERIMENT_MODE"
+  echo "Recover collection from: ..."
+fi
+
 
 if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "search" ]]; then
   echo "EXPERIMENT_MODE=$EXPERIMENT_MODE"

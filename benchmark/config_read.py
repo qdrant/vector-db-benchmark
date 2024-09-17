@@ -2,7 +2,7 @@ import glob
 import json
 import os
 
-from benchmark import DATASETS_DIR, ROOT_DIR
+from benchmark import DATASETS_DIR, ROOT_DIR, SNAPSHOTS_DIR
 
 
 def read_engine_configs() -> dict:
@@ -21,6 +21,16 @@ def read_engine_configs() -> dict:
 def read_dataset_config():
     all_configs = {}
     datasets_config_path = DATASETS_DIR / "datasets.json"
+    with open(datasets_config_path, "r") as fd:
+        configs = json.load(fd)
+        for config in configs:
+            all_configs[config["name"]] = config
+    return all_configs
+
+
+def read_snapshot_config():
+    all_configs = {}
+    datasets_config_path = SNAPSHOTS_DIR / "snapshots.json"
     with open(datasets_config_path, "r") as fd:
         configs = json.load(fd)
         for config in configs:

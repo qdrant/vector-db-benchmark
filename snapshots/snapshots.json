@@ -1,0 +1,8 @@
+[
+  {
+    "name": "200k-768-disable-defrag",
+    "vector_size": 768,
+    "path": "200k-768-disable-defrag/middle-tenants-10-768-disable-defrag.snapshot",
+    "link": "https://storage.googleapis.com/qdrant-benchmark-snapshots/on-disk-payload-index/middle-tenants-10-768-disable-defrag.snapshot"
+  }
+]

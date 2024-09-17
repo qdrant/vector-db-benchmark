@@ -6,5 +6,6 @@ from pathlib import Path
 
 BASE_DIRECTORY = Path(__file__).parent.parent
 DATASETS_DIR = BASE_DIRECTORY / "datasets"
+SNAPSHOTS_DIR = BASE_DIRECTORY / "snapshots"
 CODE_DIR = os.path.dirname(__file__)
 ROOT_DIR = Path(os.path.dirname(CODE_DIR))
