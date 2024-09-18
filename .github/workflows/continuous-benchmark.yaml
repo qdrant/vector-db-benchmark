@@ -3,9 +3,10 @@ name: Continuous Benchmark
 on:
   repository_dispatch:
   workflow_dispatch:
-  schedule:
-    # Run every 4 hours
-    - cron: "0 */4 * * *"
+#    disable for now
+#  schedule:
+#    # Run every 4 hours
+#    - cron: "0 */4 * * *"
 
 jobs:
   runBenchmark:
