@@ -25,7 +25,7 @@ class QdrantSearcher(BaseSearcher):
             host,
             prefer_grpc=True,
             limits=httpx.Limits(max_connections=None, max_keepalive_connections=0),
-            **connection_params
+            **connection_params,
         )
         cls.search_params = search_params
 
