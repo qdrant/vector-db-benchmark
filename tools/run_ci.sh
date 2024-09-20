@@ -30,11 +30,11 @@ bash -x "${SCRIPT_PATH}/run_remote_benchmark.sh"
 if [[ "$BENCHMARK_STRATEGY" == "collection-reload" ]]; then
   export TELEMETRY_API_RESPONSE_FILE=$(ls -t results/telemetry-api-*.json | head -n 1)
 else
-  # any other strategies are considered to have search results
+  # any other strategies are considered to have search & upload results
   export SEARCH_RESULTS_FILE=$(ls -t results/*-search-*.json | head -n 1)
+  export UPLOAD_RESULTS_FILE=$(ls -t results/*-upload-*.json | head -n 1)
 fi
 
-export UPLOAD_RESULTS_FILE=$(ls -t results/*-upload-*.json | head -n 1)
 export VM_RSS_MEMORY_USAGE_FILE=$(ls -t results/vm-rss-memory-usage-*.txt | head -n 1)
 export RSS_ANON_MEMORY_USAGE_FILE=$(ls -t results/rss-anon-memory-usage-*.txt | head -n 1)
 export ROOT_API_RESPONSE_FILE=$(ls -t results/root-api-*.json | head -n 1)

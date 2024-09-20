@@ -76,11 +76,11 @@ case "$BENCHMARK_STRATEGY" in
 
   bash -x "${SCRIPT_PATH}/run_server_container_with_volume.sh" "$SERVER_CONTAINER_NAME"
 
-  bash -x "${SCRIPT_PATH}/run_client_script.sh" "upload"
+  bash -x "${SCRIPT_PATH}/run_client_script.sh" "snapshot"
 
   bash -x "${SCRIPT_PATH}/run_server_container_with_volume.sh" "$SERVER_CONTAINER_NAME" "25Gb" "continue"
 
-  bash -x "${SCRIPT_PATH}/qdrant_collect_stats.sh" "$SERVER_CONTAINER_NAME"
+  bash -x "${SCRIPT_PATH}/qdrant_collect_telemetry.sh" "$SERVER_CONTAINER_NAME"
   ;;
 
   *)
