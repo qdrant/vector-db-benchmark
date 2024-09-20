@@ -28,7 +28,3 @@ echo "$RSS_ANON_MEMORY_USAGE" > results/rss-anon-memory-usage-"${CURRENT_DATE}".
 ROOT_API_RESPONSE=$(ssh -t "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "curl -s http://localhost:6333/")
 
 echo "$ROOT_API_RESPONSE" > results/root-api-"${CURRENT_DATE}".json
-
-TELEMETRY_API_RESPONSE=$(ssh -t "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "curl -s http://localhost:6333/telemetry?details_level=10")
-
-echo "$TELEMETRY_API_RESPONSE" > results/telemetry-api-"${CURRENT_DATE}".json
