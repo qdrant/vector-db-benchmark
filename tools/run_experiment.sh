@@ -38,10 +38,12 @@ if [[ "$EXPERIMENT_MODE" == "snapshot" ]] && [[ -z "$SNAPSHOT_URL" ]]; then
   exit 1
 fi
 
-docker container rm -f ci-benchmark-upload || true
-docker container rm -f ci-benchmark-search || true
+if [[ "$EXPERIMENT_MODE" != "snapshot" ]]; then
+  docker container rm -f ci-benchmark-upload || true
+  docker container rm -f ci-benchmark-search || true
 
-docker rmi --force qdrant/vector-db-benchmark:latest || true
+  docker rmi --force qdrant/vector-db-benchmark:latest || true
+fi
 
 if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "upload" ]]; then
   echo "EXPERIMENT_MODE=$EXPERIMENT_MODE"
@@ -75,7 +77,24 @@ fi
 
 if [[ "$EXPERIMENT_MODE" == "snapshot" ]]; then
   echo "EXPERIMENT_MODE=$EXPERIMENT_MODE"
+
   curl  -X PUT \
     "http://${PRIVATE_IP_OF_THE_SERVER}:6333/collections/benchmark/snapshots/recover" \
     --data-raw "{\"location\": \"${SNAPSHOT_URL}\"}"
+
+  collection_url="http://${PRIVATE_IP_OF_THE_SERVER}:6333/collections/benchmark"
+  collection_status=$(curl -s "$collection_url" | jq -r '.result.status')
+  counter=0
+  while [[ "$collection_status" != "green" && "$counter" -lt 5 ]]; do
+    collection_status=$(curl -s "$collection_url" | jq -r '.result.status')
+    counter=$(expr $counter + 1)
+    sleep 1
+  done
+
+  if [[ "$collection_status" == "green" ]]; then
+    echo "Experiment stage: Done"
+  else
+    echo "Experiment interrupted: collection is not ready."
+    exit 1
+  fi
 fi

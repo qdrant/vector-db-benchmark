@@ -27,14 +27,22 @@ SNAPSHOT_URL=${SNAPSHOT_URL:-""}
 
 PRIVATE_IP_OF_THE_SERVER=$(bash "${SCRIPT_PATH}/${CLOUD_NAME}/get_private_ip.sh" "$BENCH_SERVER_NAME")
 
-RUN_EXPERIMENT="ENGINE_NAME=${ENGINE_NAME} \
-DATASETS=${DATASETS} \
-PRIVATE_IP_OF_THE_SERVER=${PRIVATE_IP_OF_THE_SERVER} \
-EXPERIMENT_MODE=${EXPERIMENT_MODE} \
-SNAPSHOT_URL=${SNAPSHOT_URL} \
-bash ~/run_experiment.sh"
+if [[ "$EXPERIMENT_MODE" == "snapshot" ]]; then
+  RUN_EXPERIMENT="ENGINE_NAME=${ENGINE_NAME} \
+  DATASETS=${DATASETS} \
+  PRIVATE_IP_OF_THE_SERVER=${PRIVATE_IP_OF_THE_SERVER} \
+  EXPERIMENT_MODE=${EXPERIMENT_MODE} \
+  SNAPSHOT_URL=${SNAPSHOT_URL} \
+  bash ~/run_experiment.sh"
 
-ssh -tt -o ServerAliveInterval=60 -o ServerAliveCountMax=3 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "${RUN_EXPERIMENT}"
+  ssh -tt -o ServerAliveInterval=120 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "${RUN_EXPERIMENT}"
+
+else
+  RUN_EXPERIMENT="ENGINE_NAME=${ENGINE_NAME} DATASETS=${DATASETS} PRIVATE_IP_OF_THE_SERVER=${PRIVATE_IP_OF_THE_SERVER} bash ~/run_experiment.sh"
+
+  ssh -tt -o ServerAliveInterval=60 -o ServerAliveCountMax=3 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "${RUN_EXPERIMENT}"
+
+fi
 
 echo "Gather experiment results..."
 result_files_arr=()

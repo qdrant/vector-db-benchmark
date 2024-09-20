@@ -147,20 +147,29 @@ jobs:
             set +e
 
             # Benchmark collection load time
-
-            export ENGINE_NAME="qdrant-all-on-disk-scalar-q"
-            export DATASETS="random-768-100-tenants"
             export BENCHMARK_STRATEGY="collection-reload"
-            export SNAPSHOT_URL="https://storage.googleapis.com/qdrant-benchmark-snapshots/on-disk-payload-index/benchmark.snapshot"
+          
+            declare -A DATASET_TO_ENGINE
+            declare -A DATASET_TO_URL
+            DATASET_TO_ENGINE["all-payloads-default"]="qdrant-all-defaults"
+            DATASET_TO_URL["all-payloads-default"]="https://storage.googleapis.com/qdrant-benchmark-snapshots/all-payloads/benchmark-all-payloads-500k-768-default.snapshot"
 
-            # Benchmark the dev branch:
-            export QDRANT_VERSION=ghcr/dev
-            timeout 30m bash -x tools/run_ci.sh
+            set +e
+
+            for dataset in "${!DATASET_TO_ENGINE[@]}"; do
+              export ENGINE_NAME=${DATASET_TO_ENGINE[$dataset]}
+              export DATASETS=$dataset
+              export SNAPSHOT_URL=${DATASET_TO_URL[$dataset]}
+
+              # Benchmark the dev branch:
+              export QDRANT_VERSION=ghcr/dev
+              timeout 30m bash -x tools/run_ci.sh
+            done
 
             set -e
-#      - name: Fail job if any of the benches failed
-#        if: steps.benches.outputs.failed == 'error' || steps.benches.outputs.failed == 'timeout'
-#        run: exit 1
+      - name: Fail job if any of the benches failed
+        if: steps.benches.outputs.failed == 'error' || steps.benches.outputs.failed == 'timeout'
+        run: exit 1
 #      - name: Send Notification
 #        if: failure() || cancelled()
 #        uses: slackapi/slack-github-action@v1.26.0
