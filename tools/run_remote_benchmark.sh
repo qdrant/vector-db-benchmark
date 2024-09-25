@@ -80,6 +80,8 @@ case "$BENCHMARK_STRATEGY" in
 
   bash -x "${SCRIPT_PATH}/run_server_container_with_volume.sh" "$SERVER_CONTAINER_NAME" "25Gb" "continue"
 
+  sleep 5
+
   bash -x "${SCRIPT_PATH}/qdrant_collect_stats.sh" "$SERVER_CONTAINER_NAME"
   ;;
 
