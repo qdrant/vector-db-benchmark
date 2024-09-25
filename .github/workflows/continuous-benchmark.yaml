@@ -153,6 +153,8 @@ jobs:
             declare -A DATASET_TO_URL
             DATASET_TO_ENGINE["all-payloads-default"]="qdrant-continuous-benchmark-snapshot"
             DATASET_TO_ENGINE["all-payloads-on-disk"]="qdrant-continuous-benchmark-snapshot"
+            DATASET_TO_ENGINE["all-payloads-default-sparse"]="qdrant-continuous-benchmark-snapshot"
+            DATASET_TO_ENGINE["all-payloads-on-disk-sparse"]="qdrant-continuous-benchmark-snapshot"
 
             export STORAGE_URL="https://storage.googleapis.com/qdrant-benchmark-snapshots/all-payloads"
             DATASET_TO_URL["all-payloads-default"]="${STORAGE_URL}/benchmark-all-payloads-500k-768-default.snapshot"
