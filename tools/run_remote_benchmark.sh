@@ -72,7 +72,7 @@ case "$BENCHMARK_STRATEGY" in
   "collection-reload")
   echo "Collection load time benchmark"
 
-  SERVER_CONTAINER_NAME=${SERVER_CONTAINER_NAME:-"qdrant-continuous-benchmarks-with-volume"}
+  SERVER_CONTAINER_NAME=${SERVER_CONTAINER_NAME:-"qdrant-continuous-benchmarks-snapshot"}
 
   bash -x "${SCRIPT_PATH}/run_server_container_with_volume.sh" "$SERVER_CONTAINER_NAME"
 
