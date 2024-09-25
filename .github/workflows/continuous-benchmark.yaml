@@ -141,7 +141,7 @@ jobs:
             export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
             export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
-            export SERVER_NAME="benchmark-server-2"
+            export SERVER_NAME="benchmark-server-1"
             bash -x tools/setup_ci.sh
 
             set +e
