@@ -128,7 +128,7 @@ jobs:
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
   runLoadTimeBenchmark:
     runs-on: ubuntu-latest
-    needs: runTenantsBenchmark
+    needs: runBenchmark
     if: ${{ always() }}
     steps:
       - uses: actions/checkout@v3
