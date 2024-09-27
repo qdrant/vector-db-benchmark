@@ -39,11 +39,17 @@ class LancedbConfigurator(BaseConfigurator):
             pass
 
     def recreate(self, dataset: Dataset, collection_params):
-        schema = pa.schema([
-            pa.field("vector", pa.list_(pa.float32(), list_size=dataset.config.vector_size)),
-            pa.field("id", pa.int64()),
-        ] + [
-            pa.field(field_name, self.DTYPE_MAPPING.get(field_type))
-            for field_name, field_type in dataset.config.schema.items()
-        ])
+        schema = pa.schema(
+            [
+                pa.field(
+                    "vector",
+                    pa.list_(pa.float32(), list_size=dataset.config.vector_size),
+                ),
+                pa.field("id", pa.int64()),
+            ]
+            + [
+                pa.field(field_name, self.DTYPE_MAPPING.get(field_type))
+                for field_name, field_type in dataset.config.schema.items()
+            ]
+        )
         self.client.create_table(name=LANCEDB_COLLECTION_NAME, schema=schema)

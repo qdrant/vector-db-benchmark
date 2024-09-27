@@ -7,12 +7,12 @@ from engine.base_client.client import (
     BaseSearcher,
     BaseUploader,
 )
-from engine.clients.lancedb import LancedbConfigurator, LancedbSearcher, LancedbUploader
 from engine.clients.elasticsearch import (
     ElasticConfigurator,
     ElasticSearcher,
     ElasticUploader,
 )
+from engine.clients.lancedb import LancedbConfigurator, LancedbSearcher, LancedbUploader
 from engine.clients.milvus import MilvusConfigurator, MilvusSearcher, MilvusUploader
 from engine.clients.opensearch import (
     OpenSearchConfigurator,

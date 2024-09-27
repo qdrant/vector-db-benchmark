@@ -25,11 +25,12 @@ class LancedbSearcher(BaseSearcher):
     def search_one(cls, query: Query, top: int) -> List[Tuple[int, float]]:
         tbl = cls.client.open_table(name=LANCEDB_COLLECTION_NAME)
         df: LanceVectorQueryBuilder = tbl.search(query.vector)
-        results = df \
-            .metric(LancedbConfigurator.DISTANCE_MAPPING.get(cls.distance)) \
-            .where(cls.parser.parse(query.meta_conditions), prefilter=True) \
-            .select(["id"]) \
-            .limit(top) \
+        results = (
+            df.metric(LancedbConfigurator.DISTANCE_MAPPING.get(cls.distance))
+            .where(cls.parser.parse(query.meta_conditions), prefilter=True)
+            .select(["id"])
+            .limit(top)
             .to_list()
+        )
 
         return [(result["id"], result["_distance"]) for result in results]
