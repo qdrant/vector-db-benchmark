@@ -1,6 +1,6 @@
 from typing import List, Tuple
 
-from chromadb import HttpClient, ClientAPI, Settings
+from chromadb import ClientAPI, HttpClient, Settings
 from chromadb.api.types import IncludeEnum
 
 from dataset_reader.base_reader import Query
@@ -32,10 +32,13 @@ class ChromaSearcher(BaseSearcher):
             include=[IncludeEnum.distances],
         )
 
-        return [(int(hit[0]), float(hit[1])) for hit in zip(res["ids"][0], res["distances"][0])]
+        return [
+            (int(hit[0]), float(hit[1]))
+            for hit in zip(res["ids"][0], res["distances"][0])
+        ]
 
     def setup_search(self):
         metadata = self.collection.metadata.copy()
-        metadata.pop("hnsw:space", None) # Not allowed in the collection.modify method
-        metadata.update(self.search_params.get('metadata', {}))
+        metadata.pop("hnsw:space", None)  # Not allowed in the collection.modify method
+        metadata.update(self.search_params.get("metadata", {}))
         self.collection.modify(metadata=metadata)

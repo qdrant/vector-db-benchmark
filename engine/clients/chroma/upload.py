@@ -1,6 +1,6 @@
 from typing import List
 
-from chromadb import HttpClient, ClientAPI, Settings
+from chromadb import ClientAPI, HttpClient, Settings
 
 from dataset_reader.base_reader import Record
 from engine.base_client.upload import BaseUploader

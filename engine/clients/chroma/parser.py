@@ -9,7 +9,9 @@ from engine.base_client.parser import BaseConditionParser, FieldValue
 
 class ChromaConditionParser(BaseConditionParser):
     def build_condition(
-        self, and_subfilters: Optional[List[Where]], or_subfilters: Optional[List[Where]]
+        self,
+        and_subfilters: Optional[List[Where]],
+        or_subfilters: Optional[List[Where]],
     ) -> Where:
         condition: Where = {}
         if and_subfilters is not None:
@@ -44,7 +46,9 @@ class ChromaConditionParser(BaseConditionParser):
             "$lte": lte,
             "$gte": gte,
         }
-        filters: OperatorExpression = {k: v for k, v in raw_filters.items() if v is not None}
+        filters: OperatorExpression = {
+            k: v for k, v in raw_filters.items() if v is not None
+        }
         return {field_name: filters}
 
     def build_geo_filter(

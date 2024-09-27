@@ -35,7 +35,10 @@ class ChromaConfigurator(BaseConfigurator):
 
     def recreate(self, dataset: Dataset, collection_params):
         params = self.collection_params
-        params["metadata"] = dict({"hnsw:space": self.DISTANCE_MAPPING.get(dataset.config.distance)}, **params.get('metadata', {}))
+        params["metadata"] = dict(
+            {"hnsw:space": self.DISTANCE_MAPPING.get(dataset.config.distance)},
+            **params.get("metadata", {}),
+        )
         self.client.create_collection(
             name=CHROMA_COLLECTION_NAME,
             **params,

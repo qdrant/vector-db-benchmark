@@ -23,5 +23,5 @@ See https://cookbook.chromadb.dev/core/configuration/#hnsw-configuration
 non-default not in use.
 
     "parallel": 16                      # implemented in base_client
-    "batch_size": 1024                  # implemented in base_client 
+    "batch_size": 1024                  # implemented in base_client
 
