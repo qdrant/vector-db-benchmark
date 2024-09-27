@@ -31,11 +31,14 @@ trap 'cleanup' EXIT
 #SERVER_NAME=$BENCH_CLIENT_NAME SERVER_TYPE='cpx11' bash -x "${SCRIPT_PATH}/${CLOUD_NAME}/create_and_install.sh"
 #wait $SERVER_CREATION_PID
 
+BENCHMARK_STRATEGY=${BENCHMARK_STRATEGY:-"default"}
+
 SERVER_NAME=$BENCH_SERVER_NAME bash -x "${SCRIPT_PATH}/${CLOUD_NAME}/check_ssh_connection.sh"
 SERVER_NAME=$BENCH_CLIENT_NAME bash -x "${SCRIPT_PATH}/${CLOUD_NAME}/check_ssh_connection.sh"
 
-if [[ -z "${CONTAINER_MEM_LIMIT:-}" ]]; then
-  echo "CONTAINER_MEM_LIMIT is not set, run without memory limit"
+case "$BENCHMARK_STRATEGY" in
+  "default")
+  echo "Default benchmark, no volume, no memory limit"
 
   SERVER_CONTAINER_NAME=${SERVER_CONTAINER_NAME:-"qdrant-continuous-benchmarks"}
 
@@ -44,9 +47,14 @@ if [[ -z "${CONTAINER_MEM_LIMIT:-}" ]]; then
   bash -x "${SCRIPT_PATH}/run_client_script.sh"
 
   bash -x "${SCRIPT_PATH}/qdrant_collect_stats.sh" "$SERVER_CONTAINER_NAME"
+  ;;
+  "tenants")
+  if [[ -z "${CONTAINER_MEM_LIMIT:-}" ]]; then
+    echo "Tenants benchmark, but CONTAINER_MEM_LIMIT is not set!"
+    exit 2
+  fi
 
-else
-  echo "CONTAINER_MEM_LIMIT is set, run search with memory limit: ${CONTAINER_MEM_LIMIT}"
+  echo "Tenants benchmark, run search with memory limit: ${CONTAINER_MEM_LIMIT}"
 
   SERVER_CONTAINER_NAME=${SERVER_CONTAINER_NAME:-"qdrant-continuous-benchmarks-with-volume"}
 
@@ -59,6 +67,26 @@ else
   bash -x "${SCRIPT_PATH}/run_client_script.sh" "search"
 
   bash -x "${SCRIPT_PATH}/qdrant_collect_stats.sh" "$SERVER_CONTAINER_NAME"
+  ;;
 
-fi
+  "collection-reload")
+  echo "Collection load time benchmark"
 
+  SERVER_CONTAINER_NAME=${SERVER_CONTAINER_NAME:-"qdrant-continuous-benchmarks-snapshot"}
+
+  bash -x "${SCRIPT_PATH}/run_server_container_with_volume.sh" "$SERVER_CONTAINER_NAME"
+
+  bash -x "${SCRIPT_PATH}/run_client_script.sh" "snapshot"
+
+  bash -x "${SCRIPT_PATH}/run_server_container_with_volume.sh" "$SERVER_CONTAINER_NAME" "25Gb" "continue"
+
+  sleep 10
+
+  bash -x "${SCRIPT_PATH}/qdrant_collect_stats.sh" "$SERVER_CONTAINER_NAME"
+  ;;
+
+  *)
+    echo "Invalid BENCHMARK_STRATEGY value: $BENCHMARK_STRATEGY"
+    exit 1
+    ;;
+esac

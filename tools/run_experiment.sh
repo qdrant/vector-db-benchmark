@@ -11,6 +11,8 @@ PRIVATE_IP_OF_THE_SERVER=${PRIVATE_IP_OF_THE_SERVER:-""}
 
 EXPERIMENT_MODE=${EXPERIMENT_MODE:-"full"}
 
+SNAPSHOT_URL=${SNAPSHOT_URL:-""}
+
 if [[ -z "$ENGINE_NAME" ]]; then
   echo "ENGINE_NAME is not set"
   exit 1
@@ -27,13 +29,21 @@ if [[ -z "$PRIVATE_IP_OF_THE_SERVER" ]]; then
 fi
 
 if [[ -z "$EXPERIMENT_MODE" ]]; then
-  echo "EXPERIMENT_MODE is not set, possible values are: full | upload | search"
+  echo "EXPERIMENT_MODE is not set, possible values are: full | upload | search | snapshot"
   exit 1
 fi
-docker container rm -f ci-benchmark-upload || true
-docker container rm -f ci-benchmark-search || true
 
-docker rmi --force qdrant/vector-db-benchmark:latest || true
+if [[ "$EXPERIMENT_MODE" == "snapshot" ]] && [[ -z "$SNAPSHOT_URL" ]]; then
+  echo "EXPERIMENT_MODE is 'snapshot' but SNAPSHOT_URL is not set"
+  exit 1
+fi
+
+if [[ "$EXPERIMENT_MODE" != "snapshot" ]]; then
+  docker container rm -f ci-benchmark-upload || true
+  docker container rm -f ci-benchmark-search || true
+
+  docker rmi --force qdrant/vector-db-benchmark:latest || true
+fi
 
 if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "upload" ]]; then
   echo "EXPERIMENT_MODE=$EXPERIMENT_MODE"
@@ -62,4 +72,29 @@ if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "search" ]]; t
     -v "$HOME/results:/code/results" \
     qdrant/vector-db-benchmark:latest \
     python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-upload
+fi
+
+
+if [[ "$EXPERIMENT_MODE" == "snapshot" ]]; then
+  echo "EXPERIMENT_MODE=$EXPERIMENT_MODE"
+
+  curl  -X PUT \
+    "http://${PRIVATE_IP_OF_THE_SERVER}:6333/collections/benchmark/snapshots/recover" \
+    --data-raw "{\"location\": \"${SNAPSHOT_URL}\"}"
+
+  collection_url="http://${PRIVATE_IP_OF_THE_SERVER}:6333/collections/benchmark"
+  collection_status=$(curl -s "$collection_url" | jq -r '.result.status')
+  counter=0
+  while [[ "$collection_status" != "green" && "$counter" -lt 5 ]]; do
+    collection_status=$(curl -s "$collection_url" | jq -r '.result.status')
+    counter=$(expr $counter + 1)
+    sleep 1
+  done
+
+  if [[ "$collection_status" == "green" ]]; then
+    echo "Experiment stage: Done"
+  else
+    echo "Experiment interrupted: collection is not ready."
+    exit 1
+  fi
 fi

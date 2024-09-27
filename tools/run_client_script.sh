@@ -17,17 +17,38 @@ BENCH_CLIENT_NAME=${CLIENT_NAME:-"benchmark-client-1"}
 
 IP_OF_THE_CLIENT=$(bash "${SCRIPT_PATH}/${CLOUD_NAME}/get_public_ip.sh" "$BENCH_CLIENT_NAME")
 
-scp "${SCRIPT_PATH}/run_experiment.sh" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/run_experiment.sh"
-
 ENGINE_NAME=${ENGINE_NAME:-"qdrant-continuous-benchmark"}
 
 DATASETS=${DATASETS:-"laion-small-clip"}
 
+SNAPSHOT_URL=${SNAPSHOT_URL:-""}
+
 PRIVATE_IP_OF_THE_SERVER=$(bash "${SCRIPT_PATH}/${CLOUD_NAME}/get_private_ip.sh" "$BENCH_SERVER_NAME")
 
-RUN_EXPERIMENT="ENGINE_NAME=${ENGINE_NAME} DATASETS=${DATASETS} PRIVATE_IP_OF_THE_SERVER=${PRIVATE_IP_OF_THE_SERVER} EXPERIMENT_MODE=${EXPERIMENT_MODE} bash ~/run_experiment.sh"
+if [[ "$EXPERIMENT_MODE" == "snapshot" ]]; then
+  scp "${SCRIPT_PATH}/run_experiment.sh" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/run_experiment_snapshot.sh"
 
-ssh -tt -o ServerAliveInterval=60 -o ServerAliveCountMax=3 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "${RUN_EXPERIMENT}"
+  RUN_EXPERIMENT="ENGINE_NAME=${ENGINE_NAME} \
+  DATASETS=${DATASETS} \
+  PRIVATE_IP_OF_THE_SERVER=${PRIVATE_IP_OF_THE_SERVER} \
+  EXPERIMENT_MODE=${EXPERIMENT_MODE} \
+  SNAPSHOT_URL=${SNAPSHOT_URL} \
+  bash ~/run_experiment_snapshot.sh"
+
+  ssh -tt -o ServerAliveInterval=120 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "${RUN_EXPERIMENT}"
+
+else
+  scp "${SCRIPT_PATH}/run_experiment.sh" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/run_experiment.sh"
+
+  RUN_EXPERIMENT="ENGINE_NAME=${ENGINE_NAME} \
+  DATASETS=${DATASETS} \
+  PRIVATE_IP_OF_THE_SERVER=${PRIVATE_IP_OF_THE_SERVER} \
+  EXPERIMENT_MODE=${EXPERIMENT_MODE} \
+  bash ~/run_experiment.sh"
+
+  ssh -tt -o ServerAliveInterval=60 -o ServerAliveCountMax=3 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "${RUN_EXPERIMENT}"
+
+fi
 
 echo "Gather experiment results..."
 result_files_arr=()
