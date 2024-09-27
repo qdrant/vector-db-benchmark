@@ -5,7 +5,7 @@ description = ""
 authors = ["Qdrant Team <info@qdrant.tech>"]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.12"
+python = ">=3.9,<3.12"
 qdrant-client = "^1.11.0"
 typer = "^0.6.1"
 jsons = "^1.6.3"
