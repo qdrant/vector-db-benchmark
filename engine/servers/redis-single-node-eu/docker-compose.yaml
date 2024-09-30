@@ -1,0 +1,13 @@
+version: "3.7"
+
+services:
+  redis:
+    image: redis/redis-stack:latest
+    ports:
+      - '6379:6379'    
+    logging:
+      driver: "json-file"
+      options:
+        max-file: 1
+        max-size: 10m
+
