@@ -40,5 +40,5 @@ class ChromaSearcher(BaseSearcher):
     def setup_search(self):
         metadata = self.collection.metadata.copy()
         metadata.pop("hnsw:space", None)  # Not allowed in the collection.modify method
-        metadata.update(self.search_params.get("metadata", {}))
+        metadata.update(self.search_params.get("config", {}))
         self.collection.modify(metadata=metadata)

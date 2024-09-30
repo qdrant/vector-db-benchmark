@@ -37,7 +37,7 @@ class ChromaConfigurator(BaseConfigurator):
         params = self.collection_params
         params["metadata"] = dict(
             {"hnsw:space": self.DISTANCE_MAPPING.get(dataset.config.distance)},
-            **params.get("metadata", {}),
+            **params.pop("config", {}),
         )
         self.client.create_collection(
             name=CHROMA_COLLECTION_NAME,

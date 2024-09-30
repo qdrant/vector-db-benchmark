@@ -5,9 +5,7 @@
     "connection_params": {},
     "collection_params": {},
     "search_params": [
-      {
-        "parallel": 8
-      }
+      { "parallel": 8, "config": {} }
     ],
     "upload_params": {
       "parallel": 16,
@@ -19,14 +17,14 @@
     "engine": "chroma",
     "connection_params": {},
     "collection_params": {
-      "metadata": {
+      "config": {
         "hnsw:M": 16,
         "hnsw:construction_ef": 128
       }
     },
     "search_params": [
-      { "parallel": 1, "metadata": {"hnsw:search_ef": 128 } }, { "parallel": 1, "metadata": {"hnsw:search_ef": 256 } }, { "parallel": 1, "metadata": {"hnsw:search_ef": 512 } },
-      { "parallel": 100, "metadata": {"hnsw:search_ef": 128 } }, { "parallel": 100, "metadata": {"hnsw:search_ef": 256 } }, { "parallel": 100, "metadata": {"hnsw:search_ef": 512 } }
+      { "parallel": 1, "config": {"hnsw:search_ef": 128 } }, { "parallel": 1, "config": {"hnsw:search_ef": 256 } }, { "parallel": 1, "config": {"hnsw:search_ef": 512 } },
+      { "parallel": 100, "config": {"hnsw:search_ef": 128 } }, { "parallel": 100, "config": {"hnsw:search_ef": 256 } }, { "parallel": 100, "config": {"hnsw:search_ef": 512 } }
     ],
     "upload_params": { "parallel": 16 }
   },
@@ -35,14 +33,14 @@
     "engine": "chroma",
     "connection_params": {},
     "collection_params": {
-      "metadata": {
+      "config": {
         "hnsw:M": 32,
         "hnsw:construction_ef": 128
       }
     },
     "search_params": [
-      { "parallel": 1, "metadata": {"hnsw:search_ef": 128 } }, { "parallel": 1, "metadata": {"hnsw:search_ef": 256 } }, { "parallel": 1, "metadata": {"hnsw:search_ef": 512 } },
-      { "parallel": 100, "metadata": {"hnsw:search_ef": 128 } }, { "parallel": 100, "metadata": {"hnsw:search_ef": 256 } }, { "parallel": 100, "metadata": {"hnsw:search_ef": 512 } }
+      { "parallel": 1, "config": {"hnsw:search_ef": 128 } }, { "parallel": 1, "config": {"hnsw:search_ef": 256 } }, { "parallel": 1, "config": {"hnsw:search_ef": 512 } },
+      { "parallel": 100, "config": {"hnsw:search_ef": 128 } }, { "parallel": 100, "config": {"hnsw:search_ef": 256 } }, { "parallel": 100, "config": {"hnsw:search_ef": 512 } }
     ],
     "upload_params": { "parallel": 16 }
   },
@@ -51,14 +49,14 @@
     "engine": "chroma",
     "connection_params": {},
     "collection_params": {
-      "metadata": {
+      "config": {
         "hnsw:M": 32,
         "hnsw:construction_ef": 256
       }
     },
     "search_params": [
-      { "parallel": 1, "metadata": {"hnsw:search_ef": 128 } }, { "parallel": 1, "metadata": {"hnsw:search_ef": 256 } }, { "parallel": 1, "metadata": {"hnsw:search_ef": 512 } },
-      { "parallel": 100, "metadata": {"hnsw:search_ef": 128 } }, { "parallel": 100, "metadata": {"hnsw:search_ef": 256 } }, { "parallel": 100, "metadata": {"hnsw:search_ef": 512 } }
+      { "parallel": 1, "config": {"hnsw:search_ef": 128 } }, { "parallel": 1, "config": {"hnsw:search_ef": 256 } }, { "parallel": 1, "config": {"hnsw:search_ef": 512 } },
+      { "parallel": 100, "config": {"hnsw:search_ef": 128 } }, { "parallel": 100, "config": {"hnsw:search_ef": 256 } }, { "parallel": 100, "config": {"hnsw:search_ef": 512 } }
     ],
     "upload_params": { "parallel": 16 }
   },
@@ -67,14 +65,14 @@
     "engine": "chroma",
     "connection_params": {},
     "collection_params": {
-      "metadata": {
+      "config": {
         "hnsw:M": 32,
         "hnsw:construction_ef": 512
       }
     },
     "search_params": [
-      { "parallel": 1, "metadata": {"hnsw:search_ef": 128 } }, { "parallel": 1, "metadata": {"hnsw:search_ef": 256 } }, { "parallel": 1, "metadata": {"hnsw:search_ef": 512 } },
-      { "parallel": 100, "metadata": {"hnsw:search_ef": 128 } }, { "parallel": 100, "metadata": {"hnsw:search_ef": 256 } }, { "parallel": 100, "metadata": {"hnsw:search_ef": 512 } }
+      { "parallel": 1, "config": {"hnsw:search_ef": 128 } }, { "parallel": 1, "config": {"hnsw:search_ef": 256 } }, { "parallel": 1, "config": {"hnsw:search_ef": 512 } },
+      { "parallel": 100, "config": {"hnsw:search_ef": 128 } }, { "parallel": 100, "config": {"hnsw:search_ef": 256 } }, { "parallel": 100, "config": {"hnsw:search_ef": 512 } }
     ],
     "upload_params": { "parallel": 16 }
   },
@@ -83,14 +81,14 @@
     "engine": "chroma",
     "connection_params": {},
     "collection_params": {
-      "metadata": {
+      "config": {
         "hnsw:M": 64,
         "hnsw:construction_ef": 256
       }
     },
     "search_params": [
-      { "parallel": 1, "metadata": {"hnsw:search_ef": 128 } }, { "parallel": 1, "metadata": {"hnsw:search_ef": 256 } }, { "parallel": 1, "metadata": {"hnsw:search_ef": 512 } },
-      { "parallel": 100, "metadata": {"hnsw:search_ef": 128 } }, { "parallel": 100, "metadata": {"hnsw:search_ef": 256 } }, { "parallel": 100, "metadata": {"hnsw:search_ef": 512 } }
+      { "parallel": 1, "config": {"hnsw:search_ef": 128 } }, { "parallel": 1, "config": {"hnsw:search_ef": 256 } }, { "parallel": 1, "config": {"hnsw:search_ef": 512 } },
+      { "parallel": 100, "config": {"hnsw:search_ef": 128 } }, { "parallel": 100, "config": {"hnsw:search_ef": 256 } }, { "parallel": 100, "config": {"hnsw:search_ef": 512 } }
     ],
     "upload_params": { "parallel": 16 }
   },
@@ -99,14 +97,14 @@
     "engine": "chroma",
     "connection_params": {},
     "collection_params": {
-      "metadata": {
+      "config": {
         "hnsw:M": 64,
         "hnsw:construction_ef": 512
       }
     },
     "search_params": [
-      { "parallel": 1, "metadata": {"hnsw:search_ef": 128 } }, { "parallel": 1, "metadata": {"hnsw:search_ef": 256 } }, { "parallel": 1, "metadata": {"hnsw:search_ef": 512 } },
-      { "parallel": 100, "metadata": {"hnsw:search_ef": 128 } }, { "parallel": 100, "metadata": {"hnsw:search_ef": 256 } }, { "parallel": 100, "metadata": {"hnsw:search_ef": 512 } }
+      { "parallel": 1, "config": {"hnsw:search_ef": 128 } }, { "parallel": 1, "config": {"hnsw:search_ef": 256 } }, { "parallel": 1, "config": {"hnsw:search_ef": 512 } },
+      { "parallel": 100, "config": {"hnsw:search_ef": 128 } }, { "parallel": 100, "config": {"hnsw:search_ef": 256 } }, { "parallel": 100, "config": {"hnsw:search_ef": 512 } }
     ],
     "upload_params": { "parallel": 16 }
   }

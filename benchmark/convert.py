@@ -60,7 +60,7 @@ def main():
         data = json.load(open(search_file))
         experiment_name = data["params"]["experiment"]
         dataset_name = data["params"]["dataset"]
-        engine_params = data["params"].get("config", {})
+        engine_params = data["params"]["config"]
         parallel = data["params"]["parallel"]
         engine_name = data["params"]["engine"]
 

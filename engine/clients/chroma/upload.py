@@ -22,6 +22,7 @@ class ChromaUploader(BaseUploader):
 
     @classmethod
     def upload_batch(cls, batch: List[Record]):
+        # assert len(batch) <= cls.client.get_max_batch_size() # commented for performance reasons
         ids, vectors, payloads = [], [], []
         for point in batch:
             ids.append(str(point.id))

@@ -1,8 +1,8 @@
 services:
   chromadb_bench:
     image: ${CONTAINER_REGISTRY:-docker.io}/chromadb/chroma:0.5.7
-    #volumes:
-    #  - ./chromadb:/chroma/chroma
+    volumes:
+      - ./chromadb:/chroma/chroma
     ports:
       - "8000:8000"
     logging:
@@ -13,7 +13,7 @@ services:
     environment:
       IS_PERSISTENT: TRUE
       ANONYMIZED_TELEMETRY: False
-      CHROMA_WORKERS: 2
+      CHROMA_WORKERS: 1
     deploy:
       resources:
         limits:

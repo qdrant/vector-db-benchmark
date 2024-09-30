@@ -27,7 +27,6 @@ class ChromaConditionParser(BaseConditionParser):
                 condition = {**condition, **or_subfilters[0]}
 
         return condition
-        # return {k: v for d in [flt for xs in [and_subfilters, or_subfilters] for flt in xs] for k, v in d.items()}
 
     def build_exact_match_filter(self, field_name: str, value: FieldValue) -> Where:
         return {field_name: value}
