@@ -55,8 +55,12 @@ class BaseSearcher:
             # recall equals True Positives / (True Positives + False Negatives)
             # See https://en.wikipedia.org/wiki/Precision_and_recall
             true_positives = len(ids.intersection(query.expected_result[:top]))
-            precision = true_positives / top # 1 means that the results consist of expected elements.
-            recall = true_positives / len(query.expected_result) # 1 means that all expected elements are in the results.
+            precision = (
+                true_positives / top
+            )  # 1 means that the results consist of expected elements.
+            recall = true_positives / len(
+                query.expected_result
+            )  # 1 means that all expected elements are in the results.
 
         return precision, recall, end - start
 
