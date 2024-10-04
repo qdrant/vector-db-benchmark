@@ -317,13 +317,20 @@
     "type": "jsonl",
     "path": "random-100/"
   },
-  {
+  { 
     "name": "europeana-100",
     "vector_size": 300,
     "distance": "cosine",
     "type": "jsonl",
     "path": "europeana-100/"
-  },
+  },    
+  {
+    "name": "europeana-all",
+    "vector_size": 300,
+    "distance": "cosine",
+    "type": "jsonl",
+    "path": "europeana-all/"
+  }, 
   {
     "name": "random-100-euclidean",
     "vector_size": 100,

@@ -5,4 +5,8 @@ __pycache__
 NOTES.md
 
 results/*
+monitoring/results/*
+monitoring/docker.stats.jsonl
+monitoring/monitor.lock
+run_europeana_exp_output.txt
 tools/custom/data.json

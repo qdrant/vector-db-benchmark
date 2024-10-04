@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
 set -e
-
-DATASETS="random-100"
+set DOCKER_VOLUME_DIRECTORY=/opt/milvus-single-node-eu/
+#DATASETS="random-100"
+DATASETS="europeana-all"
 #all milvus m-16
 ENGINE_NAME="milvus-m-16-*"
 #all redis m-16
