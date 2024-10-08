@@ -54,13 +54,13 @@ jobs:
         with:
           payload: |
             {
-              "text": "CI benchmarks run status: ${{ job.status }}",
+              "text": "CI benchmarks (runBenchmark) run status: ${{ job.status }}",
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "CI benchmarks failed because of ${{ steps.benches.outputs.failed }}.\nView the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
+                    "text": "CI benchmarks (runBenchmark) failed because of ${{ steps.benches.outputs.failed }}.\nView the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
                   }
                 }
               ]
@@ -112,13 +112,13 @@ jobs:
         with:
           payload: |
             {
-              "text": "CI tenants benchmarks run status: ${{ job.status }}",
+              "text": "CI benchmarks (runTenantsBenchmark) run status: ${{ job.status }}",
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "CI tenants benchmarks failed because of ${{ steps.benches.outputs.failed }}.\nView the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
+                    "text": "CI benchmarks (runTenantsBenchmark) failed because of ${{ steps.benches.outputs.failed }}.\nView the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
                   }
                 }
               ]
@@ -188,13 +188,13 @@ jobs:
         with:
           payload: |
             {
-              "text": "CI tenants benchmarks run status: ${{ job.status }}",
+              "text": "CI benchmarks (runLoadTimeBenchmark) run status: ${{ job.status }}",
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "CI tenants benchmarks failed because of ${{ steps.benches.outputs.failed }}.\nView the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
+                    "text": "CI benchmarks (runLoadTimeBenchmark) failed because of ${{ steps.benches.outputs.failed }}.\nView the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
                   }
                 }
               ]
