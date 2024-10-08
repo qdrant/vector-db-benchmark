@@ -23,6 +23,8 @@ BENCHMARK_STRATEGY=${BENCHMARK_STRATEGY:-"default"}
 SCRIPT=$(realpath "$0")
 SCRIPT_PATH=$(dirname "$SCRIPT")
 
+exit 3
+
 bash -x "${SCRIPT_PATH}/run_remote_benchmark.sh"
 
 # Upload to postgres
