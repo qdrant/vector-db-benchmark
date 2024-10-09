@@ -54,13 +54,41 @@ jobs:
         with:
           payload: |
             {
-              "text": "CI benchmarks run status: ${{ job.status }}",
+              "text": "CI benchmarks (runBenchmark) run status: ${{ job.status }}",
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "CI benchmarks failed because of ${{ steps.benches.outputs.failed }}.\nView the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
+                    "text": "CI benchmarks (testSlack) failed because of *${{ steps.benches.outputs.failed }}*."
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Qdrant version: *${{ steps.benches.outputs.qdrant_version }}*."
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Engine: *${{ steps.benches.outputs.engine_name }}*."
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Dataset: *${{ steps.benches.outputs.dataset }}*."
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "View the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
                   }
                 }
               ]
@@ -112,13 +140,41 @@ jobs:
         with:
           payload: |
             {
-              "text": "CI tenants benchmarks run status: ${{ job.status }}",
+              "text": "CI benchmarks (runTenantsBenchmark) run status: ${{ job.status }}",
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "CI tenants benchmarks failed because of ${{ steps.benches.outputs.failed }}.\nView the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
+                    "text": "CI benchmarks (testSlack) failed because of *${{ steps.benches.outputs.failed }}*."
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Qdrant version: *${{ steps.benches.outputs.qdrant_version }}*."
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Engine: *${{ steps.benches.outputs.engine_name }}*."
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Dataset: *${{ steps.benches.outputs.dataset }}*."
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "View the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
                   }
                 }
               ]
@@ -188,13 +244,41 @@ jobs:
         with:
           payload: |
             {
-              "text": "CI tenants benchmarks run status: ${{ job.status }}",
+              "text": "CI benchmarks (runLoadTimeBenchmark) run status: ${{ job.status }}",
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "CI tenants benchmarks failed because of ${{ steps.benches.outputs.failed }}.\nView the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
+                    "text": "CI benchmarks (testSlack) failed because of *${{ steps.benches.outputs.failed }}*."
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Qdrant version: *${{ steps.benches.outputs.qdrant_version }}*."
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Engine: *${{ steps.benches.outputs.engine_name }}*."
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Dataset: *${{ steps.benches.outputs.dataset }}*."
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "View the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
                   }
                 }
               ]
