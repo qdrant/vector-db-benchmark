@@ -76,21 +76,21 @@ jobs:
                     "type": "mrkdwn",
                     "text": "Engine: *${{ steps.benches.outputs.engine_name }}*."
                   }
-                }, 
+                },
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
                     "text": "Dataset: *${{ steps.benches.outputs.dataset }}*."
                   }
-                }, 
+                },
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
                     "text": "View the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
                   }
-                }            
+                }
               ]
             }
         env:
@@ -162,21 +162,21 @@ jobs:
                     "type": "mrkdwn",
                     "text": "Engine: *${{ steps.benches.outputs.engine_name }}*."
                   }
-                }, 
+                },
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
                     "text": "Dataset: *${{ steps.benches.outputs.dataset }}*."
                   }
-                }, 
+                },
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
                     "text": "View the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
                   }
-                }            
+                }
               ]
             }
         env:
@@ -266,21 +266,21 @@ jobs:
                     "type": "mrkdwn",
                     "text": "Engine: *${{ steps.benches.outputs.engine_name }}*."
                   }
-                }, 
+                },
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
                     "text": "Dataset: *${{ steps.benches.outputs.dataset }}*."
                   }
-                }, 
+                },
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
                     "text": "View the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
                   }
-                }            
+                }
               ]
             }
         env:
