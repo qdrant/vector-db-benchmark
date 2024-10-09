@@ -60,7 +60,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "CI benchmarks (testSlack) failed because of *${{ steps.benches.outputs.failed }}*."
+                    "text": "CI benchmarks (runBenchmark) failed because of *${{ steps.benches.outputs.failed }}*."
                   }
                 },
                 {
@@ -146,7 +146,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "CI benchmarks (testSlack) failed because of *${{ steps.benches.outputs.failed }}*."
+                    "text": "CI benchmarks (runTenantsBenchmark) failed because of *${{ steps.benches.outputs.failed }}*."
                   }
                 },
                 {
@@ -250,7 +250,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "CI benchmarks (testSlack) failed because of *${{ steps.benches.outputs.failed }}*."
+                    "text": "CI benchmarks (runLoadTimeBenchmark) failed because of *${{ steps.benches.outputs.failed }}*."
                   }
                 },
                 {
