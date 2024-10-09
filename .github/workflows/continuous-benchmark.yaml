@@ -255,7 +255,12 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "CI benchmarks (testSlack) failed because of ${{ steps.benches.outputs.failed }}.\nReason: ${{ steps.benches.outputs.reason }}.\nView the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
+                    "text": "CI benchmarks (testSlack) failed because of ${{ steps.benches.outputs.failed }}.
+                            \nReason: ${{ steps.benches.outputs.reason }}.
+                            \nQdrant version: ${{ steps.benches.outputs.qdrant_version }}.
+                            \nEngine **${{ steps.benches.outputs.engine_name }}**
+                            \nDataset **${{ steps.benches.outputs.dataset }}**
+                            \nView the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
                   }
                 }
               ]
