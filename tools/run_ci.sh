@@ -9,7 +9,7 @@ function handle_err() {
 }
 
 function handle_term() {
-  echo "reason='Timeout occurred qdrant_version=${QDRANT_VERSION} engine_name=${ENGINE_NAME} dataset=${DATASETS}\'" >> $GITHUB_OUTPUT
+  echo "reason='Timeout occurred qdrant_version=${QDRANT_VERSION} engine_name=${ENGINE_NAME} dataset=${DATASETS}'" >> $GITHUB_OUTPUT
   echo "failed=timeout" >> $GITHUB_OUTPUT
 }
 

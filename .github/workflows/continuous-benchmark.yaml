@@ -229,8 +229,13 @@ jobs:
               export ENGINE_NAME=${DATASET_TO_ENGINE[$dataset]}
               export DATASETS=$dataset
               export QDRANT_VERSION=ghcr/dev
-
-              echo "reason='Timeout occurred qdrant_version=${QDRANT_VERSION} engine_name=${ENGINE_NAME} dataset=${DATASETS}'" >> $GITHUB_OUTPUT
+          
+              {
+                "reason=Timeout occurred"
+                "qdrant_version=${QDRANT_VERSION}"
+                "engine_name=${ENGINE_NAME}"  
+                "dataset=${DATASETS}"
+              } >> $GITHUB_OUTPUT
               echo "failed=error" >> $GITHUB_OUTPUT
             done
 
