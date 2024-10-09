@@ -230,7 +230,6 @@ jobs:
               export DATASETS=$dataset
               export QDRANT_VERSION=ghcr/dev
 
-              echo "reason=Timeout occurred" >> $GITHUB_OUTPUT
               echo "qdrant_version=${QDRANT_VERSION}" >> $GITHUB_OUTPUT
               echo "engine_name=${ENGINE_NAME}" >> $GITHUB_OUTPUT
               echo "dataset=${DATASETS}" >> $GITHUB_OUTPUT
@@ -253,9 +252,37 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "CI benchmarks (testSlack) failed because of ${{ steps.benches.outputs.failed }}.\nReason: ${{ steps.benches.outputs.reason }}.\nQdrant version: ${{ steps.benches.outputs.qdrant_version }}.\nEngine **${{ steps.benches.outputs.engine_name }}**\nDataset **${{ steps.benches.outputs.dataset }}**\nView the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
+                    "text": "CI benchmarks (testSlack) failed because of *${{ steps.benches.outputs.failed }}*."
                   }
-                }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Qdrant version: *${{ steps.benches.outputs.qdrant_version }}*."
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Engine *${{ steps.benches.outputs.engine_name }}*."
+                  }
+                }, 
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Dataset *${{ steps.benches.outputs.dataset }}*."
+                  }
+                }, 
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "View the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
+                  }
+                }            
               ]
             }
         env:
