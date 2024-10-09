@@ -4,12 +4,20 @@ PS4='ts=$(date "+%Y-%m-%dT%H:%M:%SZ") level=DEBUG line=$LINENO file=$BASH_SOURCE
 set -euo pipefail
 
 function handle_err() {
-  echo "reason='Error occurred qdrant_version=${QDRANT_VERSION} engine_name=${ENGINE_NAME} dataset=${DATASETS}'" >> $GITHUB_OUTPUT
+  echo "reason=Error occurred" >> $GITHUB_OUTPUT
+  echo "qdrant_version=${QDRANT_VERSION}" >> $GITHUB_OUTPUT
+  echo "engine_name=${ENGINE_NAME}" >> $GITHUB_OUTPUT
+  echo "dataset=${DATASETS}" >> $GITHUB_OUTPUT
+
   echo "failed=error" >> $GITHUB_OUTPUT
 }
 
 function handle_term() {
-  echo "reason='Timeout occurred qdrant_version=${QDRANT_VERSION} engine_name=${ENGINE_NAME} dataset=${DATASETS}'" >> $GITHUB_OUTPUT
+  echo "reason=Timeout occurred" >> $GITHUB_OUTPUT
+  echo "qdrant_version=${QDRANT_VERSION}" >> $GITHUB_OUTPUT
+  echo "engine_name=${ENGINE_NAME}" >> $GITHUB_OUTPUT
+  echo "dataset=${DATASETS}" >> $GITHUB_OUTPUT
+
   echo "failed=timeout" >> $GITHUB_OUTPUT
 }
 
