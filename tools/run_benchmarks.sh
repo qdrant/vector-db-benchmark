@@ -9,7 +9,7 @@ SCRIPT_PATH="$( cd "$(dirname "$0")" &>/dev/null ; pwd -P )"
 export CLOUD_NAME=${CLOUD_NAME:-"custom"}
 
 DATASETS=("glove-100-angular" "deep-image-96" "gist-960-euclidean" "dbpedia-openai-1M-1536-angular")
-VECTOR_DBS=("qdrant" "milvus" "elasticsearch" "weaviate" "redis")
+VECTOR_DBS=("qdrant" "milvus" "elasticsearch" "weaviate" "redis" "chroma")
 BRANCH="master"
 
 # Note: If you want to run with a different version of Qdrant. Set the QDRANT_VERSION env variable.
