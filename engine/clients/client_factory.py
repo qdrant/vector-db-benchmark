@@ -12,6 +12,7 @@ from engine.clients.elasticsearch import (
     ElasticSearcher,
     ElasticUploader,
 )
+from engine.clients.lancedb import LancedbConfigurator, LancedbSearcher, LancedbUploader
 from engine.clients.milvus import MilvusConfigurator, MilvusSearcher, MilvusUploader
 from engine.clients.opensearch import (
     OpenSearchConfigurator,
@@ -39,6 +40,7 @@ ENGINE_CONFIGURATORS = {
     "opensearch": OpenSearchConfigurator,
     "redis": RedisConfigurator,
     "pgvector": PgVectorConfigurator,
+    "lancedb": LancedbConfigurator,
 }
 
 ENGINE_UPLOADERS = {
@@ -49,6 +51,7 @@ ENGINE_UPLOADERS = {
     "opensearch": OpenSearchUploader,
     "redis": RedisUploader,
     "pgvector": PgVectorUploader,
+    "lancedb": LancedbUploader,
 }
 
 ENGINE_SEARCHERS = {
@@ -59,6 +62,7 @@ ENGINE_SEARCHERS = {
     "opensearch": OpenSearchSearcher,
     "redis": RedisSearcher,
     "pgvector": PgVectorSearcher,
+    "lancedb": LancedbSearcher,
 }
 
 
