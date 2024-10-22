@@ -34,6 +34,12 @@ READER_TYPE = {
 }
 
 
+# prepare progressbar
+def show_progress(block_num, block_size, total_size):
+    percent = round(block_num * block_size / total_size * 100, 2)
+    print(f"{percent} %", end="\r")
+
+
 class Dataset:
     def __init__(self, config: dict):
         self.config = DatasetConfig(**config)
@@ -47,7 +53,9 @@ class Dataset:
 
         if self.config.link:
             print(f"Downloading {self.config.link}...")
-            tmp_path, _ = urllib.request.urlretrieve(self.config.link)
+            tmp_path, _ = urllib.request.urlretrieve(
+                self.config.link, None, show_progress
+            )
 
             if self.config.link.endswith(".tgz") or self.config.link.endswith(
                 ".tar.gz"

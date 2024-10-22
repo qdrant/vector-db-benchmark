@@ -50,7 +50,6 @@ class BaseSearcher:
         if query.expected_result:
             ids = set(x[0] for x in search_res)
             precision = len(ids.intersection(query.expected_result[:top])) / top
-
         return precision, end - start
 
     def search_all(
@@ -58,9 +57,8 @@ class BaseSearcher:
         distance,
         queries: Iterable[Query],
     ):
-        parallel = self.search_params.get("parallel", 1)
-        top = self.search_params.get("top", None)
-
+        parallel = self.search_params.pop("parallel", 1)
+        top = self.search_params.pop("top", None)
         # setup_search may require initialized client
         self.init_client(
             self.host, distance, self.connection_params, self.search_params
@@ -106,6 +104,7 @@ class BaseSearcher:
             "min_time": np.min(latencies),
             "max_time": np.max(latencies),
             "rps": len(latencies) / total_time,
+            "p50_time": np.percentile(latencies, 50),
             "p95_time": np.percentile(latencies, 95),
             "p99_time": np.percentile(latencies, 99),
             "precisions": precisions,
