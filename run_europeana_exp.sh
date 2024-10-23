@@ -24,10 +24,11 @@ function run_exp() {
 
 #run_exp "qdrant-single-node" 'qdrant-m-*'
 #run_exp "weaviate-single-node" 'weaviate-m-*'
-#run_exp "milvus-single-node-eu" 'milvus-m-16-*'
+#run_exp "milvus-single-node-eu" 'milvus-IVF_SQ8'
+run_exp "qdrant-cluster-mode" 'qdrant-m-16*'
 #run_exp "qdrant-single-node-eu" 'qdrant-m-16*'
 #run_exp "redis-single-node-eu" 'redis-m-16*'
-run_exp "elasticsearch-single-node-eu" 'elasticsearch-m-16-ef-128-eu'
+#run_exp "elasticsearch-single-node-eu" 'elasticsearch-m-16-ef-128-eu'
 #run_exp "redis-single-node" 'redis-m-*'
 #run_exp "qdrant-single-node" 'qdrant-rps-m-*'
 

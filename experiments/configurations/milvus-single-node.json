@@ -22,6 +22,17 @@
     "upload_params": { "parallel": 16, "index_params": { "efConstruction": 128, "M": 16 } }
   },
   {
+    "name": "milvus-IVF_SQ8",
+    "engine": "milvus",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      { "parallel": 1, "config": {} }, { "parallel": 1, "config": {} }, { "parallel": 1, "config": {} },
+      { "parallel": 100, "config": {} }, { "parallel": 100, "config": {} }, { "parallel": 100, "config": {} }
+    ],
+    "upload_params": { "parallel": 16, "index_params": { "nlist": 16384 } }
+  },    
+  {
     "name": "milvus-m-32-ef-128",
     "engine": "milvus",
     "connection_params": {},

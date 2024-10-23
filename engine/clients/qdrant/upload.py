@@ -19,7 +19,7 @@ from engine.clients.qdrant.config import QDRANT_COLLECTION_NAME
 class QdrantUploader(BaseUploader):
     client = None
     upload_params = {}
-
+    
     @classmethod
     def init_client(cls, host, distance, connection_params, upload_params):
         os.environ["GRPC_ENABLE_FORK_SUPPORT"] = "true"
