@@ -1,7 +1,6 @@
 from opensearchpy import NotFoundError, OpenSearch
 
 from benchmark.dataset import Dataset
-from engine.base_client import IncompatibilityError
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
 from engine.clients.opensearch.config import (
@@ -10,6 +9,7 @@ from engine.clients.opensearch.config import (
     OPENSEARCH_PORT,
     OPENSEARCH_USER,
 )
+from engine.clients.opensearch.utils import get_index_thread_qty
 
 
 class OpenSearchConfigurator(BaseConfigurator):
@@ -40,21 +40,26 @@ class OpenSearchConfigurator(BaseConfigurator):
         )
 
     def clean(self):
-        try:
+        is_index_available = self.client.indices.exists(index=OPENSEARCH_INDEX,
+            params={
+                "timeout": 300,
+            })
+        if(is_index_available):
+            print(f"Deleting index: {OPENSEARCH_INDEX}, as it is already present")
             self.client.indices.delete(
                 index=OPENSEARCH_INDEX,
                 params={
                     "timeout": 300,
                 },
             )
-        except NotFoundError:
-            pass
+        
 
     def recreate(self, dataset: Dataset, collection_params):
-        if dataset.config.distance == Distance.DOT:
-            raise IncompatibilityError
-        if dataset.config.vector_size > 1024:
-            raise IncompatibilityError
+        self._update_cluster_settings()
+        distance = self.DISTANCE_MAPPING[dataset.config.distance]
+        if dataset.config.distance == Distance.COSINE:
+            distance = self.DISTANCE_MAPPING[Distance.DOT]
+            print(f"Using distance type: {distance} as dataset distance is : {dataset.config.distance}")
 
         self.client.indices.create(
             index=OPENSEARCH_INDEX,
@@ -62,6 +67,10 @@ class OpenSearchConfigurator(BaseConfigurator):
                 "settings": {
                     "index": {
                         "knn": True,
+                        "refresh_interval": -1,
+                        "number_of_replicas": 0 if collection_params.get("number_of_replicas") == None else collection_params.get("number_of_replicas"),
+                        "number_of_shards": 1 if collection_params.get("number_of_shards") == None else collection_params.get("number_of_shards"),
+                        "knn.advanced.approximate_threshold": "-1"
                     }
                 },
                 "mappings": {
@@ -72,18 +81,13 @@ class OpenSearchConfigurator(BaseConfigurator):
                             "method": {
                                 **{
                                     "name": "hnsw",
-                                    "engine": "lucene",
-                                    "space_type": self.DISTANCE_MAPPING[
-                                        dataset.config.distance
-                                    ],
-                                    "parameters": {
-                                        "m": 16,
-                                        "ef_construction": 100,
-                                    },
+                                    "engine": "faiss",
+                                    "space_type": distance,
+                                    **collection_params.get("method")
                                 },
-                                **collection_params.get("method"),
                             },
                         },
+                        # this doesn't work for nmslib, we need see what to do here, may be remove them
                         **self._prepare_fields_config(dataset),
                     }
                 },
@@ -93,6 +97,16 @@ class OpenSearchConfigurator(BaseConfigurator):
             },
             cluster_manager_timeout="5m",
         )
+
+    def _update_cluster_settings(self):
+        index_thread_qty = get_index_thread_qty(self.client)
+        cluster_settings_body = {
+            "persistent": {
+                "knn.memory.circuit_breaker.limit": "75%", # putting a higher value to ensure that even with small cluster the latencies for vector search are good
+                "knn.algo_param.index_thread_qty": index_thread_qty
+            }
+        }
+        self.client.cluster.put_settings(cluster_settings_body)
 
     def _prepare_fields_config(self, dataset: Dataset):
         return {
@@ -104,3 +118,9 @@ class OpenSearchConfigurator(BaseConfigurator):
             }
             for field_name, field_type in dataset.config.schema.items()
         }
+    
+    def execution_params(self, distance, vector_size) -> dict:
+        # normalize the vectors if cosine similarity is there.
+        if distance == Distance.COSINE:
+            return {"normalize": "true"}
+        return {}
