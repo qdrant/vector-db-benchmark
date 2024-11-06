@@ -5,7 +5,6 @@ from typing import List, Tuple
 from opensearchpy import OpenSearch
 
 from dataset_reader.base_reader import Query
-from engine.base_client.distances import Distance
 from engine.base_client.search import BaseSearcher
 from engine.clients.opensearch.config import (
     OPENSEARCH_INDEX,
@@ -14,7 +13,6 @@ from engine.clients.opensearch.config import (
     OPENSEARCH_USER,
 )
 from engine.clients.opensearch.parser import OpenSearchConditionParser
-import numpy as np
 
 
 class ClosableOpenSearch(OpenSearch):
@@ -56,9 +54,11 @@ class OpenSearchSearcher(BaseSearcher):
                 "vector": {
                     "vector": query.vector,
                     "k": top,
-                    "method_parameters" : {
-                        "ef_search": cls.search_params["config"]["ef_search"] # ef_search parameter is added in the query time
-                    }
+                    "method_parameters": {
+                        "ef_search": cls.search_params["config"][
+                            "ef_search"
+                        ]  # ef_search parameter is added in the query time
+                    },
                 }
             }
         }
@@ -80,7 +80,7 @@ class OpenSearchSearcher(BaseSearcher):
             docvalue_fields=["_id"],
             stored_fields="_none_",
         )
-        
+
         return [
             (uuid.UUID(hex=hit["fields"]["_id"][0]).int, hit["_score"])
             for hit in res["hits"]["hits"]
@@ -89,5 +89,5 @@ class OpenSearchSearcher(BaseSearcher):
     @classmethod
     def setup_search(cls):
         # Load the graphs in memory
-        warmup_endpoint = f'/_plugins/_knn/warmup/{OPENSEARCH_INDEX}'
-        cls.client.transport.perform_request('GET', warmup_endpoint)
+        warmup_endpoint = f"/_plugins/_knn/warmup/{OPENSEARCH_INDEX}"
+        cls.client.transport.perform_request("GET", warmup_endpoint)

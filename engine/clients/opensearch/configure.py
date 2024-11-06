@@ -1,4 +1,4 @@
-from opensearchpy import NotFoundError, OpenSearch
+from opensearchpy import OpenSearch
 
 from benchmark.dataset import Dataset
 from engine.base_client.configure import BaseConfigurator
@@ -40,11 +40,13 @@ class OpenSearchConfigurator(BaseConfigurator):
         )
 
     def clean(self):
-        is_index_available = self.client.indices.exists(index=OPENSEARCH_INDEX,
+        is_index_available = self.client.indices.exists(
+            index=OPENSEARCH_INDEX,
             params={
                 "timeout": 300,
-            })
-        if(is_index_available):
+            },
+        )
+        if is_index_available:
             print(f"Deleting index: {OPENSEARCH_INDEX}, as it is already present")
             self.client.indices.delete(
                 index=OPENSEARCH_INDEX,
@@ -52,14 +54,15 @@ class OpenSearchConfigurator(BaseConfigurator):
                     "timeout": 300,
                 },
             )
-        
 
     def recreate(self, dataset: Dataset, collection_params):
         self._update_cluster_settings()
         distance = self.DISTANCE_MAPPING[dataset.config.distance]
         if dataset.config.distance == Distance.COSINE:
             distance = self.DISTANCE_MAPPING[Distance.DOT]
-            print(f"Using distance type: {distance} as dataset distance is : {dataset.config.distance}")
+            print(
+                f"Using distance type: {distance} as dataset distance is : {dataset.config.distance}"
+            )
 
         self.client.indices.create(
             index=OPENSEARCH_INDEX,
@@ -68,9 +71,17 @@ class OpenSearchConfigurator(BaseConfigurator):
                     "index": {
                         "knn": True,
                         "refresh_interval": -1,
-                        "number_of_replicas": 0 if collection_params.get("number_of_replicas") == None else collection_params.get("number_of_replicas"),
-                        "number_of_shards": 1 if collection_params.get("number_of_shards") == None else collection_params.get("number_of_shards"),
-                        "knn.advanced.approximate_threshold": "-1"
+                        "number_of_replicas": (
+                            0
+                            if collection_params.get("number_of_replicas") == None
+                            else collection_params.get("number_of_replicas")
+                        ),
+                        "number_of_shards": (
+                            1
+                            if collection_params.get("number_of_shards") == None
+                            else collection_params.get("number_of_shards")
+                        ),
+                        "knn.advanced.approximate_threshold": "-1",
                     }
                 },
                 "mappings": {
@@ -83,7 +94,7 @@ class OpenSearchConfigurator(BaseConfigurator):
                                     "name": "hnsw",
                                     "engine": "faiss",
                                     "space_type": distance,
-                                    **collection_params.get("method")
+                                    **collection_params.get("method"),
                                 },
                             },
                         },
@@ -102,8 +113,8 @@ class OpenSearchConfigurator(BaseConfigurator):
         index_thread_qty = get_index_thread_qty(self.client)
         cluster_settings_body = {
             "persistent": {
-                "knn.memory.circuit_breaker.limit": "75%", # putting a higher value to ensure that even with small cluster the latencies for vector search are good
-                "knn.algo_param.index_thread_qty": index_thread_qty
+                "knn.memory.circuit_breaker.limit": "75%",  # putting a higher value to ensure that even with small cluster the latencies for vector search are good
+                "knn.algo_param.index_thread_qty": index_thread_qty,
             }
         }
         self.client.cluster.put_settings(cluster_settings_body)
@@ -118,7 +129,7 @@ class OpenSearchConfigurator(BaseConfigurator):
             }
             for field_name, field_type in dataset.config.schema.items()
         }
-    
+
     def execution_params(self, distance, vector_size) -> dict:
         # normalize the vectors if cosine similarity is there.
         if distance == Distance.COSINE:
