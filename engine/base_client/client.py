@@ -1,7 +1,7 @@
 import json
 import os
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from benchmark import ROOT_DIR
 from benchmark.dataset import Dataset
@@ -84,6 +84,7 @@ class BaseClient:
         skip_upload: bool = False,
         skip_search: bool = False,
         skip_if_exists: bool = True,
+        skip_configure: Optional[bool] = False,
     ):
         execution_params = self.configurator.execution_params(
             distance=dataset.config.distance, vector_size=dataset.config.vector_size
@@ -101,8 +102,9 @@ class BaseClient:
                 return
 
         if not skip_upload:
-            print("Experiment stage: Configure")
-            self.configurator.configure(dataset)
+            if not skip_configure:
+                print("Experiment stage: Configure")
+                self.configurator.configure(dataset)
 
             print("Experiment stage: Upload")
             upload_stats = self.uploader.upload(

@@ -3,7 +3,7 @@
 PS4='ts=$(date "+%Y-%m-%dT%H:%M:%SZ") level=DEBUG line=$LINENO file=$BASH_SOURCE '
 set -euo pipefail
 
-# Possible values are: full|upload|search
+# Possible values are: full|upload|search|parallel|snapshot
 EXPERIMENT_MODE=${1:-"full"}
 
 CLOUD_NAME=${CLOUD_NAME:-"hetzner"}
@@ -53,12 +53,12 @@ fi
 echo "Gather experiment results..."
 result_files_arr=()
 
-if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "upload" ]]; then
+if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "upload" ]] || [[ "$EXPERIMENT_MODE" == "parallel" ]]; then
   UPLOAD_RESULT_FILE=$(ssh "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "ls -t results/*-upload-*.json | head -n 1")
   result_files_arr+=("$UPLOAD_RESULT_FILE")
 fi
 
-if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "search" ]]; then
+if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "search" ]] || [[ "$EXPERIMENT_MODE" == "parallel" ]]; then
   SEARCH_RESULT_FILE=$(ssh "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "ls -t results/*-search-*.json | head -n 1")
   result_files_arr+=("$SEARCH_RESULT_FILE")
 fi

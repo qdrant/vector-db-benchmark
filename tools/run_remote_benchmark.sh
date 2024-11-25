@@ -85,6 +85,22 @@ case "$BENCHMARK_STRATEGY" in
   bash -x "${SCRIPT_PATH}/qdrant_collect_stats.sh" "$SERVER_CONTAINER_NAME"
   ;;
 
+  "parallel")
+  echo "Parallel benchmark, run upload&search at the same time"
+
+  SERVER_CONTAINER_NAME=${SERVER_CONTAINER_NAME:-"qdrant-continuous-benchmarks-with-volume"}
+
+  bash -x "${SCRIPT_PATH}/run_server_container_with_volume.sh" "$SERVER_CONTAINER_NAME"
+
+  bash -x "${SCRIPT_PATH}/run_client_script.sh" "upload"
+
+  bash -x "${SCRIPT_PATH}/run_server_container_with_volume.sh" "$SERVER_CONTAINER_NAME" "25Gb" "continue"
+
+  bash -x "${SCRIPT_PATH}/run_client_script.sh" "parallel"
+
+  bash -x "${SCRIPT_PATH}/qdrant_collect_stats.sh" "$SERVER_CONTAINER_NAME"
+  ;;
+
   *)
     echo "Invalid BENCHMARK_STRATEGY value: $BENCHMARK_STRATEGY"
     exit 1
