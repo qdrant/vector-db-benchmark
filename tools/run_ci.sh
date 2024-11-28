@@ -39,6 +39,13 @@ else
   # any other strategies are considered to have search & upload results
   export SEARCH_RESULTS_FILE=$(ls -t results/*-search-*.json | head -n 1)
   export UPLOAD_RESULTS_FILE=$(ls -t results/*-upload-*.json | head -n 1)
+
+  if [[ "$BENCHMARK_STRATEGY" == "parallel" ]]; then
+    # parallel experiment produces 2 *-search-*.json files
+    # one for search during upsert and the other for search without upsert
+    # export the latter here
+    export NO_UPSERT_SEARCH_RESULT_FILE=$(ls -t results/*-search-*.json | sed -n 2p)
+  fi
 fi
 
 export VM_RSS_MEMORY_USAGE_FILE=$(ls -t results/vm-rss-memory-usage-*.txt | head -n 1)
