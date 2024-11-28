@@ -45,4 +45,9 @@ export VM_RSS_MEMORY_USAGE_FILE=$(ls -t results/vm-rss-memory-usage-*.txt | head
 export RSS_ANON_MEMORY_USAGE_FILE=$(ls -t results/rss-anon-memory-usage-*.txt | head -n 1)
 export ROOT_API_RESPONSE_FILE=$(ls -t results/root-api-*.json | head -n 1)
 
-bash -x "${SCRIPT_PATH}/upload_results_postgres.sh"
+if [[ "$BENCHMARK_STRATEGY" != "parallel" ]]; then
+  bash -x "${SCRIPT_PATH}/upload_results_postgres.sh"
+else
+  bash -x "${SCRIPT_PATH}/upload_parallel_results_postgres.sh"
+fi
+
