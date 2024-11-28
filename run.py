@@ -58,7 +58,11 @@ def run(
 
                 with stopit.ThreadingTimeout(timeout) as tt:
                     client.run_experiment(
-                        dataset, skip_upload, skip_search, skip_if_exists, skip_configure
+                        dataset,
+                        skip_upload,
+                        skip_search,
+                        skip_if_exists,
+                        skip_configure,
                     )
                 client.delete_client()
 

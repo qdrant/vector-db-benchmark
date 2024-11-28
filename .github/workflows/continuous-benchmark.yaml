@@ -312,14 +312,14 @@ jobs:
             export DATASETS="laion-small-clip"
             export BENCHMARK_STRATEGY="parallel"
             export POSTGRES_TABLE="benchmark_parallel_search_upload"
-          
+
             # Benchmark the dev branch:
             export QDRANT_VERSION=ghcr/dev
             timeout 30m bash -x tools/run_ci.sh
 
             # Benchmark the master branch:
             export QDRANT_VERSION=docker/master
-            timeout 30m bash -x tools/run_ci.sh          
+            timeout 30m bash -x tools/run_ci.sh
 
             set -e
       - name: Fail job if any of the benches failed
