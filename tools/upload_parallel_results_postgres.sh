@@ -18,7 +18,7 @@
 # 	p95_time real,
 # 	p99_time real,
 # 	search_time real,
-#   no_upsert_search_time real,
+# 	no_upsert_search_time real,
 # );
 
 PARALLEL_SEARCH_RESULTS_FILE=${PARALLEL_SEARCH_RESULTS_FILE:-""}
