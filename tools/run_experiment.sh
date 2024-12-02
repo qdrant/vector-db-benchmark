@@ -78,14 +78,14 @@ fi
 if [[ "$EXPERIMENT_MODE" == "parallel" ]]; then
   echo "EXPERIMENT_MODE=$EXPERIMENT_MODE"
 
-  docker pull qdrant/vector-db-benchmark:latest
+#  docker pull qdrant/vector-db-benchmark:latest
 
   echo "Starting ci-benchmark-upload container"
   docker run \
     --rm \
     --name ci-benchmark-upload \
     -v "$HOME/results/parallel:/code/results" \
-    qdrant/vector-db-benchmark:latest \
+    vector-db-benchmark:el_latest \
     python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-search --skip-configure &
   UPLOAD_PID=$!
 
@@ -94,7 +94,7 @@ if [[ "$EXPERIMENT_MODE" == "parallel" ]]; then
     --rm \
     --name ci-benchmark-search \
     -v "$HOME/results/parallel:/code/results" \
-    qdrant/vector-db-benchmark:latest \
+    vector-db-benchmark:el_latest \
     python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-upload &
   SEARCH_PID=$!
 
