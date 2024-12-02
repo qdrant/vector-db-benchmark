@@ -58,7 +58,7 @@ case "$BENCHMARK_STRATEGY" in
 
   SERVER_CONTAINER_NAME=${SERVER_CONTAINER_NAME:-"qdrant-continuous-benchmarks-with-volume"}
 
-  bash -x "${SCRIPT_PATH}/run_server_container_with_volume.sh" "$SERVER_CONTAINER_NAME"
+  bash -x "${SCRIPT_PATH}/run_server_container_with_volume.sh" "$SERVER_CONTAINER_NAME" "25Gb"
 
   bash -x "${SCRIPT_PATH}/run_client_script.sh" "upload"
 
@@ -74,7 +74,7 @@ case "$BENCHMARK_STRATEGY" in
 
   SERVER_CONTAINER_NAME=${SERVER_CONTAINER_NAME:-"qdrant-continuous-benchmarks-snapshot"}
 
-  bash -x "${SCRIPT_PATH}/run_server_container_with_volume.sh" "$SERVER_CONTAINER_NAME"
+  bash -x "${SCRIPT_PATH}/run_server_container_with_volume.sh" "$SERVER_CONTAINER_NAME" "25Gb"
 
   bash -x "${SCRIPT_PATH}/run_client_script.sh" "snapshot"
 
@@ -90,7 +90,7 @@ case "$BENCHMARK_STRATEGY" in
 
   SERVER_CONTAINER_NAME=${SERVER_CONTAINER_NAME:-"qdrant-continuous-benchmarks-with-volume"}
 
-  bash -x "${SCRIPT_PATH}/run_server_container_with_volume.sh" "$SERVER_CONTAINER_NAME"
+  bash -x "${SCRIPT_PATH}/run_server_container_with_volume.sh" "$SERVER_CONTAINER_NAME" "25Gb"
 
   bash -x "${SCRIPT_PATH}/run_client_script.sh" "upload"
 
