@@ -29,7 +29,7 @@ if [[ -z "$PRIVATE_IP_OF_THE_SERVER" ]]; then
 fi
 
 if [[ -z "$EXPERIMENT_MODE" ]]; then
-  echo "EXPERIMENT_MODE is not set, possible values are: full | upload | search | snapshot"
+  echo "EXPERIMENT_MODE is not set, possible values are: full | upload | search | snapshot | parallel"
   exit 1
 fi
 
@@ -72,6 +72,37 @@ if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "search" ]]; t
     -v "$HOME/results:/code/results" \
     qdrant/vector-db-benchmark:latest \
     python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-upload
+fi
+
+
+if [[ "$EXPERIMENT_MODE" == "parallel" ]]; then
+  echo "EXPERIMENT_MODE=$EXPERIMENT_MODE"
+
+  docker pull qdrant/vector-db-benchmark:latest
+
+  echo "Starting ci-benchmark-upload container"
+  docker run \
+    --rm \
+    --name ci-benchmark-upload \
+    -v "$HOME/results/parallel:/code/results" \
+    qdrant/vector-db-benchmark:latest \
+    python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-search --skip-configure &
+  UPLOAD_PID=$!
+
+  echo "Starting ci-benchmark-search container"
+  docker run \
+    --rm \
+    --name ci-benchmark-search \
+    -v "$HOME/results/parallel:/code/results" \
+    qdrant/vector-db-benchmark:latest \
+    python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-upload &
+  SEARCH_PID=$!
+
+  echo "Waiting for both containers to finish"
+  wait $UPLOAD_PID
+  wait $SEARCH_PID
+
+  echo "EXPERIMENT_MODE=$EXPERIMENT_MODE DONE"
 fi
 
 

@@ -1,6 +1,6 @@
 import fnmatch
 import traceback
-from typing import List
+from typing import List, Optional
 
 import stopit
 import typer
@@ -23,6 +23,7 @@ def run(
     skip_if_exists: bool = False,
     exit_on_error: bool = True,
     timeout: float = 86400.0,
+    skip_configure: Optional[bool] = False,
 ):
     """
     Example:
@@ -57,7 +58,11 @@ def run(
 
                 with stopit.ThreadingTimeout(timeout) as tt:
                     client.run_experiment(
-                        dataset, skip_upload, skip_search, skip_if_exists
+                        dataset,
+                        skip_upload,
+                        skip_search,
+                        skip_if_exists,
+                        skip_configure,
                     )
                 client.delete_client()
 
