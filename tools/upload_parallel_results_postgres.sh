@@ -18,7 +18,7 @@
 # 	p95_time real,
 # 	p99_time real,
 # 	search_time real,
-#   no_upsert_search_time real,
+#     no_upsert_search_time real,
 # );
 
 SEARCH_RESULTS_FILE=${SEARCH_RESULTS_FILE:-""}
