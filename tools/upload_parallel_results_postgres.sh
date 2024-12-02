@@ -21,8 +21,9 @@
 #   no_upsert_search_time real,
 # );
 
-SEARCH_RESULTS_FILE=${SEARCH_RESULTS_FILE:-""}
-NO_UPSERT_SEARCH_RESULT_FILE=${NO_UPSERT_SEARCH_RESULT_FILE:-""}
+PARALLEL_SEARCH_RESULTS_FILE=${PARALLEL_SEARCH_RESULTS_FILE:-""}
+SEARCH_RESULT_FILE=${SEARCH_RESULTS_FILE:-""}
+PARALLEL_UPLOAD_RESULTS_FILE=${PARALLEL_UPLOAD_RESULTS_FILE:-""}
 UPLOAD_RESULTS_FILE=${UPLOAD_RESULTS_FILE:-""}
 ROOT_API_RESPONSE_FILE=${ROOT_API_RESPONSE_FILE:-""}
 POSTGRES_TABLE=${POSTGRES_TABLE:-"benchmark_parallel_search_upload"}
@@ -34,13 +35,18 @@ if [[ "$BENCHMARK_STRATEGY" != "parallel" ]]; then
   echo "BENCHMARK_STRATEGY is not parallel"
   exit 1
 else
-  if [[ -z "$SEARCH_RESULTS_FILE" ]]; then
-    echo "SEARCH_RESULTS_FILE is not set"
+  if [[ -z "$PARALLEL_SEARCH_RESULTS_FILE" ]]; then
+    echo "PARALLEL_SEARCH_RESULTS_FILE is not set"
     exit 1
   fi
 
-  if [[ -z "$NO_UPSERT_SEARCH_RESULT_FILE" ]]; then
-    echo "NO_UPSERT_SEARCH_RESULT_FILE is not set"
+  if [[ -z "$SEARCH_RESULT_FILE" ]]; then
+    echo "SEARCH_RESULT_FILE is not set"
+    exit 1
+  fi
+
+  if [[ -z "$PARALLEL_UPLOAD_RESULTS_FILE" ]]; then
+    echo "PARALLEL_UPLOAD_RESULTS_FILE is not set"
     exit 1
   fi
 
@@ -62,16 +68,17 @@ P99_TIME=NULL
 UPLOAD_TIME=NULL
 INDEXING_TIME=NULL
 SEARCH_TIME=NULL
+NO_UPSERT_SEARCH_TIME=NULL
 
-RPS=$(jq -r '.results.rps' "$SEARCH_RESULTS_FILE")
-MEAN_PRECISIONS=$(jq -r '.results.mean_precisions' "$SEARCH_RESULTS_FILE")
-P95_TIME=$(jq -r '.results.p95_time' "$SEARCH_RESULTS_FILE")
-P99_TIME=$(jq -r '.results.p99_time' "$SEARCH_RESULTS_FILE")
-SEARCH_TIME=$(jq -r '.results.total_time' "$SEARCH_RESULTS_FILE")
-NO_UPSERT_SEARCH_TIME=$(jq -r '.results.total_time' "$NO_UPSERT_SEARCH_RESULT_FILE")
+RPS=$(jq -r '.results.rps' "$PARALLEL_SEARCH_RESULTS_FILE")
+MEAN_PRECISIONS=$(jq -r '.results.mean_precisions' "$PARALLEL_SEARCH_RESULTS_FILE")
+P95_TIME=$(jq -r '.results.p95_time' "$PARALLEL_SEARCH_RESULTS_FILE")
+P99_TIME=$(jq -r '.results.p99_time' "$PARALLEL_SEARCH_RESULTS_FILE")
+SEARCH_TIME=$(jq -r '.results.total_time' "$PARALLEL_SEARCH_RESULTS_FILE")
+NO_UPSERT_SEARCH_TIME=$(jq -r '.results.total_time' "$SEARCH_RESULT_FILE")
 
-UPLOAD_TIME=$(jq -r '.results.upload_time' "$UPLOAD_RESULTS_FILE")
-INDEXING_TIME=$(jq -r '.results.total_time' "$UPLOAD_RESULTS_FILE")
+UPLOAD_TIME=$(jq -r '.results.upload_time' "$PARALLEL_UPLOAD_RESULTS_FILE")
+INDEXING_TIME=$(jq -r '.results.total_time' "$PARALLEL_UPLOAD_RESULTS_FILE")
 
 QDRANT_COMMIT=$(jq -r '.commit' "$ROOT_API_RESPONSE_FILE")
 

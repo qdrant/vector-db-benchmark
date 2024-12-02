@@ -41,10 +41,8 @@ else
   export UPLOAD_RESULTS_FILE=$(ls -t results/*-upload-*.json | head -n 1)
 
   if [[ "$BENCHMARK_STRATEGY" == "parallel" ]]; then
-    # parallel experiment produces 2 *-search-*.json files
-    # one for search during upsert and the other for search without upsert
-    # export the latter here
-    export NO_UPSERT_SEARCH_RESULT_FILE=$(ls -t results/*-search-*.json | sed -n 2p)
+    export PARALLEL_UPLOAD_RESULTS_FILE=$(ls -t results/parallel/*-upload-*.json | head -n 1)
+    export PARALLEL_SEARCH_RESULTS_FILE=$(ls -t results/parallel/*-search-*.json | head -n 1)
   fi
 fi
 
