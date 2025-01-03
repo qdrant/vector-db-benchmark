@@ -1,0 +1,76 @@
+[
+  {
+    "name": "lancedb-default",
+    "engine": "lancedb",
+    "connection_params": {},
+    "collection_params": {
+    },
+    "search_params": [
+      {
+        "parallel": 8,
+        "config": {}
+      }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "batch_size": 1024
+    }
+  },
+  {
+    "name": "lancedb-p-256-sv-64",
+    "engine": "lancedb",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      { "parallel": 1, "config": {} },
+      { "parallel": 100, "config": {} }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "indices": [
+        {
+          "num_partitions": 256,
+          "num_sub_vectors": 64
+        }
+      ]
+    }
+  },
+  {
+    "name": "lancedb-p-256-sv-16",
+    "engine": "lancedb",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      { "parallel": 1, "config": {} },
+      { "parallel": 100, "config": {} }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "indices": [
+        {
+          "num_partitions": 256,
+          "num_sub_vectors": 16
+        }
+      ]
+    }
+  },
+  {
+    "name": "lancedb-p-512-sv-8",
+    "engine": "lancedb",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      { "parallel": 1, "config": {} },
+      { "parallel": 100, "config": {} }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "indices": [
+        {
+          "num_partitions": 512,
+          "num_sub_vectors": 8
+        }
+      ]
+    }
+  }
+]
