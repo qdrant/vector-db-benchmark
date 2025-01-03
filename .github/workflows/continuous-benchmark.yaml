@@ -7,6 +7,12 @@ on:
     # Run every 4 hours
     - cron: "0 */4 * * *"
 
+# Restrict to only running this workflow one at a time.
+# Any new runs will be queued until the previous run is complete.
+# Any existing pending runs will be cancelled and replaced with current run.
+concurrency:
+  group: continuous-benchmark
+
 jobs:
   runBenchmark:
     runs-on: ubuntu-latest
@@ -182,115 +188,9 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.CI_ALERTS_CHANNEL_WEBHOOK_URL }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-  # Schedule this benchmark to run once a day for the sake of saving on S3 costs.
-  runLoadTimeBenchmark:
-    runs-on: ubuntu-latest
-    needs: runBenchmark
-    if: ${{ always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'repository_dispatch' || github.event.schedule == '0 0 * * *') }}
-    steps:
-      - uses: actions/checkout@v3
-      - uses: webfactory/ssh-agent@v0.8.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-      - name: Benches
-        id: benches
-        run: |
-            export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
-            export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-            export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
-            export SERVER_NAME="benchmark-server-3"
-            bash -x tools/setup_ci.sh
-
-            set +e
-
-            # Benchmark collection load time
-            export BENCHMARK_STRATEGY="collection-reload"
-
-            declare -A DATASET_TO_ENGINE
-            declare -A DATASET_TO_URL
-            DATASET_TO_ENGINE["all-payloads-default"]="qdrant-continuous-benchmark-snapshot"
-            DATASET_TO_ENGINE["all-payloads-on-disk"]="qdrant-continuous-benchmark-snapshot"
-            DATASET_TO_ENGINE["all-payloads-default-sparse"]="qdrant-continuous-benchmark-snapshot"
-            DATASET_TO_ENGINE["all-payloads-on-disk-sparse"]="qdrant-continuous-benchmark-snapshot"
-
-            export STORAGE_URL="https://storage.googleapis.com/qdrant-benchmark-snapshots/all-payloads"
-            DATASET_TO_URL["all-payloads-default"]="${STORAGE_URL}/benchmark-all-payloads-500k-768-default.snapshot"
-            DATASET_TO_URL["all-payloads-on-disk"]="${STORAGE_URL}/benchmark-all-payloads-500k-768-on-disk.snapshot"
-            DATASET_TO_URL["all-payloads-default-sparse"]="${STORAGE_URL}/benchmark-all-payloads-500k-sparse-default.snapshot"
-            DATASET_TO_URL["all-payloads-on-disk-sparse"]="${STORAGE_URL}/benchmark-all-payloads-500k-sparse-on-disk.snapshot"
-
-            set +e
-
-            for dataset in "${!DATASET_TO_ENGINE[@]}"; do
-              export ENGINE_NAME=${DATASET_TO_ENGINE[$dataset]}
-              export DATASETS=$dataset
-              export SNAPSHOT_URL=${DATASET_TO_URL[$dataset]}
-
-              # Benchmark the dev branch:
-              export QDRANT_VERSION=ghcr/dev
-              timeout 30m bash -x tools/run_ci.sh
-
-              # Benchmark the master branch:
-              export QDRANT_VERSION=docker/master
-              timeout 30m bash -x tools/run_ci.sh
-            done
-
-            set -e
-      - name: Fail job if any of the benches failed
-        if: steps.benches.outputs.failed == 'error' || steps.benches.outputs.failed == 'timeout'
-        run: exit 1
-      - name: Send Notification
-        if: failure() || cancelled()
-        uses: slackapi/slack-github-action@v1.26.0
-        with:
-          payload: |
-            {
-              "text": "CI benchmarks (runLoadTimeBenchmark) run status: ${{ job.status }}",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "CI benchmarks (runLoadTimeBenchmark) failed because of *${{ steps.benches.outputs.failed }}*."
-                  }
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "Qdrant version: *${{ steps.benches.outputs.qdrant_version }}*."
-                  }
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "Engine: *${{ steps.benches.outputs.engine_name }}*."
-                  }
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "Dataset: *${{ steps.benches.outputs.dataset }}*."
-                  }
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "View the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
-                  }
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.CI_ALERTS_CHANNEL_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-
   runParallelBenchmark:
     runs-on: ubuntu-latest
-    needs: [ runLoadTimeBenchmark, runTenantsBenchmark ]
+    needs: runTenantsBenchmark
     if: ${{ always() }}
     steps:
       - uses: actions/checkout@v3
