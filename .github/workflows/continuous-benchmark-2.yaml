@@ -1,4 +1,4 @@
-name: Continuous Benchmark
+name: Continuous Benchmark 2
 
 on:
   repository_dispatch:
