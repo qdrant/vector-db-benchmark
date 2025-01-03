@@ -182,6 +182,7 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.CI_ALERTS_CHANNEL_WEBHOOK_URL }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+  # Schedule this benchmark to run once a day for the sake of saving on S3 costs.
   runLoadTimeBenchmark:
     runs-on: ubuntu-latest
     needs: runBenchmark
