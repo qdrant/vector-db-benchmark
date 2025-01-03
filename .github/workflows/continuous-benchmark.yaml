@@ -185,7 +185,7 @@ jobs:
   runLoadTimeBenchmark:
     runs-on: ubuntu-latest
     needs: runBenchmark
-    if: ${{ always() }}
+    if: ${{ always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'repository_dispatch' || github.event.schedule == '0 0 * * *') }}
     steps:
       - uses: actions/checkout@v3
       - uses: webfactory/ssh-agent@v0.8.0
