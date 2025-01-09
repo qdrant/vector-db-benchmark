@@ -45,7 +45,14 @@ if [[ "$EXPERIMENT_MODE" != "snapshot" ]]; then
   docker rmi --force qdrant/vector-db-benchmark:latest || true
 fi
 
+echo "Ensure datasets volume exists and contains latest datasets.json"
 docker volume create ci-datasets
+if [[ -f "$HOME/datasets.json" ]]; then
+  echo "Found datasets.json, update the volume"
+  mv ~/datasets.json "$(docker volume inspect ci-datasets -f '{{ .Mountpoint }}')"
+else
+  echo "datasets.json is missing, do not update the volume"
+fi
 
 if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "upload" ]]; then
   echo "EXPERIMENT_MODE=$EXPERIMENT_MODE"
