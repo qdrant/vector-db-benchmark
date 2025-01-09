@@ -1,0 +1,52 @@
+name: Clean Datasets
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+  schedule:
+    # Run every month on the 1st day at 3 am
+    - cron: "0 3 1 * *"
+
+concurrency:
+  group: continuous-benchmark
+
+# This removes the ci-datasets volume from client machine.
+# The next run of Continuous Benchmark will create the volume again and download all the datasets.
+jobs:
+  removeDatasetsVolume:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Benches
+        id: benches
+        run: |
+            export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
+
+            set +e
+
+            timeout 10m bash -x tools/run_client_remove_volume.sh
+
+            set -e
+      - name: Send Notification
+        if: failure()
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          payload: |
+            {
+              "text": "Failed to remove the datasets volume (removeDatasetsVolume), run status: ${{ job.status }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "View the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.CI_ALERTS_CHANNEL_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
