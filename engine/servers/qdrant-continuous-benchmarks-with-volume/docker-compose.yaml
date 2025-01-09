@@ -9,6 +9,7 @@ services:
       - "6334:6334"
     volumes:
       - qdrant_storage:/qdrant/storage
+      - ci_datasets:/code/datasets
     logging:
       driver: "json-file"
       options:
@@ -22,3 +23,5 @@ services:
 volumes:
   qdrant_storage:
     name: "qdrant_storage"
+  ci_datasets:
+    name: "ci_datasets"

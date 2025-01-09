@@ -7,6 +7,8 @@ services:
     ports:
       - "6333:6333"
       - "6334:6334"
+    volumes:
+      - ci_datasets:/code/datasets
     logging:
       driver: "json-file"
       options:
@@ -16,3 +18,7 @@ services:
       resources:
         limits:
           memory: 25Gb
+
+volumes:
+  ci_datasets:
+    name: "ci_datasets"
