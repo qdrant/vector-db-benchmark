@@ -39,6 +39,7 @@ if [[ "$EXPERIMENT_MODE" == "snapshot" ]]; then
 
 else
   scp "${SCRIPT_PATH}/run_experiment.sh" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/run_experiment.sh"
+  scp "${SCRIPT_PATH}/../datasets/datasets.json" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/datasets.json"
 
   RUN_EXPERIMENT="ENGINE_NAME=${ENGINE_NAME} \
   DATASETS=${DATASETS} \
