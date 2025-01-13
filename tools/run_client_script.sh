@@ -56,20 +56,20 @@ result_files_arr=()
 result_parallel_files_arr=()
 
 if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "upload" ]]; then
-  UPLOAD_RESULT_FILE=$(ssh "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "ls -t results/*-upload-*.json | head -n 1")
+  UPLOAD_RESULT_FILE=$(ssh -o ServerAliveInterval=10 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "ls -t results/*-upload-*.json | head -n 1")
   result_files_arr+=("$UPLOAD_RESULT_FILE")
 fi
 
 if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "search" ]]; then
-  SEARCH_RESULT_FILE=$(ssh "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "ls -t results/*-search-*.json | head -n 1")
+  SEARCH_RESULT_FILE=$(ssh -o ServerAliveInterval=10 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "ls -t results/*-search-*.json | head -n 1")
   result_files_arr+=("$SEARCH_RESULT_FILE")
 fi
 
 if [[ "$EXPERIMENT_MODE" == "parallel" ]]; then
-  UPLOAD_RESULT_FILE=$(ssh "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "ls -t results/parallel/*-upload-*.json | head -n 1")
+  UPLOAD_RESULT_FILE=$(ssh -o ServerAliveInterval=10 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "ls -t results/parallel/*-upload-*.json | head -n 1")
   result_parallel_files_arr+=("$UPLOAD_RESULT_FILE")
 
-  SEARCH_RESULT_FILE=$(ssh "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "ls -t results/parallel/*-search-*.json | head -n 1")
+  SEARCH_RESULT_FILE=$(ssh -o ServerAliveInterval=10 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "ls -t results/parallel/*-search-*.json | head -n 1")
   result_parallel_files_arr+=("$SEARCH_RESULT_FILE")
 fi
 
@@ -78,9 +78,9 @@ mkdir -p results/parallel
 
 for RESULT_FILE in "${result_files_arr[@]}"; do
     # -p preseves modification time, access time, and modes (but not change time)
-    scp -p "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/${RESULT_FILE}" "./results"
+    scp -o ServerAliveInterval=10 -o ServerAliveCountMax=10 -p "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/${RESULT_FILE}" "./results"
 done
 
 for RESULT_FILE in "${result_parallel_files_arr[@]}"; do
-    scp -p "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/${RESULT_FILE}" "./results/parallel"
+    scp -o ServerAliveInterval=10 -o ServerAliveCountMax=10 -p "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/${RESULT_FILE}" "./results/parallel"
 done
