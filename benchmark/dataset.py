@@ -13,11 +13,10 @@ from dataset_reader.base_reader import BaseReader
 from dataset_reader.json_reader import JSONReader
 from dataset_reader.sparse_reader import SparseReader
 
-
 # Needed for Cloudflare's firewall in ann-benchmarks
 # See https://github.com/erikbern/ann-benchmarks/pull/561
 opener = build_opener()
-opener.addheaders = [('User-agent', 'Mozilla/5.0')]
+opener.addheaders = [("User-agent", "Mozilla/5.0")]
 install_opener(opener)
 
 
