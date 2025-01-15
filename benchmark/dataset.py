@@ -4,6 +4,7 @@ import tarfile
 import urllib.request
 from dataclasses import dataclass, field
 from typing import Dict, Optional
+from urllib.request import build_opener, install_opener
 
 from benchmark import DATASETS_DIR
 from dataset_reader.ann_compound_reader import AnnCompoundReader
@@ -11,6 +12,13 @@ from dataset_reader.ann_h5_reader import AnnH5Reader
 from dataset_reader.base_reader import BaseReader
 from dataset_reader.json_reader import JSONReader
 from dataset_reader.sparse_reader import SparseReader
+
+
+# Needed for Cloudflare's firewall in ann-benchmarks
+# See https://github.com/erikbern/ann-benchmarks/pull/561
+opener = build_opener()
+opener.addheaders = [('User-agent', 'Mozilla/5.0')]
+install_opener(opener)
 
 
 @dataclass
