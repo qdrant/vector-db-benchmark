@@ -3,6 +3,7 @@ name = "vector-db-benchmark"
 version = "0.1.0"
 description = ""
 authors = ["Qdrant Team <info@qdrant.tech>"]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.12"
@@ -21,7 +22,7 @@ tqdm = "^4.66.1"
 psycopg = {extras = ["binary"], version = "^3.1.17"}
 pgvector = "^0.2.4"
 
-[tool.poetry.dev-dependencies]
+[poetry.group.dev.dependencies]
 pre-commit = "^2.20.0"
 pytest = "^7.1"
 
