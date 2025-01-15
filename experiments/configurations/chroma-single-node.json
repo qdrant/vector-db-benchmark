@@ -1,0 +1,105 @@
+[
+  {
+    "name": "chroma-default",
+    "engine": "chroma",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      { "parallel": 8, "config": {} }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "batch_size": 1024
+    }
+  },
+  {
+    "name": "chroma-m-16-ef-128",
+    "engine": "chroma",
+    "connection_params": {},
+    "collection_params": {
+      "config": {
+        "hnsw:M": 16,
+        "hnsw:construction_ef": 128
+      }
+    },
+    "search_params": [
+      { "parallel": 1, "config": {"hnsw:search_ef": 128 } }, { "parallel": 1, "config": {"hnsw:search_ef": 256 } }, { "parallel": 1, "config": {"hnsw:search_ef": 512 } }
+    ],
+    "upload_params": { "parallel": 16 }
+  },
+  {
+    "name": "chroma-m-32-ef-128",
+    "engine": "chroma",
+    "connection_params": {},
+    "collection_params": {
+      "config": {
+        "hnsw:M": 32,
+        "hnsw:construction_ef": 128
+      }
+    },
+    "search_params": [
+      { "parallel": 1, "config": {"hnsw:search_ef": 128 } }, { "parallel": 1, "config": {"hnsw:search_ef": 256 } }, { "parallel": 1, "config": {"hnsw:search_ef": 512 } }
+    ],
+    "upload_params": { "parallel": 16 }
+  },
+  {
+    "name": "chroma-m-32-ef-256",
+    "engine": "chroma",
+    "connection_params": {},
+    "collection_params": {
+      "config": {
+        "hnsw:M": 32,
+        "hnsw:construction_ef": 256
+      }
+    },
+    "search_params": [
+      { "parallel": 1, "config": {"hnsw:search_ef": 128 } }, { "parallel": 1, "config": {"hnsw:search_ef": 256 } }, { "parallel": 1, "config": {"hnsw:search_ef": 512 } }
+    ],
+    "upload_params": { "parallel": 16 }
+  },
+  {
+    "name": "chroma-m-32-ef-512",
+    "engine": "chroma",
+    "connection_params": {},
+    "collection_params": {
+      "config": {
+        "hnsw:M": 32,
+        "hnsw:construction_ef": 512
+      }
+    },
+    "search_params": [
+      { "parallel": 1, "config": {"hnsw:search_ef": 128 } }, { "parallel": 1, "config": {"hnsw:search_ef": 256 } }, { "parallel": 1, "config": {"hnsw:search_ef": 512 } }
+    ],
+    "upload_params": { "parallel": 16 }
+  },
+  {
+    "name": "chroma-m-64-ef-256",
+    "engine": "chroma",
+    "connection_params": {},
+    "collection_params": {
+      "config": {
+        "hnsw:M": 64,
+        "hnsw:construction_ef": 256
+      }
+    },
+    "search_params": [
+      { "parallel": 1, "config": {"hnsw:search_ef": 128 } }, { "parallel": 1, "config": {"hnsw:search_ef": 256 } }, { "parallel": 1, "config": {"hnsw:search_ef": 512 } }
+    ],
+    "upload_params": { "parallel": 16 }
+  },
+  {
+    "name": "chroma-m-64-ef-512",
+    "engine": "chroma",
+    "connection_params": {},
+    "collection_params": {
+      "config": {
+        "hnsw:M": 64,
+        "hnsw:construction_ef": 512
+      }
+    },
+    "search_params": [
+      { "parallel": 1, "config": {"hnsw:search_ef": 128 } }, { "parallel": 1, "config": {"hnsw:search_ef": 256 } }, { "parallel": 1, "config": {"hnsw:search_ef": 512 } }
+    ],
+    "upload_params": { "parallel": 16 }
+  }
+]

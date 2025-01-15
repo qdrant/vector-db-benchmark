@@ -1,0 +1,20 @@
+services:
+  chromadb_bench:
+    image: ${CONTAINER_REGISTRY:-docker.io}/chromadb/chroma:0.5.7
+    volumes:
+      - ./chromadb:/chroma/chroma
+    ports:
+      - "8000:8000"
+    logging:
+      driver: "json-file"
+      options:
+        max-file: 1
+        max-size: 10m
+    environment:
+      IS_PERSISTENT: TRUE
+      ANONYMIZED_TELEMETRY: False
+      CHROMA_WORKERS: 1
+    deploy:
+      resources:
+        limits:
+          memory: 25Gb
