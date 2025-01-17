@@ -4,6 +4,7 @@
     "engine": "qdrant",
     "connection_params": { "timeout": 30 },
     "collection_params": {
+      "optimizers_config": { "max_segment_size": 1000000, "memmap_threshold":10000000, "default_segment_number":2 },
       "quantization_config": { "binary": {"always_ram": true} }
     },
     "search_params": [
