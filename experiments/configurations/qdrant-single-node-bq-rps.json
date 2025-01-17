@@ -10,7 +10,7 @@
     "search_params": [
       { "parallel": 1, "config": { "hnsw_ef": 128, "quantization": { "rescore": true, "oversampling": 2.0 } } }
     ],
-    "upload_params": { "parallel": 1, "batch_size": 1024 }
+    "upload_params": { "parallel": 4, "batch_size": 1024 }
   },
   {
     "name": "qdrant-bq-rps-m-16-ef-128",
