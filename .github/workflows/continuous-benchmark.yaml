@@ -232,13 +232,13 @@ jobs:
         with:
           payload: |
             {
-              "text": "CI benchmarks (runTenantsBenchmark) run status: ${{ job.status }}",
+              "text": "CI benchmarks (runParallelBenchmark) run status: ${{ job.status }}",
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "CI benchmarks (runTenantsBenchmark) failed because of *${{ steps.benches.outputs.failed }}*."
+                    "text": "CI benchmarks (runParallelBenchmark) failed because of *${{ steps.benches.outputs.failed }}*."
                   }
                 },
                 {
