@@ -43,7 +43,7 @@ jobs:
       - name: Image for ${{ inputs.qdrant_version_2 }}
         run: |
           export QDRANT_VERSION=${{ inputs.qdrant_version_2 }}
-          export BEARER_TOKEN="${{ secrets.GITHUB_TOKEN }}"          
+          export BEARER_TOKEN="${{ secrets.GITHUB_TOKEN }}"
           bash -x tools/compare_versions/prepare_image.sh
 
 #  runBenchmarkForVersion1:
