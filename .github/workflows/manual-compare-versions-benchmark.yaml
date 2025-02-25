@@ -28,7 +28,9 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Image for ${{ inputs.qdrant_version_1 }}
         run: |
+          # The branch, tag or SHA to checkout.
           export QDRANT_VERSION=${{ inputs.qdrant_version_1 }}
+          export BEARER_TOKEN="${{ secrets.GITHUB_TOKEN }}"
           bash -x tools/compare_versions/prepare_image.sh
 
   prepareImage2:
@@ -42,6 +44,7 @@ jobs:
       - name: Image for ${{ inputs.qdrant_version_2 }}
         run: |
           export QDRANT_VERSION=${{ inputs.qdrant_version_2 }}
+          export BEARER_TOKEN="${{ secrets.GITHUB_TOKEN }}"          
           bash -x tools/compare_versions/prepare_image.sh
 
 #  runBenchmarkForVersion1:
