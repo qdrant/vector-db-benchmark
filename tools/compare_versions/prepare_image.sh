@@ -50,7 +50,7 @@ curl -L \
   -H "Authorization: Bearer ${BEARER_TOKEN}" \
   -H "X-GitHub-Api-Version: 2022-11-28" \
   https://api.github.com/repos/qdrant/qdrant/dispatches \
-  -d "{\"event_type\": \"$EVENT_TYPE\", \"client_payload\": {\"version\": \"$QDRANT_VERSION\"}}"
+  -d "{\"event_type\": \"$EVENT_TYPE\", \"client_payload\": {\"version\": \"$QDRANT_VERSION\", \"triggered\": true}}"
 
 echo "Wait for the image to appear in the remote repository..."
 counter=0

@@ -33,7 +33,7 @@ jobs:
           bash -x tools/compare_versions/prepare_image.sh
 
   prepareImage2:
-    name: Prepare image ${{ inputs.qdrant_version_1 }}
+    name: Prepare image ${{ inputs.qdrant_version_2 }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
