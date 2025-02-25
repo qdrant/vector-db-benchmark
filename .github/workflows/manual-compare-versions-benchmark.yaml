@@ -1,7 +1,6 @@
 name: Manual Benchmark to compare versions
 
 on:
-  repository_dispatch:
   workflow_dispatch:
     inputs:
         qdrant_version_1:
