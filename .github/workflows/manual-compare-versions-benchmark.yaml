@@ -1,0 +1,90 @@
+name: Manual Benchmark to compare versions
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+    inputs:
+        qdrant_version_1:
+            description: "Version of qdrant to benchmark (ghcr/<commit-id>, ghcr/my-branch, docker/v1.5.1, ghcr/dev)"
+            default: ghcr/dev
+        qdrant_version_2:
+            description: "Version of qdrant to benchmark (ghcr/<commit-id>, ghcr/my-branch, docker/v1.5.1, ghcr/dev)"
+            default: docker/master
+        dataset:
+            description: "Dataset to benchmark"
+            default: laion-small-clip
+        engine_config:
+            description: "Engine config to benchmark"
+            default: qdrant-continuous-benchmark
+
+jobs:
+  prepareImage1:
+    name: Prepare image ${{ inputs.qdrant_version_1 }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Image for ${{ inputs.qdrant_version_1 }}
+        run: |
+          export QDRANT_VERSION=${{ inputs.qdrant_version_1 }}
+          bash -x tools/compare_versions/prepare_image.sh
+
+  prepareImage2:
+    name: Prepare image ${{ inputs.qdrant_version_1 }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Image for ${{ inputs.qdrant_version_2 }}
+        run: |
+          export QDRANT_VERSION=${{ inputs.qdrant_version_2 }}
+          bash -x tools/compare_versions/prepare_image.sh
+
+#  runBenchmarkForVersion1:
+#    name: compare - ${{ inputs.qdrant_version_1 }} vs ${{ inputs.qdrant_version_2 }} - ${{ inputs.dataset }}
+#    needs:
+#      - prepareImage1
+#      - prepareImage2
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v3
+#      - uses: webfactory/ssh-agent@v0.8.0
+#        with:
+#          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+#      - name: Bench ${{ inputs.qdrant_version_1 }}
+#        run: |
+#          export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
+#          export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+#          export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+#          export QDRANT_VERSION=${{ inputs.qdrant_version_1 }}
+#          export DATASETS=${{ inputs.dataset }}
+#          export ENGINE_NAME=${{ inputs.engine_config }}
+#          export POSTGRES_TABLE=benchmark_manual
+#          bash -x tools/setup_ci.sh
+#          bash -x tools/run_ci.sh
+#
+#  runBenchmarkForVersion2:
+#    name: compare - ${{ inputs.qdrant_version_1 }} vs ${{ inputs.qdrant_version_2 }} - ${{ inputs.dataset }}
+#    needs:
+#      - runBenchmarkForVersion1
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v3
+#      - uses: webfactory/ssh-agent@v0.8.0
+#        with:
+#          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+#      - name: Bench ${{ inputs.qdrant_version_2 }}
+#        run: |
+#          export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
+#          export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+#          export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+#          export QDRANT_VERSION=${{ inputs.qdrant_version_2 }}
+#          export DATASETS=${{ inputs.dataset }}
+#          export ENGINE_NAME=${{ inputs.engine_config }}
+#          export POSTGRES_TABLE=benchmark_manual
+#          bash -x tools/setup_ci.sh
+#          bash -x tools/run_ci.sh
