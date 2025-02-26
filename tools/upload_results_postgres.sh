@@ -91,8 +91,8 @@ else
   INDEXING_TIME=$(jq -r '.results.total_time' "$UPLOAD_RESULTS_FILE")
 fi
 
-VM_RSS_MEMORY_USAGE=$(cat "$VM_RSS_MEMORY_USAGE_FILE")
-RSS_ANON_MEMORY_USAGE=$(cat "$RSS_ANON_MEMORY_USAGE_FILE")
+VM_RSS_MEMORY_USAGE=$(cat "$VM_RSS_MEMORY_USAGE_FILE" | tr -d '[:space:]')
+RSS_ANON_MEMORY_USAGE=$(cat "$RSS_ANON_MEMORY_USAGE_FILE" | tr -d '[:space:]')
 
 QDRANT_COMMIT=$(jq -r '.commit' "$ROOT_API_RESPONSE_FILE")
 
