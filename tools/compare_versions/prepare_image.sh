@@ -2,8 +2,7 @@
 
 QDRANT_VERSION=${QDRANT_VERSION:-"ghcr/dev"}
 
-#MAX_RETRIES=12
-MAX_RETRIES=1
+MAX_RETRIES=15
 
 EVENT_TYPE="benchmark-trigger-image-build"
 
@@ -63,9 +62,8 @@ while ! docker manifest inspect "$IMAGE" > /dev/null 2>&1; do
   fi
   # sleep for 10 minutes, in seconds
   # together with the MAX_RETRIES it
-  # will wait for 120 minutes
-#  sleep 600
-  sleep 60
+  # will wait for 150 minutes
+  sleep 600
   ((counter++))
 done
 

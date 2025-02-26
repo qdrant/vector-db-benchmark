@@ -20,7 +20,7 @@ jobs:
   prepareImage1:
     name: Prepare image ${{ inputs.qdrant_version_1 }}
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v3
       - uses: webfactory/ssh-agent@v0.8.0
@@ -36,7 +36,7 @@ jobs:
   prepareImage2:
     name: Prepare image ${{ inputs.qdrant_version_2 }}
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v3
       - uses: webfactory/ssh-agent@v0.8.0
