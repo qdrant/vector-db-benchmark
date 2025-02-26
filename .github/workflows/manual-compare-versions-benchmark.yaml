@@ -139,11 +139,11 @@ jobs:
             if (( $(echo "$value_v1 > $value_v2" | bc -l) )); then
               local diff=$(echo "$value_v1 - $value_v2" | bc -l)
               local percentage=$(echo "($diff / $value_v1) * 100" | bc -l)
-              echo -e "\033[32m${var_name} for ${{ inputs.qdrant_version_1 }} is greater than for ${{ inputs.qdrant_version_2 }} by $diff ($percentage% faster)\033[0m"
+              echo -e "\033[32m${var_name} for ${{ inputs.qdrant_version_1 }} is greater than for ${{ inputs.qdrant_version_2 }} by $diff ($percentage% greater)\033[0m"
             elif (( $(echo "$value_v1 < $value_v2" | bc -l) )); then
               local diff=$(echo "$value_v2 - $value_v1" | bc -l)
               local percentage=$(echo "($diff / $value_v2) * 100" | bc -l)
-              echo -e "\033[32m${var_name} for ${{ inputs.qdrant_version_1 }} is less than for ${{ inputs.qdrant_version_2 }} by $diff ($percentage% slower)\033[0m"
+              echo -e "\033[32m${var_name} for ${{ inputs.qdrant_version_1 }} is less than for ${{ inputs.qdrant_version_2 }} by $diff ($percentage% less)\033[0m"
             else
               echo -e "\033[32m${var_name} are equal for both versions\033[0m"
             fi
