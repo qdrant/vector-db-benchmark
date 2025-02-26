@@ -55,12 +55,23 @@ jobs:
     runs-on: ubuntu-latest
     concurrency:
       group: continuous-benchmark
+    outputs:
+      collection_load_time: ${{ steps.bench.outputs.collection_load_time }}
+      rps: ${{ steps.bench.outputs.rps }}
+      mean_precisions: ${{ steps.bench.outputs.mean_precisions }}
+      p95_time: ${{ steps.bench.outputs.p95_time }}
+      p99_time: ${{ steps.bench.outputs.p99_time }}
+      vm_rss_memory_usage: ${{ steps.bench.outputs.vm_rss_memory_usage }}
+      rss_anon_memory_usage: ${{ steps.bench.outputs.rss_anon_memory_usage }}
+      upload_time: ${{ steps.bench.outputs.upload_time }}
+      indexing_time: ${{ steps.bench.outputs.indexing_time }}
     steps:
       - uses: actions/checkout@v3
       - uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Bench ${{ inputs.qdrant_version_1 }}
+        id: bench
         run: |
           export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
           export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
@@ -80,12 +91,23 @@ jobs:
     runs-on: ubuntu-latest
     concurrency:
       group: continuous-benchmark
+    outputs:
+      collection_load_time: ${{ steps.bench.outputs.collection_load_time }}
+      rps: ${{ steps.bench.outputs.rps }}
+      mean_precisions: ${{ steps.bench.outputs.mean_precisions }}
+      p95_time: ${{ steps.bench.outputs.p95_time }}
+      p99_time: ${{ steps.bench.outputs.p99_time }}
+      vm_rss_memory_usage: ${{ steps.bench.outputs.vm_rss_memory_usage }}
+      rss_anon_memory_usage: ${{ steps.bench.outputs.rss_anon_memory_usage }}
+      upload_time: ${{ steps.bench.outputs.upload_time }}
+      indexing_time: ${{ steps.bench.outputs.indexing_time }}
     steps:
       - uses: actions/checkout@v3
       - uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Bench ${{ inputs.qdrant_version_2 }}
+        id: bench
         run: |
           export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
           export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
