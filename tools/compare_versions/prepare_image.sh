@@ -18,10 +18,12 @@ if [[ ${QDRANT_VERSION} == docker/* ]] || [[ ${QDRANT_VERSION} == ghcr/* ]]; the
     if [[ ${QDRANT_VERSION} == docker/* ]]; then
         # pull from docker hub
         QDRANT_VERSION=${QDRANT_VERSION#docker/}
+        QDRANT_VERSION=${QDRANT_VERSION//\//-} # replace all / with -
         CONTAINER_REGISTRY='docker.io'
     elif [[ ${QDRANT_VERSION} == ghcr/* ]]; then
         # pull from github container registry
         QDRANT_VERSION=${QDRANT_VERSION#ghcr/}
+        QDRANT_VERSION=${QDRANT_VERSION//\//-} # replace all / with -
         CONTAINER_REGISTRY='ghcr.io'
     fi
 else
