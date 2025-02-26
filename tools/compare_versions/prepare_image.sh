@@ -18,12 +18,12 @@ if [[ ${QDRANT_VERSION} == docker/* ]] || [[ ${QDRANT_VERSION} == ghcr/* ]]; the
     if [[ ${QDRANT_VERSION} == docker/* ]]; then
         # pull from docker hub
         QDRANT_VERSION=${QDRANT_VERSION#docker/}
-        QDRANT_VERSION=${QDRANT_VERSION//\//-} # replace all / with -
+        QDRANT_VERSION_IMG=${QDRANT_VERSION//\//-} # replace all / with -
         CONTAINER_REGISTRY='docker.io'
     elif [[ ${QDRANT_VERSION} == ghcr/* ]]; then
         # pull from github container registry
         QDRANT_VERSION=${QDRANT_VERSION#ghcr/}
-        QDRANT_VERSION=${QDRANT_VERSION//\//-} # replace all / with -
+        QDRANT_VERSION_IMG=${QDRANT_VERSION//\//-} # replace all / with -
         CONTAINER_REGISTRY='ghcr.io'
     fi
 else
@@ -31,7 +31,7 @@ else
     exit 1
 fi
 
-IMAGE="${CONTAINER_REGISTRY}/qdrant/qdrant:${QDRANT_VERSION}"
+IMAGE="${CONTAINER_REGISTRY}/qdrant/qdrant:${QDRANT_VERSION_IMG}"
 
 if docker manifest inspect "$IMAGE" > /dev/null 2>&1; then
   echo "Image $IMAGE exists in the remote repository."

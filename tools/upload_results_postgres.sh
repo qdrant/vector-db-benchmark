@@ -33,6 +33,8 @@ POSTGRES_TABLE=${POSTGRES_TABLE:-"benchmark"}
 QDRANT_VERSION=${QDRANT_VERSION:-"dev"}
 DATASETS=${DATASETS:-"laion-small-clip"}
 
+IS_CI_RUN=${IS_CI_RUN:-"false"}
+
 if [[ "$BENCHMARK_STRATEGY" == "collection-reload" ]]; then
   if [[ -z "$TELEMETRY_API_RESPONSE_FILE" ]]; then
     echo "TELEMETRY_API_RESPONSE_FILE is not set"
@@ -102,3 +104,17 @@ INSERT INTO ${POSTGRES_TABLE} (engine, branch, commit, dataset, measure_timestam
 VALUES ('qdrant-ci', '${QDRANT_VERSION}', '${QDRANT_COMMIT}', '${DATASETS}', '${MEASURE_TIMESTAMP}', ${UPLOAD_TIME}, ${INDEXING_TIME}, ${RPS}, ${MEAN_PRECISIONS}, ${P95_TIME}, ${P99_TIME}, ${VM_RSS_MEMORY_USAGE}, ${RSS_ANON_MEMORY_USAGE}, ${COLLECTION_LOAD_TIME});
 "
 
+if [[ "$IS_CI_RUN" == "true" ]]; then
+  echo "collection_load_time=${COLLECTION_LOAD_TIME}" >> "$GITHUB_OUTPUT"
+
+  echo "rps=${RPS}" >> "$GITHUB_OUTPUT"
+  echo "mean_precisions=${MEAN_PRECISIONS}" >> "$GITHUB_OUTPUT"
+  echo "p95_time=${P95_TIME}" >> "$GITHUB_OUTPUT"
+  echo "p99_time=${P99_TIME}" >> "$GITHUB_OUTPUT"
+
+  echo "vm_rss_memory_usage=${VM_RSS_MEMORY_USAGE}" >> "$GITHUB_OUTPUT"
+  echo "rss_anon_memory_usage=${RSS_ANON_MEMORY_USAGE}" >> "$GITHUB_OUTPUT"
+
+  echo "upload_time=${UPLOAD_TIME}" >> "$GITHUB_OUTPUT"
+  echo "indexing_time=${INDEXING_TIME}" >> "$GITHUB_OUTPUT"
+fi
