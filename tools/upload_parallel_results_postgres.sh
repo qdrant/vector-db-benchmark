@@ -31,6 +31,8 @@ POSTGRES_TABLE=${POSTGRES_TABLE:-"benchmark_parallel_search_upload"}
 QDRANT_VERSION=${QDRANT_VERSION:-"dev"}
 DATASETS=${DATASETS:-"laion-small-clip"}
 
+IS_CI_RUN=${IS_CI_RUN:-"false"}
+
 if [[ "$BENCHMARK_STRATEGY" != "parallel" ]]; then
   echo "BENCHMARK_STRATEGY is not parallel"
   exit 1
@@ -90,3 +92,15 @@ INSERT INTO ${POSTGRES_TABLE} (engine, branch, commit, dataset, measure_timestam
 VALUES ('qdrant-ci', '${QDRANT_VERSION}', '${QDRANT_COMMIT}', '${DATASETS}', '${MEASURE_TIMESTAMP}', ${UPLOAD_TIME}, ${INDEXING_TIME}, ${RPS}, ${MEAN_PRECISIONS}, ${P95_TIME}, ${P99_TIME}, ${SEARCH_TIME}, ${NO_UPSERT_SEARCH_TIME});
 "
 
+if [[ "$IS_CI_RUN" == "true" ]]; then
+  echo "rps=${RPS}" >> "$GITHUB_OUTPUT"
+  echo "mean_precisions=${MEAN_PRECISIONS}" >> "$GITHUB_OUTPUT"
+  echo "p95_time=${P95_TIME}" >> "$GITHUB_OUTPUT"
+  echo "p99_time=${P99_TIME}" >> "$GITHUB_OUTPUT"
+
+  echo "search_time=${SEARCH_TIME}" >> "$GITHUB_OUTPUT"
+  echo "no_upsert_search_time=${NO_UPSERT_SEARCH_TIME}" >> "$GITHUB_OUTPUT"
+
+  echo "upload_time=${UPLOAD_TIME}" >> "$GITHUB_OUTPUT"
+  echo "indexing_time=${INDEXING_TIME}" >> "$GITHUB_OUTPUT"
+fi

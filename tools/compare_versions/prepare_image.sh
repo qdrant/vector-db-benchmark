@@ -2,8 +2,7 @@
 
 QDRANT_VERSION=${QDRANT_VERSION:-"ghcr/dev"}
 
-#MAX_RETRIES=12
-MAX_RETRIES=1
+MAX_RETRIES=15
 
 EVENT_TYPE="benchmark-trigger-image-build"
 
@@ -18,10 +17,12 @@ if [[ ${QDRANT_VERSION} == docker/* ]] || [[ ${QDRANT_VERSION} == ghcr/* ]]; the
     if [[ ${QDRANT_VERSION} == docker/* ]]; then
         # pull from docker hub
         QDRANT_VERSION=${QDRANT_VERSION#docker/}
+        QDRANT_VERSION_IMG=${QDRANT_VERSION//\//-} # replace all / with -
         CONTAINER_REGISTRY='docker.io'
     elif [[ ${QDRANT_VERSION} == ghcr/* ]]; then
         # pull from github container registry
         QDRANT_VERSION=${QDRANT_VERSION#ghcr/}
+        QDRANT_VERSION_IMG=${QDRANT_VERSION//\//-} # replace all / with -
         CONTAINER_REGISTRY='ghcr.io'
     fi
 else
@@ -29,7 +30,7 @@ else
     exit 1
 fi
 
-IMAGE="${CONTAINER_REGISTRY}/qdrant/qdrant:${QDRANT_VERSION}"
+IMAGE="${CONTAINER_REGISTRY}/qdrant/qdrant:${QDRANT_VERSION_IMG}"
 
 if docker manifest inspect "$IMAGE" > /dev/null 2>&1; then
   echo "Image $IMAGE exists in the remote repository."
@@ -50,7 +51,7 @@ curl -L \
   -H "Authorization: Bearer ${BEARER_TOKEN}" \
   -H "X-GitHub-Api-Version: 2022-11-28" \
   https://api.github.com/repos/qdrant/qdrant/dispatches \
-  -d "{\"event_type\": \"$EVENT_TYPE\", \"client_payload\": {\"version\": \"$QDRANT_VERSION\"}}"
+  -d "{\"event_type\": \"$EVENT_TYPE\", \"client_payload\": {\"version\": \"$QDRANT_VERSION\", \"triggered\": true}}"
 
 echo "Wait for the image to appear in the remote repository..."
 counter=0
@@ -61,9 +62,8 @@ while ! docker manifest inspect "$IMAGE" > /dev/null 2>&1; do
   fi
   # sleep for 10 minutes, in seconds
   # together with the MAX_RETRIES it
-  # will wait for 120 minutes
-#  sleep 600
-  sleep 60
+  # will wait for 150 minutes
+  sleep 600
   ((counter++))
 done
 
