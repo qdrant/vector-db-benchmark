@@ -149,12 +149,25 @@ jobs:
             fi
           }
 
-          compare "collection_load_time" "${{ needs.runBenchmarkForVersion1.outputs.collection_load_time }}" "${{ needs.runBenchmarkForVersion2.outputs.collection_load_time }}"
-          compare "rps" "${{ needs.runBenchmarkForVersion1.outputs.rps }}" "${{ needs.runBenchmarkForVersion2.outputs.rps }}"
-          compare "mean_precisions" "${{ needs.runBenchmarkForVersion1.outputs.mean_precisions }}" "${{ needs.runBenchmarkForVersion2.outputs.mean_precisions }}"
-          compare "p95_time" "${{ needs.runBenchmarkForVersion1.outputs.p95_time }}" "${{ needs.runBenchmarkForVersion2.outputs.p95_time }}"
-          compare "p99_time" "${{ needs.runBenchmarkForVersion1.outputs.p99_time }}" "${{ needs.runBenchmarkForVersion2.outputs.p99_time }}"
-          compare "vm_rss_memory_usage" "${{ needs.runBenchmarkForVersion1.outputs.vm_rss_memory_usage }}" "${{ needs.runBenchmarkForVersion2.outputs.vm_rss_memory_usage }}"
-          compare "rss_anon_memory_usage" "${{ needs.runBenchmarkForVersion1.outputs.rss_anon_memory_usage }}" "${{ needs.runBenchmarkForVersion2.outputs.rss_anon_memory_usage }}"
-          compare "upload_time" "${{ needs.runBenchmarkForVersion1.outputs.upload_time }}" "${{ needs.runBenchmarkForVersion2.outputs.upload_time }}"
-          compare "indexing_time" "${{ needs.runBenchmarkForVersion1.outputs.indexing_time }}" "${{ needs.runBenchmarkForVersion2.outputs.indexing_time }}"
+          res_collection_load_time=$(compare "collection_load_time" "${{ needs.runBenchmarkForVersion1.outputs.collection_load_time }}" "${{ needs.runBenchmarkForVersion2.outputs.collection_load_time }}")
+          res_rps=$(compare "rps" "${{ needs.runBenchmarkForVersion1.outputs.rps }}" "${{ needs.runBenchmarkForVersion2.outputs.rps }}")
+          res_mean_precisions=$(compare "mean_precisions" "${{ needs.runBenchmarkForVersion1.outputs.mean_precisions }}" "${{ needs.runBenchmarkForVersion2.outputs.mean_precisions }}")
+          res_p95_time=$(compare "p95_time" "${{ needs.runBenchmarkForVersion1.outputs.p95_time }}" "${{ needs.runBenchmarkForVersion2.outputs.p95_time }}")
+          res_p99_time=$(compare "p99_time" "${{ needs.runBenchmarkForVersion1.outputs.p99_time }}" "${{ needs.runBenchmarkForVersion2.outputs.p99_time }}")
+          res_vm_rss_memory_usage=$(compare "vm_rss_memory_usage" "${{ needs.runBenchmarkForVersion1.outputs.vm_rss_memory_usage }}" "${{ needs.runBenchmarkForVersion2.outputs.vm_rss_memory_usage }}")
+          res_rss_anon_memory_usage=$(compare "rss_anon_memory_usage" "${{ needs.runBenchmarkForVersion1.outputs.rss_anon_memory_usage }}" "${{ needs.runBenchmarkForVersion2.outputs.rss_anon_memory_usage }}")
+          res_upload_time=$(compare "upload_time" "${{ needs.runBenchmarkForVersion1.outputs.upload_time }}" "${{ needs.runBenchmarkForVersion2.outputs.upload_time }}")
+          res_indexing_time=$(compare "indexing_time" "${{ needs.runBenchmarkForVersion1.outputs.indexing_time }}" "${{ needs.runBenchmarkForVersion2.outputs.indexing_time }}")
+
+          echo "# Comparison results" >> $GITHUB_STEP_SUMMARY
+          echo "| Name                  | Result       |" >> $GITHUB_STEP_SUMMARY
+          echo "| --------------------- | ------------ |" >> $GITHUB_STEP_SUMMARY
+          echo "| collection_load_time  | ${res_collection_load_time} |" >> $GITHUB_STEP_SUMMARY
+          echo "| rps                   | ${res_rps} |" >> $GITHUB_STEP_SUMMARY
+          echo "| mean_precisions       | ${res_mean_precisions} |" >> $GITHUB_STEP_SUMMARY
+          echo "| p95_time              | ${res_p95_time} |" >> $GITHUB_STEP_SUMMARY
+          echo "| p99_time              | ${res_p99_time} |" >> $GITHUB_STEP_SUMMARY
+          echo "| vm_rss_memory_usage   | ${res_vm_rss_memory_usage} |" >> $GITHUB_STEP_SUMMARY
+          echo "| rss_anon_memory_usage  | ${res_rss_anon_memory_usage} |" >> $GITHUB_STEP_SUMMARY
+          echo "| upload_time           | ${res_upload_time} |" >> $GITHUB_STEP_SUMMARY
+          echo "| indexing_time         | ${res_indexing_time} |" >> $GITHUB_STEP_SUMMARY
