@@ -1,4 +1,8 @@
 name: Manual Benchmark to compare versions
+description: |
+  This workflow is used to compare two versions of qdrant using the same dataset and engine config.
+  It is triggered manually and requires the user to provide the versions of qdrant to compare, dataset and engine config.
+  The workflow will prepare the images for the provided versions (if needed), run the benchmark for each version and compare the results.
 
 on:
   workflow_dispatch:
@@ -20,6 +24,7 @@ jobs:
   prepareImage1:
     name: Prepare image ${{ inputs.qdrant_version_1 }}
     runs-on: ubuntu-latest
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v3
       - uses: webfactory/ssh-agent@v0.8.0
@@ -29,12 +34,13 @@ jobs:
         run: |
           # The branch, tag or SHA to checkout.
           export QDRANT_VERSION=${{ inputs.qdrant_version_1 }}
-          export BEARER_TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          export BEARER_TOKEN="${{ secrets.TRIGGER_GH_TOKEN }}"
           bash -x tools/compare_versions/prepare_image.sh
 
   prepareImage2:
-    name: Prepare image ${{ inputs.qdrant_version_1 }}
+    name: Prepare image ${{ inputs.qdrant_version_2 }}
     runs-on: ubuntu-latest
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v3
       - uses: webfactory/ssh-agent@v0.8.0
@@ -43,50 +49,126 @@ jobs:
       - name: Image for ${{ inputs.qdrant_version_2 }}
         run: |
           export QDRANT_VERSION=${{ inputs.qdrant_version_2 }}
-          export BEARER_TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          export BEARER_TOKEN="${{ secrets.TRIGGER_GH_TOKEN }}"
           bash -x tools/compare_versions/prepare_image.sh
 
-#  runBenchmarkForVersion1:
-#    name: compare - ${{ inputs.qdrant_version_1 }} vs ${{ inputs.qdrant_version_2 }} - ${{ inputs.dataset }}
-#    needs:
-#      - prepareImage1
-#      - prepareImage2
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v3
-#      - uses: webfactory/ssh-agent@v0.8.0
-#        with:
-#          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-#      - name: Bench ${{ inputs.qdrant_version_1 }}
-#        run: |
-#          export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
-#          export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-#          export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
-#          export QDRANT_VERSION=${{ inputs.qdrant_version_1 }}
-#          export DATASETS=${{ inputs.dataset }}
-#          export ENGINE_NAME=${{ inputs.engine_config }}
-#          export POSTGRES_TABLE=benchmark_manual
-#          bash -x tools/setup_ci.sh
-#          bash -x tools/run_ci.sh
-#
-#  runBenchmarkForVersion2:
-#    name: compare - ${{ inputs.qdrant_version_1 }} vs ${{ inputs.qdrant_version_2 }} - ${{ inputs.dataset }}
-#    needs:
-#      - runBenchmarkForVersion1
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v3
-#      - uses: webfactory/ssh-agent@v0.8.0
-#        with:
-#          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-#      - name: Bench ${{ inputs.qdrant_version_2 }}
-#        run: |
-#          export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
-#          export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-#          export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
-#          export QDRANT_VERSION=${{ inputs.qdrant_version_2 }}
-#          export DATASETS=${{ inputs.dataset }}
-#          export ENGINE_NAME=${{ inputs.engine_config }}
-#          export POSTGRES_TABLE=benchmark_manual
-#          bash -x tools/setup_ci.sh
-#          bash -x tools/run_ci.sh
+  runBenchmarkForVersion1:
+    name: execute - ${{ inputs.qdrant_version_1 }} - ${{ inputs.dataset }}
+    needs:
+      - prepareImage1
+    runs-on: ubuntu-latest
+    concurrency:
+      group: continuous-benchmark
+    outputs:
+      collection_load_time: ${{ steps.bench.outputs.collection_load_time }}
+      rps: ${{ steps.bench.outputs.rps }}
+      mean_precisions: ${{ steps.bench.outputs.mean_precisions }}
+      p95_time: ${{ steps.bench.outputs.p95_time }}
+      p99_time: ${{ steps.bench.outputs.p99_time }}
+      vm_rss_memory_usage: ${{ steps.bench.outputs.vm_rss_memory_usage }}
+      rss_anon_memory_usage: ${{ steps.bench.outputs.rss_anon_memory_usage }}
+      upload_time: ${{ steps.bench.outputs.upload_time }}
+      indexing_time: ${{ steps.bench.outputs.indexing_time }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Bench ${{ inputs.qdrant_version_1 }}
+        id: bench
+        run: |
+          export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
+          export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+          export QDRANT_VERSION=${{ inputs.qdrant_version_1 }}
+          export DATASETS=${{ inputs.dataset }}
+          export ENGINE_NAME=${{ inputs.engine_config }}
+          export POSTGRES_TABLE=benchmark_manual
+          bash -x tools/setup_ci.sh
+          bash -x tools/run_ci.sh
+
+  runBenchmarkForVersion2:
+    name: execute - ${{ inputs.qdrant_version_2 }} - ${{ inputs.dataset }}
+    needs:
+      - prepareImage2
+      - runBenchmarkForVersion1
+    runs-on: ubuntu-latest
+    concurrency:
+      group: continuous-benchmark
+    outputs:
+      collection_load_time: ${{ steps.bench.outputs.collection_load_time }}
+      rps: ${{ steps.bench.outputs.rps }}
+      mean_precisions: ${{ steps.bench.outputs.mean_precisions }}
+      p95_time: ${{ steps.bench.outputs.p95_time }}
+      p99_time: ${{ steps.bench.outputs.p99_time }}
+      vm_rss_memory_usage: ${{ steps.bench.outputs.vm_rss_memory_usage }}
+      rss_anon_memory_usage: ${{ steps.bench.outputs.rss_anon_memory_usage }}
+      upload_time: ${{ steps.bench.outputs.upload_time }}
+      indexing_time: ${{ steps.bench.outputs.indexing_time }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Bench ${{ inputs.qdrant_version_2 }}
+        id: bench
+        run: |
+          export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
+          export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+          export QDRANT_VERSION=${{ inputs.qdrant_version_2 }}
+          export DATASETS=${{ inputs.dataset }}
+          export ENGINE_NAME=${{ inputs.engine_config }}
+          export POSTGRES_TABLE=benchmark_manual
+          bash -x tools/setup_ci.sh
+          bash -x tools/run_ci.sh
+
+  compareVersions:
+    name: compare - ${{ inputs.qdrant_version_1 }} vs ${{ inputs.qdrant_version_2 }}
+    needs:
+      - runBenchmarkForVersion1
+      - runBenchmarkForVersion2
+    runs-on: ubuntu-latest
+    steps:
+      - name: compare
+        run: |
+          compare() {
+            local var_name=$1
+            local value_v1=$2
+            local value_v2=$3
+
+            if (( $(echo "$value_v1 > $value_v2" | bc -l) )); then
+              local diff=$(echo "$value_v1 - $value_v2" | bc -l)
+              local percentage=$(echo "($diff / $value_v1) * 100" | bc -l)
+              echo -e "${{ inputs.qdrant_version_1 }} > ${{ inputs.qdrant_version_2 }} by $diff ($percentage% greater)"
+            elif (( $(echo "$value_v1 < $value_v2" | bc -l) )); then
+              local diff=$(echo "$value_v2 - $value_v1" | bc -l)
+              local percentage=$(echo "($diff / $value_v2) * 100" | bc -l)
+              echo -e "${{ inputs.qdrant_version_1 }} < ${{ inputs.qdrant_version_2 }} by $diff ($percentage% less)"
+            else
+              echo -e "equal"
+            fi
+          }
+
+          res_collection_load_time=$(compare "collection_load_time" "${{ needs.runBenchmarkForVersion1.outputs.collection_load_time }}" "${{ needs.runBenchmarkForVersion2.outputs.collection_load_time }}")
+          res_rps=$(compare "rps" "${{ needs.runBenchmarkForVersion1.outputs.rps }}" "${{ needs.runBenchmarkForVersion2.outputs.rps }}")
+          res_mean_precisions=$(compare "mean_precisions" "${{ needs.runBenchmarkForVersion1.outputs.mean_precisions }}" "${{ needs.runBenchmarkForVersion2.outputs.mean_precisions }}")
+          res_p95_time=$(compare "p95_time" "${{ needs.runBenchmarkForVersion1.outputs.p95_time }}" "${{ needs.runBenchmarkForVersion2.outputs.p95_time }}")
+          res_p99_time=$(compare "p99_time" "${{ needs.runBenchmarkForVersion1.outputs.p99_time }}" "${{ needs.runBenchmarkForVersion2.outputs.p99_time }}")
+          res_vm_rss_memory_usage=$(compare "vm_rss_memory_usage" "${{ needs.runBenchmarkForVersion1.outputs.vm_rss_memory_usage }}" "${{ needs.runBenchmarkForVersion2.outputs.vm_rss_memory_usage }}")
+          res_rss_anon_memory_usage=$(compare "rss_anon_memory_usage" "${{ needs.runBenchmarkForVersion1.outputs.rss_anon_memory_usage }}" "${{ needs.runBenchmarkForVersion2.outputs.rss_anon_memory_usage }}")
+          res_upload_time=$(compare "upload_time" "${{ needs.runBenchmarkForVersion1.outputs.upload_time }}" "${{ needs.runBenchmarkForVersion2.outputs.upload_time }}")
+          res_indexing_time=$(compare "indexing_time" "${{ needs.runBenchmarkForVersion1.outputs.indexing_time }}" "${{ needs.runBenchmarkForVersion2.outputs.indexing_time }}")
+
+          echo "# Comparison results" >> $GITHUB_STEP_SUMMARY
+          echo "| Name                  | ${{ inputs.qdrant_version_1 }}       | ${{ inputs.qdrant_version_2 }}       | Result     |" >> $GITHUB_STEP_SUMMARY
+          echo "| --------------------- | ------------ | ------------ | ------------ |" >> $GITHUB_STEP_SUMMARY
+          echo "| collection_load_time  | ${{ needs.runBenchmarkForVersion1.outputs.collection_load_time }} | ${{ needs.runBenchmarkForVersion2.outputs.collection_load_time }} | ${res_collection_load_time} |" >> $GITHUB_STEP_SUMMARY
+          echo "| rps                   | ${{ needs.runBenchmarkForVersion1.outputs.rps }} | ${{ needs.runBenchmarkForVersion2.outputs.rps }} | ${res_rps} |" >> $GITHUB_STEP_SUMMARY
+          echo "| mean_precisions       | ${{ needs.runBenchmarkForVersion1.outputs.mean_precisions }} | ${{ needs.runBenchmarkForVersion2.outputs.mean_precisions }} | ${res_mean_precisions} |" >> $GITHUB_STEP_SUMMARY
+          echo "| p95_time              | ${{ needs.runBenchmarkForVersion1.outputs.p95_time }} | ${{ needs.runBenchmarkForVersion2.outputs.p95_time }} | ${res_p95_time} |" >> $GITHUB_STEP_SUMMARY
+          echo "| p99_time              | ${{ needs.runBenchmarkForVersion1.outputs.p99_time }} | ${{ needs.runBenchmarkForVersion2.outputs.p99_time }} | ${res_p99_time} |" >> $GITHUB_STEP_SUMMARY
+          echo "| vm_rss_memory_usage   | ${{ needs.runBenchmarkForVersion1.outputs.vm_rss_memory_usage }} | ${{ needs.runBenchmarkForVersion2.outputs.vm_rss_memory_usage }} | ${res_vm_rss_memory_usage} |" >> $GITHUB_STEP_SUMMARY
+          echo "| rss_anon_memory_usage  | ${{ needs.runBenchmarkForVersion1.outputs.rss_anon_memory_usage }} | ${{ needs.runBenchmarkForVersion2.outputs.rss_anon_memory_usage }} | ${res_rss_anon_memory_usage} |" >> $GITHUB_STEP_SUMMARY
+          echo "| upload_time           | ${{ needs.runBenchmarkForVersion1.outputs.upload_time }} | ${{ needs.runBenchmarkForVersion2.outputs.upload_time }} | ${res_upload_time} |" >> $GITHUB_STEP_SUMMARY
+          echo "| indexing_time         | ${{ needs.runBenchmarkForVersion1.outputs.indexing_time }} | ${{ needs.runBenchmarkForVersion2.outputs.indexing_time }} | ${res_indexing_time} |" >> $GITHUB_STEP_SUMMARY
