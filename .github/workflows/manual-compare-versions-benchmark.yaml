@@ -1,4 +1,8 @@
 name: Manual Benchmark to compare versions
+description: |
+  This workflow is used to compare two versions of qdrant using the same dataset and engine config.
+  It is triggered manually and requires the user to provide the versions of qdrant to compare, dataset and engine config.
+  The workflow will prepare the images for the provided versions (if needed), run the benchmark for each version and compare the results.
 
 on:
   workflow_dispatch:
