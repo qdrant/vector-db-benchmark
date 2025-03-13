@@ -23,6 +23,8 @@ cancel_github_workflow() {
     "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/cancel"
 }
 
+trap 'cancel_github_workflow; exit 1' ERR
+
 QDRANT_VERSION=${QDRANT_VERSION:-"ghcr/dev"}
 
 MAX_RETRIES=15
@@ -31,7 +33,6 @@ EVENT_TYPE="benchmark-trigger-image-build"
 
 if [[ -z "${BEARER_TOKEN}" ]]; then
   echo "BEARER_TOKEN is not set. Exiting."
-  cancel_github_workflow
   exit 1
 fi
 
@@ -51,7 +52,6 @@ if [[ ${QDRANT_VERSION} == docker/* ]] || [[ ${QDRANT_VERSION} == ghcr/* ]]; the
     fi
 else
     echo "Error: unknown version ${QDRANT_VERSION}. Version name should start with 'docker/' or 'ghcr/'"
-    cancel_github_workflow
     exit 1
 fi
 
@@ -66,7 +66,6 @@ fi
 
 if [[ "${CONTAINER_REGISTRY}" == "docker.io" ]]; then
   echo "Impossible to push the image to Docker Container Registry in this workflow."
-  cancel_github_workflow
   exit 1
 fi
 
@@ -84,8 +83,7 @@ counter=0
 while ! docker manifest inspect "$IMAGE" > /dev/null 2>&1; do
   if [ $counter -ge $MAX_RETRIES ]; then
     echo "Reached maximum retries. Exiting."
-    cancel_github_workflow
-    exit 2
+    exit 1
   fi
   # sleep for 10 minutes, in seconds
   # together with the MAX_RETRIES it
