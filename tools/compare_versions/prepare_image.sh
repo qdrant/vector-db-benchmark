@@ -1,4 +1,11 @@
 #!/bin/bash
+# This script checks for the image in the remote repo
+# and if it not there triggers the image build in the
+# main Qdrant repo for the specified version and waits
+# until the image is available in the remote repository.
+#
+# Usage: export QDRANT_VERSION="ghcr/dev" && ./prepare_image.sh
+
 
 QDRANT_VERSION=${QDRANT_VERSION:-"ghcr/dev"}
 
