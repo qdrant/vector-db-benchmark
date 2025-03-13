@@ -6,6 +6,22 @@
 #
 # Usage: export QDRANT_VERSION="ghcr/dev" && ./prepare_image.sh
 
+cancel_github_workflow() {
+  echo "Canceling the current GH workflow run..."
+
+  RUN_ID=$(curl -s \
+    -H "Accept: application/vnd.github+json" \
+    -H "Authorization: Bearer ${BEARER_TOKEN}" \
+    -H "X-GitHub-Api-Version: 2022-11-28" \
+    "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs" \
+    | jq '.workflow_runs[] | select(.head_branch=="'${GITHUB_REF#refs/heads/}'") | .id' | head -n 1)
+
+  curl -s \
+    -X POST \
+    -H "Accept: application/vnd.github+json" \
+    -H "Authorization: Bearer ${BEARER_TOKEN}" \
+    "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/cancel"
+}
 
 QDRANT_VERSION=${QDRANT_VERSION:-"ghcr/dev"}
 
@@ -15,6 +31,7 @@ EVENT_TYPE="benchmark-trigger-image-build"
 
 if [[ -z "${BEARER_TOKEN}" ]]; then
   echo "BEARER_TOKEN is not set. Exiting."
+  cancel_github_workflow
   exit 1
 fi
 
@@ -34,6 +51,7 @@ if [[ ${QDRANT_VERSION} == docker/* ]] || [[ ${QDRANT_VERSION} == ghcr/* ]]; the
     fi
 else
     echo "Error: unknown version ${QDRANT_VERSION}. Version name should start with 'docker/' or 'ghcr/'"
+    cancel_github_workflow
     exit 1
 fi
 
@@ -48,6 +66,7 @@ fi
 
 if [[ "${CONTAINER_REGISTRY}" == "docker.io" ]]; then
   echo "Impossible to push the image to Docker Container Registry in this workflow."
+  cancel_github_workflow
   exit 1
 fi
 
@@ -65,6 +84,7 @@ counter=0
 while ! docker manifest inspect "$IMAGE" > /dev/null 2>&1; do
   if [ $counter -ge $MAX_RETRIES ]; then
     echo "Reached maximum retries. Exiting."
+    cancel_github_workflow
     exit 2
   fi
   # sleep for 10 minutes, in seconds
