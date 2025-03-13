@@ -133,9 +133,6 @@ jobs:
             local value_v1=$2
             local value_v2=$3
 
-            echo "${{ inputs.qdrant_version_1 }}: ${var_name}=${value_v1}"
-            echo "${{ inputs.qdrant_version_2 }}: ${var_name}=${value_v2}"
-
             if (( $(echo "$value_v1 > $value_v2" | bc -l) )); then
               local diff=$(echo "$value_v1 - $value_v2" | bc -l)
               local percentage=$(echo "($diff / $value_v1) * 100" | bc -l)
@@ -161,7 +158,7 @@ jobs:
 
           echo "# Comparison results" >> $GITHUB_STEP_SUMMARY
           echo "| Name                  | ${{ inputs.qdrant_version_1 }}       | ${{ inputs.qdrant_version_2 }}       | Result     |" >> $GITHUB_STEP_SUMMARY
-          echo "| --------------------- | ------------ |" >> $GITHUB_STEP_SUMMARY
+          echo "| --------------------- | ------------ | ------------ | ------------ |" >> $GITHUB_STEP_SUMMARY
           echo "| collection_load_time  | ${{ needs.runBenchmarkForVersion1.outputs.collection_load_time }} | ${{ needs.runBenchmarkForVersion2.outputs.collection_load_time }} | ${res_collection_load_time} |" >> $GITHUB_STEP_SUMMARY
           echo "| rps                   | ${{ needs.runBenchmarkForVersion1.outputs.rps }} | ${{ needs.runBenchmarkForVersion2.outputs.rps }} | ${res_rps} |" >> $GITHUB_STEP_SUMMARY
           echo "| mean_precisions       | ${{ needs.runBenchmarkForVersion1.outputs.mean_precisions }} | ${{ needs.runBenchmarkForVersion2.outputs.mean_precisions }} | ${res_mean_precisions} |" >> $GITHUB_STEP_SUMMARY
