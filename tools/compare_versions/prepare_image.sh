@@ -35,6 +35,9 @@ if [[ -z "${BEARER_TOKEN}" ]]; then
   exit 1
 fi
 
+sleep 10
+cancel_github_workflow
+
 # check if version starts with "docker" or "ghcr"
 if [[ ${QDRANT_VERSION} == docker/* ]] || [[ ${QDRANT_VERSION} == ghcr/* ]]; then
 
