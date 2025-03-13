@@ -1,0 +1,15 @@
+[
+  {
+    "name": "mongodb-default",
+    "engine": "mongodb",
+    "connection_params": {
+      "request_timeout": 10000
+    },
+    "collection_params": { "index_options": {  } },
+    "search_params": [
+      { "parallel": 1, "numCandidates": 128 }, { "parallel": 1, "numCandidates": 256 }, { "parallel": 1, "numCandidates": 512 }, { "parallel": 1, "numCandidates": 1024 }, { "parallel": 1, "numCandidates": 1536 }, { "parallel": 1, "numCandidates": 2048 },
+      { "parallel": 100, "numCandidates": 128 }, { "parallel": 100, "numCandidates": 256 }, { "parallel": 100, "numCandidates": 512 }, { "parallel": 1, "numCandidates": 1536 }, { "parallel": 1, "numCandidates": 2048 }
+    ],
+    "upload_params": { "parallel": 16 }
+  }
+]
