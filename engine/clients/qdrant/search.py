@@ -56,7 +56,7 @@ class QdrantSearcher(BaseSearcher):
                 query=query_vector,
                 query_filter=cls.parser.parse(query.meta_conditions),
                 limit=top,
-                search_params=rest.SearchParams(**cls.search_params.get("config", {}))
+                search_params=rest.SearchParams(**cls.search_params.get("config", {})),
             )
         except Exception as ex:
             print(f"Something went wrong during search: {ex}")
