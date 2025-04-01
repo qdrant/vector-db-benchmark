@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       with_payload:
-        description: 'Flag that controls whether to search with or without payload'
+        description: 'Flag that controls whether to search with or without payload (false or true)'
         default: false
   schedule:
     # Run every 4 hours
