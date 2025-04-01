@@ -41,10 +41,10 @@ class QdrantSearcher(BaseSearcher):
             query_vector = query.vector
         else:
             query_vector = construct(
-                    rest.SparseVector,
-                    indices=query.sparse_vector.indices,
-                    values=query.sparse_vector.values,
-                )
+                rest.SparseVector,
+                indices=query.sparse_vector.indices,
+                values=query.sparse_vector.values,
+            )
 
         try:
             res = cls.client.query_points(
