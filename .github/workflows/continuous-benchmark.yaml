@@ -3,6 +3,10 @@ name: Continuous Benchmark
 on:
   repository_dispatch:
   workflow_dispatch:
+    inputs:
+      with_payload:
+        description: 'Flag that controls whether to search with or without payload (false or true)'
+        default: false
   schedule:
     # Run every 4 hours
     - cron: "0 */4 * * *"
@@ -27,13 +31,16 @@ jobs:
             export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
             export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+            export WITH_PAYLOAD=${{ inputs.with_payload }}
+            export SUFFIX=$([ "${WITH_PAYLOAD}" = "true" ] && echo "-with-payload" || echo "")
+
             bash -x tools/setup_ci.sh
 
             declare -A DATASET_TO_ENGINE
-            DATASET_TO_ENGINE["laion-small-clip"]="qdrant-continuous-benchmark"
-            DATASET_TO_ENGINE["msmarco-sparse-100K"]="qdrant-sparse-vector"
-            DATASET_TO_ENGINE["h-and-m-2048-angular-filters"]="qdrant-continuous-benchmark"
-            DATASET_TO_ENGINE["dbpedia-openai-100K-1536-angular"]="qdrant-bq-continuous-benchmark"
+            DATASET_TO_ENGINE["laion-small-clip"]="qdrant-continuous-benchmark${SUFFIX}"
+            DATASET_TO_ENGINE["msmarco-sparse-100K"]="qdrant-sparse-vector${SUFFIX}"
+            DATASET_TO_ENGINE["h-and-m-2048-angular-filters"]="qdrant-continuous-benchmark${SUFFIX}"
+            DATASET_TO_ENGINE["dbpedia-openai-100K-1536-angular"]="qdrant-bq-continuous-benchmark${SUFFIX}"
 
             set +e
 
@@ -117,13 +124,16 @@ jobs:
             export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
             export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+            export WITH_PAYLOAD=${{ inputs.with_payload }}
+            export SUFFIX=$([ "${WITH_PAYLOAD}" = "true" ] && echo "-with-payload" || echo "")
+
             bash -x tools/setup_ci.sh
 
             set +e
 
             # Benchmark filtered search by tenants with mem limitation
 
-            export ENGINE_NAME="qdrant-all-on-disk-scalar-q"
+            export ENGINE_NAME="qdrant-all-on-disk-scalar-q${SUFFIX}"
             export DATASETS="random-768-100-tenants"
             export BENCHMARK_STRATEGY="tenants"
             export CONTAINER_MEM_LIMIT=160mb
@@ -203,13 +213,16 @@ jobs:
             export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
             export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+            export WITH_PAYLOAD=${{ inputs.with_payload }}
+            export SUFFIX=$([ "${WITH_PAYLOAD}" = "true" ] && echo "-with-payload" || echo "")
+
             bash -x tools/setup_ci.sh
 
             set +e
 
             # Benchmark parallel search&upload
 
-            export ENGINE_NAME="qdrant-continuous-benchmark"
+            export ENGINE_NAME="qdrant-continuous-benchmark${SUFFIX}"
             export DATASETS="laion-small-clip"
             export BENCHMARK_STRATEGY="parallel"
             export POSTGRES_TABLE="benchmark_parallel_search_upload"
