@@ -51,9 +51,9 @@ class QdrantSearcher(BaseSearcher):
             )
 
         try:
-            res = cls.client.search(
+            res = cls.client.query_points(
                 collection_name=QDRANT_COLLECTION_NAME,
-                query_vector=query_vector,
+                query=query_vector,
                 query_filter=cls.parser.parse(query.meta_conditions),
                 limit=top,
                 search_params=rest.SearchParams(**cls.search_params.get("config", {})),
@@ -61,4 +61,4 @@ class QdrantSearcher(BaseSearcher):
         except Exception as ex:
             print(f"Something went wrong during search: {ex}")
             raise ex
-        return [(hit.id, hit.score) for hit in res]
+        return [(hit.id, hit.score) for hit in res.points]
