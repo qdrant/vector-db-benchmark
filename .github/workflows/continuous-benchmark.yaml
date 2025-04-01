@@ -33,7 +33,7 @@ jobs:
             export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
             export WITH_PAYLOAD=${{ inputs.with_payload }}
             export SUFFIX=$([ "${WITH_PAYLOAD}" = "true" ] && echo "-with-payload" || echo "")
-            
+
             bash -x tools/setup_ci.sh
 
             declare -A DATASET_TO_ENGINE
@@ -126,7 +126,7 @@ jobs:
             export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
             export WITH_PAYLOAD=${{ inputs.with_payload }}
             export SUFFIX=$([ "${WITH_PAYLOAD}" = "true" ] && echo "-with-payload" || echo "")
-          
+
             bash -x tools/setup_ci.sh
 
             set +e
@@ -215,7 +215,7 @@ jobs:
             export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
             export WITH_PAYLOAD=${{ inputs.with_payload }}
             export SUFFIX=$([ "${WITH_PAYLOAD}" = "true" ] && echo "-with-payload" || echo "")
-          
+
             bash -x tools/setup_ci.sh
 
             set +e
