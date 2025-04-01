@@ -41,17 +41,14 @@ class QdrantSearcher(BaseSearcher):
             query_vector = query.vector
         else:
             query_vector = construct(
-                rest.NamedSparseVector,
-                name="sparse",
-                vector=construct(
                     rest.SparseVector,
                     indices=query.sparse_vector.indices,
                     values=query.sparse_vector.values,
-                ),
-            )
+                )
 
         try:
             res = cls.client.query_points(
+                using="sparse" if query.sparse_vector else None,
                 collection_name=QDRANT_COLLECTION_NAME,
                 query=query_vector,
                 query_filter=cls.parser.parse(query.meta_conditions),
