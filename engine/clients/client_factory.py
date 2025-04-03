@@ -7,11 +7,19 @@ from engine.base_client.client import (
     BaseSearcher,
     BaseUploader,
 )
+
 from engine.clients.elasticsearch import (
     ElasticConfigurator,
     ElasticSearcher,
     ElasticUploader,
 )
+
+from engine.clients.clickhouse import (
+    CHVectorConfigurator,
+    CHVectorSearcher,
+    CHVectorUploader,
+)
+
 from engine.clients.milvus import MilvusConfigurator, MilvusSearcher, MilvusUploader
 from engine.clients.opensearch import (
     OpenSearchConfigurator,
@@ -39,6 +47,7 @@ ENGINE_CONFIGURATORS = {
     "opensearch": OpenSearchConfigurator,
     "redis": RedisConfigurator,
     "pgvector": PgVectorConfigurator,
+    "clickhouse": CHVectorConfigurator
 }
 
 ENGINE_UPLOADERS = {
@@ -49,6 +58,7 @@ ENGINE_UPLOADERS = {
     "opensearch": OpenSearchUploader,
     "redis": RedisUploader,
     "pgvector": PgVectorUploader,
+    "clickhouse": CHVectorUploader
 }
 
 ENGINE_SEARCHERS = {
@@ -59,6 +69,7 @@ ENGINE_SEARCHERS = {
     "opensearch": OpenSearchSearcher,
     "redis": RedisSearcher,
     "pgvector": PgVectorSearcher,
+    "clickhouse": CHVectorSearcher
 }
 
 
