@@ -30,6 +30,11 @@ from engine.clients.weaviate import (
     WeaviateSearcher,
     WeaviateUploader,
 )
+from engine.clients.cassandra import (
+    CassandraConfigurator,
+    CassandraSearcher, 
+    CassandraUploader,
+)
 
 ENGINE_CONFIGURATORS = {
     "qdrant": QdrantConfigurator,
@@ -39,6 +44,7 @@ ENGINE_CONFIGURATORS = {
     "opensearch": OpenSearchConfigurator,
     "redis": RedisConfigurator,
     "pgvector": PgVectorConfigurator,
+    "cassandra": CassandraConfigurator,
 }
 
 ENGINE_UPLOADERS = {
@@ -49,6 +55,7 @@ ENGINE_UPLOADERS = {
     "opensearch": OpenSearchUploader,
     "redis": RedisUploader,
     "pgvector": PgVectorUploader,
+    "cassandra": CassandraUploader,
 }
 
 ENGINE_SEARCHERS = {
@@ -59,6 +66,7 @@ ENGINE_SEARCHERS = {
     "opensearch": OpenSearchSearcher,
     "redis": RedisSearcher,
     "pgvector": PgVectorSearcher,
+    "cassandra": CassandraSearcher,
 }
 
 

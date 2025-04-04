@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  cassandra:
+    image: cassandra:latest
+    container_name: cassandra-benchmark
+    ports:
+      - "9042:9042"  # CQL native transport port
+    environment:
+      - CASSANDRA_CLUSTER_NAME=VectorBenchmark
+      - MAX_HEAP_SIZE=4G
+      - HEAP_NEWSIZE=800M
+    volumes:
+      - cassandra-data:/var/lib/cassandra
+    # Healthcheck to verify when Cassandra is ready
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe keyspaces' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "1"
+        max-size: "10m"
+
+volumes:
+  cassandra-data:

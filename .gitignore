@@ -6,3 +6,6 @@ NOTES.md
 
 results/*
 tools/custom/data.json
+
+.venv
+*.DS_Store
