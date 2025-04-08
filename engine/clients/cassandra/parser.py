@@ -11,23 +11,23 @@ class CassandraConditionParser(BaseConditionParser):
         Build a CQL condition expression that combines AND and OR subfilters
         """
         conditions = []
-        
+
         # Add AND conditions
         if and_subfilters and len(and_subfilters) > 0:
             and_conds = " AND ".join([f"({cond})" for cond in and_subfilters if cond])
             if and_conds:
                 conditions.append(f"({and_conds})")
-        
+
         # Add OR conditions
         if or_subfilters and len(or_subfilters) > 0:
             or_conds = " OR ".join([f"({cond})" for cond in or_subfilters if cond])
             if or_conds:
                 conditions.append(f"({or_conds})")
-        
+
         # Combine all conditions
         if not conditions:
             return None
-        
+
         return " AND ".join(conditions)
 
     def build_exact_match_filter(self, field_name: str, value: FieldValue) -> Any:
@@ -52,31 +52,31 @@ class CassandraConditionParser(BaseConditionParser):
         Build a CQL range filter condition
         """
         conditions = []
-        
+
         if lt is not None:
             if isinstance(lt, str):
                 conditions.append(f"metadata['{field_name}'] < '{lt}'")
             else:
                 conditions.append(f"metadata['{field_name}'] < '{str(lt)}'")
-                
+
         if gt is not None:
             if isinstance(gt, str):
                 conditions.append(f"metadata['{field_name}'] > '{gt}'")
             else:
                 conditions.append(f"metadata['{field_name}'] > '{str(gt)}'")
-                
+
         if lte is not None:
             if isinstance(lte, str):
                 conditions.append(f"metadata['{field_name}'] <= '{lte}'")
             else:
                 conditions.append(f"metadata['{field_name}'] <= '{str(lte)}'")
-                
+
         if gte is not None:
             if isinstance(gte, str):
                 conditions.append(f"metadata['{field_name}'] >= '{gte}'")
             else:
                 conditions.append(f"metadata['{field_name}'] >= '{str(gte)}'")
-        
+
         return " AND ".join(conditions)
 
     def build_geo_filter(

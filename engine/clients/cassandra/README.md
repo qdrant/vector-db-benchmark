@@ -9,9 +9,9 @@ Run the following command to start the server (alternatively, run `docker compos
 $ docker compose up
 
 [+] Running 1/1
- ✔ cassandra Pulled                                                                                                                                                                           1.4s 
+ ✔ cassandra Pulled                                                                                                                                                                           1.4s
 [+] Running 1/1
- ✔ Container cassandra-benchmark  Recreated                                                                                                                                                   0.1s 
+ ✔ Container cassandra-benchmark  Recreated                                                                                                                                                   0.1s
 Attaching to cassandra-benchmark
 cassandra-benchmark  | CompileCommand: dontinline org/apache/cassandra/db/Columns$Serializer.deserializeLargeSubset(Lorg/apache/cassandra/io/util/DataInputPlus;Lorg/apache/cassandra/db/Columns;I)Lorg/apache/cassandra/db/Columns; bool dontinline = true
 ...
@@ -29,7 +29,7 @@ cassandra-benchmark  | INFO  [main] 2025-04-04 22:28:25,091 StorageService.java:
 ### Start up the client benchmark
 Run the following command to start the client benchmark using `glove-25-angular` dataset as an example:
 ```bash
-% python3 -m run --engines cassandra-single-node --datasets glove-25-angular 
+% python3 -m run --engines cassandra-single-node --datasets glove-25-angular
 ```
 and you'll see the following output:
 ```bash

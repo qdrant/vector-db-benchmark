@@ -7,6 +7,11 @@ from engine.base_client.client import (
     BaseSearcher,
     BaseUploader,
 )
+from engine.clients.cassandra import (
+    CassandraConfigurator,
+    CassandraSearcher,
+    CassandraUploader,
+)
 from engine.clients.elasticsearch import (
     ElasticConfigurator,
     ElasticSearcher,
@@ -29,11 +34,6 @@ from engine.clients.weaviate import (
     WeaviateConfigurator,
     WeaviateSearcher,
     WeaviateUploader,
-)
-from engine.clients.cassandra import (
-    CassandraConfigurator,
-    CassandraSearcher, 
-    CassandraUploader,
 )
 
 ENGINE_CONFIGURATORS = {
