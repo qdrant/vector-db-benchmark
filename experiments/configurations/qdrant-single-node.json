@@ -29,7 +29,8 @@
       "optimizers_config": {
         "max_segment_size": 1000000,
         "default_segment_number": 3,
-        "memmap_threshold": 10000000
+        "memmap_threshold": 10000000,
+        "max_optimization_threads": null
       }
     },
     "search_params": [
@@ -63,7 +64,8 @@
       "optimizers_config": {
         "max_segment_size": 1000000,
         "default_segment_number": 3,
-        "memmap_threshold": 10000000
+        "memmap_threshold": 10000000,
+        "max_optimization_threads": null
       }
     },
     "search_params": [
@@ -93,7 +95,8 @@
       "optimizers_config": {
         "max_segment_size": 1000000,
         "default_segment_number": 3,
-        "memmap_threshold": 10000000
+        "memmap_threshold": 10000000,
+        "max_optimization_threads": null
       }
     },
     "search_params": [
@@ -120,7 +123,8 @@
       "optimizers_config": {
         "max_segment_size": 1000000,
         "default_segment_number": 3,
-        "memmap_threshold": 10000000
+        "memmap_threshold": 10000000,
+        "max_optimization_threads": null
       }
     },
     "search_params": [
