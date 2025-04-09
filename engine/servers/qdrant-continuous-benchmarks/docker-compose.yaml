@@ -16,3 +16,5 @@ services:
       resources:
         limits:
           memory: 25Gb
+    environment:
+      - QDRANT__FEATURE_FLAGS__ALL=${QDRANT__FEATURE_FLAGS__ALL:-false}

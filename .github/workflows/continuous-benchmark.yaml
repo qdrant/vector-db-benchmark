@@ -50,10 +50,12 @@ jobs:
 
               # Benchmark the dev branch:
               export QDRANT_VERSION=ghcr/dev
+              export QDRANT__FEATURE_FLAGS__ALL=true
               timeout 30m bash -x tools/run_ci.sh
 
               # Benchmark the master branch:
               export QDRANT_VERSION=docker/master
+              export QDRANT__FEATURE_FLAGS__ALL=false
               timeout 30m bash -x tools/run_ci.sh
             done
 
@@ -140,10 +142,12 @@ jobs:
 
             # Benchmark the dev branch:
             export QDRANT_VERSION=ghcr/dev
+            export QDRANT__FEATURE_FLAGS__ALL=true          
             timeout 30m bash -x tools/run_ci.sh
 
             # Benchmark the master branch:
             export QDRANT_VERSION=docker/master
+            export QDRANT__FEATURE_FLAGS__ALL=false          
             timeout 30m bash -x tools/run_ci.sh
 
             set -e
@@ -229,10 +233,12 @@ jobs:
 
             # Benchmark the dev branch:
             export QDRANT_VERSION=ghcr/dev
+            export QDRANT__FEATURE_FLAGS__ALL=true
             timeout 30m bash -x tools/run_ci.sh
 
             # Benchmark the master branch:
             export QDRANT_VERSION=docker/master
+            export QDRANT__FEATURE_FLAGS__ALL=false
             timeout 30m bash -x tools/run_ci.sh
 
             set -e
