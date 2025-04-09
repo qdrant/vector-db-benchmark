@@ -7,7 +7,6 @@ from qdrant_client._pydantic_compat import construct
 from qdrant_client.http.models import (
     Batch,
     CollectionStatus,
-    OptimizersConfigDiff,
     SparseVector,
 )
 
