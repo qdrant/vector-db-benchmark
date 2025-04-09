@@ -58,15 +58,6 @@ class QdrantUploader(BaseUploader):
 
     @classmethod
     def post_upload(cls, _distance):
-        cls.client.update_collection(
-            collection_name=QDRANT_COLLECTION_NAME,
-            optimizer_config=OptimizersConfigDiff(
-                # indexing_threshold=10_000,
-                # Set to a high number to not apply limits, already limited by CPU budget
-                max_optimization_threads=100_000,
-            ),
-        )
-
         cls.wait_collection_green()
         return {}
 
