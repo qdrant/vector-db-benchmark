@@ -20,10 +20,12 @@ on:
             description: "Engine config to benchmark"
             default: qdrant-continuous-benchmark
         feature_flags_all_version_1:
-            description: "Enable all feature flags (true|false, false by default), version 1"
+            type: boolean
+            description: "Enable all feature flags (false by default), version 1"
             default: false
         feature_flags_all_version_2:
-            description: "Enable all feature flags (true|false, false by default), version 2"
+            type: boolean
+            description: "Enable all feature flags (false by default), version 2"
             default: false
 
 jobs:
