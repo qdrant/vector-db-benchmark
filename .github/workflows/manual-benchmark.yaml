@@ -13,6 +13,10 @@ on:
         engine_config:
             description: "Engine config to benchmark"
             default: qdrant-continuous-benchmark
+        feature_flags_all:
+            description: "Enable all feature flags (true|false, false by default)"
+            default: false
+
 
 jobs:
   runManualBenchmark:
@@ -32,5 +36,6 @@ jobs:
           export DATASETS=${{ inputs.dataset }}
           export ENGINE_NAME=${{ inputs.engine_config }}
           export POSTGRES_TABLE=benchmark_manual
+          export QDRANT__FEATURE_FLAGS__ALL=${{ inputs.feature_flags_all }}
           bash -x tools/setup_ci.sh
           bash -x tools/run_ci.sh
