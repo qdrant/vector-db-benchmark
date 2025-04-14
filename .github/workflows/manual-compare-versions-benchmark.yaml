@@ -8,10 +8,10 @@ on:
   workflow_dispatch:
     inputs:
         qdrant_version_1:
-            description: "Version of qdrant to benchmark (ghcr/<commit-id>, ghcr/my-branch, docker/v1.5.1, ghcr/dev)"
+            description: "Version of qdrant to benchmark (ghcr/<commit-id>, ghcr/my-branch, docker/v1.5.1, ghcr/dev), version 1"
             default: ghcr/dev
         qdrant_version_2:
-            description: "Version of qdrant to benchmark (ghcr/<commit-id>, ghcr/my-branch, docker/v1.5.1, ghcr/dev)"
+            description: "Version of qdrant to benchmark (ghcr/<commit-id>, ghcr/my-branch, docker/v1.5.1, ghcr/dev), version 2"
             default: docker/master
         dataset:
             description: "Dataset to benchmark"
@@ -20,10 +20,10 @@ on:
             description: "Engine config to benchmark"
             default: qdrant-continuous-benchmark
         feature_flags_all_version_1:
-            description: "Enable all feature flags (true|false, false by default)"
+            description: "Enable all feature flags (true|false, false by default), version 1"
             default: false
         feature_flags_all_version_2:
-            description: "Enable all feature flags (true|false, false by default)"
+            description: "Enable all feature flags (true|false, false by default), version 2"
             default: false
 
 jobs:
