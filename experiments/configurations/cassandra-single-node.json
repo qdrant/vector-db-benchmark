@@ -1,0 +1,25 @@
+[
+  {
+    "name": "cassandra-single-node",
+    "engine": "cassandra",
+    "host": "localhost",
+    "connection_params": {
+      "port": 9042,
+      "connect_timeout": 60
+    },
+    "collection_params": {
+    },
+    "upload_params": {
+      "batch_size": 100,
+      "parallel": 4
+    },
+    "search_params": [
+      {
+        "top": 10
+      },
+      {
+        "top": 100
+      }
+    ]
+  }
+]
