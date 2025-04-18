@@ -1,0 +1,22 @@
+services:
+  clickhouse:
+    container_name: clickhouse
+    user: "clickhouse:clickhouse"
+    hostname: clickhouse
+    image: clickhouse/clickhouse-server:25.1-alpine
+    environment:
+      - CLICKHOUSE_DB=clickhouse
+      - CLICKHOUSE_USER=clickhouse
+      - CLICKHOUSE_PASSWORD=passwd
+      - CLICKHOUSE_PORT=8123
+    ports:
+      - 8123:8123
+    logging:
+      driver: "json-file"
+      options:
+        max-file: 1
+        max-size: 10m
+    deploy:
+      resources:
+        limits:
+          memory: 9Gb
