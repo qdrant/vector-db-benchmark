@@ -71,7 +71,7 @@ if [[ -z "$ROOT_API_RESPONSE_FILE" ]]; then
   exit 1
 fi
 
-if [[ "$BENCHMARK_STRATEGY" != "default" ]]; then
+if [[ "$BENCHMARK_STRATEGY" == "default" ]]; then
   if [[ -z "$CPU_USAGE_FILE" ]]; then
     echo "CPU_USAGE_FILE is not set"
     exit 1
