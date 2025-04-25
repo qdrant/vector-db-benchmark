@@ -41,6 +41,10 @@ else
   export SEARCH_RESULTS_FILE=$(find results/ -maxdepth 1 -type f -name '*-search-*.json' -printf '%T@ %p\n' | sort -nr | head -n 1 | cut -d' ' -f2-)
   export UPLOAD_RESULTS_FILE=$(find results/ -maxdepth 1 -type f -name '*-upload-*.json' -printf '%T@ %p\n' | sort -nr | head -n 1 | cut -d' ' -f2-)
 
+  if [[ "$BENCHMARK_STRATEGY" == "default" ]]; then
+    export CPU_USAGE_FILE=$(ls -t results/cpu/cpu-usage-*.json | head -n 1)
+  fi
+
   if [[ "$BENCHMARK_STRATEGY" == "parallel" ]]; then
     export PARALLEL_UPLOAD_RESULTS_FILE=$(ls -t results/parallel/*-upload-*.json | head -n 1)
     export PARALLEL_SEARCH_RESULTS_FILE=$(ls -t results/parallel/*-search-*.json | head -n 1)

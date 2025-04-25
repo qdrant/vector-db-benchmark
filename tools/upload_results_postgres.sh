@@ -18,8 +18,10 @@
 # 	p95_time real,
 # 	p99_time real,
 # 	vm_rss_mem real,
-# 	rss_anon_mem real
-# 	collection_load_time_ms real
+# 	rss_anon_mem real,
+# 	collection_load_time_ms real,
+# 	cpu real,
+# 	cpu_telemetry real,
 # );
 
 SEARCH_RESULTS_FILE=${SEARCH_RESULTS_FILE:-""}
@@ -69,6 +71,13 @@ if [[ -z "$ROOT_API_RESPONSE_FILE" ]]; then
   exit 1
 fi
 
+if [[ "$BENCHMARK_STRATEGY" != "default" ]]; then
+  if [[ -z "$CPU_USAGE_FILE" ]]; then
+    echo "CPU_USAGE_FILE is not set"
+    exit 1
+  fi
+fi
+
 COLLECTION_LOAD_TIME=NULL
 RPS=NULL
 MEAN_PRECISIONS=NULL
@@ -76,8 +85,11 @@ P95_TIME=NULL
 P99_TIME=NULL
 UPLOAD_TIME=NULL
 INDEXING_TIME=NULL
+CPU=NULL
+CPU_TELEMETRY=NULL
 
 if [[ "$BENCHMARK_STRATEGY" == "collection-reload" ]]; then
+  # this strategy does not produce search & upload results files
   echo "BENCHMARK_STRATEGY is $BENCHMARK_STRATEGY, upload telemetry"
   COLLECTION_LOAD_TIME=$(jq -r '.result.collections.collections[] | select(.id == "benchmark") | .init_time_ms' "$TELEMETRY_API_RESPONSE_FILE")
 else
@@ -94,14 +106,18 @@ fi
 VM_RSS_MEMORY_USAGE=$(cat "$VM_RSS_MEMORY_USAGE_FILE" | tr -d '[:space:]')
 RSS_ANON_MEMORY_USAGE=$(cat "$RSS_ANON_MEMORY_USAGE_FILE" | tr -d '[:space:]')
 
+if [[ "$BENCHMARK_STRATEGY" != "default" ]]; then
+  CPU=$(cat "$CPU_USAGE_FILE" | tr -d '[:space:]')
+fi
+CPU_TELEMETRY=$(jq -r '.result.hardware.collection_data.benchmark.cpu' "$TELEMETRY_API_RESPONSE_FILE")
+
 QDRANT_COMMIT=$(jq -r '.commit' "$ROOT_API_RESPONSE_FILE")
 
 MEASURE_TIMESTAMP=${MEASURE_TIMESTAMP:-$(date -u +"%Y-%m-%dT%H:%M:%SZ")}
 
-
 docker run --name "vector-db" --rm jbergknoff/postgresql-client "postgresql://qdrant:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/postgres" -c "
-INSERT INTO ${POSTGRES_TABLE} (engine, branch, commit, dataset, measure_timestamp, upload_time, indexing_time, rps, mean_precisions, p95_time, p99_time, vm_rss_mem, rss_anon_mem, collection_load_time_ms)
-VALUES ('qdrant-ci', '${QDRANT_VERSION}', '${QDRANT_COMMIT}', '${DATASETS}', '${MEASURE_TIMESTAMP}', ${UPLOAD_TIME}, ${INDEXING_TIME}, ${RPS}, ${MEAN_PRECISIONS}, ${P95_TIME}, ${P99_TIME}, ${VM_RSS_MEMORY_USAGE}, ${RSS_ANON_MEMORY_USAGE}, ${COLLECTION_LOAD_TIME});
+INSERT INTO ${POSTGRES_TABLE} (engine, branch, commit, dataset, measure_timestamp, upload_time, indexing_time, rps, mean_precisions, p95_time, p99_time, vm_rss_mem, rss_anon_mem, collection_load_time_ms, cpu_telemetry, cpu)
+VALUES ('qdrant-ci', '${QDRANT_VERSION}', '${QDRANT_COMMIT}', '${DATASETS}', '${MEASURE_TIMESTAMP}', ${UPLOAD_TIME}, ${INDEXING_TIME}, ${RPS}, ${MEAN_PRECISIONS}, ${P95_TIME}, ${P99_TIME}, ${VM_RSS_MEMORY_USAGE}, ${RSS_ANON_MEMORY_USAGE}, ${COLLECTION_LOAD_TIME}, ${CPU_TELEMETRY}, ${CPU});
 "
 
 if [[ "$IS_CI_RUN" == "true" ]]; then
@@ -117,4 +133,7 @@ if [[ "$IS_CI_RUN" == "true" ]]; then
 
   echo "upload_time=${UPLOAD_TIME}" >> "$GITHUB_OUTPUT"
   echo "indexing_time=${INDEXING_TIME}" >> "$GITHUB_OUTPUT"
+
+  echo "cpu_telemetry=${CPU_TELEMETRY}" >> "$GITHUB_OUTPUT"
+  echo "cpu=${CPU}" >> "$GITHUB_OUTPUT"
 fi
