@@ -38,11 +38,12 @@ if [[ "$BENCHMARK_STRATEGY" == "collection-reload" ]]; then
   export TELEMETRY_API_RESPONSE_FILE=$(ls -t results/telemetry-api-*.json | head -n 1)
 else
   # any other strategies are considered to have search & upload results
+  export TELEMETRY_API_RESPONSE_FILE=$(ls -t results/telemetry-api-*.json | head -n 1)
   export SEARCH_RESULTS_FILE=$(find results/ -maxdepth 1 -type f -name '*-search-*.json' -printf '%T@ %p\n' | sort -nr | head -n 1 | cut -d' ' -f2-)
   export UPLOAD_RESULTS_FILE=$(find results/ -maxdepth 1 -type f -name '*-upload-*.json' -printf '%T@ %p\n' | sort -nr | head -n 1 | cut -d' ' -f2-)
 
   if [[ "$BENCHMARK_STRATEGY" == "default" ]]; then
-    export CPU_USAGE_FILE=$(ls -t results/cpu/cpu-usage-*.json | head -n 1)
+    export CPU_USAGE_FILE=$(ls -t results/cpu/cpu-usage-*.txt | head -n 1)
   fi
 
   if [[ "$BENCHMARK_STRATEGY" == "parallel" ]]; then
