@@ -1,0 +1,56 @@
+name: Send Notification
+description: "Send a notification to Slack"
+inputs:
+  source_name:
+    description: "name of the failed job (i.e runBenchmark)"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - uses: slackapi/slack-github-action@v1.26.0
+      with:
+        payload: |
+          {
+            "text": "CI benchmarks (${{ inputs.source_name }}) run status: ${{ job.status }}",
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "CI benchmarks (${{ inputs.source_name }}) failed because of *${{ steps.benches.outputs.failed }}*."
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "Qdrant version: *${{ steps.benches.outputs.qdrant_version }}*."
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "Engine: *${{ steps.benches.outputs.engine_name }}*."
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "Dataset: *${{ steps.benches.outputs.dataset }}*."
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "View the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
+                }
+              }
+            ]
+          }
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.CI_ALERTS_CHANNEL_WEBHOOK_URL }}
+        SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
