@@ -93,7 +93,7 @@ NO_UPSERT_SEARCH_TIME=$(jq -r '.results.total_time' "$SEARCH_RESULT_FILE")
 UPLOAD_TIME=$(jq -r '.results.upload_time' "$PARALLEL_UPLOAD_RESULTS_FILE")
 INDEXING_TIME=$(jq -r '.results.total_time' "$PARALLEL_UPLOAD_RESULTS_FILE")
 
-if [[ "$BENCHMARK_STRATEGY" != "default" ]]; then
+if [[ "$BENCHMARK_STRATEGY" == "default" ]]; then
   CPU=$(cat "$CPU_USAGE_FILE" | tr -d '[:space:]')
 fi
 CPU_TELEMETRY=$(jq -r '.result.hardware.collection_data.benchmark.cpu' "$TELEMETRY_API_RESPONSE_FILE")

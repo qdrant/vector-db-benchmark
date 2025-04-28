@@ -106,7 +106,7 @@ fi
 VM_RSS_MEMORY_USAGE=$(cat "$VM_RSS_MEMORY_USAGE_FILE" | tr -d '[:space:]')
 RSS_ANON_MEMORY_USAGE=$(cat "$RSS_ANON_MEMORY_USAGE_FILE" | tr -d '[:space:]')
 
-if [[ "$BENCHMARK_STRATEGY" != "default" ]]; then
+if [[ "$BENCHMARK_STRATEGY" == "default" ]]; then
   CPU=$(cat "$CPU_USAGE_FILE" | tr -d '[:space:]')
 fi
 CPU_TELEMETRY=$(jq -r '.result.hardware.collection_data.benchmark.cpu' "$TELEMETRY_API_RESPONSE_FILE")
