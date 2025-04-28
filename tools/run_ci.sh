@@ -25,7 +25,7 @@ trap 'handle_term' TERM
 # Script, that runs benchmark within the GitHub Actions CI environment
 
 # Possible values for BENCHMARK_STRATEGY: default, tenants, parallel and collection-reload
-BENCHMARK_STRATEGY=${BENCHMARK_STRATEGY:-"default"}
+export BENCHMARK_STRATEGY=${BENCHMARK_STRATEGY:-"default"}
 
 SCRIPT=$(realpath "$0")
 SCRIPT_PATH=$(dirname "$SCRIPT")
