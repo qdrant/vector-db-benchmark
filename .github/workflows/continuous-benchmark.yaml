@@ -14,8 +14,8 @@ on:
 # Restrict to only running this workflow one at a time.
 # Any new runs will be queued until the previous run is complete.
 # Any existing pending runs will be cancelled and replaced with current run.
-#concurrency:
-#  group: continuous-benchmark
+concurrency:
+  group: continuous-benchmark
 
 jobs:
   runBenchmark:
@@ -34,7 +34,32 @@ jobs:
             export WITH_PAYLOAD=${{ inputs.with_payload }}
             export SUFFIX=$([ "${WITH_PAYLOAD}" = "true" ] && echo "-with-payload" || echo "")
 
-            exit 1
+            bash -x tools/setup_ci.sh
+
+            declare -A DATASET_TO_ENGINE
+            DATASET_TO_ENGINE["laion-small-clip"]="qdrant-continuous-benchmark${SUFFIX}"
+            DATASET_TO_ENGINE["msmarco-sparse-100K"]="qdrant-sparse-vector${SUFFIX}"
+            DATASET_TO_ENGINE["h-and-m-2048-angular-filters"]="qdrant-continuous-benchmark${SUFFIX}"
+            DATASET_TO_ENGINE["dbpedia-openai-100K-1536-angular"]="qdrant-bq-continuous-benchmark${SUFFIX}"
+
+            set +e
+
+            for dataset in "${!DATASET_TO_ENGINE[@]}"; do
+              export ENGINE_NAME=${DATASET_TO_ENGINE[$dataset]}
+              export DATASETS=$dataset
+
+              # Benchmark the dev branch:
+              export QDRANT_VERSION=ghcr/dev
+              export QDRANT__FEATURE_FLAGS__ALL=true
+              timeout 30m bash -x tools/run_ci.sh
+
+              # Benchmark the master branch:
+              export QDRANT_VERSION=docker/master
+              export QDRANT__FEATURE_FLAGS__ALL=false
+              timeout 30m bash -x tools/run_ci.sh
+            done
+
+            set -e
       - name: Fail job if any of the benches failed
         if: steps.benches.outputs.failed == 'error' || steps.benches.outputs.failed == 'timeout'
         run: exit 1
@@ -63,7 +88,28 @@ jobs:
             export WITH_PAYLOAD=${{ inputs.with_payload }}
             export SUFFIX=$([ "${WITH_PAYLOAD}" = "true" ] && echo "-with-payload" || echo "")
 
-            exit 1
+            bash -x tools/setup_ci.sh
+
+            set +e
+
+            # Benchmark filtered search by tenants with mem limitation
+
+            export ENGINE_NAME="qdrant-all-on-disk-scalar-q${SUFFIX}"
+            export DATASETS="random-768-100-tenants"
+            export BENCHMARK_STRATEGY="tenants"
+            export CONTAINER_MEM_LIMIT=160mb
+
+            # Benchmark the dev branch:
+            export QDRANT_VERSION=ghcr/dev
+            export QDRANT__FEATURE_FLAGS__ALL=true
+            timeout 30m bash -x tools/run_ci.sh
+
+            # Benchmark the master branch:
+            export QDRANT_VERSION=docker/master
+            export QDRANT__FEATURE_FLAGS__ALL=false
+            timeout 30m bash -x tools/run_ci.sh
+
+            set -e
       - name: Fail job if any of the benches failed
         if: steps.benches.outputs.failed == 'error' || steps.benches.outputs.failed == 'timeout'
         run: exit 1
@@ -92,7 +138,28 @@ jobs:
             export WITH_PAYLOAD=${{ inputs.with_payload }}
             export SUFFIX=$([ "${WITH_PAYLOAD}" = "true" ] && echo "-with-payload" || echo "")
 
-            exit 1
+            bash -x tools/setup_ci.sh
+
+            set +e
+
+            # Benchmark parallel search&upload
+
+            export ENGINE_NAME="qdrant-continuous-benchmark${SUFFIX}"
+            export DATASETS="laion-small-clip"
+            export BENCHMARK_STRATEGY="parallel"
+            export POSTGRES_TABLE="benchmark_parallel_search_upload"
+
+            # Benchmark the dev branch:
+            export QDRANT_VERSION=ghcr/dev
+            export QDRANT__FEATURE_FLAGS__ALL=true
+            timeout 30m bash -x tools/run_ci.sh
+
+            # Benchmark the master branch:
+            export QDRANT_VERSION=docker/master
+            export QDRANT__FEATURE_FLAGS__ALL=false
+            timeout 30m bash -x tools/run_ci.sh
+
+            set -e
       - name: Fail job if any of the benches failed
         if: steps.benches.outputs.failed == 'error' || steps.benches.outputs.failed == 'timeout'
         run: exit 1
