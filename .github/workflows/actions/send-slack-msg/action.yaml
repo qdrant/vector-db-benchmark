@@ -8,7 +8,8 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: slackapi/slack-github-action@v1.26.0
+    - name: Send slack message
+      uses: slackapi/slack-github-action@v1.26.0
       with:
         payload: |
           {
