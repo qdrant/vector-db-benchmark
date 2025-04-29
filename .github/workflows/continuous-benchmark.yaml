@@ -51,13 +51,13 @@ jobs:
               # Benchmark the dev branch:
               export QDRANT_VERSION=ghcr/dev
               export QDRANT__FEATURE_FLAGS__ALL=true
-          
+
               echo "qdrant_version=${QDRANT_VERSION}" >> $GITHUB_OUTPUT
               echo "engine_name=${ENGINE_NAME}" >> $GITHUB_OUTPUT
               echo "dataset=${DATASETS}" >> $GITHUB_OUTPUT
-              
+
               echo "failed=error" >> $GITHUB_OUTPUT
-          
+
             done
 
             set -e
