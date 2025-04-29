@@ -24,7 +24,8 @@ trap 'handle_term' TERM
 
 # Script, that runs benchmark within the GitHub Actions CI environment
 
-BENCHMARK_STRATEGY=${BENCHMARK_STRATEGY:-"default"}
+# Possible values for BENCHMARK_STRATEGY: default, tenants, parallel and collection-reload
+export BENCHMARK_STRATEGY=${BENCHMARK_STRATEGY:-"default"}
 
 SCRIPT=$(realpath "$0")
 SCRIPT_PATH=$(dirname "$SCRIPT")
@@ -37,8 +38,13 @@ if [[ "$BENCHMARK_STRATEGY" == "collection-reload" ]]; then
   export TELEMETRY_API_RESPONSE_FILE=$(ls -t results/telemetry-api-*.json | head -n 1)
 else
   # any other strategies are considered to have search & upload results
+  export TELEMETRY_API_RESPONSE_FILE=$(ls -t results/telemetry-api-*.json | head -n 1)
   export SEARCH_RESULTS_FILE=$(find results/ -maxdepth 1 -type f -name '*-search-*.json' -printf '%T@ %p\n' | sort -nr | head -n 1 | cut -d' ' -f2-)
   export UPLOAD_RESULTS_FILE=$(find results/ -maxdepth 1 -type f -name '*-upload-*.json' -printf '%T@ %p\n' | sort -nr | head -n 1 | cut -d' ' -f2-)
+
+  if [[ "$BENCHMARK_STRATEGY" == "default" ]]; then
+    export CPU_USAGE_FILE=$(ls -t results/cpu/cpu-usage-*.txt | head -n 1)
+  fi
 
   if [[ "$BENCHMARK_STRATEGY" == "parallel" ]]; then
     export PARALLEL_UPLOAD_RESULTS_FILE=$(ls -t results/parallel/*-upload-*.json | head -n 1)

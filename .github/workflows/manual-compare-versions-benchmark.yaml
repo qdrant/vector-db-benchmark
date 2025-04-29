@@ -167,6 +167,7 @@ jobs:
           res_p99_time=$(compare "p99_time" "${{ needs.runBenchmarkForVersion1.outputs.p99_time }}" "${{ needs.runBenchmarkForVersion2.outputs.p99_time }}")
           res_vm_rss_memory_usage=$(compare "vm_rss_memory_usage" "${{ needs.runBenchmarkForVersion1.outputs.vm_rss_memory_usage }}" "${{ needs.runBenchmarkForVersion2.outputs.vm_rss_memory_usage }}")
           res_rss_anon_memory_usage=$(compare "rss_anon_memory_usage" "${{ needs.runBenchmarkForVersion1.outputs.rss_anon_memory_usage }}" "${{ needs.runBenchmarkForVersion2.outputs.rss_anon_memory_usage }}")
+          res_cpu_usage=$(compare "cpu_usage" "${{ needs.runBenchmarkForVersion1.outputs.cpu }}" "${{ needs.runBenchmarkForVersion2.outputs.cpu }}")
           res_upload_time=$(compare "upload_time" "${{ needs.runBenchmarkForVersion1.outputs.upload_time }}" "${{ needs.runBenchmarkForVersion2.outputs.upload_time }}")
           res_indexing_time=$(compare "indexing_time" "${{ needs.runBenchmarkForVersion1.outputs.indexing_time }}" "${{ needs.runBenchmarkForVersion2.outputs.indexing_time }}")
 
@@ -179,6 +180,7 @@ jobs:
           echo "| p95_time              | ${{ needs.runBenchmarkForVersion1.outputs.p95_time }} | ${{ needs.runBenchmarkForVersion2.outputs.p95_time }} | ${res_p95_time} |" >> $GITHUB_STEP_SUMMARY
           echo "| p99_time              | ${{ needs.runBenchmarkForVersion1.outputs.p99_time }} | ${{ needs.runBenchmarkForVersion2.outputs.p99_time }} | ${res_p99_time} |" >> $GITHUB_STEP_SUMMARY
           echo "| vm_rss_memory_usage   | ${{ needs.runBenchmarkForVersion1.outputs.vm_rss_memory_usage }} | ${{ needs.runBenchmarkForVersion2.outputs.vm_rss_memory_usage }} | ${res_vm_rss_memory_usage} |" >> $GITHUB_STEP_SUMMARY
-          echo "| rss_anon_memory_usage  | ${{ needs.runBenchmarkForVersion1.outputs.rss_anon_memory_usage }} | ${{ needs.runBenchmarkForVersion2.outputs.rss_anon_memory_usage }} | ${res_rss_anon_memory_usage} |" >> $GITHUB_STEP_SUMMARY
+          echo "| rss_anon_memory_usage | ${{ needs.runBenchmarkForVersion1.outputs.rss_anon_memory_usage }} | ${{ needs.runBenchmarkForVersion2.outputs.rss_anon_memory_usage }} | ${res_rss_anon_memory_usage} |" >> $GITHUB_STEP_SUMMARY
+          echo "| cpu                   | ${{ needs.runBenchmarkForVersion1.outputs.cpu }} | ${{ needs.runBenchmarkForVersion2.outputs.cpu }} | ${res_cpu_usage} |" >> $GITHUB_STEP_SUMMARY
           echo "| upload_time           | ${{ needs.runBenchmarkForVersion1.outputs.upload_time }} | ${{ needs.runBenchmarkForVersion2.outputs.upload_time }} | ${res_upload_time} |" >> $GITHUB_STEP_SUMMARY
           echo "| indexing_time         | ${{ needs.runBenchmarkForVersion1.outputs.indexing_time }} | ${{ needs.runBenchmarkForVersion2.outputs.indexing_time }} | ${res_indexing_time} |" >> $GITHUB_STEP_SUMMARY
