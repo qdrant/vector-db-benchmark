@@ -71,51 +71,16 @@ jobs:
       - name: Fail job if any of the benches failed
         if: steps.benches.outputs.failed == 'error' || steps.benches.outputs.failed == 'timeout'
         run: exit 1
-      - name: Send Notification
+      - name: Send slack message
+        uses: ./.github/workflows/actions/send-slack-msg
         if: failure() || cancelled()
-        uses: slackapi/slack-github-action@v1.26.0
         with:
-          payload: |
-            {
-              "text": "CI benchmarks (runLoadTimeBenchmark) run status: ${{ job.status }}",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "CI benchmarks (runLoadTimeBenchmark) failed because of *${{ steps.benches.outputs.failed }}*."
-                  }
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "Qdrant version: *${{ steps.benches.outputs.qdrant_version }}*."
-                  }
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "Engine: *${{ steps.benches.outputs.engine_name }}*."
-                  }
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "Dataset: *${{ steps.benches.outputs.dataset }}*."
-                  }
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "View the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
-                  }
-                }
-              ]
-            }
+          bench_name: "runLoadTimeBenchmark"
+          job_status: ${{ job.status }}
+          failed_outputs: ${{ steps.benches.outputs.failed }}
+          qdrant_version: ${{ steps.benches.outputs.qdrant_version }}
+          engine_name: ${{ steps.benches.outputs.engine_name }}
+          dataset: ${{ steps.benches.outputs.dataset }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.CI_ALERTS_CHANNEL_WEBHOOK_URL }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
