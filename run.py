@@ -26,8 +26,11 @@ def run(
     skip_configure: Optional[bool] = False,
 ):
     """
-    Example:
-        python3 run.py --engines "*-m-16-*" --engines "qdrant-*" --datasets "glove-*"
+    Examples:
+
+    python3 run.py --engines "qdrant-rps-m-*-ef-*" --datasets "dbpedia-openai-100K-1536-angular" # Qdrant RPS mode
+
+    python3 run.py --engines "*-m-*-ef-*" --datasets "glove-*" # All engines and their configs for glove datasets
     """
     all_engines = read_engine_configs()
     all_datasets = read_dataset_config()

@@ -46,9 +46,16 @@ poetry install
 Run the benchmark:
 
 ```bash
+$ poetry shell
+$ python run.py --help
+
 Usage: run.py [OPTIONS]
 
-  Example: python3 -m run --engines *-m-16-* --datasets glove-*
+  Examples:
+
+  python3 run.py --engines "qdrant-rps-m-*-ef-*" --datasets "dbpedia-openai-100K-1536-angular" # Qdrant RPS mode
+
+  python3 run.py --engines "*-m-*-ef-*" --datasets "glove-*" # All engines and their configs for glove datasets
 
 Options:
   --engines TEXT                  [default: *]
