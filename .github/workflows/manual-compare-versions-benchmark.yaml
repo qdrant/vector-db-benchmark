@@ -77,6 +77,8 @@ jobs:
       rss_anon_memory_usage: ${{ steps.bench.outputs.rss_anon_memory_usage }}
       upload_time: ${{ steps.bench.outputs.upload_time }}
       indexing_time: ${{ steps.bench.outputs.indexing_time }}
+      cpu: ${{ steps.bench.outputs.cpu }}
+      cpu_telemetry: ${{ steps.bench.outputs.cpu_telemetry }}
     steps:
       - uses: actions/checkout@v3
       - uses: webfactory/ssh-agent@v0.8.0
@@ -114,6 +116,8 @@ jobs:
       rss_anon_memory_usage: ${{ steps.bench.outputs.rss_anon_memory_usage }}
       upload_time: ${{ steps.bench.outputs.upload_time }}
       indexing_time: ${{ steps.bench.outputs.indexing_time }}
+      cpu: ${{ steps.bench.outputs.cpu }}
+      cpu_telemetry: ${{ steps.bench.outputs.cpu_telemetry }}
     steps:
       - uses: actions/checkout@v3
       - uses: webfactory/ssh-agent@v0.8.0
@@ -168,6 +172,7 @@ jobs:
           res_vm_rss_memory_usage=$(compare "vm_rss_memory_usage" "${{ needs.runBenchmarkForVersion1.outputs.vm_rss_memory_usage }}" "${{ needs.runBenchmarkForVersion2.outputs.vm_rss_memory_usage }}")
           res_rss_anon_memory_usage=$(compare "rss_anon_memory_usage" "${{ needs.runBenchmarkForVersion1.outputs.rss_anon_memory_usage }}" "${{ needs.runBenchmarkForVersion2.outputs.rss_anon_memory_usage }}")
           res_cpu_usage=$(compare "cpu_usage" "${{ needs.runBenchmarkForVersion1.outputs.cpu }}" "${{ needs.runBenchmarkForVersion2.outputs.cpu }}")
+          res_cpu_telemetry=$(compare "cpu_telemetry" "${{ needs.runBenchmarkForVersion1.outputs.cpu_telemetry }}" "${{ needs.runBenchmarkForVersion2.outputs.cpu_telemetry }}")
           res_upload_time=$(compare "upload_time" "${{ needs.runBenchmarkForVersion1.outputs.upload_time }}" "${{ needs.runBenchmarkForVersion2.outputs.upload_time }}")
           res_indexing_time=$(compare "indexing_time" "${{ needs.runBenchmarkForVersion1.outputs.indexing_time }}" "${{ needs.runBenchmarkForVersion2.outputs.indexing_time }}")
 
@@ -182,5 +187,6 @@ jobs:
           echo "| vm_rss_memory_usage   | ${{ needs.runBenchmarkForVersion1.outputs.vm_rss_memory_usage }} | ${{ needs.runBenchmarkForVersion2.outputs.vm_rss_memory_usage }} | ${res_vm_rss_memory_usage} |" >> $GITHUB_STEP_SUMMARY
           echo "| rss_anon_memory_usage | ${{ needs.runBenchmarkForVersion1.outputs.rss_anon_memory_usage }} | ${{ needs.runBenchmarkForVersion2.outputs.rss_anon_memory_usage }} | ${res_rss_anon_memory_usage} |" >> $GITHUB_STEP_SUMMARY
           echo "| cpu                   | ${{ needs.runBenchmarkForVersion1.outputs.cpu }} | ${{ needs.runBenchmarkForVersion2.outputs.cpu }} | ${res_cpu_usage} |" >> $GITHUB_STEP_SUMMARY
+          echo "| cpu_telemetry         | ${{ needs.runBenchmarkForVersion1.outputs.cpu_telemetry }} | ${{ needs.runBenchmarkForVersion2.outputs.cpu_telemetry }} | ${res_cpu_telemetry} |" >> $GITHUB_STEP_SUMMARY
           echo "| upload_time           | ${{ needs.runBenchmarkForVersion1.outputs.upload_time }} | ${{ needs.runBenchmarkForVersion2.outputs.upload_time }} | ${res_upload_time} |" >> $GITHUB_STEP_SUMMARY
           echo "| indexing_time         | ${{ needs.runBenchmarkForVersion1.outputs.indexing_time }} | ${{ needs.runBenchmarkForVersion2.outputs.indexing_time }} | ${res_indexing_time} |" >> $GITHUB_STEP_SUMMARY
