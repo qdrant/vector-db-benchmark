@@ -72,7 +72,8 @@ class CassandraUploader(BaseUploader):
         Check the status of the index
         See https://docs.datastax.com/en/cql/cassandra-5.0/develop/indexing/sai/sai-monitor.html
         """
-        assert cls.session is not None, "CQL session is not initialized"
+        if cls.session is None:
+            raise RuntimeError("CQL session is not initialized")
         return cls.session.execute(
             f"""
             SELECT is_queryable, is_building

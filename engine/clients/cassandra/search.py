@@ -69,6 +69,9 @@ class CassandraSearcher(BaseSearcher):
         cls.ann_search_stmt = cls.session.prepare(
             f"""SELECT id, {SIMILARITY_FUNC}(embedding, ?) as distance
             FROM {CASSANDRA_TABLE}
+            -- The 'ANN' clause is used for Approximate Nearest Neighbor (ANN) search.
+            -- It orders results based on proximity to the query vector using the specified similarity function.
+            -- Ensure that the Cassandra setup supports ANN queries, as this is not standard CQL.
             ORDER BY embedding ANN OF ?
             LIMIT {limit}"""
         )
