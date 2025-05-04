@@ -39,7 +39,25 @@
         "config": {
           "hnsw_ef": 256,
           "quantization": {
-            "oversampling": 2.0
+            "oversampling": 2.0,
+            "rescore": true
+          }
+        }
+      }
+    ],
+    "upload_params": { "parallel": 16, "batch_size": 1024 }
+  },
+  {
+    "name": "qdrant-rescore-only",
+    "engine": "qdrant",
+    "connection_params": { "timeout": 30 },
+    "search_params": [
+      {
+        "parallel": 8,
+        "config": {
+          "hnsw_ef": 128,
+          "quantization": {
+            "rescore": true
           }
         }
       }

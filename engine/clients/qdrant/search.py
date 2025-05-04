@@ -8,7 +8,7 @@ from qdrant_client.http import models as rest
 
 from dataset_reader.base_reader import Query
 from engine.base_client.search import BaseSearcher
-from engine.clients.qdrant.config import QDRANT_COLLECTION_NAME
+from engine.clients.qdrant.config import QDRANT_COLLECTION_NAME, QDRANT_API_KEY
 from engine.clients.qdrant.parser import QdrantConditionParser
 
 
@@ -22,8 +22,9 @@ class QdrantSearcher(BaseSearcher):
         os.environ["GRPC_ENABLE_FORK_SUPPORT"] = "true"
         os.environ["GRPC_POLL_STRATEGY"] = "epoll,poll"
         cls.client: QdrantClient = QdrantClient(
-            host,
+            url=host,
             prefer_grpc=True,
+            api_key=QDRANT_API_KEY,
             limits=httpx.Limits(max_connections=None, max_keepalive_connections=0),
             **connection_params,
         )
