@@ -53,20 +53,11 @@
     "connection_params": { "timeout": 30 },
     "search_params": [
       {
-        "parallel": 8,
+        "parallel": 20,
         "config": {
-          "hnsw_ef": 128,
+	  "hnsw_ef": 300,
           "quantization": {
             "rescore": true
-          }
-        },
-        "prefetch": {
-          "limit": 400,
-          "params": {
-            "hnsw_ef": 128,
-            "quantization": {
-              "rescore": false
-            }
           }
         }
       }
