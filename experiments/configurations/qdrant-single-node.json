@@ -55,17 +55,9 @@
       {
         "parallel": 8,
         "config": {
+          "hnsw_ef": 200,
           "quantization": {
             "rescore": true
-          }
-        },
-        "prefetch": {
-          "limit": 400,
-          "params": {
-            "hnsw_ef": 128,
-            "quantization": {
-              "rescore": false
-            }
           }
         }
       }
