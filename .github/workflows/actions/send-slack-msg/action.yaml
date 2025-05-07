@@ -1,0 +1,72 @@
+name: Send Notification
+description: "Send a notification to Slack"
+inputs:
+  bench_name:
+    description: "name of the failed job (i.e runBenchmark)"
+    required: true
+  job_status:
+    description: "status of the job (i.e failed)"
+    required: true
+  failed_outputs:
+    description: "details of the failed job"
+    required: false
+    default: "{}"
+  qdrant_version:
+    description: "version of Qdrant used in the benchmark"
+    required: false
+    default: "unknown"
+  engine_name:
+    description: "name of the engine used in the benchmark"
+    required: false
+    default: "unknown"
+  dataset:
+    description: "name of the dataset used in the benchmark"
+    required: false
+    default: "unknown"
+
+runs:
+  using: "composite"
+  steps:
+    - uses: slackapi/slack-github-action@v1.26.0
+      with:
+        payload: |
+          {
+            "text": "CI benchmarks (${{ inputs.bench_name }}) run status: ${{ inputs.status }}",
+            "blocks": [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "CI benchmarks (${{ inputs.bench_name }}) failed because of *${{ inputs.failed_outputs }}*."
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "Qdrant version: *${{ inputs.qdrant_version }}*."
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "Engine: *${{ inputs.engine_name }}*."
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "Dataset: *${{ inputs.dataset }}*."
+                }
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "View the results <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|here>"
+                }
+              }
+            ]
+          }

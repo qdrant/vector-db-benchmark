@@ -354,5 +354,13 @@
     "type": "tar",
     "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/random_keywords_1m_vocab_10_no_filters.tgz",
     "path": "random-100-match-kw-small-vocab/random_keywords_1m_vocab_10_no_filters"
+  },
+  {
+    "name": "cohere-wiki-50m-test-only",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "tar",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/cohere-wiki-50m-test-only.tgz",
+    "path": "cohere-wiki-50m/cohere_wiki_50m"
   }
 ]

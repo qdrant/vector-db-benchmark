@@ -13,7 +13,7 @@ from qdrant_client.http.models import (
 
 from dataset_reader.base_reader import Record
 from engine.base_client.upload import BaseUploader
-from engine.clients.qdrant.config import QDRANT_COLLECTION_NAME
+from engine.clients.qdrant.config import QDRANT_COLLECTION_NAME, QDRANT_API_KEY
 
 
 class QdrantUploader(BaseUploader):
@@ -24,7 +24,7 @@ class QdrantUploader(BaseUploader):
     def init_client(cls, host, distance, connection_params, upload_params):
         os.environ["GRPC_ENABLE_FORK_SUPPORT"] = "true"
         os.environ["GRPC_POLL_STRATEGY"] = "epoll,poll"
-        cls.client = QdrantClient(host=host, prefer_grpc=True, **connection_params)
+        cls.client = QdrantClient(url=host, prefer_grpc=True, api_key=QDRANT_API_KEY, **connection_params)
         cls.upload_params = upload_params
 
     @classmethod
@@ -58,14 +58,17 @@ class QdrantUploader(BaseUploader):
 
     @classmethod
     def post_upload(cls, _distance):
-        cls.client.update_collection(
-            collection_name=QDRANT_COLLECTION_NAME,
-            optimizer_config=OptimizersConfigDiff(
-                # indexing_threshold=10_000,
-                # Set to a high number to not apply limits, already limited by CPU budget
-                max_optimization_threads=100_000,
-            ),
-        )
+        # If index building is disabled through the collection settings, enable it
+        collection = cls.client.get_collection(collection_name=QDRANT_COLLECTION_NAME)
+        if collection.config.optimizer_config.max_optimization_threads == 0:
+            cls.client.update_collection(
+                collection_name=QDRANT_COLLECTION_NAME,
+                optimizer_config=OptimizersConfigDiff(
+                    # indexing_threshold=10_000,
+                    # Set to a high number to not apply limits, already limited by CPU budget
+                    max_optimization_threads=100_000,
+                ),
+            )
 
         cls.wait_collection_green()
         return {}

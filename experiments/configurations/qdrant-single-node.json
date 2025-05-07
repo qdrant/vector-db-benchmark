@@ -29,7 +29,8 @@
       "optimizers_config": {
         "max_segment_size": 1000000,
         "default_segment_number": 3,
-        "memmap_threshold": 10000000
+        "memmap_threshold": 10000000,
+        "max_optimization_threads": null
       }
     },
     "search_params": [
@@ -38,7 +39,25 @@
         "config": {
           "hnsw_ef": 256,
           "quantization": {
-            "oversampling": 2.0
+            "oversampling": 2.0,
+            "rescore": true
+          }
+        }
+      }
+    ],
+    "upload_params": { "parallel": 16, "batch_size": 1024 }
+  },
+  {
+    "name": "qdrant-rescore-only",
+    "engine": "qdrant",
+    "connection_params": { "timeout": 30 },
+    "search_params": [
+      {
+        "parallel": 20,
+        "config": {
+	  "hnsw_ef": 300,
+          "quantization": {
+            "rescore": true
           }
         }
       }
@@ -63,7 +82,8 @@
       "optimizers_config": {
         "max_segment_size": 1000000,
         "default_segment_number": 3,
-        "memmap_threshold": 10000000
+        "memmap_threshold": 10000000,
+        "max_optimization_threads": null
       }
     },
     "search_params": [
@@ -93,7 +113,8 @@
       "optimizers_config": {
         "max_segment_size": 1000000,
         "default_segment_number": 3,
-        "memmap_threshold": 10000000
+        "memmap_threshold": 10000000,
+        "max_optimization_threads": null
       }
     },
     "search_params": [
@@ -120,7 +141,8 @@
       "optimizers_config": {
         "max_segment_size": 1000000,
         "default_segment_number": 3,
-        "memmap_threshold": 10000000
+        "memmap_threshold": 10000000,
+        "max_optimization_threads": null
       }
     },
     "search_params": [

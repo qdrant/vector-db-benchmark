@@ -17,7 +17,10 @@
     "engine": "qdrant",
     "connection_params": {},
     "collection_params": {
-      "optimizers_config": { "default_segment_number": 17 },
+      "optimizers_config": {
+        "default_segment_number": 17,
+        "max_optimization_threads": null
+      },
       "quantization_config": { "scalar": {"type": "int8", "quantile": 0.99, "always_ram": false} },
       "vectors_config": { "on_disk": true },
       "hnsw_config": { "on_disk": true, "m": 0, "payload_m": 16 },
@@ -36,7 +39,10 @@
     "engine": "qdrant",
     "connection_params": {},
     "collection_params": {
-      "optimizers_config": { "default_segment_number": 17 },
+      "optimizers_config": {
+        "default_segment_number": 17,
+        "max_optimization_threads": null
+      },
       "quantization_config": { "scalar": {"type": "int8", "quantile": 0.99, "always_ram": false} },
       "vectors_config": { "on_disk": true },
       "hnsw_config": { "on_disk": true, "m": 0, "payload_m": 16 },

@@ -4,7 +4,7 @@ from qdrant_client.http import models as rest
 from benchmark.dataset import Dataset
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
-from engine.clients.qdrant.config import QDRANT_COLLECTION_NAME
+from engine.clients.qdrant.config import QDRANT_COLLECTION_NAME, QDRANT_API_KEY
 
 
 class QdrantConfigurator(BaseConfigurator):
@@ -32,7 +32,7 @@ class QdrantConfigurator(BaseConfigurator):
     def __init__(self, host, collection_params: dict, connection_params: dict):
         super().__init__(host, collection_params, connection_params)
 
-        self.client = QdrantClient(host=host, **connection_params)
+        self.client = QdrantClient(url=host, api_key=QDRANT_API_KEY, **connection_params)
 
     def clean(self):
         self.client.delete_collection(collection_name=QDRANT_COLLECTION_NAME)
@@ -69,18 +69,16 @@ class QdrantConfigurator(BaseConfigurator):
         if not set(payload_index_params.keys()).issubset(dataset.config.schema.keys()):
             raise ValueError("payload_index_params are not found in dataset schema")
 
+        optimizers_config = self.collection_params.setdefault("optimizers_config", {})
+        # By default, disable index building while uploading
+        optimizers_config.setdefault("max_optimization_threads", 0)
+
         self.client.recreate_collection(
             collection_name=QDRANT_COLLECTION_NAME,
             **vectors_config,
             **self.collection_params
         )
-        self.client.update_collection(
-            collection_name=QDRANT_COLLECTION_NAME,
-            optimizer_config=rest.OptimizersConfigDiff(
-                # indexing_threshold=10000000,
-                max_optimization_threads=0,
-            ),
-        )
+
         for field_name, field_type in dataset.config.schema.items():
             if field_type in ["keyword", "uuid"]:
                 is_tenant = payload_index_params.get(field_name, {}).get(

@@ -8,10 +8,10 @@ on:
   workflow_dispatch:
     inputs:
         qdrant_version_1:
-            description: "Version of qdrant to benchmark (ghcr/<commit-id>, ghcr/my-branch, docker/v1.5.1, ghcr/dev)"
+            description: "Version of qdrant to benchmark (ghcr/<commit-id>, ghcr/my-branch, docker/v1.5.1, ghcr/dev), version 1"
             default: ghcr/dev
         qdrant_version_2:
-            description: "Version of qdrant to benchmark (ghcr/<commit-id>, ghcr/my-branch, docker/v1.5.1, ghcr/dev)"
+            description: "Version of qdrant to benchmark (ghcr/<commit-id>, ghcr/my-branch, docker/v1.5.1, ghcr/dev), version 2"
             default: docker/master
         dataset:
             description: "Dataset to benchmark"
@@ -19,6 +19,14 @@ on:
         engine_config:
             description: "Engine config to benchmark"
             default: qdrant-continuous-benchmark
+        feature_flags_all_version_1:
+            type: boolean
+            description: "Enable all feature flags (false by default), version 1"
+            default: false
+        feature_flags_all_version_2:
+            type: boolean
+            description: "Enable all feature flags (false by default), version 2"
+            default: false
 
 jobs:
   prepareImage1:
@@ -69,6 +77,8 @@ jobs:
       rss_anon_memory_usage: ${{ steps.bench.outputs.rss_anon_memory_usage }}
       upload_time: ${{ steps.bench.outputs.upload_time }}
       indexing_time: ${{ steps.bench.outputs.indexing_time }}
+      cpu: ${{ steps.bench.outputs.cpu }}
+      cpu_telemetry: ${{ steps.bench.outputs.cpu_telemetry }}
     steps:
       - uses: actions/checkout@v3
       - uses: webfactory/ssh-agent@v0.8.0
@@ -84,6 +94,7 @@ jobs:
           export DATASETS=${{ inputs.dataset }}
           export ENGINE_NAME=${{ inputs.engine_config }}
           export POSTGRES_TABLE=benchmark_manual
+          export QDRANT__FEATURE_FLAGS__ALL=${{ inputs.feature_flags_all_version_1 }}
           bash -x tools/setup_ci.sh
           bash -x tools/run_ci.sh
 
@@ -105,6 +116,8 @@ jobs:
       rss_anon_memory_usage: ${{ steps.bench.outputs.rss_anon_memory_usage }}
       upload_time: ${{ steps.bench.outputs.upload_time }}
       indexing_time: ${{ steps.bench.outputs.indexing_time }}
+      cpu: ${{ steps.bench.outputs.cpu }}
+      cpu_telemetry: ${{ steps.bench.outputs.cpu_telemetry }}
     steps:
       - uses: actions/checkout@v3
       - uses: webfactory/ssh-agent@v0.8.0
@@ -120,6 +133,7 @@ jobs:
           export DATASETS=${{ inputs.dataset }}
           export ENGINE_NAME=${{ inputs.engine_config }}
           export POSTGRES_TABLE=benchmark_manual
+          export QDRANT__FEATURE_FLAGS__ALL=${{ inputs.feature_flags_all_version_2 }}
           bash -x tools/setup_ci.sh
           bash -x tools/run_ci.sh
 
@@ -157,6 +171,8 @@ jobs:
           res_p99_time=$(compare "p99_time" "${{ needs.runBenchmarkForVersion1.outputs.p99_time }}" "${{ needs.runBenchmarkForVersion2.outputs.p99_time }}")
           res_vm_rss_memory_usage=$(compare "vm_rss_memory_usage" "${{ needs.runBenchmarkForVersion1.outputs.vm_rss_memory_usage }}" "${{ needs.runBenchmarkForVersion2.outputs.vm_rss_memory_usage }}")
           res_rss_anon_memory_usage=$(compare "rss_anon_memory_usage" "${{ needs.runBenchmarkForVersion1.outputs.rss_anon_memory_usage }}" "${{ needs.runBenchmarkForVersion2.outputs.rss_anon_memory_usage }}")
+          res_cpu_usage=$(compare "cpu_usage" "${{ needs.runBenchmarkForVersion1.outputs.cpu }}" "${{ needs.runBenchmarkForVersion2.outputs.cpu }}")
+          res_cpu_telemetry=$(compare "cpu_telemetry" "${{ needs.runBenchmarkForVersion1.outputs.cpu_telemetry }}" "${{ needs.runBenchmarkForVersion2.outputs.cpu_telemetry }}")
           res_upload_time=$(compare "upload_time" "${{ needs.runBenchmarkForVersion1.outputs.upload_time }}" "${{ needs.runBenchmarkForVersion2.outputs.upload_time }}")
           res_indexing_time=$(compare "indexing_time" "${{ needs.runBenchmarkForVersion1.outputs.indexing_time }}" "${{ needs.runBenchmarkForVersion2.outputs.indexing_time }}")
 
@@ -169,6 +185,8 @@ jobs:
           echo "| p95_time              | ${{ needs.runBenchmarkForVersion1.outputs.p95_time }} | ${{ needs.runBenchmarkForVersion2.outputs.p95_time }} | ${res_p95_time} |" >> $GITHUB_STEP_SUMMARY
           echo "| p99_time              | ${{ needs.runBenchmarkForVersion1.outputs.p99_time }} | ${{ needs.runBenchmarkForVersion2.outputs.p99_time }} | ${res_p99_time} |" >> $GITHUB_STEP_SUMMARY
           echo "| vm_rss_memory_usage   | ${{ needs.runBenchmarkForVersion1.outputs.vm_rss_memory_usage }} | ${{ needs.runBenchmarkForVersion2.outputs.vm_rss_memory_usage }} | ${res_vm_rss_memory_usage} |" >> $GITHUB_STEP_SUMMARY
-          echo "| rss_anon_memory_usage  | ${{ needs.runBenchmarkForVersion1.outputs.rss_anon_memory_usage }} | ${{ needs.runBenchmarkForVersion2.outputs.rss_anon_memory_usage }} | ${res_rss_anon_memory_usage} |" >> $GITHUB_STEP_SUMMARY
+          echo "| rss_anon_memory_usage | ${{ needs.runBenchmarkForVersion1.outputs.rss_anon_memory_usage }} | ${{ needs.runBenchmarkForVersion2.outputs.rss_anon_memory_usage }} | ${res_rss_anon_memory_usage} |" >> $GITHUB_STEP_SUMMARY
+          echo "| cpu                   | ${{ needs.runBenchmarkForVersion1.outputs.cpu }} | ${{ needs.runBenchmarkForVersion2.outputs.cpu }} | ${res_cpu_usage} |" >> $GITHUB_STEP_SUMMARY
+          echo "| cpu_telemetry         | ${{ needs.runBenchmarkForVersion1.outputs.cpu_telemetry }} | ${{ needs.runBenchmarkForVersion2.outputs.cpu_telemetry }} | ${res_cpu_telemetry} |" >> $GITHUB_STEP_SUMMARY
           echo "| upload_time           | ${{ needs.runBenchmarkForVersion1.outputs.upload_time }} | ${{ needs.runBenchmarkForVersion2.outputs.upload_time }} | ${res_upload_time} |" >> $GITHUB_STEP_SUMMARY
           echo "| indexing_time         | ${{ needs.runBenchmarkForVersion1.outputs.indexing_time }} | ${{ needs.runBenchmarkForVersion2.outputs.indexing_time }} | ${res_indexing_time} |" >> $GITHUB_STEP_SUMMARY
