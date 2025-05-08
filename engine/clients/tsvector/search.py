@@ -17,7 +17,7 @@ CONNECTION_SETTINGS = [
 ]
 
 
-class PgVectorSearcher(BaseSearcher):
+class TsVectorSearcher(BaseSearcher):
     conn = None
     cur = None
     distance = None

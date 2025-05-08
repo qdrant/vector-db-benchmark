@@ -1,9 +1,9 @@
-from engine.clients.pgvector.configure import PgVectorConfigurator
-from engine.clients.pgvector.search import PgVectorSearcher
-from engine.clients.pgvector.upload import PgVectorUploader
+from engine.clients.tsvector.configure import TsVectorConfigurator
+from engine.clients.tsvector.search import TsVectorSearcher
+from engine.clients.tsvector.upload import TsVectorUploader
 
 __all__ = [
-    "PgVectorConfigurator",
-    "PgVectorSearcher",
-    "PgVectorUploader",
+    "TsVectorConfigurator",
+    "TsVectorSearcher",
+    "TsVectorUploader",
 ]
