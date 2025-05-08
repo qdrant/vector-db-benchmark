@@ -2,13 +2,12 @@ import os
 from typing import List, Tuple
 
 import httpx
-from qdrant_client import QdrantClient
+from qdrant_client import QdrantClient, models
 from qdrant_client._pydantic_compat import construct
-from qdrant_client import models
 
 from dataset_reader.base_reader import Query
 from engine.base_client.search import BaseSearcher
-from engine.clients.qdrant.config import QDRANT_COLLECTION_NAME, QDRANT_API_KEY
+from engine.clients.qdrant.config import QDRANT_API_KEY, QDRANT_COLLECTION_NAME
 from engine.clients.qdrant.parser import QdrantConditionParser
 
 
@@ -48,7 +47,6 @@ class QdrantSearcher(BaseSearcher):
                 values=query.sparse_vector.values,
             )
 
-
         prefetch = cls.search_params.get("prefetch")
 
         if prefetch:
@@ -65,7 +63,9 @@ class QdrantSearcher(BaseSearcher):
                 query=query_vector,
                 query_filter=cls.parser.parse(query.meta_conditions),
                 limit=top,
-                search_params=models.SearchParams(**cls.search_params.get("config", {})),
+                search_params=models.SearchParams(
+                    **cls.search_params.get("config", {})
+                ),
                 with_payload=cls.search_params.get("with_payload", False),
             )
         except Exception as ex:
