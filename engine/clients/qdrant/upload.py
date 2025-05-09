@@ -13,7 +13,7 @@ from qdrant_client.http.models import (
 
 from dataset_reader.base_reader import Record
 from engine.base_client.upload import BaseUploader
-from engine.clients.qdrant.config import QDRANT_COLLECTION_NAME, QDRANT_API_KEY
+from engine.clients.qdrant.config import QDRANT_API_KEY, QDRANT_COLLECTION_NAME
 
 
 class QdrantUploader(BaseUploader):
@@ -24,7 +24,9 @@ class QdrantUploader(BaseUploader):
     def init_client(cls, host, distance, connection_params, upload_params):
         os.environ["GRPC_ENABLE_FORK_SUPPORT"] = "true"
         os.environ["GRPC_POLL_STRATEGY"] = "epoll,poll"
-        cls.client = QdrantClient(url=host, prefer_grpc=True, api_key=QDRANT_API_KEY, **connection_params)
+        cls.client = QdrantClient(
+            url=host, prefer_grpc=True, api_key=QDRANT_API_KEY, **connection_params
+        )
         cls.upload_params = upload_params
 
     @classmethod
