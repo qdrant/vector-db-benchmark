@@ -6,7 +6,7 @@ from pgvector.psycopg import register_vector
 from dataset_reader.base_reader import Record
 from engine.base_client.distances import Distance
 from engine.base_client.upload import BaseUploader
-from engine.clients.pgvector.config import get_db_config
+from engine.clients.tsvector.config import get_db_config
 
 
 class TsVectorUploader(BaseUploader):

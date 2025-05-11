@@ -6,8 +6,8 @@ from pgvector.psycopg import register_vector
 
 from dataset_reader.base_reader import Query
 from engine.base_client.search import BaseSearcher
-from engine.clients.pgvector.config import get_db_config
-from engine.clients.pgvector.parser import PgVectorConditionParser
+from engine.clients.tsvector.config import get_db_config
+from engine.clients.tsvector.parser import TsVectorConditionParser
 
 CONNECTION_SETTINGS = [
     "set work_mem = '2GB';",
@@ -22,7 +22,7 @@ class TsVectorSearcher(BaseSearcher):
     cur = None
     distance = None
     search_params = {}
-    parser = PgVectorConditionParser()
+    parser = TsVectorConditionParser()
 
     @classmethod
     def init_client(cls, host, distance, connection_params: dict, search_params: dict):
