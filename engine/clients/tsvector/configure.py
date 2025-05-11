@@ -11,9 +11,10 @@ class TsVectorConfigurator(BaseConfigurator):
         super().__init__(host, collection_params, connection_params)
         self.conn = psycopg.connect(**get_db_config(host, connection_params))
         print("configure connection created")
-        self.conn.execute("create extension if not exists timescaledb")
+        self.conn.execute("CREATE EXTENSION IF NOT EXISTS pg_prewarm;")
+        self.conn.execute("create extension if not exists timescaledb;")
         self.conn.execute("CREATE EXTENSION IF NOT EXISTS vector;")
-        self.conn.execute("create extension if not exists vectorscale cascade")
+        self.conn.execute("create extension if not exists vectorscale cascade;")
         pgvector.psycopg.register_vector(self.conn)
 
     def clean(self):
