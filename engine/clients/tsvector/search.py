@@ -33,16 +33,16 @@ class TsVectorSearcher(BaseSearcher):
 
         cls.cur.execute(
             "set diskann.query_search_list_size = %d"
-            % connection_params["query_search_list_size"]
+            % search_params["query_search_list_size"]
         )
         print(
             "set diskann.query_search_list_size = %d"
-            % connection_params["query_search_list_size"]
+            % search_params["query_search_list_size"]
         )
         cls.cur.execute(
-            "set diskann.query_rescore = %d" % connection_params["query_rescore"]
+            "set diskann.query_rescore = %d" % search_params["query_rescore"]
         )
-        print("set diskann.query_rescore = %d" % connection_params["query_rescore"])
+        print("set diskann.query_rescore = %d" % search_params["query_rescore"])
 
         for setting in CONNECTION_SETTINGS:
             cls.cur.execute(setting)
