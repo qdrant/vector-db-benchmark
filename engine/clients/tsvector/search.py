@@ -5,6 +5,7 @@ import psycopg
 from pgvector.psycopg import register_vector
 
 from dataset_reader.base_reader import Query
+from engine.base_client.distances import Distance
 from engine.base_client.search import BaseSearcher
 from engine.clients.tsvector.config import get_db_config
 from engine.clients.tsvector.parser import TsVectorConditionParser
@@ -30,6 +31,13 @@ class TsVectorSearcher(BaseSearcher):
         cls.conn = psycopg.connect(**get_db_config(host, connection_params))
         register_vector(cls.conn)
         cls.cur = cls.conn.cursor()
+
+        if distance == Distance.COSINE:
+            cls.query = "SELECT id, embedding <=> %s AS _score FROM items ORDER BY _score LIMIT %s"
+        elif distance == Distance.L2:
+            cls.query = "SELECT id, embedding <-> %s AS _score FROM items ORDER BY _score LIMIT %s"
+        else:
+            raise NotImplementedError(f"Unsupported distance metric {cls.distance}")
 
         cls.cur.execute(
             "set diskann.query_search_list_size = %d"
