@@ -25,7 +25,11 @@ from engine.clients.pgvector import (
 )
 from engine.clients.qdrant import QdrantConfigurator, QdrantSearcher, QdrantUploader
 from engine.clients.redis import RedisConfigurator, RedisSearcher, RedisUploader
-from engine.clients.tsvector import TsVectorConfigurator, TsVectorUploader, TsVectorSearcher
+from engine.clients.tsvector import (
+    TsVectorConfigurator,
+    TsVectorSearcher,
+    TsVectorUploader,
+)
 from engine.clients.weaviate import (
     WeaviateConfigurator,
     WeaviateSearcher,
