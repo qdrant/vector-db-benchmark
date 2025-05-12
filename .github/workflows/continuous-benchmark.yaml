@@ -123,7 +123,7 @@ jobs:
         uses: ./.github/workflows/actions/send-slack-msg
         if: failure() || cancelled()
         with:
-          source_name: "runTenantsBenchmark"
+          bench_name: "runTenantsBenchmark"
           job_status: ${{ job.status }}
           failed_outputs: ${{ steps.benches.outputs.failed }}
           qdrant_version: ${{ steps.benches.outputs.qdrant_version }}
@@ -179,7 +179,7 @@ jobs:
         uses: ./.github/workflows/actions/send-slack-msg
         if: failure() || cancelled()
         with:
-          source_name: "runParallelBenchmark"
+          bench_name: "runParallelBenchmark"
           job_status: ${{ job.status }}
           failed_outputs: ${{ steps.benches.outputs.failed }}
           qdrant_version: ${{ steps.benches.outputs.qdrant_version }}
