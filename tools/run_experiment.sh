@@ -48,10 +48,10 @@ fi
 echo "Ensure datasets volume exists and contains latest datasets.json"
 docker volume create ci-datasets
 if [[ -f "$HOME/datasets.json" ]]; then
-  echo "Found datasets.json, update the volume"
+  echo "Found datasets.json, move it into the volume"
   mv ~/datasets.json "$(docker volume inspect ci-datasets -f '{{ .Mountpoint }}')"
 else
-  echo "datasets.json is missing, do not update the volume"
+  echo "datasets.json is missing, skip moving it into the volume"
 fi
 
 if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "upload" ]]; then
@@ -121,10 +121,11 @@ fi
 
 if [[ "$EXPERIMENT_MODE" == "snapshot" ]]; then
   echo "EXPERIMENT_MODE=$EXPERIMENT_MODE"
-
+  echo "Recovering collection from snapshot"
   curl  -X PUT \
     "http://${PRIVATE_IP_OF_THE_SERVER}:6333/collections/benchmark/snapshots/recover" \
     --data-raw "{\"location\": \"${SNAPSHOT_URL}\"}"
+  echo "Done recovering collection from snapshot"
 
   collection_url="http://${PRIVATE_IP_OF_THE_SERVER}:6333/collections/benchmark"
   collection_status=$(curl -s "$collection_url" | jq -r '.result.status')

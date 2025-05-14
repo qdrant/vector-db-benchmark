@@ -27,6 +27,7 @@ PRIVATE_IP_OF_THE_SERVER=$(bash "${SCRIPT_PATH}/${CLOUD_NAME}/get_private_ip.sh"
 
 if [[ "$EXPERIMENT_MODE" == "snapshot" ]]; then
   scp "${SCRIPT_PATH}/run_experiment.sh" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/run_experiment_snapshot.sh"
+  scp "${SCRIPT_PATH}/../datasets/datasets.json" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/datasets.json"
 
   RUN_EXPERIMENT="ENGINE_NAME=${ENGINE_NAME} \
   DATASETS=${DATASETS} \
