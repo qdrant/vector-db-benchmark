@@ -7,7 +7,6 @@ services:
     environment:
       - QDRANT_NUM_CPUS=4
       - QDRANT__FEATURE_FLAGS__ALL=${QDRANT__FEATURE_FLAGS__ALL:-true}
-      - QDRANT__LOG_LEVEL=DEBUG
     ports:
       - "6333:6333"
       - "6334:6334"
