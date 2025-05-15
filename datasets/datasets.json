@@ -362,5 +362,13 @@
     "type": "tar",
     "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/cohere-wiki-50m-test-only.tgz",
     "path": "cohere-wiki-50m/cohere_wiki_50m"
+  },
+  {
+    "name": "cohere-wiki-10m-test-only",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "tar",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/cohere-wiki-10m-test-only.tgz",
+    "path": "cohere-wiki-10m/cohere_wiki_10m"
   }
 ]
