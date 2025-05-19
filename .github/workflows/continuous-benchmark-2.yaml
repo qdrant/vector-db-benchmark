@@ -3,6 +3,11 @@ name: Continuous Benchmark 2
 on:
   repository_dispatch:
   workflow_dispatch:
+    inputs:
+      feature_flags_all:
+          type: boolean
+          description: "Enable all feature flags (true by default)"
+          default: true
   schedule:
     # Run every day at midnight
     - cron: "0 0 * * *"
@@ -29,6 +34,7 @@ jobs:
             export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
             export SERVER_NAME="benchmark-server-3"
+            export QDRANT__FEATURE_FLAGS__ALL=${{ inputs.feature_flags_all }}
             bash -x tools/setup_ci.sh
 
             set +e
