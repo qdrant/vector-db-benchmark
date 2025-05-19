@@ -55,9 +55,45 @@
       {
         "parallel": 20,
         "config": {
-	  "hnsw_ef": 300,
           "quantization": {
             "rescore": true
+          }
+        },
+        "prefetch": {
+          "limit": 500,
+          "params": {
+            "hnsw_ef": 768,
+            "quantization": {
+              "rescore": false
+            }
+          }
+        }
+      }
+    ],
+    "upload_params": { "parallel": 16, "batch_size": 1024 }
+  },
+  {
+    "name": "qdrant-rescore-only-bq",
+    "engine": "qdrant",
+    "connection_params": { "timeout": 30 },
+    "collection_params": {
+      "quantization_config": { "binary": {"always_ram": true} }
+    },
+    "search_params": [
+      {
+        "parallel": 20,
+        "config": {
+          "quantization": {
+            "rescore": true
+          }
+        },
+        "prefetch": {
+          "limit": 500,
+          "params": {
+            "hnsw_ef": 768,
+            "quantization": {
+              "rescore": false
+            }
           }
         }
       }
