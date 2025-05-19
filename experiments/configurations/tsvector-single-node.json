@@ -5,7 +5,7 @@
         "connection_params": {},
         "collection_params": {},
         "search_params": [
-          { "parallel": 8, "config": { "hnsw_ef": 128 }, "query_search_list_size":  75, "query_rescore":  400 }
+          { "parallel": 20, "config": { "hnsw_ef": 128 }, "query_search_list_size":  75, "query_rescore":  400 }
         ],
         "upload_params": { "parallel": 16, "batch_size": 1024, "hnsw_config": { "m": 16, "ef_construct": 128 } }
     }
