@@ -87,7 +87,8 @@ class TsVectorSearcher(BaseSearcher):
         cls.cur.execute(
             cls.query, (np.array(query.vector), top), binary=True, prepare=True
         )
-        return cls.cur.fetchall()
+        res = cls.cur.fetchall()
+        return [(hit[0], float(hit[1])) for hit in res]
 
     @classmethod
     def delete_client(cls):
