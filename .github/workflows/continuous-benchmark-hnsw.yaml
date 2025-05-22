@@ -1,6 +1,9 @@
 name: Continuous Benchmark Hnsw Indexing
 
 on:
+  push:
+    branches:
+      - add-ansible
   workflow_dispatch:
     inputs:
       feature_flags_all:
