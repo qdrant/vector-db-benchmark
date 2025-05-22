@@ -13,16 +13,13 @@ This script will:
 
 import json
 import os
-
-import numpy as np
 import random
 import time
-import requests
 from pathlib import Path
+
+import numpy as np
 import tqdm
-
 from qdrant_client import QdrantClient, models
-
 
 QDRANT_COLLECTION_NAME = "Benchmark"
 
@@ -44,18 +41,18 @@ BATCH_SIZE = 500
 
 def read_test_data(file: Path, limit: int = 1000):
     """
-        {
-            "query": [
-                0.022043373435735703,
-                -0.022230295464396477,
-                ....
-            ],
-            "closest_ids": [
-                43749,
-                43756,
-                ....
-            ]
-        }
+    {
+        "query": [
+            0.022043373435735703,
+            -0.022230295464396477,
+            ....
+        ],
+        "closest_ids": [
+            43749,
+            43756,
+            ....
+        ]
+    }
     """
     with open(file, "r") as f:
         for idx, line in enumerate(f):
@@ -83,8 +80,8 @@ class QdrantBenchmark:
             optimizers_config=models.OptimizersConfigDiff(
                 deleted_threshold=0.001,
                 vacuum_min_vector_number=100,
-                default_segment_number=1
-            )
+                default_segment_number=1,
+            ),
         )
 
     def initial_upload(self, vectors: np.ndarray):
@@ -95,7 +92,9 @@ class QdrantBenchmark:
         )
 
     def upload_points(self, vectors: np.ndarray, ids: list[int]):
-        points =[models.PointStruct(id=idx, vector=vectors[idx].tolist()) for idx in ids]
+        points = [
+            models.PointStruct(id=idx, vector=vectors[idx].tolist()) for idx in ids
+        ]
 
         self.client.upsert(
             collection_name=QDRANT_COLLECTION_NAME,
@@ -154,11 +153,12 @@ def main():
     vectors_1 = np.load(VECTORS_FILE_1)
     vectors_2 = np.load(VECTORS_FILE_2)
 
-
     benchmark = QdrantBenchmark("http://localhost:6333")
     benchmark.initial_upload(vectors_1)
 
-    print("Initial precision dataset1: ", benchmark.validate_test_data(TEST_DATA_FILE_1))
+    print(
+        "Initial precision dataset1: ", benchmark.validate_test_data(TEST_DATA_FILE_1)
+    )
 
     points_to_migrate = list(range(TOTAL_VECTORS))
 
@@ -166,7 +166,7 @@ def main():
 
     total_indexing_time = 0
     for i in tqdm.tqdm(range(0, len(points_to_migrate), BATCH_SIZE), desc="Iterating"):
-        batch = points_to_migrate[i:i+BATCH_SIZE]
+        batch = points_to_migrate[i : i + BATCH_SIZE]
 
         benchmark.delete_points(set(batch))
 

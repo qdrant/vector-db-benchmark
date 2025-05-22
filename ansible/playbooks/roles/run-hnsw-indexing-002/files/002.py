@@ -17,15 +17,13 @@ This script will:
 
 import json
 import os
-
-import numpy as np
 import random
 import time
 from pathlib import Path
+
+import numpy as np
 import tqdm
-
 from qdrant_client import QdrantClient, models
-
 
 QDRANT_COLLECTION_NAME = "benchmark"
 DATASET_DIM = int(os.getenv("DATASET_DIM", 1536))
@@ -41,18 +39,18 @@ TOTAL_VECTORS = 100_000
 
 def read_test_data(limit: int = 1000):
     """
-        {
-            "query": [
-                0.022043373435735703,
-                -0.022230295464396477,
-                ....
-            ],
-            "closest_ids": [
-                43749,
-                43756,
-                ....
-            ]
-        }
+    {
+        "query": [
+            0.022043373435735703,
+            -0.022230295464396477,
+            ....
+        ],
+        "closest_ids": [
+            43749,
+            43756,
+            ....
+        ]
+    }
     """
     with open(TEST_DATA_FILE, "r") as f:
         for idx, line in enumerate(f):
@@ -78,9 +76,8 @@ class QdrantBenchmark:
                 distance=models.Distance.COSINE,
             ),
             optimizers_config=models.OptimizersConfigDiff(
-                deleted_threshold=0.001,
-                vacuum_min_vector_number=100
-            )
+                deleted_threshold=0.001, vacuum_min_vector_number=100
+            ),
         )
 
     def initial_upload(self, vectors: np.ndarray):
@@ -91,7 +88,9 @@ class QdrantBenchmark:
         )
 
     def upload_points(self, vectors: np.ndarray, ids: list[int]):
-        points =[models.PointStruct(id=idx, vector=vectors[idx].tolist()) for idx in ids]
+        points = [
+            models.PointStruct(id=idx, vector=vectors[idx].tolist()) for idx in ids
+        ]
 
         self.client.upsert(
             collection_name=QDRANT_COLLECTION_NAME,
