@@ -1,0 +1,86 @@
+---
+- name: Run load
+  hosts: remote_machines
+  become: yes
+  tasks:
+    - name: Load common variables
+      include_vars: "group_vars/hnsw-indexing-{{ bench | default('002') }}.yml"
+
+    - name: Ensure necessary packages are installed
+      ansible.builtin.package:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - wget
+        - python3-venv
+
+    - name: Ensure Docker is installed
+      ansible.builtin.command: docker --version
+      register: docker_check
+      failed_when: docker_check.rc not in [0, 127]
+
+    - name: Execute benchmark
+      include_role:
+        name: "run-hnsw-indexing-{{ bench | default('002') }}"
+      loop: "{{ servers }}"
+      loop_control:
+        loop_var: "server"
+      vars:
+        server_name: "{{ server.name }}"
+        server_version: "{{ server.version }}"
+        server_image: "{{ server.image }}"
+        bench: "{{ bench | default('002') }}"
+
+    - name: "Compare results on the remote machine"
+      ansible.builtin.shell: |
+        python3 "${WORK_DIR}/get_score.py"
+      environment:
+        WORK_DIR: "{{ working_dir }}"
+        DATA_DIR: "{{ working_dir }}"
+        BENCH: "{{ bench }}"
+        SERVER_NAME: "{{ servers[0].name }}"
+        SERVER_NAME_2: "{{ servers[1].name }}"
+        SERVER_VERSION: "{{ servers[0].version }}"
+        SERVER_VERSION_2: "{{ servers[1].version }}"
+      register: "score_result"
+
+    - name: Extract precision_score and set fact
+      set_fact:
+        precision_score: "{{ score_result.stdout }}"
+
+- name: Export data into postgres
+  hosts: db_hosts
+  tasks:
+    - name: Load common variables
+      include_vars: "group_vars/hnsw-indexing-{{ bench | default('002') }}.yml"
+
+    - name: Insert data into table
+      ansible.builtin.shell: |
+        result="{{ hostvars['benchmark-machine']['precision_score'] }}"
+        engine="{{ server.name }}-{{ server.version }}"
+        score=$(echo "$result" | grep -oP "${engine}_score=\K[^,]+")
+        indexing_time_s=$(echo "$result" | grep -oP "${engine}_indexing_time=\K[^,]+")
+        
+        MEASURE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        
+        pg_query="INSERT INTO hnsw_indexing (
+            engine, 
+            engine_version, 
+            dataset, 
+            measure_timestamp, 
+            bench_name, 
+            precision_score,
+            indexing_time_s
+        ) VALUES (
+            '{{ server.name }}', 
+            '{{ server.version }}', 
+            '{{ dataset_name }}', 
+            '${MEASURE_TIMESTAMP}', 
+            '{{ bench }}', 
+            '${score}',
+            '${indexing_time_s}'
+        );"
+        docker exec -it qdrant-postgres psql -U qdrant -d postgres -c "${pg_query}"
+      loop: "{{ servers }}"
+      loop_control:
+        loop_var: "server"

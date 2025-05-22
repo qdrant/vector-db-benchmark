@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  qdrant:
+    image: ${SERVER_IMAGE:-qdrant/qdrant}:${SERVER_VERSION:-"dev"}
+    container_name: qdrant-continuous
+    expose:
+      - 6333
+      - 6334
+    ports:
+      - '6333:6333'
+      - '6334:6334'
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    environment:
+      - QDRANT__LOG_LEVEL=DEBUG
+      - QDRANT__FEATURE_FLAGS__ALL=${QDRANT__FEATURE_FLAGS__ALL:-true}
+
+volumes:
+  qdrant_storage:
+    name: "qdrant_storage"

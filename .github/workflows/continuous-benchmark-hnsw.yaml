@@ -1,0 +1,52 @@
+name: Continuous Benchmark Hnsw Indexing
+
+on:
+  push:
+    branches:
+      - add-ansible
+  workflow_dispatch:
+    inputs:
+      feature_flags_all:
+          type: boolean
+          description: "Enable all feature flags (true by default)"
+          default: true
+  schedule:
+    # Run every day at 2am
+    - cron: "0 2 * * *"
+
+# Restrict to only running this workflow one at a time.
+# Any new runs will be queued until the previous run is complete.
+# Any existing pending runs will be cancelled and replaced with current run.
+concurrency:
+  group: continuous-benchmark
+
+jobs:
+  runHnswIndexingHealingBenchmark:
+    runs-on: ubuntu-latest
+    container: alpine/ansible:2.18.1
+    steps:
+      - uses: actions/checkout@v3
+      - uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Run hnsw-indexing-002
+        id: hnsw-indexing-002
+        run: |
+            export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
+            export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+            export SERVER_NAME="benchmark-server-3"
+            export QDRANT__FEATURE_FLAGS__ALL=${{ inputs.feature_flags_all }}
+            bash -x tools/setup_ci.sh
+          
+            IP_OF_THE_SERVER=$(bash "tools/hetzner/get_public_ip.sh" "$SERVER_NAME")
+          
+            # Create ansible inventory.ini file
+            cat <<EOL > ansible/playbooks/inventory.ini
+            [remote_machines]
+            benchmark-machine ansible_host=${IP_OF_THE_SERVER} ansible_user=root
+            [db_hosts]
+            benchmark-db ansible_host=${POSTGRES_HOST} ansible_user=root
+            EOL
+
+            cd ansible/playbooks && ansible-playbook playbook-hnsw-index.yml --extra-vars "bench=002"
