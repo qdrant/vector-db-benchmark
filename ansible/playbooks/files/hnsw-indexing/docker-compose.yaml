@@ -1,0 +1,20 @@
+version: '3.7'
+
+services:
+  qdrant_bench:
+    image: ${CONTAINER_REGISTRY:-docker.io}/qdrant/qdrant:${QDRANT_VERSION}
+    container_name: qdrant-continuous
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    logging:
+      driver: "json-file"
+      options:
+        max-file: 1
+        max-size: 10m
+    deploy:
+      resources:
+        limits:
+          memory: 25Gb
+    environment:
+      - QDRANT__FEATURE_FLAGS__ALL=${QDRANT__FEATURE_FLAGS__ALL:-false}
