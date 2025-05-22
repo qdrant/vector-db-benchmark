@@ -16,10 +16,11 @@
 - name: Start Docker container on the remote machine
   ansible.builtin.shell: |
     docker stop qdrant-continuous || true
-    docker-compose down || true
+    docker rm qdrant-continuous || true
+    docker compose down || true
     docker volume rm qdrant_storage || true
     docker image rm "{{ server_image }}:{{ server_version }}" || true
-    docker-compose up -d
+    docker compose up -d
   args:
     chdir: "{{ working_dir }}"
   environment:
