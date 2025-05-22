@@ -28,7 +28,7 @@
       vars:
         server_name: "{{ server.name }}"
         server_version: "{{ server.version }}"
-        server_image: "{{ server.image }}"
+        server_registry: "{{ server.registry }}"
         bench: "{{ bench | default('002') }}"
 
     - name: "Compare results on the remote machine"
