@@ -1,9 +1,6 @@
 name: Continuous Benchmark Hnsw Indexing
 
 on:
-  push:
-    branches:
-      - add-ansible
   workflow_dispatch:
     inputs:
       feature_flags_all:
@@ -68,7 +65,26 @@ jobs:
       - uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-      - name: Run hnsw-indexing-002
+      - name: Run bench
         id: hnsw-indexing-002
         run: |
             cd ansible/playbooks && ansible-playbook playbook-hnsw-index.yml --extra-vars "bench=002"
+
+  runHnswIndexingHealingBenchmark-2:
+    runs-on: ubuntu-latest
+    container: alpine/ansible:2.18.1
+    needs: runHnswIndexingHealingBenchmark
+    steps:
+      - uses: actions/checkout@v3
+      - name: Download inventory.ini
+        uses: actions/download-artifact@v4
+        with:
+          name: inventory
+          path: ansible/playbooks
+      - uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Run bench
+        id: hnsw-indexing-003
+        run: |
+            cd ansible/playbooks && ansible-playbook playbook-hnsw-index.yml --extra-vars "bench=003"          
