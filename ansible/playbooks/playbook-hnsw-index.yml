@@ -60,23 +60,23 @@
         engine="{{ server.name }}-{{ server.version }}"
         score=$(echo "$result" | grep -oP "${engine}_score=\K[^,]+")
         indexing_time_s=$(echo "$result" | grep -oP "${engine}_indexing_time=\K[^,]+")
-        
+
         MEASURE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-        
+
         pg_query="INSERT INTO hnsw_indexing (
-            engine, 
-            engine_version, 
-            dataset, 
-            measure_timestamp, 
-            bench_name, 
+            engine,
+            engine_version,
+            dataset,
+            measure_timestamp,
+            bench_name,
             precision_score,
             indexing_time_s
         ) VALUES (
-            '{{ server.name }}', 
-            '{{ server.version }}', 
-            '{{ dataset_name }}', 
-            '${MEASURE_TIMESTAMP}', 
-            '{{ bench }}', 
+            '{{ server.name }}',
+            '{{ server.version }}',
+            '{{ dataset_name }}',
+            '${MEASURE_TIMESTAMP}',
+            '{{ bench }}',
             '${score}',
             '${indexing_time_s}'
         );"

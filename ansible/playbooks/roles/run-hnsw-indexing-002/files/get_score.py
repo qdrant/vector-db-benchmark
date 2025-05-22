@@ -1,7 +1,6 @@
 import os.path
 import re
 
-
 SERVER_NAME = os.getenv("SERVER_NAME", "qdrant")
 SERVER_NAME_2 = os.getenv("SERVER_NAME_2", "qdrant")
 SERVER_VERSION = os.getenv("SERVER_VERSION", "dev")
@@ -10,8 +9,12 @@ BENCH = os.getenv("BENCH", "002")
 DATA_DIR = os.getenv("DATA_DIR", "data")
 
 filepaths = {
-    f"{SERVER_NAME}-{SERVER_VERSION}": os.path.join(DATA_DIR, f"output-{SERVER_NAME}-{SERVER_VERSION}-{BENCH}.txt"),
-    f"{SERVER_NAME_2}-{SERVER_VERSION_2}": os.path.join(DATA_DIR, f"output-{SERVER_NAME_2}-{SERVER_VERSION_2}-{BENCH}.txt")
+    f"{SERVER_NAME}-{SERVER_VERSION}": os.path.join(
+        DATA_DIR, f"output-{SERVER_NAME}-{SERVER_VERSION}-{BENCH}.txt"
+    ),
+    f"{SERVER_NAME_2}-{SERVER_VERSION_2}": os.path.join(
+        DATA_DIR, f"output-{SERVER_NAME_2}-{SERVER_VERSION_2}-{BENCH}.txt"
+    ),
 }
 
 
@@ -28,14 +31,13 @@ def main():
             text = file.read()
 
         after_deletion = float(after_del_re.search(text).group(1))
-        iterations = [(int(m.group(1)), float(m.group(2))) for m in iteration_re.finditer(text)]
+        iterations = [
+            (int(m.group(1)), float(m.group(2))) for m in iteration_re.finditer(text)
+        ]
         indexing_time = float(indexing_re.search(text).group(1))
 
         score = round(after_deletion / iterations[-1][1], 4)
-        results[label] = {
-            "score": score,
-            "indexing_time": indexing_time
-        }
+        results[label] = {"score": score, "indexing_time": indexing_time}
 
     result = ""
     for label, data in results.items():
