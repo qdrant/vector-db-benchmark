@@ -38,7 +38,7 @@ jobs:
           IP_OF_THE_SERVER=$(bash "tools/hetzner/get_public_ip.sh" "$SERVER_NAME")
 
           # Create ansible inventory.ini file
-          cat <<EOL > inventory.ini
+          cat <<EOL > ansible/playbooks/inventory.ini
           [remote_machines]
           benchmark-machine ansible_host=${IP_OF_THE_SERVER} ansible_user=root
           [db_hosts]
@@ -47,7 +47,7 @@ jobs:
 
           # Save inventory.ini for the next step
           mkdir -p output
-          mv inventory.ini output/inventory.ini
+          mv ansible/playbooks/inventory.ini output/inventory.ini
       - name: Upload inventory.ini
         uses: actions/upload-artifact@v3
         with:
