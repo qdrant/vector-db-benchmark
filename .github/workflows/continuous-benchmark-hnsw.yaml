@@ -81,4 +81,4 @@ jobs:
       - name: Run bench
         id: hnsw-indexing-003
         run: |
-            cd ansible/playbooks && ansible-playbook playbook-hnsw-index.yml --extra-vars "bench=003"          
+            cd ansible/playbooks && ansible-playbook playbook-hnsw-index.yml --extra-vars "bench=003"
