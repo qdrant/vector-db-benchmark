@@ -152,7 +152,7 @@ def main():
     deleted_points = set()
 
     benchmark = QdrantBenchmark("http://localhost:6333")
-    benchmark.initial_upload(vectors)
+    benchmark.initial_upload(vectors[:TOTAL_VECTORS])
 
     print("Initial precision: ", benchmark.validate_test_data())
 
