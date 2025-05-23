@@ -11,9 +11,9 @@ servers:
     registry: "ghcr.io"
     image: "qdrant/qdrant"
     version: "dev"
-    feature_flags: "false"  # due to bug in flags logic
+    feature_flags: "true"
   - name: "qdrant"
     registry: "docker.io"
     image: "qdrant/qdrant"
     version: "master"
-    feature_flags: "true"  # due to bug in flags logic
+    feature_flags: "false"
