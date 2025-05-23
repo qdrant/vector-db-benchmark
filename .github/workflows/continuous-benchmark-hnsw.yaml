@@ -1,18 +1,10 @@
 name: Continuous Benchmark Hnsw Indexing
 
 on:
-  push:
-    branches:
-      - add-ansible
   workflow_dispatch:
-    inputs:
-      feature_flags_all:
-          type: boolean
-          description: "Enable all feature flags (true by default)"
-          default: true
   schedule:
-    # Run every day at 2am
-    - cron: "0 2 * * *"
+    # Run every day at 5am
+    - cron: "0 5 * * *"
 
 # Restrict to only running this workflow one at a time.
 # Any new runs will be queued until the previous run is complete.
@@ -32,7 +24,6 @@ jobs:
           export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
           export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
           export SERVER_NAME="benchmark-server-3"
-          export QDRANT__FEATURE_FLAGS__ALL=${{ inputs.feature_flags_all }}
           bash -x tools/setup_ci.sh
 
           IP_OF_THE_SERVER=$(bash "tools/hetzner/get_public_ip.sh" "$SERVER_NAME")
@@ -54,7 +45,7 @@ jobs:
           name: inventory
           path: output/inventory.ini
 
-  runHnswIndexingHealingBenchmark:
+  runUpdateHealingBenchmark:
     runs-on: ubuntu-latest
     container: alpine/ansible:2.18.1
     needs: createInventory
@@ -71,12 +62,12 @@ jobs:
       - name: Run bench
         id: hnsw-indexing-002
         run: |
-            cd ansible/playbooks && ansible-playbook playbook-hnsw-index.yml --extra-vars "bench=002"
+          cd ansible/playbooks && ansible-playbook playbook-hnsw-index.yml --extra-vars "bench=002"
 
-  runHnswIndexingHealingBenchmark-2:
+  runTransformHealingBenchmark:
     runs-on: ubuntu-latest
     container: alpine/ansible:2.18.1
-    needs: runHnswIndexingHealingBenchmark
+    needs: runUpdateHealingBenchmark
     steps:
       - uses: actions/checkout@v3
       - name: Download inventory.ini
