@@ -22,7 +22,7 @@ import numpy as np
 import tqdm
 from qdrant_client import QdrantClient, models
 
-QDRANT_COLLECTION_NAME = "Benchmark"
+QDRANT_COLLECTION_NAME = "benchmark"
 
 DATASET_DIM = int(os.getenv("DATASET_DIM", 512))
 DATASET_NAME = os.getenv("DATASET_NAME", "laion-small-clip-no-filters-1")

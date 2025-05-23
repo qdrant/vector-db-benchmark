@@ -29,6 +29,7 @@
         server_name: "{{ server.name }}"
         server_version: "{{ server.version }}"
         server_registry: "{{ server.registry }}"
+        server_feature_flags: "{{ server.feature_flags }}"
         bench: "{{ bench | default('002') }}"
 
     - name: "Compare results on the remote machine"

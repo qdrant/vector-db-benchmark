@@ -42,6 +42,8 @@ fi
 echo "Activating virtual environment..."
 source "${WORK_DIR}/venv/bin/activate"
 
+NOW=$(date "+%Y-%m-%dT%H:%M:%SZ")
+echo "${NOW}"
 echo "Running..."
 python "${WORK_DIR}/${BENCH}.py"
 echo "Python script completed with exit code: $?"
