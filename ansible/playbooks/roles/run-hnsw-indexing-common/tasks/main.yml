@@ -25,7 +25,7 @@
   environment:
     QDRANT_VERSION: "{{ server_version }}"
     CONTAINER_REGISTRY: "{{ server_registry }}"
-    QDRANT__FEATURE_FLAGS__ALL: "true"
+    QDRANT__FEATURE_FLAGS__ALL: "false"
   register: compose_result
   failed_when: compose_result.rc != 0
 

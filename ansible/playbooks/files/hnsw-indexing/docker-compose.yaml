@@ -17,4 +17,5 @@ services:
         limits:
           memory: 25Gb
     environment:
+      - QDRANT__LOG_LEVEL=DEBUG
       - QDRANT__FEATURE_FLAGS__ALL=${QDRANT__FEATURE_FLAGS__ALL:-false}
