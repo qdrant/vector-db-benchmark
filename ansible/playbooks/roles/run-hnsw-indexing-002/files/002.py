@@ -18,6 +18,7 @@ This script will:
 import json
 import os
 import random
+import sys
 import time
 from pathlib import Path
 
@@ -34,7 +35,7 @@ VECTORS_FILE = DATA_DIR / "vectors.npy"
 
 TEST_DATA_FILE = DATA_DIR / "tests.jsonl"
 
-TOTAL_VECTORS = 100_000
+TOTAL_VECTORS = 10_000
 
 
 def read_test_data(limit: int = 1000):
@@ -190,4 +191,10 @@ def main():
 
 
 if __name__ == "__main__":
+    sys.stdout.reconfigure(line_buffering=True)
+    sys.stderr.reconfigure(line_buffering=True)
+
     main()
+
+    sys.stdout.flush()
+    sys.stderr.flush()

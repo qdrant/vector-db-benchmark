@@ -48,8 +48,8 @@ echo "Activating virtual environment..."
 source "${WORK_DIR}/venv/bin/activate"
 
 echo "Running..."
-python "${WORK_DIR}/${BENCH}.py"
-
+python -u "${WORK_DIR}/${BENCH}.py"
+echo "Python script completed with exit code: $?"
 deactivate
 
 exit 0

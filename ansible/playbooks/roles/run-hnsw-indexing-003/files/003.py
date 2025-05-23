@@ -14,6 +14,7 @@ This script will:
 import json
 import os
 import random
+import sys
 import time
 from pathlib import Path
 
@@ -35,7 +36,7 @@ VECTORS_FILE_1 = DATA_DIR / "vectors.npy"
 TEST_DATA_FILE_2 = DATA_DIR_2 / "tests.jsonl"
 TEST_DATA_FILE_1 = DATA_DIR / "tests.jsonl"
 
-TOTAL_VECTORS = 100_000
+TOTAL_VECTORS = 10_000
 BATCH_SIZE = 500
 
 
@@ -80,7 +81,6 @@ class QdrantBenchmark:
             optimizers_config=models.OptimizersConfigDiff(
                 deleted_threshold=0.001,
                 vacuum_min_vector_number=100,
-                default_segment_number=1,
             ),
         )
 
@@ -179,4 +179,10 @@ def main():
 
 
 if __name__ == "__main__":
+    sys.stdout.reconfigure(line_buffering=True)
+    sys.stderr.reconfigure(line_buffering=True)
+
     main()
+
+    sys.stdout.flush()
+    sys.stderr.flush()
