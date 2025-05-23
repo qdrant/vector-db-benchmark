@@ -35,7 +35,7 @@ VECTORS_FILE = DATA_DIR / "vectors.npy"
 
 TEST_DATA_FILE = DATA_DIR / "tests.jsonl"
 
-TOTAL_VECTORS = 10_000
+TOTAL_VECTORS = 100_000
 
 
 def read_test_data(limit: int = 1000):
@@ -152,7 +152,7 @@ def main():
     deleted_points = set()
 
     benchmark = QdrantBenchmark("http://localhost:6333")
-    benchmark.initial_upload(vectors[:TOTAL_VECTORS])
+    benchmark.initial_upload(vectors)
 
     print("Initial precision: ", benchmark.validate_test_data())
 

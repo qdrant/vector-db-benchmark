@@ -8,7 +8,7 @@ dataset_2_url: "https://storage.googleapis.com/ann-filtered-benchmark/datasets/l
 dataset_2_name: "laion-small-clip-no-filters-2"
 servers:
   - name: "qdrant"
-    registry: "ghcr"
+    registry: "ghcr.io"
     image: "qdrant/qdrant"
     version: "dev"
   - name: "qdrant"

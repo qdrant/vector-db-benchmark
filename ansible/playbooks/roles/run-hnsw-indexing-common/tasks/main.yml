@@ -32,8 +32,8 @@
 - name: "Execute the script on the remote machine: {{ server_name }}-{{ server_version }}"
   ansible.builtin.shell: |
     {{ working_dir }}/run-bench.sh > "{{ working_dir }}/output-{{ server_name }}-{{ server_version }}-{{ bench }}.txt" 2>&1
-  async: 2700 # 45 minutes
-  poll: 30 # Check every 30 seconds
+  async: 3600 # 60 minutes
+  poll: 60 # Check every 60 seconds
   environment:
     SERVER_NAME: "{{ server_name }}"
     BENCH: "{{ bench }}"
