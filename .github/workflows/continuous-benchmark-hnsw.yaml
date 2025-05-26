@@ -1,9 +1,6 @@
 name: Continuous Benchmark Hnsw Indexing
 
 on:
-  push:
-    branches:
-      - add-ansible
   workflow_dispatch:
   schedule:
     # Run every day at 5am
