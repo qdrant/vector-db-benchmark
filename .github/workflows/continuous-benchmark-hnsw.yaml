@@ -66,3 +66,22 @@ jobs:
         id: hnsw-indexing-update
         run: |
           cd ansible/playbooks && ansible-playbook playbook-hnsw-index.yml --extra-vars "bench=update"
+
+  runTransformHealingBenchmark:
+    runs-on: ubuntu-latest
+    container: alpine/ansible:2.18.1
+    needs: runUpdateHealingBenchmark
+    steps:
+      - uses: actions/checkout@v3
+      - name: Download inventory.ini
+        uses: actions/download-artifact@v4
+        with:
+          name: inventory
+          path: ansible/playbooks
+      - uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Run bench
+        id: hnsw-indexing-transform
+        run: |
+            cd ansible/playbooks && ansible-playbook playbook-hnsw-index.yml --extra-vars "bench=transform"
