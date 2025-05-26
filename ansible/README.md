@@ -32,7 +32,7 @@ ansible-playbook playbook-hnsw-index.yml --extra-vars "bench=update"
 
 ## How to add a new benchmark
 
-* Create a new playbook in the [ansible/playbooks](playbooks) directory (i.e `playbook-hnsw-index.yml`). The playbook defines which role to run on which machine (i.e run `run-hnsw-indexing-update` on machines of `remote_machines` group). 
+* Create a new playbook in the [ansible/playbooks](playbooks) directory (i.e `playbook-hnsw-index.yml`). The playbook defines which role to run on which machine (i.e run `run-hnsw-indexing-update` on machines of `remote_machines` group).
 * Add a new folder in [ansible/playbooks/roles](playbooks/roles) (i.e `run-hnsw-indexing-update`) with 2 sub-folders `tasks` (required) and `files` (optional).  Add `main.yml` in `tasks` folder. The role defines tasks (`main.yml`) required to run the benchmark. For example, copying scripts, setting up benchmark server, running the benchmark.
-* Optionally in the [ansible/playbooks/group_vars](playbooks/group_vars) directory add a new yml file to define variables specific for the role (i.e `hnsw-indexing-update.yml`). Variables that are shared can also be defined here (i.e in `common_vars.yml`).   
+* Optionally in the [ansible/playbooks/group_vars](playbooks/group_vars) directory add a new yml file to define variables specific for the role (i.e `hnsw-indexing-update.yml`). Variables that are shared can also be defined here (i.e in `common_vars.yml`).
 * Optionally in the [ansible/playbooks/files](playbooks/files) directory add files that are common across several roles and/or playbooks.
