@@ -5,7 +5,7 @@ SERVER_NAME = os.getenv("SERVER_NAME", "qdrant")
 SERVER_NAME_2 = os.getenv("SERVER_NAME_2", "qdrant")
 SERVER_VERSION = os.getenv("SERVER_VERSION", "dev")
 SERVER_VERSION_2 = os.getenv("SERVER_VERSION_2", "master")
-BENCH = os.getenv("BENCH", "003")
+BENCH = os.getenv("BENCH", "transform")
 DATA_DIR = os.getenv("DATA_DIR", "data")
 
 filepaths = {

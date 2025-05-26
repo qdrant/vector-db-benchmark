@@ -33,7 +33,7 @@
   ansible.builtin.shell: |
     {{ working_dir }}/run-bench.sh > "{{ working_dir }}/output-{{ server_name }}-{{ server_version }}-{{ bench }}.txt" 2>&1
   async: 3600 # 60 minutes
-  poll: 60 # Check every 60 seconds
+  poll: 30 # Check every 30 seconds
   environment:
     SERVER_NAME: "{{ server_name }}"
     BENCH: "{{ bench }}"
@@ -42,4 +42,19 @@
     DATASET_DIM: "{{ dataset_dim }}"
     DATASET_NAME_2: "{{ dataset_2_name | default('') }}"
   register: bench_result
-  failed_when: bench_result.rc != 0
+  ignore_errors: yes
+
+- name: Show script output if failed
+  ansible.builtin.shell: cat "{{ working_dir }}/output-{{ server_name }}-{{ server_version }}-{{ bench }}.txt"
+  when: bench_result.rc != 0
+  register: script_output
+
+- name: Print script output
+  ansible.builtin.debug:
+    msg: "{{ script_output.stdout }}"
+  when: bench_result.rc != 0
+
+- name: Fail if script failed
+  ansible.builtin.fail:
+    msg: "Script failed with rc={{ bench_result.rc }}"
+  when: bench_result.rc != 0

@@ -4,7 +4,7 @@
   become: yes
   tasks:
     - name: Load common variables
-      include_vars: "group_vars/hnsw-indexing-{{ bench | default('002') }}.yml"
+      include_vars: "group_vars/hnsw-indexing-{{ bench | default('update') }}.yml"
 
     - name: Ensure necessary packages are installed
       ansible.builtin.package:
@@ -21,7 +21,7 @@
 
     - name: Execute benchmark
       include_role:
-        name: "run-hnsw-indexing-{{ bench | default('002') }}"
+        name: "run-hnsw-indexing-{{ bench | default('update') }}"
       loop: "{{ servers }}"
       loop_control:
         loop_var: "server"
@@ -30,7 +30,7 @@
         server_version: "{{ server.version }}"
         server_registry: "{{ server.registry }}"
         server_feature_flags: "{{ server.feature_flags }}"
-        bench: "{{ bench | default('002') }}"
+        bench: "{{ bench | default('update') }}"
 
     - name: "Compare results on the remote machine"
       ansible.builtin.shell: |
@@ -53,7 +53,7 @@
   hosts: db_hosts
   tasks:
     - name: Load common variables
-      include_vars: "group_vars/hnsw-indexing-{{ bench | default('002') }}.yml"
+      include_vars: "group_vars/hnsw-indexing-{{ bench | default('update') }}.yml"
 
     - name: Insert data into table
       ansible.builtin.shell: |

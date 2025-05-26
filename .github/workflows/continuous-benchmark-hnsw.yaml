@@ -1,6 +1,9 @@
 name: Continuous Benchmark Hnsw Indexing
 
 on:
+  push:
+    branches:
+      - add-ansible
   workflow_dispatch:
   schedule:
     # Run every day at 5am
@@ -60,9 +63,9 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Run bench
-        id: hnsw-indexing-002
+        id: hnsw-indexing-update
         run: |
-          cd ansible/playbooks && ansible-playbook playbook-hnsw-index.yml --extra-vars "bench=002"
+          cd ansible/playbooks && ansible-playbook playbook-hnsw-index.yml --extra-vars "bench=update"
 
   runTransformHealingBenchmark:
     runs-on: ubuntu-latest
@@ -79,6 +82,6 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Run bench
-        id: hnsw-indexing-003
+        id: hnsw-indexing-transform
         run: |
-            cd ansible/playbooks && ansible-playbook playbook-hnsw-index.yml --extra-vars "bench=003"
+            cd ansible/playbooks && ansible-playbook playbook-hnsw-index.yml --extra-vars "bench=transform"
