@@ -3,8 +3,8 @@
 
 set -euo pipefail
 
-if [ -z "${SERVER_NAME:-}" ]; then
-    echo "Error: SERVER_NAME is not set"
+if [ -z "${DATASET_DIM:-}" ]; then
+    echo "Error: DATASET_DIM is not set"
     exit 1
 fi
 

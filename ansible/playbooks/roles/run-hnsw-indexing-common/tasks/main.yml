@@ -35,7 +35,6 @@
   async: 3600 # 60 minutes
   poll: 30 # Check every 30 seconds
   environment:
-    SERVER_NAME: "{{ server_name }}"
     BENCH: "{{ bench }}"
     WORK_DIR: "{{ working_dir }}"
     DATASET_NAME: "{{ dataset_name }}"
