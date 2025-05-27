@@ -20,6 +20,7 @@ import os
 import random
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -30,6 +31,7 @@ QDRANT_COLLECTION_NAME = "benchmark"
 DATASET_DIM = int(os.getenv("DATASET_DIM", 1536))
 DATASET_NAME = os.getenv("DATASET_NAME", "dbpedia_openai_100K")
 DATA_DIR = Path(__file__).parent / "data" / DATASET_NAME
+OUTPUT_FILENAME = os.getenv("OUTPUT_FILENAME", "output.json")
 
 VECTORS_FILE = DATA_DIR / "vectors.npy"
 
@@ -126,27 +128,40 @@ class QdrantBenchmark:
             ),
         )
 
-    def wait_ready(self):
-        wait_time = 0.2
-        total = 0
+    def wait_ready(self) -> float:
+        wait_interval = 0.2
+        confirmations_required = 2
+
+        start_time = time.time()
+        confirmations = 0
+        first_green_time: float | None = None
+
         while True:
-            time.sleep(wait_time)
-            total += wait_time
-            collection_info = self.client.get_collection(QDRANT_COLLECTION_NAME)
-            if collection_info.status != models.CollectionStatus.GREEN:
-                continue
-            time.sleep(wait_time)
             collection_info = self.client.get_collection(QDRANT_COLLECTION_NAME)
             if collection_info.status == models.CollectionStatus.GREEN:
-                break
-        return total
+                confirmations += 1
+                first_green_time = first_green_time or time.time()
+                if confirmations == confirmations_required:
+                    return first_green_time - start_time
+            else:
+                confirmations = 0
+                first_green_time = None
+            time.sleep(wait_interval)
 
     def __del__(self):
         self.client.close()
 
 
-def main():
+def store_to_file(data_dict):
+    timestamped_dict = data_dict.copy()
+    timestamped_dict['timestamp'] = datetime.now().isoformat()
 
+    with open(OUTPUT_FILENAME, 'w', encoding='utf-8') as f:
+        json.dump(timestamped_dict, f, ensure_ascii=False)
+
+
+def main():
+    result = {}
     vectors = np.load(VECTORS_FILE)
 
     deleted_points = set()
@@ -154,7 +169,11 @@ def main():
     benchmark = QdrantBenchmark("http://localhost:6333")
     benchmark.initial_upload(vectors)
 
-    print("Initial precision: ", benchmark.validate_test_data())
+    benchmark.wait_ready()
+
+    initial_precision = benchmark.validate_test_data()
+    print("Initial precision: ", initial_precision)
+    result["initial_precision"] = initial_precision
 
     # Delete 1000 random points
     points_to_delete = random.sample(range(TOTAL_VECTORS), 1000)
@@ -165,19 +184,21 @@ def main():
 
     benchmark.wait_ready()
 
-    print("Precision after deletion: ", benchmark.validate_test_data())
+    precision_after_deletion = benchmark.validate_test_data()
+    print("Precision after deletion: ", precision_after_deletion)
+    result["precision_before_iteration"] = precision_after_deletion
 
     total_indexing_time = 0
     for _ in tqdm.tqdm(range(100), desc="Iterating"):
-        # Select 500 points to upload, from the points that was already deleted
+        # Select 500 points to upload, from the points that were already deleted
         points_to_upload = random.sample(list(deleted_points), 500)
 
         benchmark.upload_points(vectors, points_to_upload)
 
-        # Remove the points that was uploaded from the deleted points
+        # Remove the points that were uploaded from the deleted points
         deleted_points.difference_update(points_to_upload)
 
-        # Select 500 points to delete, from the points that was not deleted yet
+        # Select 500 points to delete, from the points that haven't been deleted yet
         points_to_delete = random.sample(range(TOTAL_VECTORS), 500)
 
         benchmark.delete_points(points_to_delete)
@@ -187,7 +208,13 @@ def main():
         total_indexing_time += benchmark.wait_ready()
 
     print(f"Indexing: {total_indexing_time}")
-    print(f"Iteration 99, Precision: {benchmark.validate_test_data()}")
+    result["indexing_total_time_s"] = precision_after_deletion
+
+    precision_after_iteration = benchmark.validate_test_data()
+    print(f"Iteration 99, Precision: {precision_after_iteration}")
+    result["precision_after_iteration"] = precision_after_iteration
+
+    store_to_file(result)
 
 
 if __name__ == "__main__":
