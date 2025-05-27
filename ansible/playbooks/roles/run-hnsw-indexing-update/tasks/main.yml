@@ -4,11 +4,10 @@
     path: "{{ item }}"
     state: directory
     owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
     mode: '0755'
     recurse: yes
+    follow: false
   loop:
-    - "{{ logging_dir }}"
     - "{{ working_dir }}"
     - "{{ working_dir }}/data"
     - "{{ working_dir }}/data/{{ dataset_name }}"
@@ -36,7 +35,6 @@
     dest: "{{ working_dir }}/data/{{ dataset_name }}"
     remote_src: yes
     owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
   when: dest_dir_contents.matched == 0
 
 - name: Prepare and execute the benchmark
