@@ -23,6 +23,11 @@ if [ -z "${DATASET_NAME_2:-}" ]; then
     exit 4
 fi
 
+if [ -z "${OUTPUT_FILENAME:-}" ]; then
+    echo "Error: OUTPUT_FILENAME is not set"
+    exit 5
+fi
+
 if [ -z "${WORK_DIR:-}" ]; then
     WORK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     echo "Warn: WORK_DIR is not set, defaults to script's ${WORK_DIR}"
