@@ -31,7 +31,7 @@
 
 - name: "Execute the script on the remote machine: {{ server_name }}-{{ server_version }}"
   ansible.builtin.shell: |
-    {{ working_dir }}/run-bench.sh > "log-{{ bench }}.log" 2>&1
+    {{ working_dir }}/run-bench.sh > "{{ working_dir }}/log-{{ server_name }}-{{ server_version }}-{{ bench }}.log" 2>&1
   async: 3600 # 60 minutes
   poll: 30 # Check every 30 seconds
   environment:
@@ -45,7 +45,7 @@
   ignore_errors: yes
 
 - name: Show script output if failed
-  ansible.builtin.shell: cat "log-{{ bench }}.log"
+  ansible.builtin.shell: cat "{{ working_dir }}/log-{{ server_name }}-{{ server_version }}-{{ bench }}.log"
   when: bench_result.rc != 0
   register: script_output
 
