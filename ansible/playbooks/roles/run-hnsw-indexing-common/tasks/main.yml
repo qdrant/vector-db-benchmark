@@ -5,7 +5,6 @@
     dest: "{{ item.dest }}"
     mode: "{{ item.mode | default('0644') }}"
     owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
   loop:
     - { src: run-bench.sh, dest: "{{ working_dir }}/run-bench.sh", mode: '0755' }
     - { src: "{{ bench }}.py", dest: "{{ working_dir }}/{{ bench }}.py" }

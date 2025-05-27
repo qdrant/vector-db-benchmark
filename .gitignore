@@ -6,3 +6,5 @@ NOTES.md
 
 results/*
 tools/custom/data.json
+
+ansible/playbooks/inventory.ini
