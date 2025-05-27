@@ -210,7 +210,7 @@ def main():
         total_indexing_time += benchmark.wait_ready()
 
     print(f"Indexing: {total_indexing_time}")
-    result["indexing_total_time_s"] = precision_after_deletion
+    result["indexing_total_time_s"] = total_indexing_time
 
     precision_after_iteration = benchmark.validate_test_data()
     print(f"Iteration 99, Precision: {precision_after_iteration}")
