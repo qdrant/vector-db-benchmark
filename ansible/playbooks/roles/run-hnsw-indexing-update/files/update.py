@@ -177,6 +177,7 @@ def main():
 
     # Delete 1000 random points
     points_to_delete = random.sample(range(TOTAL_VECTORS), 1000)
+    points_rest = set(range(TOTAL_VECTORS)) - set(points_to_delete)
 
     benchmark.delete_points(points_to_delete)
 
@@ -199,7 +200,8 @@ def main():
         deleted_points.difference_update(points_to_upload)
 
         # Select 500 points to delete, from the points that haven't been deleted yet
-        points_to_delete = random.sample(range(TOTAL_VECTORS), 500)
+        points_to_delete = random.sample(list(points_rest), 500)
+        points_rest = set(points_rest) - set(points_to_delete)
 
         benchmark.delete_points(points_to_delete)
 
