@@ -1,9 +1,6 @@
 name: Continuous Benchmark Hnsw Indexing
 
 on:
-  push:
-    branches:
-      - add-update-benchmark
   workflow_dispatch:
   schedule:
     # Run every day at 5am
@@ -41,14 +38,15 @@ jobs:
     needs: runUpdateHealingBenchmark
     steps:
       - uses: actions/checkout@v3
-      - name: Download inventory.ini
-        uses: actions/download-artifact@v4
-        with:
-          name: inventory
-          path: ansible/playbooks
       - uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Create inventory
+        uses: ./.github/workflows/actions/create-inventory
+        with:
+          hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
+          db_host: ${{ secrets.POSTGRES_HOST }}
+          server_name: "benchmark-server-3"
       - name: Run bench
         id: hnsw-indexing-transform
         run: |
