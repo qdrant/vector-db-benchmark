@@ -11,7 +11,7 @@
     - { src: "{{ bench }}.py", dest: "{{ working_dir }}/{{ bench }}.py" }
     - { src: "../../files/hnsw-indexing/requirements.txt", dest: "{{ working_dir }}/requirements.txt" }
     - { src: "../../files/hnsw-indexing/docker-compose.yaml", dest: "{{ working_dir }}/docker-compose.yaml" }
-    - { src: get_score.py, dest: "{{ working_dir }}/get_score.py" }
+    - { src: "../../files/hnsw-indexing/get_score.py", dest: "{{ working_dir }}/get_score.py" }
 
 - name: Start Docker container on the remote machine
   ansible.builtin.shell: |

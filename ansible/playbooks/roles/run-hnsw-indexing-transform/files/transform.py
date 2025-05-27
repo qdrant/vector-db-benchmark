@@ -16,6 +16,7 @@ import os
 import random
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -23,7 +24,7 @@ import tqdm
 from qdrant_client import QdrantClient, models
 
 QDRANT_COLLECTION_NAME = "benchmark"
-
+OUTPUT_FILENAME = os.getenv("OUTPUT_FILENAME", "output.json")
 DATASET_DIM = int(os.getenv("DATASET_DIM", 512))
 DATASET_NAME = os.getenv("DATASET_NAME", "laion-small-clip-no-filters-1")
 DATASET_NAME_2 = os.getenv("DATASET_NAME_2", "laion-small-clip-no-filters-2")
@@ -129,36 +130,51 @@ class QdrantBenchmark:
             ),
         )
 
-    def wait_ready(self):
-        wait_time = 0.1
-        total = 0
+    def wait_ready(self) -> float:
+        wait_interval = 0.2
+        confirmations_required = 2
+
+        start_time = time.time()
+        confirmations = 0
+        first_green_time: float | None = None
+
         while True:
-            time.sleep(wait_time)
-            total += wait_time
-            collection_info = self.client.get_collection(QDRANT_COLLECTION_NAME)
-            if collection_info.status != models.CollectionStatus.GREEN:
-                continue
-            time.sleep(wait_time)
             collection_info = self.client.get_collection(QDRANT_COLLECTION_NAME)
             if collection_info.status == models.CollectionStatus.GREEN:
-                break
-        return total
+                confirmations += 1
+                first_green_time = first_green_time or time.time()
+                if confirmations == confirmations_required:
+                    return first_green_time - start_time
+            else:
+                confirmations = 0
+                first_green_time = None
+            time.sleep(wait_interval)
 
     def __del__(self):
         self.client.close()
 
 
-def main():
+def store_to_file(data_dict):
+    timestamped_dict = data_dict.copy()
+    timestamped_dict["timestamp"] = datetime.now().isoformat()
 
+    with open(OUTPUT_FILENAME, "w", encoding="utf-8") as f:
+        json.dump(timestamped_dict, f, ensure_ascii=False)
+
+
+def main():
+    result = {}
     vectors_1 = np.load(VECTORS_FILE_1)
     vectors_2 = np.load(VECTORS_FILE_2)
 
     benchmark = QdrantBenchmark("http://localhost:6333")
     benchmark.initial_upload(vectors_1)
+    benchmark.wait_ready()
 
-    print(
-        "Initial precision dataset1: ", benchmark.validate_test_data(TEST_DATA_FILE_1)
-    )
+    initial_precision = benchmark.validate_test_data(TEST_DATA_FILE_1)
+    print("Precision dataset1: ", initial_precision)
+    result["initial_precision"] = initial_precision
+    result["precision_before_iteration"] = initial_precision
 
     points_to_migrate = list(range(TOTAL_VECTORS))
 
@@ -175,7 +191,13 @@ def main():
         total_indexing_time += benchmark.wait_ready()
 
     print(f"Indexing: {total_indexing_time}")
-    print("Precision dataset2: ", benchmark.validate_test_data(TEST_DATA_FILE_2))
+    result["indexing_total_time_s"] = total_indexing_time
+
+    precision_after_iteration = benchmark.validate_test_data(TEST_DATA_FILE_2)
+    print(f"Precision dataset2: {precision_after_iteration}")
+    result["precision_after_iteration"] = precision_after_iteration
+
+    store_to_file(result)
 
 
 if __name__ == "__main__":
