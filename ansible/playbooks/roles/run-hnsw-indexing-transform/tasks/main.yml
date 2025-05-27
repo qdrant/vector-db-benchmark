@@ -4,7 +4,6 @@
     path: "{{ item }}"
     state: directory
     owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
     mode: '0755'
     recurse: yes
   loop:
@@ -37,7 +36,6 @@
     dest: "{{ working_dir }}/data/{{ dataset_name }}"
     remote_src: yes
     owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
   when: dest_dir_contents.matched == 0
 
 - name: Check if the second dataset archive already exists
@@ -63,7 +61,6 @@
     dest: "{{ working_dir }}/data/{{ dataset_2_name }}"
     remote_src: yes
     owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
   when: dest_2_dir_contents.matched == 0
 
 - name: Prepare and execute the benchmark
