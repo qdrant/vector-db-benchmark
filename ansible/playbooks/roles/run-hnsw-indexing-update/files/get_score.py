@@ -1,5 +1,5 @@
+import json
 import os.path
-import re
 
 SERVER_NAME = os.getenv("SERVER_NAME", "qdrant")
 SERVER_NAME_2 = os.getenv("SERVER_NAME_2", "qdrant")
@@ -10,33 +10,26 @@ DATA_DIR = os.getenv("DATA_DIR", "data")
 
 filepaths = {
     f"{SERVER_NAME}-{SERVER_VERSION}": os.path.join(
-        DATA_DIR, f"output-{SERVER_NAME}-{SERVER_VERSION}-{BENCH}.txt"
+        DATA_DIR, f"output-{SERVER_NAME}-{SERVER_VERSION}-{BENCH}.json"
     ),
     f"{SERVER_NAME_2}-{SERVER_VERSION_2}": os.path.join(
-        DATA_DIR, f"output-{SERVER_NAME_2}-{SERVER_VERSION_2}-{BENCH}.txt"
+        DATA_DIR, f"output-{SERVER_NAME_2}-{SERVER_VERSION_2}-{BENCH}.json"
     ),
 }
 
 
 def main():
-    # Regular expressions to extract needed data
-    after_del_re = re.compile(r"Precision after deletion:\s+([\d.]+)")
-    iteration_re = re.compile(r"Iteration (\d+), Precision: ([\d.]+)")
-    indexing_re = re.compile(r"Indexing: ([\d.]+)")
-
     results = {}
 
     for label, path in filepaths.items():
         with open(path, "r") as file:
             text = file.read()
+            given_output = json.loads(text)
 
-        after_deletion = float(after_del_re.search(text).group(1))
-        iterations = [
-            (int(m.group(1)), float(m.group(2))) for m in iteration_re.finditer(text)
-        ]
-        indexing_time = float(indexing_re.search(text).group(1))
-
-        score = round(after_deletion / iterations[-1][1], 4)
+        precision_before_iteration = given_output.get("precision_before_iteration", 0.0)
+        precision_after_iteration = given_output.get("precision_after_iteration", 1.0)
+        score = round(precision_before_iteration / precision_after_iteration, 4)
+        indexing_time = given_output.get("indexing_total_time_s", 0.0)
         results[label] = {"score": score, "indexing_time": indexing_time}
 
     result = ""
