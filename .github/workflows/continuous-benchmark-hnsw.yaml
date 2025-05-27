@@ -1,9 +1,6 @@
 name: Continuous Benchmark Hnsw Indexing
 
 on:
-  push:
-    branches:
-      - add-transform-benchmark
   workflow_dispatch:
   schedule:
     # Run every day at 5am
@@ -12,32 +9,33 @@ on:
 # Restrict to only running this workflow one at a time.
 # Any new runs will be queued until the previous run is complete.
 # Any existing pending runs will be cancelled and replaced with current run.
-#concurrency:
-#  group: continuous-benchmark
+concurrency:
+  group: continuous-benchmark
 
 jobs:
-#  runUpdateHealingBenchmark:
-#    runs-on: ubuntu-latest
-#    container: alpine/ansible:2.18.1
-#    steps:
-#      - uses: actions/checkout@v3
-#      - uses: webfactory/ssh-agent@v0.8.0
-#        with:
-#          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-#      - name: Create inventory
-#        uses: ./.github/workflows/actions/create-inventory
-#        with:
-#          hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
-#          db_host: ${{ secrets.POSTGRES_HOST }}
-#          server_name: "benchmark-server-3"
-#      - name: Run bench
-#        id: hnsw-indexing-update
-#        run: |
-#          cd ansible/playbooks && ansible-playbook playbook-hnsw-index.yml --extra-vars "bench=update"
+  runUpdateHealingBenchmark:
+    runs-on: ubuntu-latest
+    container: alpine/ansible:2.18.1
+    steps:
+      - uses: actions/checkout@v3
+      - uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Create inventory
+        uses: ./.github/workflows/actions/create-inventory
+        with:
+          hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
+          db_host: ${{ secrets.POSTGRES_HOST }}
+          server_name: "benchmark-server-3"
+      - name: Run bench
+        id: hnsw-indexing-update
+        run: |
+          cd ansible/playbooks && ansible-playbook playbook-hnsw-index.yml --extra-vars "bench=update"
 
   runTransformHealingBenchmark:
     runs-on: ubuntu-latest
     container: alpine/ansible:2.18.1
+    needs: runUpdateHealingBenchmark
     steps:
       - uses: actions/checkout@v3
       - uses: webfactory/ssh-agent@v0.8.0
