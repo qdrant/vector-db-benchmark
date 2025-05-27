@@ -154,9 +154,9 @@ class QdrantBenchmark:
 
 def store_to_file(data_dict):
     timestamped_dict = data_dict.copy()
-    timestamped_dict['timestamp'] = datetime.now().isoformat()
+    timestamped_dict["timestamp"] = datetime.now().isoformat()
 
-    with open(OUTPUT_FILENAME, 'w', encoding='utf-8') as f:
+    with open(OUTPUT_FILENAME, "w", encoding="utf-8") as f:
         json.dump(timestamped_dict, f, ensure_ascii=False)
 
 
