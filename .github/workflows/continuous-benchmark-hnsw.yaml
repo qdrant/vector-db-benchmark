@@ -26,8 +26,28 @@ jobs:
         with:
           hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
           db_host: ${{ secrets.POSTGRES_HOST }}
-          server_name: "benchmark-server-3"
+          server_name: "benchmark-server-1"
       - name: Run bench
         id: hnsw-indexing-update
         run: |
           cd ansible/playbooks && ansible-playbook playbook-hnsw-index.yml --extra-vars "bench=update"
+
+  runTransformHealingBenchmark:
+    runs-on: ubuntu-latest
+    container: alpine/ansible:2.18.1
+    needs: runUpdateHealingBenchmark
+    steps:
+      - uses: actions/checkout@v3
+      - uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Create inventory
+        uses: ./.github/workflows/actions/create-inventory
+        with:
+          hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
+          db_host: ${{ secrets.POSTGRES_HOST }}
+          server_name: "benchmark-server-1"
+      - name: Run bench
+        id: hnsw-indexing-transform
+        run: |
+            cd ansible/playbooks && ansible-playbook playbook-hnsw-index.yml --extra-vars "bench=transform"

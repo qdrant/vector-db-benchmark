@@ -10,7 +10,7 @@
     - { src: "{{ bench }}.py", dest: "{{ working_dir }}/{{ bench }}.py" }
     - { src: "../../files/hnsw-indexing/requirements.txt", dest: "{{ working_dir }}/requirements.txt" }
     - { src: "../../files/hnsw-indexing/docker-compose.yaml", dest: "{{ working_dir }}/docker-compose.yaml" }
-    - { src: get_score.py, dest: "{{ working_dir }}/get_score.py" }
+    - { src: "../../files/hnsw-indexing/get_score.py", dest: "{{ working_dir }}/get_score.py" }
 
 - name: Start Docker container on the remote machine
   ansible.builtin.shell: |
@@ -31,7 +31,7 @@
 - name: "Execute the script on the remote machine: {{ server_name }}-{{ server_version }}"
   ansible.builtin.shell: |
     {{ working_dir }}/run-bench.sh > "{{ working_dir }}/log-{{ server_name }}-{{ server_version }}-{{ bench }}.log" 2>&1
-  async: 3600 # 60 minutes
+  async: 7200 # 120 minutes
   poll: 30 # Check every 30 seconds
   environment:
     OUTPUT_FILENAME: "{{ working_dir }}/output-{{ server_name }}-{{ server_version }}-{{ bench }}.json"
