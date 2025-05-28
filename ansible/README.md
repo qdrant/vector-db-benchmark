@@ -19,7 +19,7 @@ Ensure the ssh keys are properly mounted into the container.
 Run the following commands from [ansible](.):
 ```bash
 docker buildx build --tag vector-db-benchmark-ansible:latest -f Dockerfile .
-docker run --rm -it -v ~/.ssh/id_rsa:/root/.ssh/id_rsa -v ~/.ssh/id_rsa.pub:/root/.ssh/id_rsa.pub -v ./playbooks:/ansible/playbooks -v ./tmp:/tmp/experiments vector-db-benchmark-ansible ansible-playbook playbook-hnsw-index.yml --extra-vars "bench=update"
+docker run --rm -it -v ~/.ssh/id_rsa:/root/.ssh/id_rsa -v ~/.ssh/id_rsa.pub:/root/.ssh/id_rsa.pub -v ./playbooks:/ansible/playbooks vector-db-benchmark-ansible ansible-playbook playbook-hnsw-index.yml --extra-vars "bench=update"
 ```
 
 ### Run ansible locally
