@@ -26,7 +26,7 @@ jobs:
         with:
           hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
           db_host: ${{ secrets.POSTGRES_HOST }}
-          server_name: "benchmark-server-3"
+          server_name: "benchmark-server-1"
       - name: Run bench
         id: hnsw-indexing-update
         run: |
@@ -46,7 +46,7 @@ jobs:
         with:
           hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
           db_host: ${{ secrets.POSTGRES_HOST }}
-          server_name: "benchmark-server-3"
+          server_name: "benchmark-server-1"
       - name: Run bench
         id: hnsw-indexing-transform
         run: |
