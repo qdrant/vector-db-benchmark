@@ -43,6 +43,11 @@
   register: bench_result
   ignore_errors: yes
 
+- name: Save Docker container logs
+  ansible.builtin.shell: |
+    docker logs qdrant-continuous > "{{ working_dir }}/log-qdrant-container-{{ server_name }}-{{ server_version }}-{{ bench }}.log" 2>&1
+  ignore_errors: yes
+
 - name: Show script output if failed
   ansible.builtin.shell: cat "{{ working_dir }}/log-{{ server_name }}-{{ server_version }}-{{ bench }}.log"
   when: bench_result.rc != 0
