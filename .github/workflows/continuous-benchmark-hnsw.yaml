@@ -3,8 +3,8 @@ name: Continuous Benchmark Hnsw Indexing
 on:
   workflow_dispatch:
   schedule:
-    # Run every day at 5am
-    - cron: "0 5 * * *"
+    # Run every day at 3am
+    - cron: "0 3 * * *"
 
 # Restrict to only running this workflow one at a time.
 # Any new runs will be queued until the previous run is complete.
