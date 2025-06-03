@@ -39,7 +39,8 @@ def main():
 
     result = ""
     for label, data in results.items():
-        result += f"{label}_precision_score={data['precision_score']},{label}_indexing_time={data['indexing_time']},{label}_precision_before_iteration={data['precision_before_iteration']},{label}_precision_after_iteration={data['precision_after_iteration']},"
+        for key, value in data.items():
+            result += f"{label}_{key}={value},"
     print(result)
     return result
 
