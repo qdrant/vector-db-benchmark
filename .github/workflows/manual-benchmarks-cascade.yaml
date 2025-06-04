@@ -9,7 +9,7 @@ on:
             description: "Version of qdrant to benchmark (tags/v1.6.1, <commit-id>, my-branch, docker/v1.5.1, ghcr/dev)"
             default: ghcr/dev
         dataset:
-            description: "Dataset to benchmark"
+            description: "Dataset to benchmark (if benchmark_set=single)"
             default: laion-small-clip
         engine_config:
             description: "Engine config to benchmark"
@@ -21,10 +21,16 @@ on:
         # Inputs to control cascade behavior
         benchmark_set:
             description: "Benchmark set to run (from benchmark-configs.json)"
-            default: "smoke_test"
+            default: "single"
         current_index:
             description: "Current benchmark index in cascade (internal use)"
             default: "0"
+
+# Restrict to only running this workflow one at a time.
+# Any new runs will be queued until the previous run is complete.
+# Any existing pending runs will be cancelled and replaced with current run.
+concurrency:
+  group: continuous-benchmark
 
 jobs:
   runBenchmark:
@@ -119,7 +125,7 @@ jobs:
           export POSTGRES_TABLE=benchmark_manual
           export QDRANT__FEATURE_FLAGS__ALL=${{ steps.config.outputs.feature_flags_all }}
           bash -x tools/setup_ci.sh
-          # bash -x tools/run_ci.sh
+          bash -x tools/run_ci.sh
 
       # Trigger next benchmark in cascade if there are more to run
       - name: Trigger next benchmark
