@@ -97,6 +97,16 @@ jobs:
           export QDRANT__FEATURE_FLAGS__ALL=${{ inputs.feature_flags_all_version_1 }}
           bash -x tools/setup_ci.sh
           bash -x tools/run_ci.sh
+      - name: Find latest telemetry API JSON
+        id: find_telemetry
+        run: echo "file=$(ls -t results/telemetry-api-*.json | head -n 1)" >> $GITHUB_OUTPUT
+      - name: Upload telemetry API JSON artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: telemetry-version1
+          path: ${{ steps.find_telemetry.outputs.file }}
+          retention-days: 1
+        if: always()
 
   runBenchmarkForVersion2:
     name: execute - ${{ inputs.qdrant_version_2 }} - ${{ inputs.dataset }}
@@ -136,6 +146,16 @@ jobs:
           export QDRANT__FEATURE_FLAGS__ALL=${{ inputs.feature_flags_all_version_2 }}
           bash -x tools/setup_ci.sh
           bash -x tools/run_ci.sh
+      - name: Find latest telemetry API JSON
+        id: find_telemetry
+        run: echo "file=$(ls -t results/telemetry-api-*.json | head -n 1)" >> $GITHUB_OUTPUT
+      - name: Upload telemetry API JSON artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: telemetry-version2
+          path: ${{ steps.find_telemetry.outputs.file }}
+          retention-days: 1
+        if: always()
 
   compareVersions:
     name: compare - ${{ inputs.qdrant_version_1 }} vs ${{ inputs.qdrant_version_2 }}
