@@ -59,7 +59,9 @@
       ansible.builtin.shell: |
         result="{{ hostvars['benchmark-machine']['precision_score'] }}"
         engine="{{ server.name }}-{{ server.version }}"
-        score=$(echo "$result" | grep -oP "${engine}_score=\K[^,]+")
+        precision_before_iteration=$(echo "$result" | grep -oP "${engine}_precision_before_iteration=\K[^,]+")
+        precision_after_iteration=$(echo "$result" | grep -oP "${engine}_precision_after_iteration=\K[^,]+")
+        precision_score=$(echo "$result" | grep -oP "${engine}_precision_score=\K[^,]+")
         indexing_time_s=$(echo "$result" | grep -oP "${engine}_indexing_time=\K[^,]+")
 
         MEASURE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
@@ -70,6 +72,8 @@
             dataset,
             measure_timestamp,
             bench_name,
+            precision_before_iteration,
+            precision_after_iteration,
             precision_score,
             indexing_time_s
         ) VALUES (
@@ -78,7 +82,9 @@
             '{{ dataset_name }}',
             '${MEASURE_TIMESTAMP}',
             '{{ bench }}',
-            '${score}',
+            '${precision_before_iteration}',
+            '${precision_after_iteration}',
+            '${precision_score}',
             '${indexing_time_s}'
         );"
         docker exec -it qdrant-postgres psql -U qdrant -d postgres -c "${pg_query}"

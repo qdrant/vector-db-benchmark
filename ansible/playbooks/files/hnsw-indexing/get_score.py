@@ -30,11 +30,17 @@ def main():
         precision_after_iteration = given_output.get("precision_after_iteration", 1.0)
         score = round(precision_before_iteration / precision_after_iteration, 4)
         indexing_time = given_output.get("indexing_total_time_s", 0.0)
-        results[label] = {"score": score, "indexing_time": indexing_time}
+        results[label] = {
+            "indexing_time": indexing_time,
+            "precision_before_iteration": precision_before_iteration,
+            "precision_after_iteration": precision_after_iteration,
+            "precision_score": score,
+        }
 
     result = ""
     for label, data in results.items():
-        result += f"{label}_score={data['score']},{label}_indexing_time={data['indexing_time']},"
+        for key, value in data.items():
+            result += f"{label}_{key}={value},"
     print(result)
     return result
 
