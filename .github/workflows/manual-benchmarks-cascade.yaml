@@ -41,12 +41,12 @@ jobs:
         id: config
         run: |
           CONFIG_FILE="benchmark-configs.json"
-          
+
           if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
             # Repository dispatch - get values from payload
             BENCHMARK_SET="${{ github.event.client_payload.benchmark_set }}"
             CURRENT_INDEX=${{ github.event.client_payload.current_index || 0 }}
-            
+
             echo "qdrant_version=${{ github.event.client_payload.qdrant_version }}" >> $GITHUB_OUTPUT
             echo "dataset=${{ github.event.client_payload.dataset }}" >> $GITHUB_OUTPUT
             echo "engine_config=${{ github.event.client_payload.engine_config }}" >> $GITHUB_OUTPUT
@@ -57,7 +57,7 @@ jobs:
             # Workflow dispatch - get benchmark set from input and read from file
             BENCHMARK_SET="${{ inputs.benchmark_set }}"
             CURRENT_INDEX=${{ inputs.current_index || 0 }}
-            
+
             if [ "$BENCHMARK_SET" = "single" ]; then
               # Single benchmark - use the input values directly
               echo "qdrant_version=${{ inputs.qdrant_version }}" >> $GITHUB_OUTPUT
@@ -72,33 +72,33 @@ jobs:
                 echo "Configuration file $CONFIG_FILE not found!"
                 exit 1
               fi
-              
+
               if ! jq empty "$CONFIG_FILE" 2>/dev/null; then
                 echo "Invalid JSON in $CONFIG_FILE"
                 exit 1
               fi
-              
+
               BENCHMARK_CONFIGS=$(jq -r ".benchmark_sets.\"$BENCHMARK_SET\"" "$CONFIG_FILE")
-              
+
               if [ "$BENCHMARK_CONFIGS" = "null" ]; then
                 echo "Benchmark set '$BENCHMARK_SET' not found in configuration file"
                 echo "Available sets:"
                 jq -r '.benchmark_sets | keys[]' "$CONFIG_FILE"
                 exit 1
               fi
-              
+
               CURRENT_CONFIG=$(echo "$BENCHMARK_CONFIGS" | jq -r ".[$CURRENT_INDEX]")
-              
+
               if [ "$CURRENT_CONFIG" = "null" ]; then
                 echo "Invalid index $CURRENT_INDEX for benchmark set '$BENCHMARK_SET'"
                 exit 1
               fi
-              
+
               QDRANT_VERSION=$(echo "$CURRENT_CONFIG" | jq -r '.qdrant_version')
               DATASET=$(echo "$CURRENT_CONFIG" | jq -r '.dataset')
               ENGINE_CONFIG=$(echo "$CURRENT_CONFIG" | jq -r '.engine_config')
               FEATURE_FLAGS=$(echo "$CURRENT_CONFIG" | jq -r '.feature_flags_all')
-              
+
               echo "qdrant_version=$QDRANT_VERSION" >> $GITHUB_OUTPUT
               echo "dataset=$DATASET" >> $GITHUB_OUTPUT
               echo "engine_config=$ENGINE_CONFIG" >> $GITHUB_OUTPUT
@@ -129,16 +129,16 @@ jobs:
           BENCHMARK_SET="${{ steps.config.outputs.benchmark_set }}"
           CURRENT_INDEX=${{ steps.config.outputs.current_index }}
           NEXT_INDEX=$((CURRENT_INDEX + 1))
-          
+
           # Get the benchmark configurations for this set
           BENCHMARK_CONFIGS=$(jq -r ".benchmark_sets.\"$BENCHMARK_SET\"" "$CONFIG_FILE")
           TOTAL_CONFIGS=$(echo "$BENCHMARK_CONFIGS" | jq length)
-          
+
           echo "Benchmark set: $BENCHMARK_SET"
           echo "Current index: $CURRENT_INDEX"
           echo "Next index: $NEXT_INDEX"
           echo "Total configs: $TOTAL_CONFIGS"
-          
+
           if [ $NEXT_INDEX -lt $TOTAL_CONFIGS ]; then
             # Get next configuration
             NEXT_CONFIG=$(echo "$BENCHMARK_CONFIGS" | jq -r ".[$NEXT_INDEX]")
@@ -146,13 +146,13 @@ jobs:
             NEXT_DATASET=$(echo "$NEXT_CONFIG" | jq -r '.dataset')
             NEXT_ENGINE_CONFIG=$(echo "$NEXT_CONFIG" | jq -r '.engine_config')
             NEXT_FEATURE_FLAGS=$(echo "$NEXT_CONFIG" | jq -r '.feature_flags_all')
-            
+
             echo "🚀 Triggering next benchmark ($NEXT_INDEX/$((TOTAL_CONFIGS-1))):"
             echo "  - qdrant_version: $NEXT_QDRANT_VERSION"
             echo "  - dataset: $NEXT_DATASET"
             echo "  - engine_config: $NEXT_ENGINE_CONFIG"
             echo "  - feature_flags_all: $NEXT_FEATURE_FLAGS"
-            
+
             # Trigger next benchmark via repository dispatch
             curl -X POST \
               -H "Accept: application/vnd.github.v3+json" \
