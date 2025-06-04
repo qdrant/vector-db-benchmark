@@ -20,8 +20,8 @@ on:
             default: false
         # Inputs to control cascade behavior
         benchmark_set:
-            description: "Benchmark set to run (from .github/benchmark-configs.json)"
-            default: "single"
+            description: "Benchmark set to run (from benchmark-configs.json)"
+            default: "smoke_test"
         current_index:
             description: "Current benchmark index in cascade (internal use)"
             default: "0"
