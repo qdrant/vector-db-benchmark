@@ -1,7 +1,6 @@
 name: Continuous Benchmark 2
 
 on:
-  repository_dispatch:
   workflow_dispatch:
     inputs:
       feature_flags_all:
