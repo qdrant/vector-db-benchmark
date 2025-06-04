@@ -1,4 +1,8 @@
 name: Automated Cascade of Benchmarks
+description: |
+  This workflow runs a series of benchmarks in a cascade fashion.
+  It can be triggered manually or via repository dispatch events.
+  The benchmarks are defined in `benchmark_cascade/benchmark-configs.json`.
 
 on:
   repository_dispatch:
