@@ -130,6 +130,10 @@ jobs:
           export ENGINE_NAME=${{ steps.config.outputs.engine_config }}
           export POSTGRES_TABLE=benchmark_manual
           export QDRANT__FEATURE_FLAGS__ALL=${{ steps.config.outputs.feature_flags_all }}
+          
+          export SERVER_NAME="benchmark-server-3"
+          export CLIENT_NAME="benchmark-server-3"
+          
           bash -x tools/setup_ci.sh
           bash -x tools/run_ci.sh
 
