@@ -92,6 +92,14 @@
         "engine_config": "qdrant-continuous-benchmark",
         "feature_flags_all": false
       }
+    ],
+    "one": [
+        {
+            "qdrant_version": "ghcr/dev",
+            "dataset": "dbpedia-openai-1M-1536-angular",
+            "engine_config": "qdrant-rps-m-16-ef-128",
+            "feature_flags_all": false
+        }
     ]
   }
 }

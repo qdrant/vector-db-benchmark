@@ -25,7 +25,7 @@ on:
         # Inputs to control cascade behavior
         benchmark_set:
             description: "Benchmark set to run (from benchmark_cascade/benchmark-configs.json)"
-            default: "single"
+            default: "one"
         current_index:
             description: "Current benchmark index in cascade (internal use)"
             default: "0"
@@ -38,10 +38,11 @@ concurrency:
 
 jobs:
   runBenchmark:
-    name: benchmark - ${{ github.event.client_payload.qdrant_version || inputs.qdrant_version }} - ${{ github.event.client_payload.dataset || inputs.dataset }}
+    name: benchmark-cascade
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        ref: ${{ github.ref }}
       - uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
