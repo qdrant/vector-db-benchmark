@@ -23,6 +23,8 @@ DATASETS=${DATASETS:-"laion-small-clip"}
 
 SNAPSHOT_URL=${SNAPSHOT_URL:-""}
 
+FETCH_ALL_RESULTS=${FETCH_ALL_RESULTS:-"false"}
+
 PRIVATE_IP_OF_THE_SERVER=$(bash "${SCRIPT_PATH}/${CLOUD_NAME}/get_private_ip.sh" "$BENCH_SERVER_NAME")
 
 if [[ "$EXPERIMENT_MODE" == "snapshot" ]]; then
@@ -63,7 +65,19 @@ fi
 
 if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "search" ]]; then
   SEARCH_RESULT_FILE=$(ssh -o ServerAliveInterval=10 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "find results/ -maxdepth 1 -type f -name '*-search-*.json' -printf '%T@ %p\n' | sort -nr | head -n 1 | cut -d' ' -f2-")
-  result_files_arr+=("$SEARCH_RESULT_FILE")
+
+  if [[ "$FETCH_ALL_RESULTS" == "true" ]]; then
+    # Extract the prefix pattern
+    # Example: qdrant-sq-rps-m-16-ef-128-random-100-search-0-2025-06-10-12-50-26.json
+    # Prefix: qdrant-sq-rps-m-16-ef-128-random-100
+    PREFIX=$(ssh -o ServerAliveInterval=10 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "basename '$SEARCH_RESULT_FILE' | sed 's/-search-.*$//'")
+    # Find all result files matching the prefix
+    while IFS= read -r file; do
+      result_files_arr+=("$file")
+    done < <(ssh -o ServerAliveInterval=10 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "find results/ -maxdepth 1 -type f -name '${PREFIX}-search-*.json' -printf '%T@ %p\n' | sort -nr | cut -d' ' -f2-")
+  else
+    result_files_arr+=("$SEARCH_RESULT_FILE")
+  fi
 fi
 
 if [[ "$EXPERIMENT_MODE" == "parallel" ]]; then
