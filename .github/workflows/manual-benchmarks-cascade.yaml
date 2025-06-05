@@ -14,10 +14,10 @@ on:
             default: ghcr/dev
         dataset:
             description: "Dataset to benchmark (used if benchmark_set=single)"
-            default: laion-small-clip
+            default: dbpedia-openai-1M-1536-angular
         engine_config:
             description: "Engine config to benchmark (used if benchmark_set=single)"
-            default: qdrant-continuous-benchmark
+            default: qdrant-rps-m-16-ef-128
         feature_flags_all:
             type: boolean
             description: "Enable all feature flags (false by default, used if benchmark_set=single)"
@@ -25,7 +25,7 @@ on:
         # Inputs to control cascade behavior
         benchmark_set:
             description: "Benchmark set to run (from benchmark_cascade/benchmark-configs.json)"
-            default: "one"
+            default: "single"
         current_index:
             description: "Current benchmark index in cascade (internal use)"
             default: "0"
@@ -131,7 +131,7 @@ jobs:
           export POSTGRES_TABLE=benchmark_manual
           export QDRANT__FEATURE_FLAGS__ALL=${{ steps.config.outputs.feature_flags_all }}
           
-          export SERVER_NAME="benchmark-server-3"
+          export SERVER_NAME="benchmark-server-4"
           export CLIENT_NAME="benchmark-server-3"
           
           bash -x tools/setup_ci.sh
@@ -187,6 +187,17 @@ jobs:
               }"
           else
             echo "🎉 All benchmarks in set '$BENCHMARK_SET' completed! ($TOTAL_CONFIGS total)"
+            export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
+            export SERVER_NAME="benchmark-server-4"
+            export CLIENT_NAME="benchmark-server-3"
+            bash -x tools/tear_down.sh
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Tear down server if single benchmark
+        if: steps.config.outputs.benchmark_set == 'single'
+        run: |
+          export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
+          export SERVER_NAME="benchmark-server-4"
+          export CLIENT_NAME="benchmark-server-3"
+          bash -x tools/tear_down.sh

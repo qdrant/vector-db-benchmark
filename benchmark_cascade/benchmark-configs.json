@@ -7,49 +7,392 @@
       {
         "qdrant_version": "ghcr/dev",
         "dataset": "dbpedia-openai-1M-1536-angular",
-        "engine_config": "qdrant-continuous-benchmark",
+        "engine_config": "qdrant-rps-m-16-ef-128",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "dbpedia-openai-1M-1536-angular",
+        "engine_config": "qdrant-sq-rps-m-64-ef-512",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "dbpedia-openai-1M-1536-angular",
+        "engine_config": "latest-qdrant-bq-rps-m-32",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "dbpedia-openai-1M-1536-angular",
+        "engine_config": "qdrant-sq-rps-m-64-ef-256",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "dbpedia-openai-1M-1536-angular",
+        "engine_config": "qdrant-sq-rps-m-32-ef-512",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "dbpedia-openai-1M-1536-angular",
+        "engine_config": "qdrant-rps-m-64-ef-512",
+        "feature_flags_all": false
+      },
+
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "deep-image-96-angular",
+        "engine_config": "qdrant-rps-m-16-ef-128",
         "feature_flags_all": false
       },
       {
         "qdrant_version": "ghcr/dev",
         "dataset": "deep-image-96-angular",
-        "engine_config": "qdrant-continuous-benchmark",
-        "feature_flags_all": true
+        "engine_config": "qdrant-sq-rps-m-32-ef-256",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "deep-image-96-angular",
+        "engine_config": "qdrant-sq-rps-m-32-ef-512",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "deep-image-96-angular",
+        "engine_config": "qdrant-sq-rps-m-64-ef-256",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "deep-image-96-angular",
+        "engine_config": "qdrant-rps-m-32-ef-512",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "deep-image-96-angular",
+        "engine_config": "qdrant-sq-rps-m-64-ef-512",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "deep-image-96-angular",
+        "engine_config": "qdrant-rps-m-64-ef-512",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "deep-image-96-angular",
+        "engine_config": "qdrant-sq-rps-m-32-ef-256",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "deep-image-96-angular",
+        "engine_config": "qdrant-m-32-ef-512",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "deep-image-96-angular",
+        "engine_config": "qdrant-m-64-ef-512",
+        "feature_flags_all": false
+      },
+
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "gist-960-euclidean",
+        "engine_config": "latest-qdrant-bq-rps-m-32",
+        "feature_flags_all": false
       },
       {
         "qdrant_version": "ghcr/dev",
         "dataset": "gist-960-euclidean",
-        "engine_config": "qdrant-continuous-benchmark",
+        "engine_config": "qdrant-sq-rps-m-16-ef-128",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "gist-960-euclidean",
+        "engine_config": "qdrant-sq-rps-m-32-ef-128",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "gist-960-euclidean",
+        "engine_config": "qdrant-sq-rps-m-32-ef-256",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "gist-960-euclidean",
+        "engine_config": "qdrant-sq-rps-m-32-ef-512",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "gist-960-euclidean",
+        "engine_config": "qdrant-sq-rps-m-64-ef-512",
+        "feature_flags_all": false
+      },
+
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "glove-100-angular",
+        "engine_config": "qdrant-rps-m-16-ef-128",
         "feature_flags_all": false
       },
       {
         "qdrant_version": "ghcr/dev",
         "dataset": "glove-100-angular",
-        "engine_config": "qdrant-continuous-benchmark",
+        "engine_config": "qdrant-rps-m-32-ef-128",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "glove-100-angular",
+        "engine_config": "qdrant-rps-m-32-ef-512",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "glove-100-angular",
+        "engine_config": "qdrant-rps-m-32-ef-256",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "glove-100-angular",
+        "engine_config": "qdrant-rps-m-64-ef-256",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "glove-100-angular",
+        "engine_config": "qdrant-rps-m-64-ef-512",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "glove-100-angular",
+        "engine_config": "qdrant-sq-rps-m-64-ef-256",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "glove-100-angular",
+        "engine_config": "qdrant-sq-rps-m-64-ef-512",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "glove-100-angular",
+        "engine_config": "qdrant-sq-rps-m-32-ef-256",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "glove-100-angular",
+        "engine_config": "qdrant-sq-rps-m-32-ef-512",
+        "feature_flags_all": false
+      },
+
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "dbpedia-openai-1M-1536-angular",
+        "engine_config": "qdrant-rps-m-16-ef-128",
         "feature_flags_all": false
       },
       {
         "qdrant_version": "docker/master",
         "dataset": "dbpedia-openai-1M-1536-angular",
-        "engine_config": "qdrant-continuous-benchmark",
+        "engine_config": "qdrant-sq-rps-m-64-ef-512",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "dbpedia-openai-1M-1536-angular",
+        "engine_config": "latest-qdrant-bq-rps-m-32",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "dbpedia-openai-1M-1536-angular",
+        "engine_config": "qdrant-sq-rps-m-64-ef-256",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "dbpedia-openai-1M-1536-angular",
+        "engine_config": "qdrant-sq-rps-m-32-ef-512",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "dbpedia-openai-1M-1536-angular",
+        "engine_config": "qdrant-rps-m-64-ef-512",
+        "feature_flags_all": false
+      },
+
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "deep-image-96-angular",
+        "engine_config": "qdrant-rps-m-16-ef-128",
         "feature_flags_all": false
       },
       {
         "qdrant_version": "docker/master",
         "dataset": "deep-image-96-angular",
-        "engine_config": "qdrant-continuous-benchmark",
-        "feature_flags_all": true
+        "engine_config": "qdrant-sq-rps-m-32-ef-256",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "deep-image-96-angular",
+        "engine_config": "qdrant-sq-rps-m-32-ef-512",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "deep-image-96-angular",
+        "engine_config": "qdrant-sq-rps-m-64-ef-256",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "deep-image-96-angular",
+        "engine_config": "qdrant-rps-m-32-ef-512",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "deep-image-96-angular",
+        "engine_config": "qdrant-sq-rps-m-64-ef-512",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "deep-image-96-angular",
+        "engine_config": "qdrant-rps-m-64-ef-512",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "deep-image-96-angular",
+        "engine_config": "qdrant-sq-rps-m-32-ef-256",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "deep-image-96-angular",
+        "engine_config": "qdrant-m-32-ef-512",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "deep-image-96-angular",
+        "engine_config": "qdrant-m-64-ef-512",
+        "feature_flags_all": false
+      },
+
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "gist-960-euclidean",
+        "engine_config": "latest-qdrant-bq-rps-m-32",
+        "feature_flags_all": false
       },
       {
         "qdrant_version": "docker/master",
         "dataset": "gist-960-euclidean",
-        "engine_config": "qdrant-continuous-benchmark",
+        "engine_config": "qdrant-sq-rps-m-16-ef-128",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "gist-960-euclidean",
+        "engine_config": "qdrant-sq-rps-m-32-ef-128",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "gist-960-euclidean",
+        "engine_config": "qdrant-sq-rps-m-32-ef-256",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "gist-960-euclidean",
+        "engine_config": "qdrant-sq-rps-m-32-ef-512",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "gist-960-euclidean",
+        "engine_config": "qdrant-sq-rps-m-64-ef-512",
+        "feature_flags_all": false
+      },
+
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "glove-100-angular",
+        "engine_config": "qdrant-rps-m-16-ef-128",
         "feature_flags_all": false
       },
       {
         "qdrant_version": "docker/master",
         "dataset": "glove-100-angular",
-        "engine_config": "qdrant-continuous-benchmark",
+        "engine_config": "qdrant-rps-m-32-ef-128",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "glove-100-angular",
+        "engine_config": "qdrant-rps-m-32-ef-512",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "glove-100-angular",
+        "engine_config": "qdrant-rps-m-32-ef-256",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "glove-100-angular",
+        "engine_config": "qdrant-rps-m-64-ef-256",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "glove-100-angular",
+        "engine_config": "qdrant-rps-m-64-ef-512",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "glove-100-angular",
+        "engine_config": "qdrant-sq-rps-m-64-ef-256",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "glove-100-angular",
+        "engine_config": "qdrant-sq-rps-m-64-ef-512",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "glove-100-angular",
+        "engine_config": "qdrant-sq-rps-m-32-ef-256",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "glove-100-angular",
+        "engine_config": "qdrant-sq-rps-m-32-ef-512",
         "feature_flags_all": false
       }
     ],
@@ -66,40 +409,6 @@
         "engine_config": "qdrant-continuous-benchmark",
         "feature_flags_all": true
       }
-    ],
-    "dataset_comparison": [
-      {
-        "qdrant_version": "ghcr/dev",
-        "dataset": "dbpedia-openai-1M-1536-angular",
-        "engine_config": "qdrant-continuous-benchmark",
-        "feature_flags_all": false
-      },
-      {
-        "qdrant_version": "ghcr/dev",
-        "dataset": "deep-image-96-angular",
-        "engine_config": "qdrant-continuous-benchmark",
-        "feature_flags_all": true
-      },
-      {
-        "qdrant_version": "ghcr/dev",
-        "dataset": "gist-960-euclidean",
-        "engine_config": "qdrant-continuous-benchmark",
-        "feature_flags_all": false
-      },
-      {
-        "qdrant_version": "ghcr/dev",
-        "dataset": "glove-100-angular",
-        "engine_config": "qdrant-continuous-benchmark",
-        "feature_flags_all": false
-      }
-    ],
-    "one": [
-        {
-            "qdrant_version": "ghcr/dev",
-            "dataset": "dbpedia-openai-1M-1536-angular",
-            "engine_config": "qdrant-rps-m-16-ef-128",
-            "feature_flags_all": false
-        }
     ]
   }
 }
