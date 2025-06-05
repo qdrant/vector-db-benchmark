@@ -1,7 +1,6 @@
 name: Continuous Benchmark
 
 on:
-  repository_dispatch:
   workflow_dispatch:
     inputs:
       with_payload:

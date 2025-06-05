@@ -1,4 +1,8 @@
 name: Automated Cascade of Benchmarks
+description: |
+  This workflow runs a series of benchmarks in a cascade fashion.
+  It can be triggered manually or via repository dispatch events.
+  The benchmarks are defined in `benchmark_cascade/benchmark-configs.json`.
 
 on:
   repository_dispatch:
@@ -6,25 +10,31 @@ on:
   workflow_dispatch:
     inputs:
         qdrant_version:
-            description: "Version of qdrant to benchmark (tags/v1.6.1, <commit-id>, my-branch, docker/v1.5.1, ghcr/dev)"
+            description: "Version of qdrant to benchmark (docker/v1.5.1, ghcr/dev etc), used when benchmark_set=single"
             default: ghcr/dev
         dataset:
-            description: "Dataset to benchmark"
+            description: "Dataset to benchmark (used if benchmark_set=single)"
             default: laion-small-clip
         engine_config:
-            description: "Engine config to benchmark"
+            description: "Engine config to benchmark (used if benchmark_set=single)"
             default: qdrant-continuous-benchmark
         feature_flags_all:
             type: boolean
-            description: "Enable all feature flags (false by default)"
+            description: "Enable all feature flags (false by default, used if benchmark_set=single)"
             default: false
         # Inputs to control cascade behavior
         benchmark_set:
-            description: "Benchmark set to run (from benchmark-configs.json)"
-            default: "smoke_test"
+            description: "Benchmark set to run (from benchmark_cascade/benchmark-configs.json)"
+            default: "single"
         current_index:
             description: "Current benchmark index in cascade (internal use)"
             default: "0"
+
+# Restrict to only running this workflow one at a time.
+# Any new runs will be queued until the previous run is complete.
+# Any existing pending runs will be cancelled and replaced with current run.
+concurrency:
+  group: continuous-benchmark
 
 jobs:
   runBenchmark:
@@ -40,7 +50,7 @@ jobs:
       - name: Set benchmark configuration
         id: config
         run: |
-          CONFIG_FILE="benchmark-configs.json"
+          CONFIG_FILE="benchmark_cascade/benchmark-configs.json"
 
           if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
             # Repository dispatch - get values from payload
@@ -119,13 +129,13 @@ jobs:
           export POSTGRES_TABLE=benchmark_manual
           export QDRANT__FEATURE_FLAGS__ALL=${{ steps.config.outputs.feature_flags_all }}
           bash -x tools/setup_ci.sh
-          # bash -x tools/run_ci.sh
+          bash -x tools/run_ci.sh
 
       # Trigger next benchmark in cascade if there are more to run
       - name: Trigger next benchmark
         if: steps.config.outputs.benchmark_set != 'single'
         run: |
-          CONFIG_FILE="benchmark-configs.json"
+          CONFIG_FILE="benchmark_cascade/benchmark-configs.json"
           BENCHMARK_SET="${{ steps.config.outputs.benchmark_set }}"
           CURRENT_INDEX=${{ steps.config.outputs.current_index }}
           NEXT_INDEX=$((CURRENT_INDEX + 1))
