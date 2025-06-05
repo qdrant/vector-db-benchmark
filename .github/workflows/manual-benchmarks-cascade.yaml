@@ -10,17 +10,17 @@ on:
   workflow_dispatch:
     inputs:
         qdrant_version:
-            description: "Version of qdrant to benchmark (tags/v1.6.1, <commit-id>, my-branch, docker/v1.5.1, ghcr/dev)"
+            description: "Version of qdrant to benchmark (docker/v1.5.1, ghcr/dev etc), used when benchmark_set=single"
             default: ghcr/dev
         dataset:
-            description: "Dataset to benchmark (if benchmark_set=single)"
+            description: "Dataset to benchmark (used if benchmark_set=single)"
             default: laion-small-clip
         engine_config:
-            description: "Engine config to benchmark"
+            description: "Engine config to benchmark (used if benchmark_set=single)"
             default: qdrant-continuous-benchmark
         feature_flags_all:
             type: boolean
-            description: "Enable all feature flags (false by default)"
+            description: "Enable all feature flags (false by default, used if benchmark_set=single)"
             default: false
         # Inputs to control cascade behavior
         benchmark_set:
