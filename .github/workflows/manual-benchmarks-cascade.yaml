@@ -120,6 +120,72 @@ jobs:
             fi
           fi
 
+      - name: Set up server and client machines
+        run: |
+          export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
+          export CURRENT_INDEX=${{ steps.config.outputs.current_index }}
+          
+          export SERVER_NAME="benchmark-cascade-server-${CURRENT_INDEX}"
+          export CLIENT_NAME="benchmark-cascade-client-${CURRENT_INDEX}"
+          export BENCH_SERVER_NAME=${SERVER_NAME}
+          export BENCH_CLIENT_NAME=${CLIENT_NAME}
+          
+          bash -x tools/setup_ci.sh
+          
+          # Function to create server with retries
+          create_server_with_retries() {
+            local server_name=$1
+            local server_type=$2
+            local max_retries=5
+            local retry_count=0
+            
+            while [ $retry_count -lt $max_retries ]; do
+              echo "Creating server $server_name (attempt $((retry_count + 1))/$max_retries)..."
+              
+              if SERVER_NAME=$server_name SERVER_TYPE=$server_type bash -x "tools/hetzner/create_and_install.sh"; then
+                echo "Successfully created server $server_name"
+                return 0
+              else
+                retry_count=$((retry_count + 1))
+                if [ $retry_count -lt $max_retries ]; then
+                  echo "Failed to create server $server_name, waiting 60 seconds before retry..."
+                  sleep 60
+                fi
+              fi
+            done
+            
+            echo "Failed to create server $server_name after $max_retries attempts"
+            return 1
+          }
+          
+          # Create server and client machines with retries in parallel
+          # Start both server creations in background
+          create_server_with_retries "$BENCH_SERVER_NAME" "cpx51" &
+          SERVER_PID=$!
+          
+          create_server_with_retries "$BENCH_CLIENT_NAME" "cpx41" &
+          CLIENT_PID=$!
+          
+          # Wait for both to complete and check their exit statuses
+          wait $SERVER_PID
+          SERVER_EXIT_CODE=$?
+          
+          wait $CLIENT_PID
+          CLIENT_EXIT_CODE=$?
+          
+          # Check if both succeeded
+          if [ $SERVER_EXIT_CODE -ne 0 ]; then
+            echo "Failed to create server machine"
+            exit 1
+          fi
+          
+          if [ $CLIENT_EXIT_CODE -ne 0 ]; then
+            echo "Failed to create client machine"
+            exit 1
+          fi
+          
+          echo "Both machines created successfully"
+
       - name: Run benchmark
         run: |
           export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
@@ -134,17 +200,8 @@ jobs:
           
           export SERVER_NAME="benchmark-cascade-server-${CURRENT_INDEX}"
           export CLIENT_NAME="benchmark-cascade-client-${CURRENT_INDEX}"
-          
-          bash -x tools/setup_ci.sh
-          
-          # Set up server and client machines
-          SERVER_NAME=$BENCH_SERVER_NAME SERVER_TYPE='cpx51' bash -x "tools/hetzner/create_and_install.sh" &
-          SERVER_CREATION_PID=$!
-          wait $SERVER_CREATION_PID
-          SERVER_NAME=$BENCH_CLIENT_NAME SERVER_TYPE='cpx41' bash -x "tools/hetzner/create_and_install.sh"
-          CLIENT_CREATION_PID=$!
-          wait $CLIENT_CREATION_PID
 
+          bash -x tools/setup_ci.sh
           bash -x tools/run_ci.sh
 
       - name: Tear down machines
@@ -194,16 +251,15 @@ jobs:
             curl -X POST \
               -H "Accept: application/vnd.github.v3+json" \
               -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              https://api.github.com/repos/${{ github.repository }}/dispatches \
+              "https://api.github.com/repos/${{ github.repository }}/actions/workflows/manual-benchmarks-cascade.yaml/dispatches" \
               -d "{
-                \"event_type\": \"run-benchmark-cascade\",
-                \"client_payload\": {
+                \"inputs\": {
                   \"qdrant_version\": \"$NEXT_QDRANT_VERSION\",
                   \"dataset\": \"$NEXT_DATASET\",
                   \"engine_config\": \"$NEXT_ENGINE_CONFIG\",
                   \"feature_flags_all\": $NEXT_FEATURE_FLAGS,
                   \"benchmark_set\": \"$BENCHMARK_SET\",
-                  \"current_index\": $NEXT_INDEX
+                  \"current_index\": \"$NEXT_INDEX\"
                 },
                 \"ref\": \"${{ github.ref }}\"
               }"
