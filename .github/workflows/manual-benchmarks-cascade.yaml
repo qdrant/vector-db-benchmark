@@ -130,12 +130,33 @@ jobs:
           export ENGINE_NAME=${{ steps.config.outputs.engine_config }}
           export POSTGRES_TABLE=benchmark_manual
           export QDRANT__FEATURE_FLAGS__ALL=${{ steps.config.outputs.feature_flags_all }}
+          export CURRENT_INDEX=${{ steps.config.outputs.current_index }}
           
-          export SERVER_NAME="benchmark-server-4"
-          export CLIENT_NAME="benchmark-server-3"
+          export SERVER_NAME="benchmark-cascade-server-${CURRENT_INDEX}"
+          export CLIENT_NAME="benchmark-cascade-client-${CURRENT_INDEX}"
           
           bash -x tools/setup_ci.sh
+          
+          # Set up server and client machines
+          SERVER_NAME=$BENCH_SERVER_NAME SERVER_TYPE='cpx51' bash -x "tools/hetzner/create_and_install.sh" &
+          SERVER_CREATION_PID=$!
+          wait $SERVER_CREATION_PID
+          SERVER_NAME=$BENCH_CLIENT_NAME SERVER_TYPE='cpx41' bash -x "tools/hetzner/create_and_install.sh"
+          CLIENT_CREATION_PID=$!
+          wait $CLIENT_CREATION_PID
+
           bash -x tools/run_ci.sh
+
+      - name: Tear down machines
+        if: ${{ always() }}
+        continue-on-error: true
+        run: |
+          export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
+          export CURRENT_INDEX=${{ steps.config.outputs.current_index }}
+          
+          export SERVER_NAME="benchmark-cascade-server-${CURRENT_INDEX}"
+          export CLIENT_NAME="benchmark-cascade-client-${CURRENT_INDEX}"
+          bash -x tools/tear_down.sh
 
       # Trigger next benchmark in cascade if there are more to run
       - name: Trigger next benchmark
@@ -183,21 +204,11 @@ jobs:
                   \"feature_flags_all\": $NEXT_FEATURE_FLAGS,
                   \"benchmark_set\": \"$BENCHMARK_SET\",
                   \"current_index\": $NEXT_INDEX
-                }
+                },
+                \"ref\": \"${{ github.ref }}\"
               }"
           else
             echo "🎉 All benchmarks in set '$BENCHMARK_SET' completed! ($TOTAL_CONFIGS total)"
-            export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
-            export SERVER_NAME="benchmark-server-4"
-            export CLIENT_NAME="benchmark-server-3"
-            bash -x tools/tear_down.sh
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Tear down server if single benchmark
-        if: steps.config.outputs.benchmark_set == 'single'
-        run: |
-          export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
-          export SERVER_NAME="benchmark-server-4"
-          export CLIENT_NAME="benchmark-server-3"
-          bash -x tools/tear_down.sh
