@@ -55,14 +55,7 @@ jobs:
           
           if [ "$BENCHMARK_SET" = "single" ]; then
             # Single benchmark - create a matrix with one item
-            MATRIX_JSON='[{
-              "index": 0,
-              "qdrant_version": "'${{ inputs.qdrant_version }}'",
-              "qdrant_version_sanitized": "'$(echo "${{ inputs.qdrant_version }}" | sed "s|/|-|g")'",
-              "dataset": "'${{ inputs.dataset }}'",
-              "engine_config": "'${{ inputs.engine_config }}'",
-              "feature_flags_all": '${{ inputs.feature_flags_all }}'
-            }]'
+            MATRIX_JSON='[{"index": 0, "qdrant_version": "'${{ inputs.qdrant_version }}'", "qdrant_version_sanitized": "'$(echo "${{ inputs.qdrant_version }}" | sed "s|/|-|g")'", "dataset": "'${{ inputs.dataset }}'", "engine_config": "'${{ inputs.engine_config }}'", "feature_flags_all": '${{ inputs.feature_flags_all }}'}]'
             echo "matrix=$MATRIX_JSON" >> $GITHUB_OUTPUT
             echo "has_next_batch=false" >> $GITHUB_OUTPUT
             echo "next_batch=0" >> $GITHUB_OUTPUT
@@ -118,14 +111,7 @@ jobs:
               
               QDRANT_VERSION_SANITIZED=$(echo "$QDRANT_VERSION" | sed 's|/|-|g')
           
-              MATRIX_JSON="${MATRIX_JSON}{
-                \"index\": \"$i\",
-                \"qdrant_version\": \"$QDRANT_VERSION\",
-                \"qdrant_version_sanitized\": \"$QDRANT_VERSION_SANITIZED\",
-                \"dataset\": \"$DATASET\",
-                \"engine_config\": \"$ENGINE_CONFIG\",
-                \"feature_flags_all\": $FEATURE_FLAGS
-              }"
+              MATRIX_JSON="${MATRIX_JSON}{\"index\": $i, \"qdrant_version\": \"$QDRANT_VERSION\", \"qdrant_version_sanitized\": \"$QDRANT_VERSION_SANITIZED\", \"dataset\": \"$DATASET\", \"engine_config\": \"$ENGINE_CONFIG\", \"feature_flags_all\": $FEATURE_FLAGS}"
             done
             
             MATRIX_JSON="${MATRIX_JSON}]"
