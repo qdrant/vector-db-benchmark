@@ -245,6 +245,11 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: python:3.11-slim
+    strategy:
+      max-parallel: 2
+      fail-fast: false
+      matrix:
+        config: ${{ fromJSON(needs.prepareBenchmarks.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -256,6 +261,7 @@ jobs:
       - name: Download all benchmark artifacts
         uses: actions/download-artifact@v4
         with:
+          name: results-${{ matrix.config.qdrant_version_sanitized }}-${{ matrix.config.dataset }}-${{ matrix.config.engine_config }}-${{ matrix.config.index }}
           path: artifacts/
       - name: Prepare results directory
         run: |
