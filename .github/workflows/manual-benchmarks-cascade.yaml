@@ -336,7 +336,7 @@ jobs:
         with:
           name: final-processed-results
           path: |
-            scripts/results*.json
+            scripts/results.json
           retention-days: 1
 
   triggerNextBatch:
