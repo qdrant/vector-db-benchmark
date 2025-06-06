@@ -1,12 +1,10 @@
 name: Automated Cascade of Benchmarks
 description: |
   This workflow runs a series of benchmarks in a cascade fashion.
-  It can be triggered manually or via repository dispatch events.
-  The benchmarks are defined in `benchmark_cascade/benchmark-configs.json`.
+  It is triggered manually. The benchmarks are defined in `benchmark_cascade/benchmark-configs.json`.
+  Each benchmark runs on a dedicated server and client machine.
 
 on:
-  repository_dispatch:
-    types: [run-benchmark, run-benchmark-cascade]
   workflow_dispatch:
     inputs:
         qdrant_version:
@@ -24,17 +22,11 @@ on:
             default: false
         # Inputs to control cascade behavior
         benchmark_set:
-            description: "Benchmark set to run (from benchmark_cascade/benchmark-configs.json)"
+            description: "Benchmark set to run (from benchmark_cascade/benchmark-configs.json or 'single' for the benchmark from inputs)"
             default: "single"
         current_index:
             description: "Current benchmark index in cascade (internal use)"
             default: "0"
-
-# Restrict to only running this workflow one at a time.
-# Any new runs will be queued until the previous run is complete.
-# Any existing pending runs will be cancelled and replaced with current run.
-#concurrency:
-#  group: continuous-benchmark
 
 jobs:
   runBenchmark:
@@ -214,6 +206,13 @@ jobs:
           export SERVER_NAME="benchmark-cascade-server-${CURRENT_INDEX}"
           export CLIENT_NAME="benchmark-cascade-client-${CURRENT_INDEX}"
           bash -x tools/tear_down.sh
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: results-${{ steps.config.outputs.current_index }}
+          path: results/
+          retention-days: 1
 
       # Trigger next benchmark in cascade if there are more to run
       - name: Trigger next benchmark
