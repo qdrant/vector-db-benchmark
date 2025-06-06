@@ -237,7 +237,7 @@ jobs:
         with:
           name: results-${{ matrix.config.qdrant_version_sanitized }}-${{ matrix.config.dataset }}-${{ matrix.config.engine_config }}-${{ matrix.config.index }}
           path: results/
-          retention-days: 1
+          retention-days: 7
 
   processBenchmarks:
     name: Process Benchmark Results
@@ -245,11 +245,6 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: python:3.11-slim
-    strategy:
-      max-parallel: 2
-      fail-fast: false
-      matrix:
-        config: ${{ fromJSON(needs.prepareBenchmarks.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -261,7 +256,6 @@ jobs:
       - name: Download all benchmark artifacts
         uses: actions/download-artifact@v4
         with:
-          name: results-${{ matrix.config.qdrant_version_sanitized }}-${{ matrix.config.dataset }}-${{ matrix.config.engine_config }}-${{ matrix.config.index }}
           path: artifacts/
       - name: Prepare results directory
         run: |
@@ -276,10 +270,10 @@ jobs:
       - name: Upload processed results
         uses: actions/upload-artifact@v4
         with:
-          name: processed-results-${{ matrix.config.qdrant_version_sanitized }}-${{ matrix.config.dataset }}-${{ matrix.config.engine_config }}-${{ matrix.config.index }}
+          name: processed-results
           path: |
             scripts/results.json
-          retention-days: 1
+          retention-days: 7
 
   triggerNextBatch:
     name: Trigger Next Batch
