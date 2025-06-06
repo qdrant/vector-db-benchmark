@@ -27,6 +27,9 @@ on:
         current_batch:
             description: "Current batch index (for cascading, internal use)"
             default: "0"
+        workflow_run_ids:
+            description: "Comma-separated list of workflow run IDs (for internal use)"
+            default: ""
 
 jobs:
   prepareBenchmarks:
@@ -37,6 +40,7 @@ jobs:
       has_next_batch: ${{ steps.prepare.outputs.has_next_batch }}
       next_batch: ${{ steps.prepare.outputs.next_batch }}
       benchmark_set: ${{ steps.prepare.outputs.benchmark_set }}
+      workflow_run_ids: ${{ steps.prepare.outputs.workflow_run_ids }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -51,6 +55,15 @@ jobs:
           BATCH_SIZE=2  # Number of parallel jobs
           
           echo "benchmark_set=$BENCHMARK_SET" >> $GITHUB_OUTPUT
+          
+          # Accumulate workflow run IDs
+          WORKFLOW_RUN_IDS="${{ inputs.workflow_run_ids }}"
+          if [ -n "$WORKFLOW_RUN_IDS" ]; then
+            WORKFLOW_RUN_IDS="${WORKFLOW_RUN_IDS},${{ github.run_id }}"
+          else
+            WORKFLOW_RUN_IDS="${{ github.run_id }}"
+          fi
+          echo "workflow_run_ids=$WORKFLOW_RUN_IDS" >> $GITHUB_OUTPUT
           
           if [ "$BENCHMARK_SET" = "single" ]; then
             # Single benchmark - create a matrix with one item
@@ -237,11 +250,12 @@ jobs:
         with:
           name: results-${{ matrix.config.qdrant_version_sanitized }}-${{ matrix.config.dataset }}-${{ matrix.config.engine_config }}-${{ matrix.config.index }}
           path: results/
-          retention-days: 7
+          retention-days: 1
 
   processBenchmarks:
-    name: Process Benchmark Results
+    name: Process All Benchmark Results
     needs: [prepareBenchmarks, runBenchmarks]
+    if: needs.prepareBenchmarks.outputs.has_next_batch == 'false'
     runs-on: ubuntu-latest
     container:
       image: python:3.11-slim
@@ -249,31 +263,79 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.ref }}
+      
       - name: Install dependencies
         run: |
           pip install pandas jupyter nbconvert
 
-      - name: Download all benchmark artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts/
+      - name: Download artifacts from specific workflow runs
+        run: |
+          # Install GitHub CLI
+          apt-get update && apt-get install -y curl unzip
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          apt-get update && apt-get install -y gh
+          
+          # Download artifacts from specific workflow runs
+          mkdir -p artifacts
+          
+          # Get workflow run IDs from the accumulated list
+          WORKFLOW_RUN_IDS="${{ needs.prepareBenchmarks.outputs.workflow_run_ids }}"
+          echo "Workflow run IDs: $WORKFLOW_RUN_IDS"
+          
+          # Convert comma-separated list to array and download artifacts from each run
+          IFS=',' read -ra RUN_IDS <<< "$WORKFLOW_RUN_IDS"
+          for run_id in "${RUN_IDS[@]}"; do
+            echo "Downloading artifacts from run $run_id"
+            
+            # List artifacts for this run
+            gh api repos/${{ github.repository }}/actions/runs/$run_id/artifacts \
+              --jq '.artifacts[] | select(.name | startswith("results-")) | {name: .name, url: .archive_download_url}' \
+              | while IFS= read -r line; do
+                  artifact_name=$(echo "$line" | jq -r '.name')
+                  artifact_url=$(echo "$line" | jq -r '.url')
+                  
+                  if [ -n "$artifact_url" ] && [ "$artifact_url" != "null" ]; then
+                    echo "Downloading $artifact_name from run $run_id"
+                    gh api "$artifact_url" > "artifacts/${run_id}-${artifact_name}.zip" || true
+                  fi
+                done
+          done
+          
+          # Extract all downloaded artifacts
+          cd artifacts
+          for zip_file in *.zip; do
+            if [ -f "$zip_file" ]; then
+              unzip -o "$zip_file" && rm "$zip_file"
+            fi
+          done
+          cd ..
+          
+          ls -la artifacts/
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Prepare results directory
         run: |
           mkdir -p results
           find artifacts/ -name "*.json" -exec cp {} results/ \;
           ls -la results/
+          echo "Found $(ls results/*.json | wc -l) result files"
+
       - name: Execute Jupyter notebook
         run: |
           cd scripts
-          jupyter nbconvert --to notebook --execute process-benchmarks.ipynb
+          jupyter nbconvert --to notebook --execute process-benchmarks.ipynb --output process-benchmarks-executed.ipynb
+          ls -la .
           cd ..
+
       - name: Upload processed results
         uses: actions/upload-artifact@v4
         with:
-          name: processed-results
+          name: final-processed-results
           path: |
-            scripts/results.json
-          retention-days: 7
+            scripts/results*.json
+          retention-days: 1
 
   triggerNextBatch:
     name: Trigger Next Batch
@@ -294,7 +356,8 @@ jobs:
             -d "{
               \"inputs\": {
                 \"benchmark_set\": \"${{ needs.prepareBenchmarks.outputs.benchmark_set }}\",
-                \"current_batch\": \"${{ needs.prepareBenchmarks.outputs.next_batch }}\"
+                \"current_batch\": \"${{ needs.prepareBenchmarks.outputs.next_batch }}\",
+                \"workflow_run_ids\": \"${{ needs.prepareBenchmarks.outputs.workflow_run_ids }}\"
               },
               \"ref\": \"${{ github.ref }}\"
             }"
