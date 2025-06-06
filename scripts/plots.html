@@ -1,0 +1,622 @@
+<!--
+This HTML file is designed to visualize vector database benchmark results using Chart.js and Tailwind CSS.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vector Database Benchmark Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        .chart-container {
+            position: relative;
+            height: 500px;
+            width: 100%;
+        }
+
+        .file-input {
+            background: linear-gradient(145deg, #f3f4f6, #e5e7eb);
+        }
+
+        .animate-pulse-custom {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="max-w-7xl mx-auto p-6 bg-white min-h-screen">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Vector Database Benchmark Visualization</h1>
+            <p class="text-gray-600">Upload your JSON benchmark data to create interactive performance charts comparing different engines and configurations.</p>
+        </div>
+
+        <!-- Data Input Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="space-y-4">
+                <h2 class="text-xl font-semibold text-gray-800">Data Input</h2>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Upload JSON File</label>
+                    <input
+                        type="file"
+                        id="fileInput"
+                        accept=".json"
+                        class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file-input"
+                    />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Or Paste JSON Data</label>
+                    <textarea
+                        id="jsonInput"
+                        placeholder="Paste your JSON benchmark data here..."
+                        class="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    ></textarea>
+                    <button
+                        id="loadDataBtn"
+                        class="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
+                    >
+                        Load Data
+                    </button>
+                    <button
+                        id="loadSampleBtn"
+                        class="mt-2 ml-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 transition-colors duration-200"
+                    >
+                        Load Sample Data
+                    </button>
+                </div>
+
+                <div id="errorMessage" class="hidden p-3 bg-red-50 border border-red-200 rounded-lg text-red-700"></div>
+                <div id="successMessage" class="hidden p-3 bg-green-50 border border-green-200 rounded-lg text-green-700"></div>
+            </div>
+
+            <div class="space-y-4">
+                <h2 class="text-xl font-semibold text-gray-800">Expected Data Format</h2>
+                <div class="p-4 bg-gray-50 rounded-lg text-sm border">
+                    <pre class="whitespace-pre-wrap text-gray-700 text-xs">[
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-rps-m-16-ef-128",
+    "dataset_name": "dbpedia-openai-1M-1536-angular",
+    "rps": 394.08,
+    "mean_time": 0.247,
+    "p95_time": 0.260,
+    "p99_time": 0.267,
+    "mean_precisions": 0.9975,
+    "parallel": 100,
+    "upload_time": 110.66,
+    "engine_params": {
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "hnsw_ef": 512
+    }
+  },
+  ...
+]</pre>
+                </div>
+                <p class="text-sm text-gray-600">
+                    Array of benchmark result objects with engine names, performance metrics, and precision values.
+                </p>
+            </div>
+        </div>
+
+        <!-- Data Summary -->
+        <div id="dataSummary" class="hidden mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h3 class="font-semibold text-blue-800 mb-2">Data Summary:</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-blue-700">
+                <div><strong>Engines:</strong> <span id="engineCount">0</span></div>
+                <div><strong>Datasets:</strong> <span id="datasetCount">0</span></div>
+                <div><strong>Total Records:</strong> <span id="recordCount">0</span></div>
+            </div>
+        </div>
+
+        <!-- Chart Controls -->
+        <div class="mb-6 p-4 bg-gray-50 rounded-lg border">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Y-Axis Metric</label>
+                    <select
+                        id="yMetricSelect"
+                        class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="rps">RPS (Requests Per Second)</option>
+                        <option value="mean_time">Mean Latency (ms)</option>
+                        <option value="p95_time">P95 Latency (ms)</option>
+                        <option value="p99_time">P99 Latency (ms)</option>
+                        <option value="upload_time">Upload Time (s)</option>
+                        <option value="total_upload_time">Index Time (s)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">X-Axis</label>
+                    <select
+                        id="xAxisSelect"
+                        class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="mean_precisions">Precision</option>
+                        <option value="parallel">Parallel Threads</option>
+                        <option value="setup_name">Setup Name</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Group By</label>
+                    <select
+                        id="groupBySelect"
+                        class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="engine_name">Engine</option>
+                        <option value="dataset_name">Dataset</option>
+                        <option value="setup_name">Setup</option>
+                        <option value="none">No Grouping</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Chart Type</label>
+                    <select
+                        id="chartTypeSelect"
+                        class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="line">Line Chart</option>
+                        <option value="scatter">Scatter Plot</option>
+                        <option value="bar">Bar Chart</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div id="filtersSection" class="hidden mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+            <h3 class="font-semibold text-yellow-800 mb-3">Filters</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="filterControls">
+                <!-- Dynamic filter controls will be added here -->
+            </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <h2 id="chartTitle" class="text-xl font-semibold text-gray-800 mb-4">
+                Performance Chart
+            </h2>
+            <div class="chart-container">
+                <canvas id="benchmarkChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h3 class="font-semibold text-blue-800 mb-2">How to use:</h3>
+            <ol class="list-decimal list-inside text-blue-700 space-y-1 text-sm">
+                <li>Upload your JSON file containing benchmark results or paste the data directly</li>
+                <li>Select the performance metric you want to visualize on the Y-axis</li>
+                <li>Choose what to display on the X-axis (precision, parallel threads, or setup names)</li>
+                <li>Group results by engine, dataset, or setup to compare different configurations</li>
+                <li>Use filters to focus on specific engines, datasets, or setups</li>
+                <li>Switch between line charts, scatter plots, and bar charts for different views</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Sample data matching the user's format
+        const sampleData = [
+            {
+                "engine_name": "qdrant",
+                "setup_name": "qdrant-rps-m-16-ef-128",
+                "dataset_name": "dbpedia-openai-1M-1536-angular",
+                "search_idx": "7",
+                "upload_time": 110.66,
+                "total_upload_time": 275.92,
+                "p95_time": 0.261,
+                "rps": 394.09,
+                "parallel": 100,
+                "p99_time": 0.267,
+                "mean_time": 0.247,
+                "mean_precisions": 0.9975,
+                "engine_params": {
+                    "hnsw_config": {
+                        "m": 16,
+                        "ef_construct": 128
+                    },
+                    "hnsw_ef": 512
+                }
+            },
+            {
+                "engine_name": "weaviate",
+                "setup_name": "weaviate-rps-ef-128",
+                "dataset_name": "dbpedia-openai-1M-1536-angular",
+                "search_idx": "7",
+                "upload_time": 125.43,
+                "total_upload_time": 298.21,
+                "p95_time": 0.312,
+                "rps": 320.45,
+                "parallel": 100,
+                "p99_time": 0.334,
+                "mean_time": 0.298,
+                "mean_precisions": 0.9950,
+                "engine_params": {
+                    "hnsw_config": {
+                        "ef_construct": 128
+                    }
+                }
+            },
+            {
+                "engine_name": "redis",
+                "setup_name": "redis-rps-default",
+                "dataset_name": "dbpedia-openai-1M-1536-angular",
+                "search_idx": "7",
+                "upload_time": 98.32,
+                "total_upload_time": 245.67,
+                "p95_time": 0.289,
+                "rps": 345.67,
+                "parallel": 100,
+                "p99_time": 0.312,
+                "mean_time": 0.267,
+                "mean_precisions": 0.9925,
+                "engine_params": {
+                    "hnsw_config": {
+                        "m": 16,
+                        "ef_construct": 100
+                    }
+                }
+            },
+            {
+                "engine_name": "qdrant",
+                "setup_name": "qdrant-rps-m-32-ef-256",
+                "dataset_name": "dbpedia-openai-1M-1536-angular",
+                "search_idx": "8",
+                "upload_time": 115.21,
+                "total_upload_time": 289.43,
+                "p95_time": 0.234,
+                "rps": 425.12,
+                "parallel": 100,
+                "p99_time": 0.245,
+                "mean_time": 0.219,
+                "mean_precisions": 0.9985,
+                "engine_params": {
+                    "hnsw_config": {
+                        "m": 32,
+                        "ef_construct": 256
+                    },
+                    "hnsw_ef": 512
+                }
+            },
+            {
+                "engine_name": "elasticsearch",
+                "setup_name": "elasticsearch-default",
+                "dataset_name": "dbpedia-openai-1M-1536-angular",
+                "search_idx": "7",
+                "upload_time": 142.56,
+                "total_upload_time": 356.78,
+                "p95_time": 0.387,
+                "rps": 258.34,
+                "parallel": 100,
+                "p99_time": 0.423,
+                "mean_time": 0.365,
+                "mean_precisions": 0.9920,
+                "engine_params": {
+                    "hnsw_config": {
+                        "m": 16,
+                        "ef_construct": 200
+                    }
+                }
+            }
+        ];
+
+        // Color palette
+        const colors = [
+            '#DC2626', '#059669', '#7C3AED', '#F59E0B', '#336791',
+            '#EC4899', '#10B981', '#8B5CF6', '#F97316', '#06B6D4'
+        ];
+
+        // State
+        let currentData = [];
+        let filteredData = [];
+        let chart = null;
+        let filters = {};
+
+        // DOM elements
+        const fileInput = document.getElementById('fileInput');
+        const jsonInput = document.getElementById('jsonInput');
+        const loadDataBtn = document.getElementById('loadDataBtn');
+        const loadSampleBtn = document.getElementById('loadSampleBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const yMetricSelect = document.getElementById('yMetricSelect');
+        const xAxisSelect = document.getElementById('xAxisSelect');
+        const groupBySelect = document.getElementById('groupBySelect');
+        const chartTypeSelect = document.getElementById('chartTypeSelect');
+        const chartTitle = document.getElementById('chartTitle');
+        const dataSummary = document.getElementById('dataSummary');
+        const filtersSection = document.getElementById('filtersSection');
+        const filterControls = document.getElementById('filterControls');
+
+        // Initialize with sample data
+        loadData(sampleData);
+
+        // Event listeners
+        fileInput.addEventListener('change', handleFileUpload);
+        loadDataBtn.addEventListener('click', handleJsonInput);
+        loadSampleBtn.addEventListener('click', () => loadData(sampleData));
+        yMetricSelect.addEventListener('change', updateChart);
+        xAxisSelect.addEventListener('change', updateChart);
+        groupBySelect.addEventListener('change', updateChart);
+        chartTypeSelect.addEventListener('change', updateChart);
+
+        function showMessage(element, message, isError = false) {
+            element.textContent = message;
+            element.className = `p-3 border rounded-lg ${isError ? 'bg-red-50 border-red-200 text-red-700' : 'bg-green-50 border-green-200 text-green-700'}`;
+            element.classList.remove('hidden');
+
+            const otherMessage = isError ? successMessage : errorMessage;
+            otherMessage.classList.add('hidden');
+
+            setTimeout(() => {
+                element.classList.add('hidden');
+            }, 5000);
+        }
+
+        async function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                try {
+                    const text = await file.text();
+                    const parsedData = JSON.parse(text);
+                    if (Array.isArray(parsedData)) {
+                        loadData(parsedData);
+                        jsonInput.value = JSON.stringify(parsedData, null, 2);
+                        showMessage(successMessage, 'File loaded successfully!');
+                    } else {
+                        throw new Error('Data should be an array of objects');
+                    }
+                } catch (err) {
+                    showMessage(errorMessage, 'Error reading file or invalid JSON format.', true);
+                }
+            }
+        }
+
+        function handleJsonInput() {
+            try {
+                const parsedData = JSON.parse(jsonInput.value);
+                if (Array.isArray(parsedData)) {
+                    loadData(parsedData);
+                    showMessage(successMessage, 'JSON data loaded successfully!');
+                } else {
+                    throw new Error('Data should be an array of objects');
+                }
+            } catch (err) {
+                showMessage(errorMessage, 'Invalid JSON format. Please check your data structure.', true);
+            }
+        }
+
+        function loadData(data) {
+            currentData = data;
+            filteredData = [...data];
+            updateDataSummary();
+            createFilterControls();
+            updateChart();
+        }
+
+        function updateDataSummary() {
+            const engines = new Set(currentData.map(d => d.engine_name));
+            const datasets = new Set(currentData.map(d => d.dataset_name));
+
+            document.getElementById('engineCount').textContent = engines.size;
+            document.getElementById('datasetCount').textContent = datasets.size;
+            document.getElementById('recordCount').textContent = currentData.length;
+
+            dataSummary.classList.remove('hidden');
+        }
+
+        function createFilterControls() {
+            const filterFields = ['engine_name', 'dataset_name', 'setup_name'];
+            filterControls.innerHTML = '';
+            filters = {};
+
+            filterFields.forEach(field => {
+                const values = [...new Set(currentData.map(d => d[field]))].sort();
+                if (values.length > 1) {
+                    const div = document.createElement('div');
+                    div.innerHTML = `
+                        <label class="block text-sm font-medium text-yellow-700 mb-2">${field.replace('_', ' ').toUpperCase()}</label>
+                        <select id="filter_${field}" class="w-full p-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-sm">
+                            <option value="">All</option>
+                            ${values.map(v => `<option value="${v}">${v}</option>`).join('')}
+                        </select>
+                    `;
+                    filterControls.appendChild(div);
+
+                    document.getElementById(`filter_${field}`).addEventListener('change', (e) => {
+                        filters[field] = e.target.value;
+                        applyFilters();
+                    });
+                }
+            });
+
+            if (filterControls.children.length > 0) {
+                filtersSection.classList.remove('hidden');
+            }
+        }
+
+        function applyFilters() {
+            filteredData = currentData.filter(row => {
+                return Object.entries(filters).every(([field, value]) => {
+                    return !value || row[field] === value;
+                });
+            });
+            updateChart();
+        }
+
+        function getChartConfig() {
+            const yMetric = yMetricSelect.value;
+            const xAxis = xAxisSelect.value;
+            const groupBy = groupBySelect.value;
+            const chartType = chartTypeSelect.value;
+
+            let datasets = [];
+
+            if (groupBy === 'none') {
+                datasets = [{
+                    label: 'All Data',
+                    data: filteredData.map(row => ({
+                        x: xAxis === 'mean_precisions' ? row[xAxis] * 100 : row[xAxis],
+                        y: yMetric.includes('time') && yMetric !== 'total_upload_time' ? row[yMetric] * 1000 : row[yMetric],
+                        originalData: row
+                    })),
+                    borderColor: colors[0],
+                    backgroundColor: colors[0] + '80',
+                    borderWidth: chartType === 'line' ? 3 : 1,
+                    fill: false,
+                    tension: 0.4,
+                    pointRadius: chartType === 'scatter' ? 6 : 4
+                }];
+            } else {
+                const groups = [...new Set(filteredData.map(d => d[groupBy]))];
+                datasets = groups.map((group, index) => {
+                    const groupData = filteredData.filter(d => d[groupBy] === group);
+                    return {
+                        label: group,
+                        data: groupData.map(row => ({
+                            x: xAxis === 'mean_precisions' ? row[xAxis] * 100 : row[xAxis],
+                            y: yMetric.includes('time') && yMetric !== 'total_upload_time' ? row[yMetric] * 1000 : row[yMetric],
+                            originalData: row
+                        })),
+                        borderColor: colors[index % colors.length],
+                        backgroundColor: colors[index % colors.length] + '80',
+                        borderWidth: chartType === 'line' ? 3 : 1,
+                        fill: false,
+                        tension: 0.4,
+                        pointRadius: chartType === 'scatter' ? 6 : 4
+                    };
+                });
+            }
+
+            const isTimeMetric = yMetric.includes('time');
+            const yLabel = yMetric === 'total_upload_time' ? 'Index Time (s)' :
+                          isTimeMetric ? yMetric.replace('_', ' ').toUpperCase() + ' (ms)' :
+                          yMetric.replace('_', ' ').toUpperCase();
+
+            const xLabel = xAxis === 'mean_precisions' ? 'Precision (%)' :
+                          xAxis.replace('_', ' ').toUpperCase();
+
+            return {
+                type: chartType === 'scatter' ? 'scatter' : chartType,
+                data: { datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    const item = tooltipItems[0];
+                                    const originalData = item.raw.originalData;
+                                    return originalData.setup_name || 'Unknown Setup';
+                                },
+                                label: function(context) {
+                                    const originalData = context.raw.originalData;
+                                    const yUnit = yMetric === 'total_upload_time' ? 's' :
+                                                 yMetric.includes('time') ? 'ms' :
+                                                 (yMetric === 'rps' ? 'RPS' : '');
+                                    const xUnit = xAxis === 'mean_precisions' ? '%' : '';
+
+                                    let labels = [];
+                                    labels.push(`${xLabel}: ${context.parsed.x}${xUnit}`);
+                                    labels.push(`${yLabel}: ${context.parsed.y.toFixed(2)}${yUnit}`);
+
+                                    if (originalData.engine_params && originalData.engine_params.hnsw_config) {
+                                        const hnsw = originalData.engine_params.hnsw_config;
+                                        labels.push(`HNSW Config:`);
+                                        if (hnsw.m) labels.push(`  • m: ${hnsw.m}`);
+                                        if (hnsw.ef_construct) labels.push(`  • ef_construct: ${hnsw.ef_construct}`);
+                                        if (hnsw.ef) labels.push(`  • ef: ${hnsw.ef}`);
+                                        if (originalData.engine_params.hnsw_ef) labels.push(`  • hnsw_ef: ${originalData.engine_params.hnsw_ef}`);
+                                    }
+
+                                    return labels;
+                                },
+                                footer: function(tooltipItems) {
+                                    const item = tooltipItems[0];
+                                    const originalData = item.raw.originalData;
+                                    let footerLines = [];
+
+                                    if (originalData.engine_name) {
+                                        footerLines.push(`Engine: ${originalData.engine_name}`);
+                                    }
+                                    if (originalData.dataset_name) {
+                                        footerLines.push(`Dataset: ${originalData.dataset_name}`);
+                                    }
+
+                                    return footerLines;
+                                }
+                            },
+                            displayColors: false,
+                            titleAlign: 'center',
+                            bodyAlign: 'left',
+                            footerAlign: 'center',
+                            titleFont: { weight: 'bold', size: 14 },
+                            bodyFont: { size: 12 },
+                            footerFont: { size: 10, style: 'italic' },
+                            padding: 12,
+                            cornerRadius: 8,
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            footerColor: '#ccc'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: xLabel },
+                            grid: { color: '#E5E7EB' },
+                            type: xAxis === 'setup_name' ? 'category' : 'linear'
+                        },
+                        y: {
+                            title: { display: true, text: yLabel },
+                            grid: { color: '#E5E7EB' }
+                        }
+                    }
+                }
+            };
+        }
+
+        function updateChart() {
+            const yMetric = yMetricSelect.value;
+            const xAxis = xAxisSelect.value;
+
+            const yMetricDisplay = yMetric === 'total_upload_time' ? 'Index Time' :
+                                  yMetric.replace('_', ' ').toUpperCase();
+            chartTitle.textContent = `${yMetricDisplay} vs ${xAxis.replace('_', ' ').toUpperCase()}`;
+
+            if (chart) {
+                chart.destroy();
+            }
+
+            if (filteredData.length > 0) {
+                const ctx = document.getElementById('benchmarkChart').getContext('2d');
+                chart = new Chart(ctx, getChartConfig());
+            }
+        }
+    </script>
+</body>
+</html>
