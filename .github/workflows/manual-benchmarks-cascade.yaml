@@ -63,7 +63,7 @@ jobs:
           else
             WORKFLOW_RUN_IDS="${{ github.run_id }}"
           fi
-          echo "workflow_run_ids=$WORKFLOW_RUN_IDS" >> $GITHUB_OUTPUT
+          echo "workflow_run_ids=$WORKFLOW_RUN_IDS" >> "$GITHUB_OUTPUT"
           
           if [ "$BENCHMARK_SET" = "single" ]; then
             # Single benchmark - create a matrix with one item
@@ -269,9 +269,10 @@ jobs:
           pip install pandas jupyter nbconvert
 
       - name: Download artifacts from specific workflow runs
+        shell: bash
         run: |
           # Install GitHub CLI
-          apt-get update && apt-get install -y curl unzip
+          apt-get update && apt-get install -y curl unzip jq
           curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
           echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
           apt-get update && apt-get install -y gh
@@ -284,22 +285,23 @@ jobs:
           echo "Workflow run IDs: $WORKFLOW_RUN_IDS"
           
           # Convert comma-separated list to array and download artifacts from each run
-          IFS=',' read -ra RUN_IDS <<< "$WORKFLOW_RUN_IDS"
-          for run_id in "${RUN_IDS[@]}"; do
-            echo "Downloading artifacts from run $run_id"
-            
-            # List artifacts for this run
-            gh api repos/${{ github.repository }}/actions/runs/$run_id/artifacts \
-              --jq '.artifacts[] | select(.name | startswith("results-")) | {name: .name, url: .archive_download_url}' \
-              | while IFS= read -r line; do
-                  artifact_name=$(echo "$line" | jq -r '.name')
-                  artifact_url=$(echo "$line" | jq -r '.url')
-                  
-                  if [ -n "$artifact_url" ] && [ "$artifact_url" != "null" ]; then
-                    echo "Downloading $artifact_name from run $run_id"
-                    gh api "$artifact_url" > "artifacts/${run_id}-${artifact_name}.zip" || true
-                  fi
-                done
+          echo "$WORKFLOW_RUN_IDS" | tr ',' '\n' | while read run_id; do
+            if [ -n "$run_id" ]; then
+              echo "Downloading artifacts from run $run_id"
+              
+              # List artifacts for this run
+              gh api repos/${{ github.repository }}/actions/runs/$run_id/artifacts \
+                --jq '.artifacts[] | select(.name | startswith("results-")) | {name: .name, url: .archive_download_url}' \
+                | while IFS= read -r line; do
+                    artifact_name=$(echo "$line" | jq -r '.name')
+                    artifact_url=$(echo "$line" | jq -r '.url')
+                    
+                    if [ -n "$artifact_url" ] && [ "$artifact_url" != "null" ]; then
+                      echo "Downloading $artifact_name from run $run_id"
+                      gh api "$artifact_url" > "artifacts/${run_id}-${artifact_name}.zip" || true
+                    fi
+                  done
+            fi
           done
           
           # Extract all downloaded artifacts
