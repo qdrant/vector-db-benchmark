@@ -402,24 +402,6 @@
         "dataset": "dbpedia-openai-1M-1536-angular",
         "engine_config": "qdrant-rps-m-16-ef-128",
         "feature_flags_all": false
-      },
-      {
-        "qdrant_version": "docker/master",
-        "dataset": "dbpedia-openai-1M-1536-angular",
-        "engine_config": "qdrant-rps-m-16-ef-128",
-        "feature_flags_all": false
-      },
-      {
-        "qdrant_version": "ghcr/dev",
-        "dataset": "deep-image-96-angular",
-        "engine_config": "qdrant-rps-m-16-ef-128",
-        "feature_flags_all": false
-      },
-      {
-        "qdrant_version": "docker/master",
-        "dataset": "deep-image-96-angular",
-        "engine_config": "qdrant-rps-m-16-ef-128",
-        "feature_flags_all": false
       }
     ]
   }

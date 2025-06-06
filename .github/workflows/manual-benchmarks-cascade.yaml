@@ -23,7 +23,7 @@ on:
         # Inputs to control cascade behavior
         benchmark_set:
             description: "Benchmark set to run (from benchmark_cascade/benchmark-configs.json or 'single' for the benchmark from inputs)"
-            default: "single"
+            default: "smoke_test"
         current_batch:
             description: "Current batch index (for cascading, internal use)"
             default: "0"
@@ -241,7 +241,48 @@ jobs:
           path: results/
           retention-days: 1
 
-  # Third job: Trigger next batch if needed
+  # Third job: Process benchmark results
+  processBenchmarks:
+    name: Process Benchmark Results
+    needs: [prepareBenchmarks, runBenchmarks]
+    runs-on: ubuntu-latest
+    container:
+      image: python:3.11-slim
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Install dependencies
+        run: |
+          pip install pandas jupyter nbconvert
+
+      - name: Download all benchmark artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Prepare results directory
+        run: |
+          mkdir -p results
+          find artifacts/ -name "*.json" -exec cp {} results/ \;
+          ls -la results/
+
+      - name: Execute Jupyter notebook
+        run: |
+          cd scripts
+          jupyter nbconvert --to notebook --execute process-benchmarks.ipynb
+          cd ..
+
+      - name: Upload processed results
+        uses: actions/upload-artifact@v4
+        with:
+          name: processed-results-${{ matrix.config.qdrant_version_sanitized }}-${{ matrix.config.dataset }}-${{ matrix.config.engine_config }}-${{ matrix.config.index }}
+          path: |
+            scripts/results*.json
+          retention-days: 1
+
+  # Fourth job: Trigger next batch if needed
   triggerNextBatch:
     name: Trigger Next Batch
     needs: [prepareBenchmarks, runBenchmarks]
