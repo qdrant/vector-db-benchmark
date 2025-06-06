@@ -399,8 +399,8 @@
     "smoke_test": [
       {
         "qdrant_version": "ghcr/dev",
-        "dataset": "dbpedia-openai-1M-1536-angular",
-        "engine_config": "qdrant-rps-m-16-ef-128",
+        "dataset": "glove-100-angular",
+        "engine_config": "qdrant-continuous-benchmark",
         "feature_flags_all": false
       }
     ]
