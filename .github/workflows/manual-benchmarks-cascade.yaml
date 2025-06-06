@@ -119,7 +119,7 @@ jobs:
               QDRANT_VERSION_SANITIZED=$(echo "$QDRANT_VERSION" | sed 's|/|-|g')
           
               MATRIX_JSON="${MATRIX_JSON}{
-                \"index\": $i,
+                \"index\": \"$i"\,
                 \"qdrant_version\": \"$QDRANT_VERSION\",
                 \"qdrant_version_sanitized\": \"$QDRANT_VERSION_SANITIZED\",
                 \"dataset\": \"$DATASET\",
