@@ -196,14 +196,6 @@ jobs:
           bash -x tools/setup_ci.sh
           bash -x tools/run_ci.sh
 
-      - name: Upload benchmark results
-        uses: actions/upload-artifact@v4
-        with:
-          name: results-${{ steps.config.outputs.current_index }}
-          path: results/
-          retention-days: 1
-        continue-on-error: true
-
       - name: Tear down machines
         if: ${{ always() }}
         continue-on-error: true
@@ -214,6 +206,13 @@ jobs:
           export SERVER_NAME="benchmark-cascade-server-${CURRENT_INDEX}"
           export CLIENT_NAME="benchmark-cascade-client-${CURRENT_INDEX}"
           bash -x tools/tear_down.sh
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: results-${{ steps.config.outputs.current_index }}
+          path: results/
+          retention-days: 1
 
       # Trigger next benchmark in cascade if there are more to run
       - name: Trigger next benchmark
