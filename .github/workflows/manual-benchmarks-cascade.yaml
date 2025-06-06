@@ -220,9 +220,8 @@ jobs:
           export SERVER_NAME="benchmark-cascade-server-${CURRENT_INDEX}"
           export CLIENT_NAME="benchmark-cascade-client-${CURRENT_INDEX}"
 
-          #bash -x tools/setup_ci.sh
-          #bash -x tools/run_ci.sh
-          mkdir -p results
+          bash -x tools/setup_ci.sh
+          bash -x tools/run_ci.sh
 
       - name: Tear down machines
         if: ${{ always() }}
