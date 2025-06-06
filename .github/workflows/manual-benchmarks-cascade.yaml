@@ -199,7 +199,7 @@ jobs:
       - name: Upload benchmark results
         uses: actions/upload-artifact@v4
         with:
-          name: results-${{ steps.config.outputs.qdrant_version }}-${{ steps.config.outputs.dataset }}-${{ steps.config.outputs.engine_config }}
+          name: results-${{ steps.config.outputs.current_index }}
           path: results/
           retention-days: 1
         continue-on-error: true
