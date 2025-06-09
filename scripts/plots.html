@@ -44,35 +44,100 @@ This HTML file is designed to visualize vector database benchmark results using 
             <div class="space-y-4">
                 <h2 class="text-xl font-semibold text-gray-800">Data Input</h2>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Upload JSON File</label>
-                    <input
-                        type="file"
-                        id="fileInput"
-                        accept=".json"
-                        class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file-input"
-                    />
+                <!-- File 1 Input -->
+                <div class="p-4 border border-blue-200 rounded-lg bg-blue-50">
+                    <h3 class="text-sm font-semibold text-blue-800 mb-2">Primary Dataset</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-blue-700 mb-1">Dataset Label/Version</label>
+                            <input
+                                type="text"
+                                id="primaryLabel"
+                                placeholder="e.g., v1.0, Before optimization, Current"
+                                class="w-full p-2 border border-blue-300 rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                value="Primary"
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-blue-700 mb-1">Upload JSON File</label>
+                            <input
+                                type="file"
+                                id="fileInput"
+                                accept=".json"
+                                class="block w-full text-xs text-gray-500 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200"
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-blue-700 mb-1">Or Paste JSON Data</label>
+                            <textarea
+                                id="jsonInput"
+                                placeholder="Paste your JSON benchmark data here..."
+                                class="w-full h-20 p-2 border border-blue-300 rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                            ></textarea>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button
+                                id="loadDataBtn"
+                                class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
+                            >
+                                Load Primary
+                            </button>
+                            <button
+                                id="loadSampleBtn"
+                                class="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 focus:ring-2 focus:ring-green-500 transition-colors duration-200"
+                            >
+                                Load Sample
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Or Paste JSON Data</label>
-                    <textarea
-                        id="jsonInput"
-                        placeholder="Paste your JSON benchmark data here..."
-                        class="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                    ></textarea>
-                    <button
-                        id="loadDataBtn"
-                        class="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
-                    >
-                        Load Data
-                    </button>
-                    <button
-                        id="loadSampleBtn"
-                        class="mt-2 ml-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 transition-colors duration-200"
-                    >
-                        Load Sample Data
-                    </button>
+                <!-- File 2 Input -->
+                <div class="p-4 border border-orange-200 rounded-lg bg-orange-50">
+                    <h3 class="text-sm font-semibold text-orange-800 mb-2">Comparison Dataset (Optional)</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-orange-700 mb-1">Dataset Label/Version</label>
+                            <input
+                                type="text"
+                                id="comparisonLabel"
+                                placeholder="e.g., v2.0, After optimization, New"
+                                class="w-full p-2 border border-orange-300 rounded text-xs focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                value="Comparison"
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-orange-700 mb-1">Upload JSON File</label>
+                            <input
+                                type="file"
+                                id="fileInput2"
+                                accept=".json"
+                                class="block w-full text-xs text-gray-500 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200"
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-orange-700 mb-1">Or Paste JSON Data</label>
+                            <textarea
+                                id="jsonInput2"
+                                placeholder="Paste comparison data here..."
+                                class="w-full h-20 p-2 border border-orange-300 rounded text-xs focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                            ></textarea>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button
+                                id="loadData2Btn"
+                                class="px-3 py-1 bg-orange-600 text-white rounded text-xs hover:bg-orange-700 focus:ring-2 focus:ring-orange-500 transition-colors duration-200"
+                            >
+                                Load Comparison
+                            </button>
+                            <button
+                                id="clearData2Btn"
+                                class="px-3 py-1 bg-gray-600 text-white rounded text-xs hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 transition-colors duration-200"
+                            >
+                                Clear
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="errorMessage" class="hidden p-3 bg-red-50 border border-red-200 rounded-lg text-red-700"></div>
@@ -114,10 +179,27 @@ This HTML file is designed to visualize vector database benchmark results using 
         <!-- Data Summary -->
         <div id="dataSummary" class="hidden mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
             <h3 class="font-semibold text-blue-800 mb-2">Data Summary:</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-blue-700">
-                <div><strong>Engines:</strong> <span id="engineCount">0</span></div>
-                <div><strong>Datasets:</strong> <span id="datasetCount">0</span></div>
-                <div><strong>Total Records:</strong> <span id="recordCount">0</span></div>
+            <div id="primarySummary" class="mb-2">
+                <h4 class="font-medium text-blue-700 text-sm"><span id="primarySummaryLabel">Primary</span> Dataset:</h4>
+                <div class="text-xs text-blue-600 ml-4 mb-1">
+                    <strong>File:</strong> <span id="primaryFilename">sample-data</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-blue-600 ml-4">
+                    <div><strong>Engines:</strong> <span id="engineCount">0</span></div>
+                    <div><strong>Datasets:</strong> <span id="datasetCount">0</span></div>
+                    <div><strong>Records:</strong> <span id="recordCount">0</span></div>
+                </div>
+            </div>
+            <div id="comparisonSummary" class="hidden">
+                <h4 class="font-medium text-orange-700 text-sm"><span id="comparisonSummaryLabel">Comparison</span> Dataset:</h4>
+                <div class="text-xs text-orange-600 ml-4 mb-1">
+                    <strong>File:</strong> <span id="comparisonFilename">-</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-orange-600 ml-4">
+                    <div><strong>Engines:</strong> <span id="engineCount2">0</span></div>
+                    <div><strong>Datasets:</strong> <span id="datasetCount2">0</span></div>
+                    <div><strong>Records:</strong> <span id="recordCount2">0</span></div>
+                </div>
             </div>
         </div>
 
@@ -200,12 +282,15 @@ This HTML file is designed to visualize vector database benchmark results using 
         <div class="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
             <h3 class="font-semibold text-blue-800 mb-2">How to use:</h3>
             <ol class="list-decimal list-inside text-blue-700 space-y-1 text-sm">
-                <li>Upload your JSON file containing benchmark results or paste the data directly</li>
-                <li>Select the performance metric you want to visualize on the Y-axis</li>
-                <li>Choose what to display on the X-axis (precision, parallel threads, or setup names)</li>
-                <li>Group results by engine, dataset, or setup to compare different configurations</li>
-                <li>Use filters to focus on specific engines, datasets, or setups</li>
-                <li>Switch between line charts, scatter plots, and bar charts for different views</li>
+                <li><strong>Load Primary Dataset:</strong> Upload your main JSON file containing benchmark results or paste the data directly</li>
+                <li><strong>Optional Comparison:</strong> Upload a second JSON file to compare results side-by-side (different colors and shapes)</li>
+                <li><strong>Add Version Labels:</strong> Customize the dataset labels to identify versions (e.g., "v1.0", "Before optimization")</li>
+                <li><strong>Select Metrics:</strong> Choose the performance metric for Y-axis and what to display on X-axis</li>
+                <li><strong>Group Data:</strong> Group results by engine, dataset, or setup to compare different configurations</li>
+                <li><strong>Filter Results:</strong> Use filters to focus on specific engines, datasets, or setups</li>
+                <li><strong>Switch Views:</strong> Change between line charts, scatter plots, and bar charts</li>
+                <li><strong>Track Sources:</strong> Hover over data points to see filename, version, engine, and HNSW configuration details</li>
+                <li><strong>Compare Files:</strong> In comparison mode, primary data shows as blue circles, comparison data as orange triangles</li>
             </ol>
         </div>
     </div>
@@ -316,22 +401,41 @@ This HTML file is designed to visualize vector database benchmark results using 
             }
         ];
 
-        // Color palette
-        const colors = [
-            '#DC2626', '#059669', '#7C3AED', '#F59E0B', '#336791',
-            '#EC4899', '#10B981', '#8B5CF6', '#F97316', '#06B6D4'
+        // Color palettes for different datasets
+        const primaryColors = [
+            '#1E40AF', '#2563EB', '#3B82F6', '#60A5FA', '#93C5FD',
+            '#1E3A8A', '#1D4ED8', '#2D7AE6', '#4F9AF2', '#7CB3F7'
         ];
 
+        const comparisonColors = [
+            '#EA580C', '#F97316', '#FB923C', '#FDBA74', '#FED7AA',
+            '#C2410C', '#DC2626', '#EF4444', '#F87171', '#FCA5A5'
+        ];
+
+        // Legacy colors array for single dataset mode
+        const colors = primaryColors;
+
         // State
+        let primaryData = [];
+        let comparisonData = [];
         let currentData = [];
         let filteredData = [];
         let chart = null;
         let filters = {};
+        let isComparisonMode = false;
+        let primaryFilename = '';
+        let comparisonFilename = '';
 
         // DOM elements
         const fileInput = document.getElementById('fileInput');
+        const fileInput2 = document.getElementById('fileInput2');
         const jsonInput = document.getElementById('jsonInput');
+        const jsonInput2 = document.getElementById('jsonInput2');
+        const primaryLabel = document.getElementById('primaryLabel');
+        const comparisonLabel = document.getElementById('comparisonLabel');
         const loadDataBtn = document.getElementById('loadDataBtn');
+        const loadData2Btn = document.getElementById('loadData2Btn');
+        const clearData2Btn = document.getElementById('clearData2Btn');
         const loadSampleBtn = document.getElementById('loadSampleBtn');
         const errorMessage = document.getElementById('errorMessage');
         const successMessage = document.getElementById('successMessage');
@@ -341,16 +445,27 @@ This HTML file is designed to visualize vector database benchmark results using 
         const chartTypeSelect = document.getElementById('chartTypeSelect');
         const chartTitle = document.getElementById('chartTitle');
         const dataSummary = document.getElementById('dataSummary');
+        const primarySummary = document.getElementById('primarySummary');
+        const comparisonSummary = document.getElementById('comparisonSummary');
         const filtersSection = document.getElementById('filtersSection');
         const filterControls = document.getElementById('filterControls');
 
         // Initialize with sample data
-        loadData(sampleData);
+        primaryFilename = 'sample-data.json';
+        loadPrimaryData(sampleData);
 
         // Event listeners
         fileInput.addEventListener('change', handleFileUpload);
+        fileInput2.addEventListener('change', handleFile2Upload);
         loadDataBtn.addEventListener('click', handleJsonInput);
-        loadSampleBtn.addEventListener('click', () => loadData(sampleData));
+        loadData2Btn.addEventListener('click', handleJson2Input);
+        clearData2Btn.addEventListener('click', clearComparisonData);
+        loadSampleBtn.addEventListener('click', () => {
+            primaryFilename = 'sample-data.json';
+            loadPrimaryData(sampleData);
+        });
+        primaryLabel.addEventListener('input', updateChart);
+        comparisonLabel.addEventListener('input', updateChart);
         yMetricSelect.addEventListener('change', updateChart);
         xAxisSelect.addEventListener('change', updateChart);
         groupBySelect.addEventListener('change', updateChart);
@@ -376,9 +491,10 @@ This HTML file is designed to visualize vector database benchmark results using 
                     const text = await file.text();
                     const parsedData = JSON.parse(text);
                     if (Array.isArray(parsedData)) {
-                        loadData(parsedData);
+                        primaryFilename = file.name;
+                        loadPrimaryData(parsedData);
                         jsonInput.value = JSON.stringify(parsedData, null, 2);
-                        showMessage(successMessage, 'File loaded successfully!');
+                        showMessage(successMessage, `Primary file "${file.name}" loaded successfully!`);
                     } else {
                         throw new Error('Data should be an array of objects');
                     }
@@ -388,12 +504,33 @@ This HTML file is designed to visualize vector database benchmark results using 
             }
         }
 
+        async function handleFile2Upload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                try {
+                    const text = await file.text();
+                    const parsedData = JSON.parse(text);
+                    if (Array.isArray(parsedData)) {
+                        comparisonFilename = file.name;
+                        loadComparisonData(parsedData);
+                        jsonInput2.value = JSON.stringify(parsedData, null, 2);
+                        showMessage(successMessage, `Comparison file "${file.name}" loaded successfully!`);
+                    } else {
+                        throw new Error('Data should be an array of objects');
+                    }
+                } catch (err) {
+                    showMessage(errorMessage, 'Error reading comparison file or invalid JSON format.', true);
+                }
+            }
+        }
+
         function handleJsonInput() {
             try {
                 const parsedData = JSON.parse(jsonInput.value);
                 if (Array.isArray(parsedData)) {
-                    loadData(parsedData);
-                    showMessage(successMessage, 'JSON data loaded successfully!');
+                    primaryFilename = 'pasted-data.json';
+                    loadPrimaryData(parsedData);
+                    showMessage(successMessage, 'Primary JSON data loaded successfully!');
                 } else {
                     throw new Error('Data should be an array of objects');
                 }
@@ -402,21 +539,85 @@ This HTML file is designed to visualize vector database benchmark results using 
             }
         }
 
-        function loadData(data) {
-            currentData = data;
-            filteredData = [...data];
+        function handleJson2Input() {
+            try {
+                const parsedData = JSON.parse(jsonInput2.value);
+                if (Array.isArray(parsedData)) {
+                    comparisonFilename = 'pasted-data-2.json';
+                    loadComparisonData(parsedData);
+                    showMessage(successMessage, 'Comparison JSON data loaded successfully!');
+                } else {
+                    throw new Error('Data should be an array of objects');
+                }
+            } catch (err) {
+                showMessage(errorMessage, 'Invalid comparison JSON format. Please check your data structure.', true);
+            }
+        }
+
+        function loadPrimaryData(data) {
+            primaryData = data.map(row => ({
+                ...row,
+                fileSource: 'primary',
+                filename: primaryFilename
+            }));
+            combineDatasets();
+        }
+
+        function loadComparisonData(data) {
+            comparisonData = data.map(row => ({
+                ...row,
+                fileSource: 'comparison',
+                filename: comparisonFilename
+            }));
+            isComparisonMode = true;
+            comparisonSummary.classList.remove('hidden');
+            combineDatasets();
+        }
+
+        function clearComparisonData() {
+            comparisonData = [];
+            comparisonFilename = '';
+            isComparisonMode = false;
+            comparisonSummary.classList.add('hidden');
+            jsonInput2.value = '';
+            fileInput2.value = '';
+            combineDatasets();
+            showMessage(successMessage, 'Comparison data cleared!');
+        }
+
+        function combineDatasets() {
+            currentData = [...primaryData, ...comparisonData];
+            filteredData = [...currentData];
             updateDataSummary();
             createFilterControls();
             updateChart();
         }
 
-        function updateDataSummary() {
-            const engines = new Set(currentData.map(d => d.engine_name));
-            const datasets = new Set(currentData.map(d => d.dataset_name));
+        function loadData(data) {
+            // Legacy function for backward compatibility
+            loadPrimaryData(data);
+        }
 
-            document.getElementById('engineCount').textContent = engines.size;
-            document.getElementById('datasetCount').textContent = datasets.size;
-            document.getElementById('recordCount').textContent = currentData.length;
+        function updateDataSummary() {
+            // Primary dataset summary
+            const engines1 = new Set(primaryData.map(d => d.engine_name));
+            const datasets1 = new Set(primaryData.map(d => d.dataset_name));
+
+            document.getElementById('engineCount').textContent = engines1.size;
+            document.getElementById('datasetCount').textContent = datasets1.size;
+            document.getElementById('recordCount').textContent = primaryData.length;
+            document.getElementById('primaryFilename').textContent = primaryFilename || 'sample-data';
+
+            // Comparison dataset summary
+            if (isComparisonMode && comparisonData.length > 0) {
+                const engines2 = new Set(comparisonData.map(d => d.engine_name));
+                const datasets2 = new Set(comparisonData.map(d => d.dataset_name));
+
+                document.getElementById('engineCount2').textContent = engines2.size;
+                document.getElementById('datasetCount2').textContent = datasets2.size;
+                document.getElementById('recordCount2').textContent = comparisonData.length;
+                document.getElementById('comparisonFilename').textContent = comparisonFilename || '-';
+            }
 
             dataSummary.classList.remove('hidden');
         }
@@ -468,40 +669,127 @@ This HTML file is designed to visualize vector database benchmark results using 
 
             let datasets = [];
 
-            if (groupBy === 'none') {
-                datasets = [{
-                    label: 'All Data',
-                    data: filteredData.map(row => ({
-                        x: xAxis === 'mean_precisions' ? row[xAxis] * 100 : row[xAxis],
-                        y: yMetric.includes('time') && yMetric !== 'total_upload_time' ? row[yMetric] * 1000 : row[yMetric],
-                        originalData: row
-                    })),
-                    borderColor: colors[0],
-                    backgroundColor: colors[0] + '80',
-                    borderWidth: chartType === 'line' ? 3 : 1,
-                    fill: false,
-                    tension: 0.4,
-                    pointRadius: chartType === 'scatter' ? 6 : 4
-                }];
+            if (isComparisonMode && comparisonData.length > 0) {
+                // Comparison mode: group by file source and then by the selected groupBy field
+                const primaryLabelText = primaryLabel.value.trim() || 'Primary';
+                const comparisonLabelText = comparisonLabel.value.trim() || 'Comparison';
+
+                if (groupBy === 'none') {
+                    // Just separate by file source
+                    datasets = [
+                        {
+                            label: primaryLabelText,
+                            data: filteredData.filter(row => row.fileSource === 'primary').map(row => ({
+                                x: xAxis === 'mean_precisions' ? row[xAxis] * 100 : row[xAxis],
+                                y: yMetric.includes('time') && yMetric !== 'total_upload_time' ? row[yMetric] * 1000 : row[yMetric],
+                                originalData: row
+                            })),
+                            borderColor: primaryColors[0],
+                            backgroundColor: primaryColors[0] + '20',
+                            borderWidth: chartType === 'line' ? 3 : 1,
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: chartType === 'scatter' ? 6 : 4,
+                            pointStyle: 'circle'
+                        },
+                        {
+                            label: comparisonLabelText,
+                            data: filteredData.filter(row => row.fileSource === 'comparison').map(row => ({
+                                x: xAxis === 'mean_precisions' ? row[xAxis] * 100 : row[xAxis],
+                                y: yMetric.includes('time') && yMetric !== 'total_upload_time' ? row[yMetric] * 1000 : row[yMetric],
+                                originalData: row
+                            })),
+                            borderColor: comparisonColors[0],
+                            backgroundColor: comparisonColors[0] + '20',
+                            borderWidth: chartType === 'line' ? 3 : 1,
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: chartType === 'scatter' ? 6 : 4,
+                            pointStyle: 'triangle'
+                        }
+                    ];
+                } else {
+                    // Group by the selected field within each file source
+                    const primaryGroups = [...new Set(filteredData.filter(d => d.fileSource === 'primary').map(d => d[groupBy]))];
+                    const comparisonGroups = [...new Set(filteredData.filter(d => d.fileSource === 'comparison').map(d => d[groupBy]))];
+
+                    // Primary dataset groups
+                    primaryGroups.forEach((group, index) => {
+                        const groupData = filteredData.filter(d => d.fileSource === 'primary' && d[groupBy] === group);
+                        datasets.push({
+                            label: `${primaryLabelText}: ${group}`,
+                            data: groupData.map(row => ({
+                                x: xAxis === 'mean_precisions' ? row[xAxis] * 100 : row[xAxis],
+                                y: yMetric.includes('time') && yMetric !== 'total_upload_time' ? row[yMetric] * 1000 : row[yMetric],
+                                originalData: row
+                            })),
+                            borderColor: primaryColors[index % primaryColors.length],
+                            backgroundColor: primaryColors[index % primaryColors.length] + '20',
+                            borderWidth: chartType === 'line' ? 3 : 1,
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: chartType === 'scatter' ? 6 : 4,
+                            pointStyle: 'circle'
+                        });
+                    });
+
+                    // Comparison dataset groups
+                    comparisonGroups.forEach((group, index) => {
+                        const groupData = filteredData.filter(d => d.fileSource === 'comparison' && d[groupBy] === group);
+                        datasets.push({
+                            label: `${comparisonLabelText}: ${group}`,
+                            data: groupData.map(row => ({
+                                x: xAxis === 'mean_precisions' ? row[xAxis] * 100 : row[xAxis],
+                                y: yMetric.includes('time') && yMetric !== 'total_upload_time' ? row[yMetric] * 1000 : row[yMetric],
+                                originalData: row
+                            })),
+                            borderColor: comparisonColors[index % comparisonColors.length],
+                            backgroundColor: comparisonColors[index % comparisonColors.length] + '20',
+                            borderWidth: chartType === 'line' ? 3 : 1,
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: chartType === 'scatter' ? 6 : 4,
+                            pointStyle: 'triangle'
+                        });
+                    });
+                }
             } else {
-                const groups = [...new Set(filteredData.map(d => d[groupBy]))];
-                datasets = groups.map((group, index) => {
-                    const groupData = filteredData.filter(d => d[groupBy] === group);
-                    return {
-                        label: group,
-                        data: groupData.map(row => ({
+                // Single dataset mode (original behavior)
+                if (groupBy === 'none') {
+                    datasets = [{
+                        label: 'All Data',
+                        data: filteredData.map(row => ({
                             x: xAxis === 'mean_precisions' ? row[xAxis] * 100 : row[xAxis],
                             y: yMetric.includes('time') && yMetric !== 'total_upload_time' ? row[yMetric] * 1000 : row[yMetric],
                             originalData: row
                         })),
-                        borderColor: colors[index % colors.length],
-                        backgroundColor: colors[index % colors.length] + '80',
+                        borderColor: colors[0],
+                        backgroundColor: colors[0] + '80',
                         borderWidth: chartType === 'line' ? 3 : 1,
                         fill: false,
                         tension: 0.4,
                         pointRadius: chartType === 'scatter' ? 6 : 4
-                    };
-                });
+                    }];
+                } else {
+                    const groups = [...new Set(filteredData.map(d => d[groupBy]))];
+                    datasets = groups.map((group, index) => {
+                        const groupData = filteredData.filter(d => d[groupBy] === group);
+                        return {
+                            label: group,
+                            data: groupData.map(row => ({
+                                x: xAxis === 'mean_precisions' ? row[xAxis] * 100 : row[xAxis],
+                                y: yMetric.includes('time') && yMetric !== 'total_upload_time' ? row[yMetric] * 1000 : row[yMetric],
+                                originalData: row
+                            })),
+                            borderColor: colors[index % colors.length],
+                            backgroundColor: colors[index % colors.length] + '80',
+                            borderWidth: chartType === 'line' ? 3 : 1,
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: chartType === 'scatter' ? 6 : 4
+                        };
+                    });
+                }
             }
 
             const isTimeMetric = yMetric.includes('time');
@@ -567,6 +855,19 @@ This HTML file is designed to visualize vector database benchmark results using 
                                         footerLines.push(`Dataset: ${originalData.dataset_name}`);
                                     }
 
+                                    // Show file source and filename in comparison mode
+                                    if (isComparisonMode && comparisonData.length > 0) {
+                                        const primaryLabelText = primaryLabel.value.trim() || 'Primary';
+                                        const comparisonLabelText = comparisonLabel.value.trim() || 'Comparison';
+                                        const sourceLabel = originalData.fileSource === 'primary' ? primaryLabelText : comparisonLabelText;
+                                        footerLines.push(`Source: ${sourceLabel}`);
+                                    }
+
+                                    // Always show filename if available
+                                    if (originalData.filename) {
+                                        footerLines.push(`File: ${originalData.filename}`);
+                                    }
+
                                     return footerLines;
                                 }
                             },
@@ -607,6 +908,16 @@ This HTML file is designed to visualize vector database benchmark results using 
             const yMetricDisplay = yMetric === 'total_upload_time' ? 'Index Time' :
                                   yMetric.replace('_', ' ').toUpperCase();
             chartTitle.textContent = `${yMetricDisplay} vs ${xAxis.replace('_', ' ').toUpperCase()}`;
+
+            // Update summary labels
+            const primarySummaryLabel = document.getElementById('primarySummaryLabel');
+            const comparisonSummaryLabel = document.getElementById('comparisonSummaryLabel');
+            if (primarySummaryLabel) {
+                primarySummaryLabel.textContent = primaryLabel.value.trim() || 'Primary';
+            }
+            if (comparisonSummaryLabel) {
+                comparisonSummaryLabel.textContent = comparisonLabel.value.trim() || 'Comparison';
+            }
 
             if (chart) {
                 chart.destroy();
