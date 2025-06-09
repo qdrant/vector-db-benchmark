@@ -61,9 +61,9 @@ jobs:
           BENCHMARK_SET="${{ inputs.benchmark_set }}"
           CURRENT_BATCH=${{ inputs.current_batch || 0 }}
           BATCH_SIZE=2  # Number of parallel jobs
-          
+
           echo "benchmark_set=$BENCHMARK_SET" >> $GITHUB_OUTPUT
-          
+
           # Accumulate workflow run IDs
           WORKFLOW_RUN_IDS="${{ inputs.workflow_run_ids }}"
           if [ -n "$WORKFLOW_RUN_IDS" ]; then
@@ -72,7 +72,7 @@ jobs:
             WORKFLOW_RUN_IDS="${{ github.run_id }}"
           fi
           echo "workflow_run_ids=$WORKFLOW_RUN_IDS" >> "$GITHUB_OUTPUT"
-          
+
           if [ "$BENCHMARK_SET" = "single" ]; then
             # Single benchmark - create a matrix with one item
             MATRIX_JSON='[{"index": 0, "qdrant_version": "'${{ inputs.qdrant_version }}'", "qdrant_version_sanitized": "'$(echo "${{ inputs.qdrant_version }}" | sed "s|/|-|g")'", "dataset": "'${{ inputs.dataset }}'", "engine_config": "'${{ inputs.engine_config }}'", "feature_flags_all": '${{ inputs.feature_flags_all }}'}]'
@@ -85,39 +85,39 @@ jobs:
               echo "Configuration file $CONFIG_FILE not found!"
               exit 1
             fi
-            
+
             BENCHMARK_CONFIGS=$(jq -r ".benchmark_sets.\"$BENCHMARK_SET\"" "$CONFIG_FILE")
-            
+
             if [ "$BENCHMARK_CONFIGS" = "null" ]; then
               echo "Benchmark set '$BENCHMARK_SET' not found in configuration file"
               exit 1
             fi
-            
+
             # Apply params_override if provided
             PARAMS_OVERRIDE='${{ inputs.params_override }}'
             if [ "$PARAMS_OVERRIDE" != "{}" ]; then
               echo "Applying params_override: $PARAMS_OVERRIDE"
-              
+
               # Parse the override params
               OVERRIDE_PARAMS=$(echo "$PARAMS_OVERRIDE" | jq -r '.params // {}')
-              
+
               if [ "$OVERRIDE_PARAMS" != "{}" ]; then
                 # Generate all parameter combinations using separate Python script
                 if ! BENCHMARK_CONFIGS=$(python3 benchmark_cascade/generate_configs.py "$OVERRIDE_PARAMS" "$BENCHMARK_CONFIGS"); then
                   echo "Error: Failed to generate benchmark configurations"
                   exit 1
                 fi
-                
+
                 echo "Generated $(echo "$BENCHMARK_CONFIGS" | jq length) configurations after applying params_override"
               fi
             fi
-            
+
             TOTAL_CONFIGS=$(echo "$BENCHMARK_CONFIGS" | jq length)
             START_INDEX=$((CURRENT_BATCH * BATCH_SIZE))
             END_INDEX=$((START_INDEX + BATCH_SIZE - 1))
-            
+
             echo "Batch info: Current batch=$CURRENT_BATCH, Start=$START_INDEX, End=$END_INDEX, Total=$TOTAL_CONFIGS"
-            
+
             # Check if we need more batches
             NEXT_START=$((END_INDEX + 1))
             if [ $NEXT_START -lt $TOTAL_CONFIGS ]; then
@@ -127,37 +127,37 @@ jobs:
               echo "has_next_batch=false" >> $GITHUB_OUTPUT
               echo "next_batch=0" >> $GITHUB_OUTPUT
             fi
-            
+
             # Create matrix for current batch
             MATRIX_JSON="["
             FIRST=true
-            
+
             for i in $(seq $START_INDEX $END_INDEX); do
               if [ $i -ge $TOTAL_CONFIGS ]; then
                 break
               fi
-              
+
               if [ "$FIRST" = false ]; then
                 MATRIX_JSON="${MATRIX_JSON},"
               fi
               FIRST=false
-              
+
               CONFIG=$(echo "$BENCHMARK_CONFIGS" | jq -r ".[$i]")
               QDRANT_VERSION=$(echo "$CONFIG" | jq -r '.qdrant_version')
               DATASET=$(echo "$CONFIG" | jq -r '.dataset')
               ENGINE_CONFIG=$(echo "$CONFIG" | jq -r '.engine_config')
               FEATURE_FLAGS=$(echo "$CONFIG" | jq -r '.feature_flags_all')
-              
+
               QDRANT_VERSION_SANITIZED=$(echo "$QDRANT_VERSION" | sed 's|/|-|g')
-          
+
               MATRIX_JSON="${MATRIX_JSON}{\"index\": $i, \"qdrant_version\": \"$QDRANT_VERSION\", \"qdrant_version_sanitized\": \"$QDRANT_VERSION_SANITIZED\", \"dataset\": \"$DATASET\", \"engine_config\": \"$ENGINE_CONFIG\", \"feature_flags_all\": $FEATURE_FLAGS}"
             done
-            
+
             MATRIX_JSON="${MATRIX_JSON}]"
-            
+
             echo "Current batch: $CURRENT_BATCH (indices $START_INDEX-$END_INDEX of $TOTAL_CONFIGS total)"
             echo "Matrix JSON: $MATRIX_JSON"
-            
+
             echo "matrix=$MATRIX_JSON" >> $GITHUB_OUTPUT
           fi
 
@@ -182,24 +182,24 @@ jobs:
         run: |
           export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
           export CURRENT_INDEX=${{ matrix.config.index }}
-          
+
           export SERVER_NAME="benchmark-cascade-server-${CURRENT_INDEX}"
           export CLIENT_NAME="benchmark-cascade-client-${CURRENT_INDEX}"
           export BENCH_SERVER_NAME=${SERVER_NAME}
           export BENCH_CLIENT_NAME=${CLIENT_NAME}
-          
+
           bash -x tools/setup_ci.sh
-          
+
           # Function to create server with retries
           create_server_with_retries() {
             local server_name=$1
             local server_type=$2
             local max_retries=5
             local retry_count=0
-            
+
             while [ $retry_count -lt $max_retries ]; do
               echo "Creating server $server_name (attempt $((retry_count + 1))/$max_retries)..."
-              
+
               if SERVER_NAME=$server_name SERVER_TYPE=$server_type bash -x "tools/hetzner/create_and_install.sh"; then
                 echo "Successfully created server $server_name"
                 return 0
@@ -211,36 +211,36 @@ jobs:
                 fi
               fi
             done
-            
+
             echo "Failed to create server $server_name after $max_retries attempts"
             return 1
           }
-          
+
           # Create server and client machines with retries in parallel
           create_server_with_retries "$BENCH_SERVER_NAME" "cpx51" &
           SERVER_PID=$!
-          
+
           create_server_with_retries "$BENCH_CLIENT_NAME" "cpx41" &
           CLIENT_PID=$!
-          
+
           # Wait for both to complete and check their exit statuses
           wait $SERVER_PID
           SERVER_EXIT_CODE=$?
-          
+
           wait $CLIENT_PID
           CLIENT_EXIT_CODE=$?
-          
+
           # Check if both succeeded
           if [ $SERVER_EXIT_CODE -ne 0 ]; then
             echo "Failed to create server machine"
             exit 1
           fi
-          
+
           if [ $CLIENT_EXIT_CODE -ne 0 ]; then
             echo "Failed to create client machine"
             exit 1
           fi
-          
+
           echo "Both machines created successfully"
 
       - name: Run benchmark
@@ -254,7 +254,7 @@ jobs:
           export POSTGRES_TABLE=benchmark_manual
           export QDRANT__FEATURE_FLAGS__ALL=${{ matrix.config.feature_flags_all }}
           export CURRENT_INDEX=${{ matrix.config.index }}
-          
+
           export SERVER_NAME="benchmark-cascade-server-${CURRENT_INDEX}"
           export CLIENT_NAME="benchmark-cascade-client-${CURRENT_INDEX}"
 
@@ -267,7 +267,7 @@ jobs:
         run: |
           export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
           export CURRENT_INDEX=${{ matrix.config.index }}
-          
+
           export SERVER_NAME="benchmark-cascade-server-${CURRENT_INDEX}"
           export CLIENT_NAME="benchmark-cascade-client-${CURRENT_INDEX}"
           bash -x tools/tear_down.sh
@@ -290,7 +290,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.ref }}
-      
+
       - name: Install dependencies
         run: |
           pip install pandas jupyter nbconvert
@@ -303,26 +303,26 @@ jobs:
           curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
           echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
           apt-get update && apt-get install -y gh
-          
+
           # Download artifacts from specific workflow runs
           mkdir -p artifacts
-          
+
           # Get workflow run IDs from the accumulated list
           WORKFLOW_RUN_IDS="${{ needs.prepareBenchmarks.outputs.workflow_run_ids }}"
           echo "Workflow run IDs: $WORKFLOW_RUN_IDS"
-          
+
           # Convert comma-separated list to array and download artifacts from each run
           echo "$WORKFLOW_RUN_IDS" | tr ',' '\n' | while read run_id; do
             if [ -n "$run_id" ]; then
               echo "Downloading artifacts from run $run_id"
-              
+
               # List artifacts for this run
               gh api repos/${{ github.repository }}/actions/runs/$run_id/artifacts \
                 --jq '.artifacts[] | select(.name | startswith("results-")) | {name: .name, url: .archive_download_url}' \
                 | while IFS= read -r line; do
                     artifact_name=$(echo "$line" | jq -r '.name')
                     artifact_url=$(echo "$line" | jq -r '.url')
-                    
+
                     if [ -n "$artifact_url" ] && [ "$artifact_url" != "null" ]; then
                       echo "Downloading $artifact_name from run $run_id"
                       gh api "$artifact_url" > "artifacts/${run_id}-${artifact_name}.zip" || true
@@ -330,7 +330,7 @@ jobs:
                   done
             fi
           done
-          
+
           # Keep zips for version parsing, don't extract yet
           ls -la artifacts/
         env:
@@ -341,21 +341,21 @@ jobs:
           ROOT_DIR=$(pwd)
           mkdir -p final_results
           cd artifacts
-          
+
           # Extract version from artifact names (between "results-" and "-bench-")
           VERSIONS=$(ls *.zip | sed -n 's/^[0-9]*-results-\(.*\)-bench-.*/\1/p' | sort -u)
-          
+
           echo "Found the following Qdrant versions:"
           echo "$VERSIONS"
-          
+
           # Process each version separately
           for VERSION in $VERSIONS; do
             echo "Processing version: $VERSION"
-            
+
             # Create results directory for this version
             rm -rf "$ROOT_DIR/results"
             mkdir -p "$ROOT_DIR/results"
-            
+
             # Extract only artifacts for this version
             for zip_file in *results-${VERSION}-bench-*.zip; do
               if [ -f "$zip_file" ]; then
@@ -363,11 +363,11 @@ jobs:
                 unzip -o "$zip_file" -d "$ROOT_DIR/results/"
               fi
             done
-            
+
             # Run Jupyter notebook
             cd "$ROOT_DIR/scripts"
             jupyter nbconvert --to notebook --execute process-benchmarks.ipynb --output process-benchmarks-executed.ipynb
-            
+
             # Copy results to final_results with version suffix
             if [ -f "results.json" ]; then
               cp results.json "$ROOT_DIR/final_results/results-${VERSION}.json"
@@ -375,16 +375,16 @@ jobs:
             else
               echo "Warning: results.json not found for version $VERSION"
             fi
-            
+
             # Go back to artifacts directory for next iteration
             cd "$ROOT_DIR/artifacts"
-            
+
             # Clean up results directory for next iteration
             rm -rf "$ROOT_DIR/results"
           done
-          
+
           cd "$ROOT_DIR"
-          
+
           echo "Final results:"
           ls -la final_results/
 
@@ -406,7 +406,7 @@ jobs:
         run: |
           echo "🚀 Triggering next batch of benchmarks..."
           echo "Next batch index: ${{ needs.prepareBenchmarks.outputs.next_batch }}"
-          
+
           # Trigger next batch via workflow dispatch
           curl -X POST \
             -H "Accept: application/vnd.github.v3+json" \

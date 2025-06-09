@@ -6,7 +6,7 @@ Benchmark workflow that runs multiple Qdrant benchmarks in parallel batches on r
 
 Benchmarks are defined in [benchmark-configs.json](benchmark-configs.json) with predefined sets:
 - `smoke_test` - Quick tests (3 benchmarks)
-- `full_regression` - Large test suite (30+ benchmarks)  
+- `full_regression` - Large test suite (30+ benchmarks)
 - `template` - Example configuration
 
 ## Running Benchmarks
