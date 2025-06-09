@@ -277,7 +277,7 @@ jobs:
         with:
           name: results-${{ matrix.config.qdrant_version_sanitized }}-bench-${{ matrix.config.dataset }}-${{ matrix.config.engine_config }}-${{ matrix.config.index }}
           path: results/
-          retention-days: 1
+          retention-days: 7
 
   processBenchmarks:
     name: Process All Benchmark Results
@@ -394,7 +394,7 @@ jobs:
           name: final-processed-results
           path: |
             final_results/
-          retention-days: 1
+          retention-days: 7
 
   triggerNextBatch:
     name: Trigger Next Batch
