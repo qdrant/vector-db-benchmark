@@ -407,6 +407,10 @@ jobs:
           echo "🚀 Triggering next batch of benchmarks..."
           echo "Next batch index: ${{ needs.prepareBenchmarks.outputs.next_batch }}"
 
+          PARAMS_OVERRIDE='${{ inputs.params_override }}'
+          # Escape the JSON for embedding in the curl command
+          ESCAPED_PARAMS=$(echo "$PARAMS_OVERRIDE" | jq -Rs .)
+
           # Trigger next batch via workflow dispatch
           curl -X POST \
             -H "Accept: application/vnd.github.v3+json" \
@@ -417,7 +421,7 @@ jobs:
                 \"benchmark_set\": \"${{ needs.prepareBenchmarks.outputs.benchmark_set }}\",
                 \"current_batch\": \"${{ needs.prepareBenchmarks.outputs.next_batch }}\",
                 \"workflow_run_ids\": \"${{ needs.prepareBenchmarks.outputs.workflow_run_ids }}\",
-                \"params_override\": \"${{ inputs.params_override }}\"
+                \"params_override\": $ESCAPED_PARAMS
               },
               \"ref\": \"${{ github.ref }}\"
             }"
