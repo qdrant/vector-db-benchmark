@@ -277,7 +277,7 @@ jobs:
         with:
           name: results-${{ matrix.config.qdrant_version_sanitized }}-bench-${{ matrix.config.dataset }}-${{ matrix.config.engine_config }}-${{ matrix.config.index }}
           path: results/
-          retention-days: 7
+          retention-days: 2
 
   processBenchmarks:
     name: Process All Benchmark Results
@@ -336,6 +336,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Upload all artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-unprocessed-results
+          path: artifacts/
+          retention-days: 7
+
       - name: Process results by Qdrant version
         run: |
           ROOT_DIR=$(pwd)
@@ -392,8 +399,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: final-processed-results
-          path: |
-            final_results/
+          path: final_results/
           retention-days: 7
 
   triggerNextBatch:
