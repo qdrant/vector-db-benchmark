@@ -2,7 +2,7 @@ name: Automated Cascade of Benchmarks
 description: |
   This workflow runs a series of benchmarks in a cascade fashion.
   It is triggered manually. The benchmarks are defined in `benchmark_cascade/benchmark-configs.json`.
-  Benchmarks are run in parallel (2 at a time).
+  Benchmarks are run in parallel. Instructions can be found in `benchmark_cascade/README.md`.
 
 on:
   workflow_dispatch:

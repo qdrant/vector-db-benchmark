@@ -278,21 +278,6 @@ This HTML file is designed to visualize vector database benchmark results using 
             </div>
         </div>
 
-        <!-- Instructions -->
-        <div class="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <h3 class="font-semibold text-blue-800 mb-2">How to use:</h3>
-            <ol class="list-decimal list-inside text-blue-700 space-y-1 text-sm">
-                <li><strong>Load Primary Dataset:</strong> Upload your main JSON file containing benchmark results or paste the data directly</li>
-                <li><strong>Optional Comparison:</strong> Upload a second JSON file to compare results side-by-side (different colors and shapes)</li>
-                <li><strong>Add Version Labels:</strong> Customize the dataset labels to identify versions (e.g., "v1.0", "Before optimization")</li>
-                <li><strong>Select Metrics:</strong> Choose the performance metric for Y-axis and what to display on X-axis</li>
-                <li><strong>Group Data:</strong> Group results by engine, dataset, or setup to compare different configurations</li>
-                <li><strong>Filter Results:</strong> Use filters to focus on specific engines, datasets, or setups</li>
-                <li><strong>Switch Views:</strong> Change between line charts, scatter plots, and bar charts</li>
-                <li><strong>Track Sources:</strong> Hover over data points to see filename, version, engine, and HNSW configuration details</li>
-                <li><strong>Compare Files:</strong> In comparison mode, primary data shows as blue circles, comparison data as orange triangles</li>
-            </ol>
-        </div>
     </div>
 
     <script>
@@ -647,7 +632,7 @@ This HTML file is designed to visualize vector database benchmark results using 
                 }
             });
 
-            if (filterControls.children.length > 0) {
+            if (filterControls.children.length > 0 || currentData.length > 0) {
                 filtersSection.classList.remove('hidden');
             }
         }
@@ -669,6 +654,21 @@ This HTML file is designed to visualize vector database benchmark results using 
 
             let datasets = [];
 
+            // Helper function to sort data by x-axis value
+            function sortDataByXAxis(data) {
+                return data.sort((a, b) => {
+                    const aValue = xAxis === 'mean_precisions' ? a[xAxis] * 100 : a[xAxis];
+                    const bValue = xAxis === 'mean_precisions' ? b[xAxis] * 100 : b[xAxis];
+
+                    // Handle numeric vs string sorting
+                    if (typeof aValue === 'number' && typeof bValue === 'number') {
+                        return aValue - bValue;
+                    } else {
+                        return String(aValue).localeCompare(String(bValue));
+                    }
+                });
+            }
+
             if (isComparisonMode && comparisonData.length > 0) {
                 // Comparison mode: group by file source and then by the selected groupBy field
                 const primaryLabelText = primaryLabel.value.trim() || 'Primary';
@@ -676,10 +676,13 @@ This HTML file is designed to visualize vector database benchmark results using 
 
                 if (groupBy === 'none') {
                     // Just separate by file source
+                    const primaryDataSorted = sortDataByXAxis(filteredData.filter(row => row.fileSource === 'primary'));
+                    const comparisonDataSorted = sortDataByXAxis(filteredData.filter(row => row.fileSource === 'comparison'));
+
                     datasets = [
                         {
                             label: primaryLabelText,
-                            data: filteredData.filter(row => row.fileSource === 'primary').map(row => ({
+                            data: primaryDataSorted.map(row => ({
                                 x: xAxis === 'mean_precisions' ? row[xAxis] * 100 : row[xAxis],
                                 y: yMetric.includes('time') && yMetric !== 'total_upload_time' ? row[yMetric] * 1000 : row[yMetric],
                                 originalData: row
@@ -694,7 +697,7 @@ This HTML file is designed to visualize vector database benchmark results using 
                         },
                         {
                             label: comparisonLabelText,
-                            data: filteredData.filter(row => row.fileSource === 'comparison').map(row => ({
+                            data: comparisonDataSorted.map(row => ({
                                 x: xAxis === 'mean_precisions' ? row[xAxis] * 100 : row[xAxis],
                                 y: yMetric.includes('time') && yMetric !== 'total_upload_time' ? row[yMetric] * 1000 : row[yMetric],
                                 originalData: row
@@ -715,7 +718,7 @@ This HTML file is designed to visualize vector database benchmark results using 
 
                     // Primary dataset groups
                     primaryGroups.forEach((group, index) => {
-                        const groupData = filteredData.filter(d => d.fileSource === 'primary' && d[groupBy] === group);
+                        const groupData = sortDataByXAxis(filteredData.filter(d => d.fileSource === 'primary' && d[groupBy] === group));
                         datasets.push({
                             label: `${primaryLabelText}: ${group}`,
                             data: groupData.map(row => ({
@@ -735,7 +738,7 @@ This HTML file is designed to visualize vector database benchmark results using 
 
                     // Comparison dataset groups
                     comparisonGroups.forEach((group, index) => {
-                        const groupData = filteredData.filter(d => d.fileSource === 'comparison' && d[groupBy] === group);
+                        const groupData = sortDataByXAxis(filteredData.filter(d => d.fileSource === 'comparison' && d[groupBy] === group));
                         datasets.push({
                             label: `${comparisonLabelText}: ${group}`,
                             data: groupData.map(row => ({
@@ -756,9 +759,10 @@ This HTML file is designed to visualize vector database benchmark results using 
             } else {
                 // Single dataset mode (original behavior)
                 if (groupBy === 'none') {
+                    const sortedData = sortDataByXAxis([...filteredData]);
                     datasets = [{
                         label: 'All Data',
-                        data: filteredData.map(row => ({
+                        data: sortedData.map(row => ({
                             x: xAxis === 'mean_precisions' ? row[xAxis] * 100 : row[xAxis],
                             y: yMetric.includes('time') && yMetric !== 'total_upload_time' ? row[yMetric] * 1000 : row[yMetric],
                             originalData: row
@@ -773,7 +777,7 @@ This HTML file is designed to visualize vector database benchmark results using 
                 } else {
                     const groups = [...new Set(filteredData.map(d => d[groupBy]))];
                     datasets = groups.map((group, index) => {
-                        const groupData = filteredData.filter(d => d[groupBy] === group);
+                        const groupData = sortDataByXAxis(filteredData.filter(d => d[groupBy] === group));
                         return {
                             label: group,
                             data: groupData.map(row => ({
