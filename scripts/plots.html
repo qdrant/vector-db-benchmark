@@ -287,36 +287,42 @@ This HTML file is designed to visualize vector database benchmark results using 
                 "engine_name": "qdrant",
                 "setup_name": "qdrant-rps-m-16-ef-128",
                 "dataset_name": "dbpedia-openai-1M-1536-angular",
-                "search_idx": "7",
-                "upload_time": 110.66,
-                "total_upload_time": 275.92,
-                "p95_time": 0.261,
-                "rps": 394.09,
-                "parallel": 100,
-                "p99_time": 0.267,
-                "mean_time": 0.247,
-                "mean_precisions": 0.9975,
+                "search_idx": "0",
+                "upload_time": 104.89,
+                "total_upload_time": 275.16,
+                "p95_time": 0.00568,
+                "rps": 184.79,
+                "parallel": 1,
+                "p99_time": 0.00635,
+                "mean_time": 0.00475,
+                "mean_precisions": 0.9770,
                 "engine_params": {
+                    "optimizers_config": {
+                        "max_segment_size": 1000000,
+                        "memmap_threshold": 10000000,
+                        "default_segment_number": 2,
+                        "max_optimization_threads": 0
+                    },
                     "hnsw_config": {
                         "m": 16,
                         "ef_construct": 128
                     },
-                    "hnsw_ef": 512
+                    "hnsw_ef": 64
                 }
             },
             {
                 "engine_name": "weaviate",
                 "setup_name": "weaviate-rps-ef-128",
                 "dataset_name": "dbpedia-openai-1M-1536-angular",
-                "search_idx": "7",
+                "search_idx": "0",
                 "upload_time": 125.43,
                 "total_upload_time": 298.21,
-                "p95_time": 0.312,
-                "rps": 320.45,
-                "parallel": 100,
-                "p99_time": 0.334,
-                "mean_time": 0.298,
-                "mean_precisions": 0.9950,
+                "p95_time": 0.00612,
+                "rps": 163.42,
+                "parallel": 1,
+                "p99_time": 0.00687,
+                "mean_time": 0.00521,
+                "mean_precisions": 0.9750,
                 "engine_params": {
                     "hnsw_config": {
                         "ef_construct": 128
@@ -327,15 +333,15 @@ This HTML file is designed to visualize vector database benchmark results using 
                 "engine_name": "redis",
                 "setup_name": "redis-rps-default",
                 "dataset_name": "dbpedia-openai-1M-1536-angular",
-                "search_idx": "7",
+                "search_idx": "0",
                 "upload_time": 98.32,
                 "total_upload_time": 245.67,
-                "p95_time": 0.289,
-                "rps": 345.67,
-                "parallel": 100,
-                "p99_time": 0.312,
-                "mean_time": 0.267,
-                "mean_precisions": 0.9925,
+                "p95_time": 0.00589,
+                "rps": 169.84,
+                "parallel": 1,
+                "p99_time": 0.00663,
+                "mean_time": 0.00498,
+                "mean_precisions": 0.9725,
                 "engine_params": {
                     "hnsw_config": {
                         "m": 16,
@@ -347,36 +353,36 @@ This HTML file is designed to visualize vector database benchmark results using 
                 "engine_name": "qdrant",
                 "setup_name": "qdrant-rps-m-32-ef-256",
                 "dataset_name": "dbpedia-openai-1M-1536-angular",
-                "search_idx": "8",
+                "search_idx": "1",
                 "upload_time": 115.21,
                 "total_upload_time": 289.43,
-                "p95_time": 0.234,
-                "rps": 425.12,
-                "parallel": 100,
-                "p99_time": 0.245,
-                "mean_time": 0.219,
-                "mean_precisions": 0.9985,
+                "p95_time": 0.00534,
+                "rps": 187.34,
+                "parallel": 1,
+                "p99_time": 0.00598,
+                "mean_time": 0.00462,
+                "mean_precisions": 0.9785,
                 "engine_params": {
                     "hnsw_config": {
                         "m": 32,
                         "ef_construct": 256
                     },
-                    "hnsw_ef": 512
+                    "hnsw_ef": 64
                 }
             },
             {
                 "engine_name": "elasticsearch",
                 "setup_name": "elasticsearch-default",
                 "dataset_name": "dbpedia-openai-1M-1536-angular",
-                "search_idx": "7",
+                "search_idx": "0",
                 "upload_time": 142.56,
                 "total_upload_time": 356.78,
-                "p95_time": 0.387,
-                "rps": 258.34,
-                "parallel": 100,
-                "p99_time": 0.423,
-                "mean_time": 0.365,
-                "mean_precisions": 0.9920,
+                "p95_time": 0.00687,
+                "rps": 145.52,
+                "parallel": 1,
+                "p99_time": 0.00789,
+                "mean_time": 0.00623,
+                "mean_precisions": 0.9720,
                 "engine_params": {
                     "hnsw_config": {
                         "m": 16,
@@ -399,6 +405,14 @@ This HTML file is designed to visualize vector database benchmark results using 
 
         // Legacy colors array for single dataset mode
         const colors = primaryColors;
+
+        // Utility function to get filename without extension
+        function getFilenameWithoutExtension(filename) {
+            if (!filename) return '';
+            const lastDotIndex = filename.lastIndexOf('.');
+            if (lastDotIndex === -1) return filename;
+            return filename.substring(0, lastDotIndex);
+        }
 
         // State
         let primaryData = [];
@@ -671,8 +685,8 @@ This HTML file is designed to visualize vector database benchmark results using 
 
             if (isComparisonMode && comparisonData.length > 0) {
                 // Comparison mode: group by file source and then by the selected groupBy field
-                const primaryLabelText = primaryLabel.value.trim() || 'Primary';
-                const comparisonLabelText = comparisonLabel.value.trim() || 'Comparison';
+                const primaryFilenameShort = getFilenameWithoutExtension(primaryFilename);
+                const comparisonFilenameShort = getFilenameWithoutExtension(comparisonFilename);
 
                 if (groupBy === 'none') {
                     // Just separate by file source
@@ -681,7 +695,7 @@ This HTML file is designed to visualize vector database benchmark results using 
 
                     datasets = [
                         {
-                            label: primaryLabelText,
+                            label: primaryFilenameShort,
                             data: primaryDataSorted.map(row => ({
                                 x: xAxis === 'mean_precisions' ? row[xAxis] * 100 : row[xAxis],
                                 y: yMetric.includes('time') && yMetric !== 'total_upload_time' ? row[yMetric] * 1000 : row[yMetric],
@@ -696,7 +710,7 @@ This HTML file is designed to visualize vector database benchmark results using 
                             pointStyle: 'circle'
                         },
                         {
-                            label: comparisonLabelText,
+                            label: comparisonFilenameShort,
                             data: comparisonDataSorted.map(row => ({
                                 x: xAxis === 'mean_precisions' ? row[xAxis] * 100 : row[xAxis],
                                 y: yMetric.includes('time') && yMetric !== 'total_upload_time' ? row[yMetric] * 1000 : row[yMetric],
@@ -720,7 +734,7 @@ This HTML file is designed to visualize vector database benchmark results using 
                     primaryGroups.forEach((group, index) => {
                         const groupData = sortDataByXAxis(filteredData.filter(d => d.fileSource === 'primary' && d[groupBy] === group));
                         datasets.push({
-                            label: `${primaryLabelText}: ${group}`,
+                            label: `${primaryFilenameShort}: ${group}`,
                             data: groupData.map(row => ({
                                 x: xAxis === 'mean_precisions' ? row[xAxis] * 100 : row[xAxis],
                                 y: yMetric.includes('time') && yMetric !== 'total_upload_time' ? row[yMetric] * 1000 : row[yMetric],
@@ -740,7 +754,7 @@ This HTML file is designed to visualize vector database benchmark results using 
                     comparisonGroups.forEach((group, index) => {
                         const groupData = sortDataByXAxis(filteredData.filter(d => d.fileSource === 'comparison' && d[groupBy] === group));
                         datasets.push({
-                            label: `${comparisonLabelText}: ${group}`,
+                            label: `${comparisonFilenameShort}: ${group}`,
                             data: groupData.map(row => ({
                                 x: xAxis === 'mean_precisions' ? row[xAxis] * 100 : row[xAxis],
                                 y: yMetric.includes('time') && yMetric !== 'total_upload_time' ? row[yMetric] * 1000 : row[yMetric],
@@ -757,11 +771,13 @@ This HTML file is designed to visualize vector database benchmark results using 
                     });
                 }
             } else {
-                // Single dataset mode (original behavior)
+                // Single dataset mode - include filename in labels
+                const filenameShort = getFilenameWithoutExtension(primaryFilename) || 'data';
+
                 if (groupBy === 'none') {
                     const sortedData = sortDataByXAxis([...filteredData]);
                     datasets = [{
-                        label: 'All Data',
+                        label: filenameShort,
                         data: sortedData.map(row => ({
                             x: xAxis === 'mean_precisions' ? row[xAxis] * 100 : row[xAxis],
                             y: yMetric.includes('time') && yMetric !== 'total_upload_time' ? row[yMetric] * 1000 : row[yMetric],
@@ -779,7 +795,7 @@ This HTML file is designed to visualize vector database benchmark results using 
                     datasets = groups.map((group, index) => {
                         const groupData = sortDataByXAxis(filteredData.filter(d => d[groupBy] === group));
                         return {
-                            label: group,
+                            label: `${filenameShort}: ${group}`,
                             data: groupData.map(row => ({
                                 x: xAxis === 'mean_precisions' ? row[xAxis] * 100 : row[xAxis],
                                 y: yMetric.includes('time') && yMetric !== 'total_upload_time' ? row[yMetric] * 1000 : row[yMetric],
@@ -836,6 +852,11 @@ This HTML file is designed to visualize vector database benchmark results using 
                                     labels.push(`${xLabel}: ${context.parsed.x}${xUnit}`);
                                     labels.push(`${yLabel}: ${context.parsed.y.toFixed(2)}${yUnit}`);
 
+                                    // Add parallel threads info
+                                    if (originalData.parallel !== undefined) {
+                                        labels.push(`Parallel: ${originalData.parallel} threads`);
+                                    }
+
                                     if (originalData.engine_params && originalData.engine_params.hnsw_config) {
                                         const hnsw = originalData.engine_params.hnsw_config;
                                         labels.push(`HNSW Config:`);
@@ -861,10 +882,10 @@ This HTML file is designed to visualize vector database benchmark results using 
 
                                     // Show file source and filename in comparison mode
                                     if (isComparisonMode && comparisonData.length > 0) {
-                                        const primaryLabelText = primaryLabel.value.trim() || 'Primary';
-                                        const comparisonLabelText = comparisonLabel.value.trim() || 'Comparison';
-                                        const sourceLabel = originalData.fileSource === 'primary' ? primaryLabelText : comparisonLabelText;
-                                        footerLines.push(`Source: ${sourceLabel}`);
+                                        const sourceFilename = originalData.fileSource === 'primary' ?
+                                            getFilenameWithoutExtension(primaryFilename) :
+                                            getFilenameWithoutExtension(comparisonFilename);
+                                        footerLines.push(`Source: ${sourceFilename}`);
                                     }
 
                                     // Always show filename if available
@@ -913,14 +934,14 @@ This HTML file is designed to visualize vector database benchmark results using 
                                   yMetric.replace('_', ' ').toUpperCase();
             chartTitle.textContent = `${yMetricDisplay} vs ${xAxis.replace('_', ' ').toUpperCase()}`;
 
-            // Update summary labels
+            // Update summary labels to show filenames without extension
             const primarySummaryLabel = document.getElementById('primarySummaryLabel');
             const comparisonSummaryLabel = document.getElementById('comparisonSummaryLabel');
             if (primarySummaryLabel) {
-                primarySummaryLabel.textContent = primaryLabel.value.trim() || 'Primary';
+                primarySummaryLabel.textContent = getFilenameWithoutExtension(primaryFilename) || 'Primary';
             }
             if (comparisonSummaryLabel) {
-                comparisonSummaryLabel.textContent = comparisonLabel.value.trim() || 'Comparison';
+                comparisonSummaryLabel.textContent = getFilenameWithoutExtension(comparisonFilename) || 'Comparison';
             }
 
             if (chart) {

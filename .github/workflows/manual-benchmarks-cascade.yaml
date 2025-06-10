@@ -60,7 +60,7 @@ jobs:
           CONFIG_FILE="benchmark_cascade/benchmark-configs.json"
           BENCHMARK_SET="${{ inputs.benchmark_set }}"
           CURRENT_BATCH=${{ inputs.current_batch || 0 }}
-          BATCH_SIZE=2  # Number of parallel jobs
+          BATCH_SIZE=4  # Number of parallel jobs
 
           echo "benchmark_set=$BENCHMARK_SET" >> $GITHUB_OUTPUT
 
@@ -166,7 +166,7 @@ jobs:
     needs: prepareBenchmarks
     runs-on: ubuntu-latest
     strategy:
-      max-parallel: 2
+      max-parallel: 4
       fail-fast: false
       matrix:
         config: ${{ fromJSON(needs.prepareBenchmarks.outputs.matrix) }}
@@ -257,6 +257,7 @@ jobs:
 
           export SERVER_NAME="benchmark-cascade-server-${CURRENT_INDEX}"
           export CLIENT_NAME="benchmark-cascade-client-${CURRENT_INDEX}"
+          export FETCH_ALL_RESULTS="true"
 
           bash -x tools/setup_ci.sh
           bash -x tools/run_ci.sh
