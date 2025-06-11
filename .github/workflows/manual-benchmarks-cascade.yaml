@@ -21,6 +21,10 @@ on:
             description: "Enable all feature flags (false by default, used if benchmark_set=single)"
             default: false
         # Inputs to control cascade behavior
+        process_results:
+          type: boolean
+          description: "Skip all the jobs except for processBenchmarks (true) or run a normal cascade (false)"
+          default: false
         benchmark_set:
             description: "Benchmark set to run (from benchmark_cascade/benchmark-configs.json or 'single' for the benchmark from inputs)"
             default: "smoke_test"
@@ -31,13 +35,24 @@ on:
             description: "Current batch index (for cascading, internal use)"
             default: "0"
         workflow_run_ids:
-            description: "Comma-separated list of workflow run IDs (for internal use)"
+            description: "Comma-separated list of workflow run IDs to process (used when process_results=true or for internal cascade tracking)"
+            default: ""
+        machines_per_bench:
+            type: boolean
+            description: "Create/destroy machines for each benchmark run (true) or reuse machines across batches (false)"
+            default: false
+        server_name:
+            description: "Server name to use when machines_per_bench is false"
+            default: ""
+        client_name:
+            description: "Client name to use when machines_per_bench is false"
             default: ""
 
 jobs:
   prepareBenchmarks:
     name: Prepare Benchmarks
     runs-on: ubuntu-latest
+    if: inputs.process_results == false
     outputs:
       matrix: ${{ steps.prepare.outputs.matrix }}
       has_next_batch: ${{ steps.prepare.outputs.has_next_batch }}
@@ -60,7 +75,7 @@ jobs:
           CONFIG_FILE="benchmark_cascade/benchmark-configs.json"
           BENCHMARK_SET="${{ inputs.benchmark_set }}"
           CURRENT_BATCH=${{ inputs.current_batch || 0 }}
-          BATCH_SIZE=4  # Number of parallel jobs
+          BATCH_SIZE=40  # Number of parallel jobs
 
           echo "benchmark_set=$BENCHMARK_SET" >> $GITHUB_OUTPUT
 
@@ -161,12 +176,117 @@ jobs:
             echo "matrix=$MATRIX_JSON" >> $GITHUB_OUTPUT
           fi
 
-  runBenchmarks:
-    name: Run Benchmark ${{ matrix.config.index }}
+  setupMachines:
+    name: Setup Machines ${{ matrix.config.index }}
     needs: prepareBenchmarks
+    if: inputs.process_results == false
     runs-on: ubuntu-latest
     strategy:
-      max-parallel: 4
+      max-parallel: 40
+      fail-fast: false
+      matrix:
+        config: ${{ fromJSON(needs.prepareBenchmarks.outputs.matrix) }}
+    outputs:
+      server_name: ${{ steps.setup.outputs.server_name }}
+      client_name: ${{ steps.setup.outputs.client_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Set up server and client machines
+        id: setup
+        run: |
+          export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
+          export CURRENT_INDEX=${{ matrix.config.index }}
+          export CURRENT_BATCH=${{ inputs.current_batch || 0 }}
+          export MACHINES_PER_BENCH="${{ inputs.machines_per_bench }}"
+          
+          # Check if we should skip machine setup
+          if [ "$MACHINES_PER_BENCH" = "false" ] && [ "$CURRENT_BATCH" != "0" ]; then
+            echo "machines_per_bench is false and not initial batch (batch=$CURRENT_BATCH), skipping machine setup"
+            # Use provided server and client names from inputs
+            export SERVER_NAME="${{ inputs.server_name }}"
+            export CLIENT_NAME="${{ inputs.client_name }}"
+            echo "Using existing machines: SERVER_NAME=$SERVER_NAME, CLIENT_NAME=$CLIENT_NAME"
+          else
+            echo "Creating new machines (machines_per_bench=$MACHINES_PER_BENCH, batch=$CURRENT_BATCH)"
+            export SERVER_NAME="benchmark-cascade-server-${CURRENT_INDEX}"
+            export CLIENT_NAME="benchmark-cascade-client-${CURRENT_INDEX}"
+            export BENCH_SERVER_NAME=${SERVER_NAME}
+            export BENCH_CLIENT_NAME=${CLIENT_NAME}
+
+            bash -x tools/setup_ci.sh
+
+            # Function to create server with retries
+            create_server_with_retries() {
+              local server_name=$1
+              local server_type=$2
+              local max_retries=5
+              local retry_count=0
+
+              while [ $retry_count -lt $max_retries ]; do
+                echo "Creating server $server_name (attempt $((retry_count + 1))/$max_retries)..."
+
+                if SERVER_NAME=$server_name SERVER_TYPE=$server_type bash -x "tools/hetzner/create_and_install.sh"; then
+                  echo "Successfully created server $server_name"
+                  return 0
+                else
+                  retry_count=$((retry_count + 1))
+                  if [ $retry_count -lt $max_retries ]; then
+                    echo "Failed to create server $server_name, waiting 60 seconds before retry..."
+                    sleep 60
+                  fi
+                fi
+              done
+
+              echo "Failed to create server $server_name after $max_retries attempts"
+              return 1
+            }
+
+            # Create server and client machines with retries in parallel
+            create_server_with_retries "$BENCH_SERVER_NAME" "cpx51" &
+            SERVER_PID=$!
+
+            create_server_with_retries "$BENCH_CLIENT_NAME" "cpx41" &
+            CLIENT_PID=$!
+
+            # Wait for both to complete and check their exit statuses
+            wait $SERVER_PID
+            SERVER_EXIT_CODE=$?
+
+            wait $CLIENT_PID
+            CLIENT_EXIT_CODE=$?
+
+            # Check if both succeeded
+            if [ $SERVER_EXIT_CODE -ne 0 ]; then
+              echo "Failed to create server machine"
+              exit 1
+            fi
+
+            if [ $CLIENT_EXIT_CODE -ne 0 ]; then
+              echo "Failed to create client machine"
+              exit 1
+            fi
+
+            echo "Both machines created successfully"
+          fi
+          
+          # Set outputs for other jobs to use
+          echo "server_name=$SERVER_NAME" >> $GITHUB_OUTPUT
+          echo "client_name=$CLIENT_NAME" >> $GITHUB_OUTPUT
+
+  runBenchmarks:
+    name: Run Benchmark ${{ matrix.config.index }}
+    needs: [prepareBenchmarks, setupMachines]
+    if: inputs.process_results == false
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      max-parallel: 40
       fail-fast: false
       matrix:
         config: ${{ fromJSON(needs.prepareBenchmarks.outputs.matrix) }}
@@ -177,72 +297,6 @@ jobs:
       - uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Set up server and client machines
-        run: |
-          export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
-          export CURRENT_INDEX=${{ matrix.config.index }}
-
-          export SERVER_NAME="benchmark-cascade-server-${CURRENT_INDEX}"
-          export CLIENT_NAME="benchmark-cascade-client-${CURRENT_INDEX}"
-          export BENCH_SERVER_NAME=${SERVER_NAME}
-          export BENCH_CLIENT_NAME=${CLIENT_NAME}
-
-          bash -x tools/setup_ci.sh
-
-          # Function to create server with retries
-          create_server_with_retries() {
-            local server_name=$1
-            local server_type=$2
-            local max_retries=5
-            local retry_count=0
-
-            while [ $retry_count -lt $max_retries ]; do
-              echo "Creating server $server_name (attempt $((retry_count + 1))/$max_retries)..."
-
-              if SERVER_NAME=$server_name SERVER_TYPE=$server_type bash -x "tools/hetzner/create_and_install.sh"; then
-                echo "Successfully created server $server_name"
-                return 0
-              else
-                retry_count=$((retry_count + 1))
-                if [ $retry_count -lt $max_retries ]; then
-                  echo "Failed to create server $server_name, waiting 60 seconds before retry..."
-                  sleep 60
-                fi
-              fi
-            done
-
-            echo "Failed to create server $server_name after $max_retries attempts"
-            return 1
-          }
-
-          # Create server and client machines with retries in parallel
-          create_server_with_retries "$BENCH_SERVER_NAME" "cpx51" &
-          SERVER_PID=$!
-
-          create_server_with_retries "$BENCH_CLIENT_NAME" "cpx41" &
-          CLIENT_PID=$!
-
-          # Wait for both to complete and check their exit statuses
-          wait $SERVER_PID
-          SERVER_EXIT_CODE=$?
-
-          wait $CLIENT_PID
-          CLIENT_EXIT_CODE=$?
-
-          # Check if both succeeded
-          if [ $SERVER_EXIT_CODE -ne 0 ]; then
-            echo "Failed to create server machine"
-            exit 1
-          fi
-
-          if [ $CLIENT_EXIT_CODE -ne 0 ]; then
-            echo "Failed to create client machine"
-            exit 1
-          fi
-
-          echo "Both machines created successfully"
-
       - name: Run benchmark
         run: |
           export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
@@ -254,24 +308,23 @@ jobs:
           export POSTGRES_TABLE=benchmark_manual
           export QDRANT__FEATURE_FLAGS__ALL=${{ matrix.config.feature_flags_all }}
           export CURRENT_INDEX=${{ matrix.config.index }}
+          export MACHINES_PER_BENCH="${{ inputs.machines_per_bench }}"
 
-          export SERVER_NAME="benchmark-cascade-server-${CURRENT_INDEX}"
-          export CLIENT_NAME="benchmark-cascade-client-${CURRENT_INDEX}"
+          # Use appropriate server and client names based on machines_per_bench setting
+          if [ "$MACHINES_PER_BENCH" = "false" ]; then
+            export SERVER_NAME="${{ inputs.server_name }}"
+            export CLIENT_NAME="${{ inputs.client_name }}"
+            echo "Using reused machines: SERVER_NAME=$SERVER_NAME, CLIENT_NAME=$CLIENT_NAME"
+          else
+            export SERVER_NAME="benchmark-cascade-server-${CURRENT_INDEX}"
+            export CLIENT_NAME="benchmark-cascade-client-${CURRENT_INDEX}"
+            echo "Using per-benchmark machines: SERVER_NAME=$SERVER_NAME, CLIENT_NAME=$CLIENT_NAME"
+          fi
+          
           export FETCH_ALL_RESULTS="true"
 
           bash -x tools/setup_ci.sh
           bash -x tools/run_ci.sh
-
-      - name: Tear down machines
-        if: ${{ always() }}
-        continue-on-error: true
-        run: |
-          export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
-          export CURRENT_INDEX=${{ matrix.config.index }}
-
-          export SERVER_NAME="benchmark-cascade-server-${CURRENT_INDEX}"
-          export CLIENT_NAME="benchmark-cascade-client-${CURRENT_INDEX}"
-          bash -x tools/tear_down.sh
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v4
@@ -279,11 +332,38 @@ jobs:
           name: results-${{ matrix.config.qdrant_version_sanitized }}-bench-${{ matrix.config.dataset }}-${{ matrix.config.engine_config }}-${{ matrix.config.index }}
           path: results/
           retention-days: 7
-
+      - name: Teardown machines
+        if: ${{ always() }}
+        continue-on-error: true
+        run: |
+          export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
+          export CURRENT_INDEX=${{ matrix.config.index }}
+          export MACHINES_PER_BENCH="${{ inputs.machines_per_bench }}"
+          export HAS_NEXT_BATCH="${{ needs.prepareBenchmarks.outputs.has_next_batch }}"
+          
+          # Check if we should skip machine teardown
+          if [ "$MACHINES_PER_BENCH" = "false" ] && [ "$HAS_NEXT_BATCH" = "true" ]; then
+            echo "machines_per_bench is false and more batches coming (has_next_batch=$HAS_NEXT_BATCH), skipping machine teardown"
+            echo "Machines will be reused for next batch"
+          else
+            echo "Tearing down machines (machines_per_bench=$MACHINES_PER_BENCH, has_next_batch=$HAS_NEXT_BATCH)"
+            # Use provided server and client names if available, otherwise derive from index
+            if [ "$MACHINES_PER_BENCH" = "false" ]; then
+              export SERVER_NAME="${{ inputs.server_name }}"
+              export CLIENT_NAME="${{ inputs.client_name }}"
+            else
+              export SERVER_NAME="benchmark-cascade-server-${CURRENT_INDEX}"
+              export CLIENT_NAME="benchmark-cascade-client-${CURRENT_INDEX}"
+            fi
+            
+            bash -x tools/setup_ci.sh
+            bash -x tools/tear_down.sh
+          fi
   processBenchmarks:
     name: Process All Benchmark Results
     needs: [prepareBenchmarks, runBenchmarks]
-    if: needs.prepareBenchmarks.outputs.has_next_batch == 'false'
+    if: always() && (needs.prepareBenchmarks.outputs.has_next_batch == 'false' || inputs.process_results == true)
+    continue-on-error: true
     runs-on: ubuntu-latest
     container:
       image: python:3.11-slim
@@ -291,11 +371,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.ref }}
-
       - name: Install dependencies
-        run: |
-          pip install pandas jupyter nbconvert
-
+        run: pip install pandas jupyter nbconvert
       - name: Download artifacts from specific workflow runs
         shell: bash
         run: |
@@ -309,8 +386,14 @@ jobs:
           mkdir -p artifacts
 
           # Get workflow run IDs from the accumulated list
-          WORKFLOW_RUN_IDS="${{ needs.prepareBenchmarks.outputs.workflow_run_ids }}"
-          echo "Workflow run IDs: $WORKFLOW_RUN_IDS"
+          # If process_results is true, use the input workflow_run_ids instead
+          if [ "${{ inputs.process_results }}" = "true" ]; then
+            WORKFLOW_RUN_IDS="${{ inputs.workflow_run_ids }}"
+            echo "Using workflow run IDs from input (process_results=true): $WORKFLOW_RUN_IDS"
+          else
+            WORKFLOW_RUN_IDS="${{ needs.prepareBenchmarks.outputs.workflow_run_ids }}"
+            echo "Using workflow run IDs from prepareBenchmarks: $WORKFLOW_RUN_IDS"
+          fi
 
           # Convert comma-separated list to array and download artifacts from each run
           echo "$WORKFLOW_RUN_IDS" | tr ',' '\n' | while read run_id; do
@@ -336,19 +419,23 @@ jobs:
           ls -la artifacts/
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Upload all artifacts
         uses: actions/upload-artifact@v4
         with:
           name: all-unprocessed-results
           path: artifacts/
           retention-days: 7
-
       - name: Process results by Qdrant version
         run: |
           ROOT_DIR=$(pwd)
           mkdir -p final_results
           cd artifacts
+
+          # Check if there are any zip files
+          if ! ls *.zip >/dev/null 2>&1; then
+            echo "No artifacts found to process"
+            exit 0
+          fi
 
           # Extract version from artifact names (between "results-" and "-bench-")
           VERSIONS=$(ls *.zip | sed -n 's/^[0-9]*-results-\(.*\)-bench-.*/\1/p' | sort -u)
@@ -402,15 +489,16 @@ jobs:
           name: final-processed-results
           path: final_results/
           retention-days: 7
-
   triggerNextBatch:
     name: Trigger Next Batch
     needs: [prepareBenchmarks, runBenchmarks]
-    if: needs.prepareBenchmarks.outputs.has_next_batch == 'true'
+    if: needs.prepareBenchmarks.outputs.has_next_batch == 'true' && inputs.process_results == false
     runs-on: ubuntu-latest
     steps:
       - name: Trigger next batch
         run: |
+          echo "Workflows ids ran so far: ${{ needs.prepareBenchmarks.outputs.workflow_run_ids }}"
+          
           echo "🚀 Triggering next batch of benchmarks..."
           echo "Next batch index: ${{ needs.prepareBenchmarks.outputs.next_batch }}"
 
@@ -428,7 +516,10 @@ jobs:
                 \"benchmark_set\": \"${{ needs.prepareBenchmarks.outputs.benchmark_set }}\",
                 \"current_batch\": \"${{ needs.prepareBenchmarks.outputs.next_batch }}\",
                 \"workflow_run_ids\": \"${{ needs.prepareBenchmarks.outputs.workflow_run_ids }}\",
-                \"params_override\": $ESCAPED_PARAMS
+                \"params_override\": $ESCAPED_PARAMS,
+                \"machines_per_bench\": \"${{ inputs.machines_per_bench }}\",
+                \"server_name\": \"${{ inputs.server_name }}\",
+                \"client_name\": \"${{ inputs.client_name }}\"
               },
               \"ref\": \"${{ github.ref }}\"
             }"

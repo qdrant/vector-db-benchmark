@@ -8,6 +8,8 @@ This HTML file is designed to visualize vector database benchmark results using 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vector Database Benchmark Visualization</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <style>
@@ -37,6 +39,16 @@ This HTML file is designed to visualize vector database benchmark results using 
         <div class="mb-8">
             <h1 class="text-3xl font-bold text-gray-900 mb-2">Vector Database Benchmark Visualization</h1>
             <p class="text-gray-600">Upload your JSON benchmark data to create interactive performance charts comparing different engines and configurations.</p>
+
+            <!-- Info about Pareto filtering -->
+            <div class="mt-4 p-3 bg-green-100 border-2 border-green-400 rounded">
+                <div style="font-size: 16px; font-weight: bold; color: #059669;">
+                    🎯 Pareto Frontier Filter Applied
+                </div>
+                <div style="font-size: 14px; margin-top: 6px; color: #047857;">
+                    Shows only datapoints that improve performance within each parallel thread group
+                </div>
+            </div>
         </div>
 
         <!-- Data Input Section -->
@@ -263,16 +275,27 @@ This HTML file is designed to visualize vector database benchmark results using 
         <!-- Filters -->
         <div id="filtersSection" class="hidden mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
             <h3 class="font-semibold text-yellow-800 mb-3">Filters</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="filterControls">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="filterControls">
                 <!-- Dynamic filter controls will be added here -->
             </div>
         </div>
 
         <!-- Chart -->
         <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-            <h2 id="chartTitle" class="text-xl font-semibold text-gray-800 mb-4">
-                Performance Chart
-            </h2>
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="chartTitle" class="text-xl font-semibold text-gray-800">
+                    Performance Chart
+                </h2>
+                <div class="flex items-center gap-4">
+                    <span class="text-sm text-gray-600">🔍 Scroll to zoom • Drag to select area • Alt+Drag to pan</span>
+                    <button
+                        id="resetZoomBtn"
+                        class="px-3 py-1 bg-gray-500 text-white rounded text-xs hover:bg-gray-600 focus:ring-2 focus:ring-gray-400 transition-colors duration-200"
+                    >
+                        Reset Zoom
+                    </button>
+                </div>
+            </div>
             <div class="chart-container">
                 <canvas id="benchmarkChart"></canvas>
             </div>
@@ -288,106 +311,104 @@ This HTML file is designed to visualize vector database benchmark results using 
                 "setup_name": "qdrant-rps-m-16-ef-128",
                 "dataset_name": "dbpedia-openai-1M-1536-angular",
                 "search_idx": "0",
-                "upload_time": 104.89,
-                "total_upload_time": 275.16,
-                "p95_time": 0.00568,
-                "rps": 184.79,
+                "upload_time": 118.20,
+                "total_upload_time": 318.64,
+                "p95_time": 0.007691,
+                "rps": 130.26,
                 "parallel": 1,
-                "p99_time": 0.00635,
-                "mean_time": 0.00475,
-                "mean_precisions": 0.9770,
+                "p99_time": 0.008957,
+                "mean_time": 0.006716,
+                "mean_precisions": 0.9784,
                 "engine_params": {
-                    "optimizers_config": {
-                        "max_segment_size": 1000000,
-                        "memmap_threshold": 10000000,
-                        "default_segment_number": 2,
-                        "max_optimization_threads": 0
-                    },
                     "hnsw_config": {
                         "m": 16,
                         "ef_construct": 128
                     },
                     "hnsw_ef": 64
-                }
-            },
-            {
-                "engine_name": "weaviate",
-                "setup_name": "weaviate-rps-ef-128",
-                "dataset_name": "dbpedia-openai-1M-1536-angular",
-                "search_idx": "0",
-                "upload_time": 125.43,
-                "total_upload_time": 298.21,
-                "p95_time": 0.00612,
-                "rps": 163.42,
-                "parallel": 1,
-                "p99_time": 0.00687,
-                "mean_time": 0.00521,
-                "mean_precisions": 0.9750,
-                "engine_params": {
-                    "hnsw_config": {
-                        "ef_construct": 128
-                    }
-                }
-            },
-            {
-                "engine_name": "redis",
-                "setup_name": "redis-rps-default",
-                "dataset_name": "dbpedia-openai-1M-1536-angular",
-                "search_idx": "0",
-                "upload_time": 98.32,
-                "total_upload_time": 245.67,
-                "p95_time": 0.00589,
-                "rps": 169.84,
-                "parallel": 1,
-                "p99_time": 0.00663,
-                "mean_time": 0.00498,
-                "mean_precisions": 0.9725,
-                "engine_params": {
-                    "hnsw_config": {
-                        "m": 16,
-                        "ef_construct": 100
-                    }
                 }
             },
             {
                 "engine_name": "qdrant",
-                "setup_name": "qdrant-rps-m-32-ef-256",
+                "setup_name": "qdrant-rps-m-16-ef-128",
                 "dataset_name": "dbpedia-openai-1M-1536-angular",
                 "search_idx": "1",
-                "upload_time": 115.21,
-                "total_upload_time": 289.43,
-                "p95_time": 0.00534,
-                "rps": 187.34,
+                "upload_time": 118.20,
+                "total_upload_time": 318.64,
+                "p95_time": 0.009744,
+                "rps": 112.17,
                 "parallel": 1,
-                "p99_time": 0.00598,
-                "mean_time": 0.00462,
-                "mean_precisions": 0.9785,
+                "p99_time": 0.011519,
+                "mean_time": 0.007994,
+                "mean_precisions": 0.9901,
                 "engine_params": {
                     "hnsw_config": {
-                        "m": 32,
-                        "ef_construct": 256
+                        "m": 16,
+                        "ef_construct": 128
+                    },
+                    "hnsw_ef": 128
+                }
+            },
+            {
+                "engine_name": "qdrant",
+                "setup_name": "qdrant-rps-m-16-ef-128",
+                "dataset_name": "dbpedia-openai-1M-1536-angular",
+                "search_idx": "2",
+                "upload_time": 118.20,
+                "total_upload_time": 318.64,
+                "p95_time": 0.012000,
+                "rps": 92.79,
+                "parallel": 1,
+                "p99_time": 0.015120,
+                "mean_time": 0.009842,
+                "mean_precisions": 0.9950,
+                "engine_params": {
+                    "hnsw_config": {
+                        "m": 16,
+                        "ef_construct": 128
+                    },
+                    "hnsw_ef": 256
+                }
+            },
+            {
+                "engine_name": "qdrant",
+                "setup_name": "qdrant-rps-m-16-ef-128",
+                "dataset_name": "dbpedia-openai-1M-1536-angular",
+                "search_idx": "4",
+                "upload_time": 118.20,
+                "total_upload_time": 318.64,
+                "p95_time": 0.016229,
+                "rps": 808.74,
+                "parallel": 100,
+                "p99_time": 0.026924,
+                "mean_time": 0.009566,
+                "mean_precisions": 0.9784,
+                "engine_params": {
+                    "hnsw_config": {
+                        "m": 16,
+                        "ef_construct": 128
                     },
                     "hnsw_ef": 64
                 }
             },
             {
-                "engine_name": "elasticsearch",
-                "setup_name": "elasticsearch-default",
+                "engine_name": "qdrant",
+                "setup_name": "qdrant-rps-m-16-ef-128",
                 "dataset_name": "dbpedia-openai-1M-1536-angular",
-                "search_idx": "0",
-                "upload_time": 142.56,
-                "total_upload_time": 356.78,
-                "p95_time": 0.00687,
-                "rps": 145.52,
-                "parallel": 1,
-                "p99_time": 0.00789,
-                "mean_time": 0.00623,
-                "mean_precisions": 0.9720,
+                "search_idx": "5",
+                "upload_time": 118.20,
+                "total_upload_time": 318.64,
+                "p95_time": 0.079736,
+                "rps": 823.07,
+                "parallel": 100,
+                "p99_time": 0.114752,
+                "mean_time": 0.033456,
+                "mean_precisions": 0.9901,
                 "engine_params": {
                     "hnsw_config": {
                         "m": 16,
-                        "ef_construct": 200
-                    }
+                        "ef_construct": 128
+                    },
+                    "hnsw_ef": 128
                 }
             }
         ];
@@ -448,10 +469,84 @@ This HTML file is designed to visualize vector database benchmark results using 
         const comparisonSummary = document.getElementById('comparisonSummary');
         const filtersSection = document.getElementById('filtersSection');
         const filterControls = document.getElementById('filterControls');
+        const resetZoomBtn = document.getElementById('resetZoomBtn');
 
         // Initialize with sample data
         primaryFilename = 'sample-data.json';
         loadPrimaryData(sampleData);
+
+        // Pareto frontier filtering function
+        function applyParetoFilter(data, yMetric) {
+            // Always apply Pareto filter for all metrics
+            if (data.length === 0) {
+                return data;
+            }
+
+            console.log(`DEBUG PARETO: Input data length: ${data.length}, yMetric: ${yMetric}`);
+            console.log(`DEBUG PARETO: First few points:`, data.slice(0, 3).map(p => ({
+                precision: p.mean_precisions, 
+                rps: p.rps, 
+                parallel: p.parallel,
+                fileSource: p.fileSource
+            })));
+
+            // Group data by parallel thread count
+            const parallelGroups = {};
+            data.forEach(point => {
+                const parallel = point.parallel;
+                if (!parallelGroups[parallel]) {
+                    parallelGroups[parallel] = [];
+                }
+                parallelGroups[parallel].push(point);
+            });
+
+            console.log(`DEBUG PARETO: Parallel groups:`, Object.keys(parallelGroups).map(k => `${k}: ${parallelGroups[k].length} points`));
+
+            const allFiltered = [];
+
+            // Apply Pareto filter to each parallel group separately
+            Object.keys(parallelGroups).forEach(parallel => {
+                const groupData = parallelGroups[parallel];
+                
+                // Sort by precision descending (highest first) within this group
+                const sortedByPrecision = [...groupData].sort((a, b) => b.mean_precisions - a.mean_precisions);
+
+                if (sortedByPrecision.length === 0) return;
+
+                const filtered = [];
+                
+                // Determine if higher or lower values are better for this metric
+                const isHigherBetter = yMetric === 'rps';
+                
+                // Start with the highest precision point
+                let bestPerformance = sortedByPrecision[0][yMetric];
+                if (bestPerformance === null || bestPerformance === undefined) {
+                    return; // Skip this group if no valid metric data
+                }
+                filtered.push(sortedByPrecision[0]);
+
+                // For each subsequent point (lower precision), only include if it improves performance
+                for (let i = 1; i < sortedByPrecision.length; i++) {
+                    const currentValue = sortedByPrecision[i][yMetric];
+                    if (currentValue === null || currentValue === undefined) {
+                        continue; // Skip points with missing data
+                    }
+                    
+                    const isImprovement = isHigherBetter ?
+                        currentValue > bestPerformance :
+                        currentValue < bestPerformance;
+
+                    if (isImprovement) {
+                        filtered.push(sortedByPrecision[i]);
+                        bestPerformance = currentValue; // Update the best performance threshold
+                    }
+                }
+
+                allFiltered.push(...filtered);
+            });
+
+            return allFiltered;
+        }
 
         // Event listeners
         fileInput.addEventListener('change', handleFileUpload);
@@ -469,6 +564,11 @@ This HTML file is designed to visualize vector database benchmark results using 
         xAxisSelect.addEventListener('change', updateChart);
         groupBySelect.addEventListener('change', updateChart);
         chartTypeSelect.addEventListener('change', updateChart);
+        resetZoomBtn.addEventListener('click', () => {
+            if (chart) {
+                chart.resetZoom();
+            }
+        });
 
         function showMessage(element, message, isError = false) {
             element.textContent = message;
@@ -570,6 +670,7 @@ This HTML file is designed to visualize vector database benchmark results using 
             }));
             isComparisonMode = true;
             comparisonSummary.classList.remove('hidden');
+            console.log(`DEBUG: loadComparisonData - Set isComparisonMode to true, comparisonData.length: ${comparisonData.length}`);
             combineDatasets();
         }
 
@@ -622,22 +723,38 @@ This HTML file is designed to visualize vector database benchmark results using 
         }
 
         function createFilterControls() {
-            const filterFields = ['engine_name', 'dataset_name', 'setup_name'];
+            const filterFields = ['engine_name', 'dataset_name', 'setup_name', 'parallel'];
             filterControls.innerHTML = '';
             filters = {};
 
             filterFields.forEach(field => {
-                const values = [...new Set(currentData.map(d => d[field]))].sort();
+                const values = [...new Set(currentData.map(d => d[field]))].sort((a, b) => {
+                    // Sort numerically for parallel field
+                    if (field === 'parallel') {
+                        return Number(a) - Number(b);
+                    }
+                    return String(a).localeCompare(String(b));
+                });
                 if (values.length > 1) {
                     const div = document.createElement('div');
+                    const fieldLabel = field === 'parallel' ? 'PARALLEL THREADS' : field.replace('_', ' ').toUpperCase();
+                    
+                    // Set default value for parallel field to 100
+                    const defaultValue = field === 'parallel' && values.includes(100) ? '100' : '';
+                    
                     div.innerHTML = `
-                        <label class="block text-sm font-medium text-yellow-700 mb-2">${field.replace('_', ' ').toUpperCase()}</label>
+                        <label class="block text-sm font-medium text-yellow-700 mb-2">${fieldLabel}</label>
                         <select id="filter_${field}" class="w-full p-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-sm">
                             <option value="">All</option>
-                            ${values.map(v => `<option value="${v}">${v}</option>`).join('')}
+                            ${values.map(v => `<option value="${v}" ${v == defaultValue ? 'selected' : ''}>${field === 'parallel' ? v + ' threads' : v}</option>`).join('')}
                         </select>
                     `;
                     filterControls.appendChild(div);
+
+                    // Set initial filter value
+                    if (defaultValue) {
+                        filters[field] = defaultValue;
+                    }
 
                     document.getElementById(`filter_${field}`).addEventListener('change', (e) => {
                         filters[field] = e.target.value;
@@ -649,12 +766,23 @@ This HTML file is designed to visualize vector database benchmark results using 
             if (filterControls.children.length > 0 || currentData.length > 0) {
                 filtersSection.classList.remove('hidden');
             }
+            
+            // Apply initial filters
+            applyFilters();
         }
 
         function applyFilters() {
             filteredData = currentData.filter(row => {
                 return Object.entries(filters).every(([field, value]) => {
-                    return !value || row[field] === value;
+                    if (!value) return true;
+
+                    // Handle numeric comparison for parallel field
+                    if (field === 'parallel') {
+                        return Number(row[field]) === Number(value);
+                    }
+
+                    // String comparison for other fields
+                    return row[field] === value;
                 });
             });
             updateChart();
@@ -665,6 +793,8 @@ This HTML file is designed to visualize vector database benchmark results using 
             const xAxis = xAxisSelect.value;
             const groupBy = groupBySelect.value;
             const chartType = chartTypeSelect.value;
+
+            console.log(`DEBUG: getChartConfig called - isComparisonMode: ${isComparisonMode}, comparisonData.length: ${comparisonData.length}, groupBy: ${groupBy}`);
 
             let datasets = [];
 
@@ -690,8 +820,65 @@ This HTML file is designed to visualize vector database benchmark results using 
 
                 if (groupBy === 'none') {
                     // Just separate by file source
-                    const primaryDataSorted = sortDataByXAxis(filteredData.filter(row => row.fileSource === 'primary'));
-                    const comparisonDataSorted = sortDataByXAxis(filteredData.filter(row => row.fileSource === 'comparison'));
+                    let primaryDataFiltered = filteredData.filter(row => row.fileSource === 'primary');
+                    let comparisonDataFiltered = filteredData.filter(row => row.fileSource === 'comparison');
+
+                    console.log(`DEBUG: Before Pareto - Primary: ${primaryDataFiltered.length}, Comparison: ${comparisonDataFiltered.length}`);
+
+                    // Apply Pareto filtering if enabled
+                    primaryDataFiltered = applyParetoFilter(primaryDataFiltered, yMetric);
+                    comparisonDataFiltered = applyParetoFilter(comparisonDataFiltered, yMetric);
+
+                    console.log(`DEBUG: After Pareto - Primary: ${primaryDataFiltered.length}, Comparison: ${comparisonDataFiltered.length}`);
+                    
+                    // Check if we have the A-B-C pattern in the filtered results
+                    console.log(`DEBUG: Checking primary data for A-B-C pattern...`);
+                    const primarySorted = primaryDataFiltered.sort((a, b) => b.mean_precisions - a.mean_precisions);
+                    const primaryRPS = primarySorted.map(p => p.rps);
+                    for (let i = 0; i < primaryRPS.length - 2; i++) {
+                        if (primaryRPS[i+1] < primaryRPS[i] && primaryRPS[i+2] > primaryRPS[i+1]) {
+                            console.log(`❌ BUG DETECTED in PRIMARY at positions ${i}-${i+1}-${i+2}: RPS sequence: ${primaryRPS[i].toFixed(2)} -> ${primaryRPS[i+1].toFixed(2)} -> ${primaryRPS[i+2].toFixed(2)}`);
+                            console.log(`   Setups: ${primarySorted[i].setup_name} -> ${primarySorted[i+1].setup_name} -> ${primarySorted[i+2].setup_name}`);
+                            console.log(`   Parallel: ${primarySorted[i].parallel} -> ${primarySorted[i+1].parallel} -> ${primarySorted[i+2].parallel}`);
+                        }
+                    }
+                    
+                    console.log(`DEBUG: Checking comparison data for A-B-C pattern...`);
+                    const comparisonSorted = comparisonDataFiltered.sort((a, b) => b.mean_precisions - a.mean_precisions);
+                    const comparisonRPS = comparisonSorted.map(p => p.rps);
+                    for (let i = 0; i < comparisonRPS.length - 2; i++) {
+                        if (comparisonRPS[i+1] < comparisonRPS[i] && comparisonRPS[i+2] > comparisonRPS[i+1]) {
+                            console.log(`❌ BUG DETECTED in COMPARISON at positions ${i}-${i+1}-${i+2}: RPS sequence: ${comparisonRPS[i].toFixed(2)} -> ${comparisonRPS[i+1].toFixed(2)} -> ${comparisonRPS[i+2].toFixed(2)}`);
+                            console.log(`   Setups: ${comparisonSorted[i].setup_name} -> ${comparisonSorted[i+1].setup_name} -> ${comparisonSorted[i+2].setup_name}`);
+                            console.log(`   Parallel: ${comparisonSorted[i].parallel} -> ${comparisonSorted[i+1].parallel} -> ${comparisonSorted[i+2].parallel}`);
+                        }
+                    }
+
+                    // Then sort by X-axis
+                    const primaryDataSorted = sortDataByXAxis(primaryDataFiltered);
+                    const comparisonDataSorted = sortDataByXAxis(comparisonDataFiltered);
+
+                    console.log(`DEBUG: Primary sorted precision range:`, 
+                        primaryDataSorted.map(p => p.mean_precisions).slice(0, 3),
+                        '...',
+                        primaryDataSorted.map(p => p.mean_precisions).slice(-3)
+                    );
+                    console.log(`DEBUG: Comparison sorted precision range:`, 
+                        comparisonDataSorted.map(p => p.mean_precisions).slice(0, 3),
+                        '...',
+                        comparisonDataSorted.map(p => p.mean_precisions).slice(-3)
+                    );
+                    
+                    console.log(`DEBUG: Primary sorted RPS range:`, 
+                        primaryDataSorted.map(p => p.rps).slice(0, 3),
+                        '...',
+                        primaryDataSorted.map(p => p.rps).slice(-3)
+                    );
+                    console.log(`DEBUG: Comparison sorted RPS range:`, 
+                        comparisonDataSorted.map(p => p.rps).slice(0, 3),
+                        '...',
+                        comparisonDataSorted.map(p => p.rps).slice(-3)
+                    );
 
                     datasets = [
                         {
@@ -732,7 +919,10 @@ This HTML file is designed to visualize vector database benchmark results using 
 
                     // Primary dataset groups
                     primaryGroups.forEach((group, index) => {
-                        const groupData = sortDataByXAxis(filteredData.filter(d => d.fileSource === 'primary' && d[groupBy] === group));
+                        let groupData = filteredData.filter(d => d.fileSource === 'primary' && d[groupBy] === group);
+                        groupData = applyParetoFilter(groupData, yMetric);
+                        groupData = sortDataByXAxis(groupData);
+
                         datasets.push({
                             label: `${primaryFilenameShort}: ${group}`,
                             data: groupData.map(row => ({
@@ -752,7 +942,10 @@ This HTML file is designed to visualize vector database benchmark results using 
 
                     // Comparison dataset groups
                     comparisonGroups.forEach((group, index) => {
-                        const groupData = sortDataByXAxis(filteredData.filter(d => d.fileSource === 'comparison' && d[groupBy] === group));
+                        let groupData = filteredData.filter(d => d.fileSource === 'comparison' && d[groupBy] === group);
+                        groupData = applyParetoFilter(groupData, yMetric);
+                        groupData = sortDataByXAxis(groupData);
+
                         datasets.push({
                             label: `${comparisonFilenameShort}: ${group}`,
                             data: groupData.map(row => ({
@@ -775,7 +968,10 @@ This HTML file is designed to visualize vector database benchmark results using 
                 const filenameShort = getFilenameWithoutExtension(primaryFilename) || 'data';
 
                 if (groupBy === 'none') {
-                    const sortedData = sortDataByXAxis([...filteredData]);
+                    let dataToPlot = [...filteredData];
+                    dataToPlot = applyParetoFilter(dataToPlot, yMetric);
+                    const sortedData = sortDataByXAxis(dataToPlot);
+
                     datasets = [{
                         label: filenameShort,
                         data: sortedData.map(row => ({
@@ -793,7 +989,10 @@ This HTML file is designed to visualize vector database benchmark results using 
                 } else {
                     const groups = [...new Set(filteredData.map(d => d[groupBy]))];
                     datasets = groups.map((group, index) => {
-                        const groupData = sortDataByXAxis(filteredData.filter(d => d[groupBy] === group));
+                        let groupData = filteredData.filter(d => d[groupBy] === group);
+                        groupData = applyParetoFilter(groupData, yMetric);
+                        groupData = sortDataByXAxis(groupData);
+
                         return {
                             label: `${filenameShort}: ${group}`,
                             data: groupData.map(row => ({
@@ -827,6 +1026,29 @@ This HTML file is designed to visualize vector database benchmark results using 
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
+                        zoom: {
+                            pan: {
+                                enabled: true,
+                                mode: 'xy',
+                                threshold: 10
+                            },
+                            zoom: {
+                                wheel: {
+                                    enabled: true,
+                                    speed: 0.1
+                                },
+                                pinch: {
+                                    enabled: true
+                                },
+                                drag: {
+                                    enabled: true,
+                                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                    borderColor: 'rgba(59, 130, 246, 0.5)',
+                                    borderWidth: 1
+                                },
+                                mode: 'xy'
+                            }
+                        },
                         legend: {
                             position: 'top',
                             labels: {
