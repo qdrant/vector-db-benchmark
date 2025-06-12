@@ -46,7 +46,7 @@ This HTML file is designed to visualize vector database benchmark results using 
                     🎯 Pareto Frontier Filter Applied
                 </div>
                 <div style="font-size: 14px; margin-top: 6px; color: #047857;">
-                    Shows only datapoints that improve performance within each parallel thread group
+                    Shows only datapoints that improve performance within each dataset and parallel thread group
                 </div>
             </div>
         </div>
@@ -482,36 +482,45 @@ This HTML file is designed to visualize vector database benchmark results using 
                 return data;
             }
 
-            console.log(`DEBUG PARETO: Input data length: ${data.length}, yMetric: ${yMetric}`);
-            console.log(`DEBUG PARETO: First few points:`, data.slice(0, 3).map(p => ({
-                precision: p.mean_precisions,
-                rps: p.rps,
-                parallel: p.parallel,
-                fileSource: p.fileSource
-            })));
 
-            // Group data by parallel thread count
-            const parallelGroups = {};
+            // Group data by dataset and parallel thread count
+            const datasetParallelGroups = {};
             data.forEach(point => {
-                const parallel = point.parallel;
-                if (!parallelGroups[parallel]) {
-                    parallelGroups[parallel] = [];
+                const dataset = point.dataset_name || 'Unknown';
+                const parallel = point.parallel || 1;
+                const groupKey = `${dataset}__${parallel}`;
+                
+                if (!datasetParallelGroups[groupKey]) {
+                    datasetParallelGroups[groupKey] = [];
                 }
-                parallelGroups[parallel].push(point);
+                datasetParallelGroups[groupKey].push(point);
             });
 
-            console.log(`DEBUG PARETO: Parallel groups:`, Object.keys(parallelGroups).map(k => `${k}: ${parallelGroups[k].length} points`));
 
             const allFiltered = [];
 
-            // Apply Pareto filter to each parallel group separately
-            Object.keys(parallelGroups).forEach(parallel => {
-                const groupData = parallelGroups[parallel];
+            // Apply Pareto filter to each dataset-parallel group separately
+            Object.keys(datasetParallelGroups).forEach(groupKey => {
+                const [dataset, parallel] = groupKey.split('__');
+                const groupData = datasetParallelGroups[groupKey];
+
 
                 // Sort by precision descending (highest first) within this group
                 const sortedByPrecision = [...groupData].sort((a, b) => b.mean_precisions - a.mean_precisions);
+                
+                // Remove duplicates based on precision value
+                const seenPrecisions = new Set();
+                const uniqueByPrecision = [];
+                for (const point of sortedByPrecision) {
+                    const precision = point.mean_precisions || 0;
+                    if (!seenPrecisions.has(precision)) {
+                        seenPrecisions.add(precision);
+                        uniqueByPrecision.push(point);
+                    }
+                }
+                const sortedByPrecisionUnique = uniqueByPrecision;
 
-                if (sortedByPrecision.length === 0) return;
+                if (sortedByPrecisionUnique.length === 0) return;
 
                 const filtered = [];
 
@@ -519,15 +528,16 @@ This HTML file is designed to visualize vector database benchmark results using 
                 const isHigherBetter = yMetric === 'rps';
 
                 // Start with the highest precision point
-                let bestPerformance = sortedByPrecision[0][yMetric];
+                let bestPerformance = sortedByPrecisionUnique[0][yMetric];
                 if (bestPerformance === null || bestPerformance === undefined) {
-                    return; // Skip this group if no valid metric data
+                    return;
                 }
-                filtered.push(sortedByPrecision[0]);
+                filtered.push(sortedByPrecisionUnique[0]);
+
 
                 // For each subsequent point (lower precision), only include if it improves performance
-                for (let i = 1; i < sortedByPrecision.length; i++) {
-                    const currentValue = sortedByPrecision[i][yMetric];
+                for (let i = 1; i < sortedByPrecisionUnique.length; i++) {
+                    const currentValue = sortedByPrecisionUnique[i][yMetric];
                     if (currentValue === null || currentValue === undefined) {
                         continue; // Skip points with missing data
                     }
@@ -537,8 +547,8 @@ This HTML file is designed to visualize vector database benchmark results using 
                         currentValue < bestPerformance;
 
                     if (isImprovement) {
-                        filtered.push(sortedByPrecision[i]);
-                        bestPerformance = currentValue; // Update the best performance threshold
+                        filtered.push(sortedByPrecisionUnique[i]);
+                        bestPerformance = currentValue;
                     }
                 }
 
@@ -670,7 +680,6 @@ This HTML file is designed to visualize vector database benchmark results using 
             }));
             isComparisonMode = true;
             comparisonSummary.classList.remove('hidden');
-            console.log(`DEBUG: loadComparisonData - Set isComparisonMode to true, comparisonData.length: ${comparisonData.length}`);
             combineDatasets();
         }
 
@@ -794,7 +803,6 @@ This HTML file is designed to visualize vector database benchmark results using 
             const groupBy = groupBySelect.value;
             const chartType = chartTypeSelect.value;
 
-            console.log(`DEBUG: getChartConfig called - isComparisonMode: ${isComparisonMode}, comparisonData.length: ${comparisonData.length}, groupBy: ${groupBy}`);
 
             let datasets = [];
 
@@ -823,62 +831,12 @@ This HTML file is designed to visualize vector database benchmark results using 
                     let primaryDataFiltered = filteredData.filter(row => row.fileSource === 'primary');
                     let comparisonDataFiltered = filteredData.filter(row => row.fileSource === 'comparison');
 
-                    console.log(`DEBUG: Before Pareto - Primary: ${primaryDataFiltered.length}, Comparison: ${comparisonDataFiltered.length}`);
-
-                    // Apply Pareto filtering if enabled
                     primaryDataFiltered = applyParetoFilter(primaryDataFiltered, yMetric);
                     comparisonDataFiltered = applyParetoFilter(comparisonDataFiltered, yMetric);
 
-                    console.log(`DEBUG: After Pareto - Primary: ${primaryDataFiltered.length}, Comparison: ${comparisonDataFiltered.length}`);
 
-                    // Check if we have the A-B-C pattern in the filtered results
-                    console.log(`DEBUG: Checking primary data for A-B-C pattern...`);
-                    const primarySorted = primaryDataFiltered.sort((a, b) => b.mean_precisions - a.mean_precisions);
-                    const primaryRPS = primarySorted.map(p => p.rps);
-                    for (let i = 0; i < primaryRPS.length - 2; i++) {
-                        if (primaryRPS[i+1] < primaryRPS[i] && primaryRPS[i+2] > primaryRPS[i+1]) {
-                            console.log(`❌ BUG DETECTED in PRIMARY at positions ${i}-${i+1}-${i+2}: RPS sequence: ${primaryRPS[i].toFixed(2)} -> ${primaryRPS[i+1].toFixed(2)} -> ${primaryRPS[i+2].toFixed(2)}`);
-                            console.log(`   Setups: ${primarySorted[i].setup_name} -> ${primarySorted[i+1].setup_name} -> ${primarySorted[i+2].setup_name}`);
-                            console.log(`   Parallel: ${primarySorted[i].parallel} -> ${primarySorted[i+1].parallel} -> ${primarySorted[i+2].parallel}`);
-                        }
-                    }
-
-                    console.log(`DEBUG: Checking comparison data for A-B-C pattern...`);
-                    const comparisonSorted = comparisonDataFiltered.sort((a, b) => b.mean_precisions - a.mean_precisions);
-                    const comparisonRPS = comparisonSorted.map(p => p.rps);
-                    for (let i = 0; i < comparisonRPS.length - 2; i++) {
-                        if (comparisonRPS[i+1] < comparisonRPS[i] && comparisonRPS[i+2] > comparisonRPS[i+1]) {
-                            console.log(`❌ BUG DETECTED in COMPARISON at positions ${i}-${i+1}-${i+2}: RPS sequence: ${comparisonRPS[i].toFixed(2)} -> ${comparisonRPS[i+1].toFixed(2)} -> ${comparisonRPS[i+2].toFixed(2)}`);
-                            console.log(`   Setups: ${comparisonSorted[i].setup_name} -> ${comparisonSorted[i+1].setup_name} -> ${comparisonSorted[i+2].setup_name}`);
-                            console.log(`   Parallel: ${comparisonSorted[i].parallel} -> ${comparisonSorted[i+1].parallel} -> ${comparisonSorted[i+2].parallel}`);
-                        }
-                    }
-
-                    // Then sort by X-axis
                     const primaryDataSorted = sortDataByXAxis(primaryDataFiltered);
                     const comparisonDataSorted = sortDataByXAxis(comparisonDataFiltered);
-
-                    console.log(`DEBUG: Primary sorted precision range:`,
-                        primaryDataSorted.map(p => p.mean_precisions).slice(0, 3),
-                        '...',
-                        primaryDataSorted.map(p => p.mean_precisions).slice(-3)
-                    );
-                    console.log(`DEBUG: Comparison sorted precision range:`,
-                        comparisonDataSorted.map(p => p.mean_precisions).slice(0, 3),
-                        '...',
-                        comparisonDataSorted.map(p => p.mean_precisions).slice(-3)
-                    );
-
-                    console.log(`DEBUG: Primary sorted RPS range:`,
-                        primaryDataSorted.map(p => p.rps).slice(0, 3),
-                        '...',
-                        primaryDataSorted.map(p => p.rps).slice(-3)
-                    );
-                    console.log(`DEBUG: Comparison sorted RPS range:`,
-                        comparisonDataSorted.map(p => p.rps).slice(0, 3),
-                        '...',
-                        comparisonDataSorted.map(p => p.rps).slice(-3)
-                    );
 
                     datasets = [
                         {
