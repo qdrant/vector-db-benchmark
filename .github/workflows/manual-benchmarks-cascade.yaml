@@ -503,7 +503,8 @@ jobs:
                 \"params_override\": $ESCAPED_PARAMS,
                 \"machines_per_bench\": \"${{ inputs.machines_per_bench }}\",
                 \"server_name\": \"${{ inputs.server_name }}\",
-                \"client_name\": \"${{ inputs.client_name }}\"
+                \"client_name\": \"${{ inputs.client_name }}\",
+                \"max_parallel\": \"${{ inputs.max_parallel || 40 }}\"
               },
               \"ref\": \"${{ github.ref }}\"
             }"
