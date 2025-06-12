@@ -46,16 +46,15 @@ jobs:
       next_batch: ${{ steps.prepare.outputs.next_batch }}
       benchmark_set: ${{ steps.prepare.outputs.benchmark_set }}
       workflow_run_ids: ${{ steps.prepare.outputs.workflow_run_ids }}
+      machines_info: ${{ steps.prepare.outputs.machines_info }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.ref }}
-
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10.12'
-
       - name: Prepare benchmark matrix
         id: prepare
         run: |
@@ -155,6 +154,29 @@ jobs:
 
           echo "matrix=$MATRIX_JSON" >> $GITHUB_OUTPUT
 
+          # Generate machines_info array for the current batch
+          MACHINES_INFO="["
+          MACHINES_FIRST=true
+
+          for i in $(seq $START_INDEX $END_INDEX); do
+            if [ $i -ge $TOTAL_CONFIGS ]; then
+              break
+            fi
+
+            if [ "$MACHINES_FIRST" = false ]; then
+              MACHINES_INFO="${MACHINES_INFO},"
+            fi
+            MACHINES_FIRST=false
+
+            SERVER_NAME="benchmark-cascade-server-${i}"
+            CLIENT_NAME="benchmark-cascade-client-${i}"
+            MACHINES_INFO="${MACHINES_INFO}{\"server_name\":\"$SERVER_NAME\",\"client_name\":\"$CLIENT_NAME\"}"
+          done
+
+          MACHINES_INFO="${MACHINES_INFO}]"
+          echo "Generated machines_info: $MACHINES_INFO"
+          echo "machines_info=$MACHINES_INFO" >> $GITHUB_OUTPUT
+
   setupMachines:
     name: Setup Machines ${{ matrix.config.index }}
     needs: prepareBenchmarks
@@ -175,7 +197,6 @@ jobs:
       - uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
       - name: Set up server and client machines
         id: setup
         run: |
@@ -184,11 +205,17 @@ jobs:
           export CURRENT_BATCH=${{ inputs.current_batch || 0 }}
           export MACHINES_PER_BENCH="${{ inputs.machines_per_bench }}"
 
-          # Check if we should skip machine setup
-          if [ "$MACHINES_PER_BENCH" = "false" ] && [ "$CURRENT_BATCH" != "0" ]; then
-            echo "machines_per_bench is false and not initial batch (batch=$CURRENT_BATCH), skipping machine setup"
-            # Use provided machines_info from inputs - select by strategy.job-index
-            MACHINES_INFO='${{ inputs.machines_info }}'
+          # Determine machine names based on machines_per_bench and batch
+          if [ "$MACHINES_PER_BENCH" = "false" ]; then
+            # Use machines_info array - from inputs for batch 1+, from prepareBenchmarks for batch 0
+            if [ "$CURRENT_BATCH" != "0" ]; then
+              echo "machines_per_bench is false and not initial batch (batch=$CURRENT_BATCH), using machines_info from inputs"
+              MACHINES_INFO='${{ inputs.machines_info }}'
+            else
+              echo "machines_per_bench is false and initial batch (batch=$CURRENT_BATCH), using machines_info from prepareBenchmarks"
+              MACHINES_INFO='${{ needs.prepareBenchmarks.outputs.machines_info }}'
+            fi
+            
             JOB_INDEX=${{ strategy.job-index }}
 
             # Extract server and client names from machines_info array using jq
@@ -201,13 +228,24 @@ jobs:
               exit 1
             fi
 
-            echo "Using existing machines: SERVER_NAME=$SERVER_NAME, CLIENT_NAME=$CLIENT_NAME"
+            # Only create machines on first batch, reuse on subsequent batches
+            if [ "$CURRENT_BATCH" = "0" ]; then
+              echo "Creating new machines: SERVER_NAME=$SERVER_NAME, CLIENT_NAME=$CLIENT_NAME"
+              export BENCH_SERVER_NAME=${SERVER_NAME}
+              export BENCH_CLIENT_NAME=${CLIENT_NAME}
+            else
+              echo "Using existing machines: SERVER_NAME=$SERVER_NAME, CLIENT_NAME=$CLIENT_NAME"
+            fi
           else
-            echo "Creating new machines (machines_per_bench=$MACHINES_PER_BENCH, batch=$CURRENT_BATCH)"
+            echo "Creating new machines per benchmark (machines_per_bench=$MACHINES_PER_BENCH)"
             export SERVER_NAME="benchmark-cascade-server-${CURRENT_INDEX}"
             export CLIENT_NAME="benchmark-cascade-client-${CURRENT_INDEX}"
             export BENCH_SERVER_NAME=${SERVER_NAME}
             export BENCH_CLIENT_NAME=${CLIENT_NAME}
+          fi
+
+          # Create machines if needed
+          if [ "$MACHINES_PER_BENCH" = "true" ] || [ "$CURRENT_BATCH" = "0" ]; then
 
             bash -x tools/setup_ci.sh
 
@@ -301,16 +339,23 @@ jobs:
           export MACHINES_PER_BENCH="${{ inputs.machines_per_bench }}"
 
           # Use appropriate server and client names based on machines_per_bench setting
-          if [ "$MACHINES_PER_BENCH" = "false" ] && [ "$CURRENT_BATCH" != "0" ]; then
-            # Use machines_info from inputs - select by strategy.job-index
-            MACHINES_INFO='${{ inputs.machines_info }}'
+          if [ "$MACHINES_PER_BENCH" = "false" ]; then
+            # Use machines_info array - from inputs for batch 1+, from prepareBenchmarks for batch 0
+            if [ "$CURRENT_BATCH" != "0" ]; then
+              echo "Using machines_info from inputs for batch $CURRENT_BATCH"
+              MACHINES_INFO='${{ inputs.machines_info }}'
+            else
+              echo "Using machines_info from prepareBenchmarks for batch $CURRENT_BATCH"
+              MACHINES_INFO='${{ needs.prepareBenchmarks.outputs.machines_info }}'
+            fi
+            
             JOB_INDEX=${{ strategy.job-index }}
 
             # Extract server and client names from machines_info array using jq
             export SERVER_NAME=$(echo "$MACHINES_INFO" | jq -r ".[$JOB_INDEX].server_name")
             export CLIENT_NAME=$(echo "$MACHINES_INFO" | jq -r ".[$JOB_INDEX].client_name")
 
-            echo "Using reused machines: SERVER_NAME=$SERVER_NAME, CLIENT_NAME=$CLIENT_NAME"
+            echo "Using machines: SERVER_NAME=$SERVER_NAME, CLIENT_NAME=$CLIENT_NAME"
           else
             export SERVER_NAME="benchmark-cascade-server-${CURRENT_INDEX}"
             export CLIENT_NAME="benchmark-cascade-client-${CURRENT_INDEX}"
@@ -345,10 +390,15 @@ jobs:
           else
             echo "Tearing down machines (machines_per_bench=$MACHINES_PER_BENCH, has_next_batch=$HAS_NEXT_BATCH)"
 
-            if [ "$MACHINES_PER_BENCH" = "false" ] && [ "$CURRENT_BATCH" != "0" ]; then
-              echo "Using provided server and client names for teardown"
-              # Use machines_info from inputs - select by strategy.job-index
-              MACHINES_INFO='${{ inputs.machines_info }}'
+            if [ "$MACHINES_PER_BENCH" = "false" ]; then
+              echo "Using machines_info for teardown"
+              # Use machines_info array - from inputs for batch 1+, from prepareBenchmarks for batch 0
+              if [ "$CURRENT_BATCH" != "0" ]; then
+                MACHINES_INFO='${{ inputs.machines_info }}'
+              else
+                MACHINES_INFO='${{ needs.prepareBenchmarks.outputs.machines_info }}'
+              fi
+              
               JOB_INDEX=${{ strategy.job-index }}
 
               # Extract server and client names from machines_info array using jq
@@ -505,29 +555,9 @@ jobs:
           echo "🚀 Triggering next batch of benchmarks..."
           echo "Next batch index: ${{ needs.prepareBenchmarks.outputs.next_batch }}"
 
-          # Collect machines info from setupMachines outputs
-          MACHINES_INFO="["
-          FIRST=true
-
-          # Convert setupMachines outputs to JSON array
-          SERVER_NAMES='${{ toJSON(needs.setupMachines.outputs.server_name) }}'
-          CLIENT_NAMES='${{ toJSON(needs.setupMachines.outputs.client_name) }}'
-
-          # Parse arrays (they come as JSON arrays from matrix outputs)
-          for i in $(echo "$SERVER_NAMES" | jq -r 'keys[]'); do
-            SERVER_NAME=$(echo "$SERVER_NAMES" | jq -r ".[$i]")
-            CLIENT_NAME=$(echo "$CLIENT_NAMES" | jq -r ".[$i]")
-
-            if [ "$FIRST" = false ]; then
-              MACHINES_INFO="${MACHINES_INFO},"
-            fi
-            FIRST=false
-
-            MACHINES_INFO="${MACHINES_INFO}{\"server_name\":\"$SERVER_NAME\",\"client_name\":\"$CLIENT_NAME\"}"
-          done
-
-          MACHINES_INFO="${MACHINES_INFO}]"
-          echo "Generated machines_info: $MACHINES_INFO"
+          # Use machines_info from prepareBenchmarks output
+          MACHINES_INFO='${{ needs.prepareBenchmarks.outputs.machines_info }}'
+          echo "Using machines_info from prepareBenchmarks: $MACHINES_INFO"
 
           PARAMS_OVERRIDE='${{ inputs.params_override }}'
           # Escape the JSON for embedding in the curl command
