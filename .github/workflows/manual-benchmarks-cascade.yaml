@@ -315,6 +315,7 @@ jobs:
         continue-on-error: true
         run: |
           export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
+          export CURRENT_BATCH=${{ inputs.current_batch || 0 }}
           export CURRENT_INDEX=${{ matrix.config.index }}
           export MACHINES_PER_BENCH="${{ inputs.machines_per_bench }}"
           export HAS_NEXT_BATCH="${{ needs.prepareBenchmarks.outputs.has_next_batch }}"
@@ -325,11 +326,13 @@ jobs:
             echo "Machines will be reused for next batch"
           else
             echo "Tearing down machines (machines_per_bench=$MACHINES_PER_BENCH, has_next_batch=$HAS_NEXT_BATCH)"
-            # Use provided server and client names if available, otherwise derive from index
-            if [ "$MACHINES_PER_BENCH" = "false" ]; then
+            
+            if [ "$MACHINES_PER_BENCH" = "false" ] && [ "$CURRENT_BATCH" != "0" ]; then
+              echo "Using provided server and client names for teardown"
               export SERVER_NAME="${{ inputs.server_name }}"
               export CLIENT_NAME="${{ inputs.client_name }}"
             else
+              echo "Deriving server and client names from CURRENT_INDEX"
               export SERVER_NAME="benchmark-cascade-server-${CURRENT_INDEX}"
               export CLIENT_NAME="benchmark-cascade-client-${CURRENT_INDEX}"
             fi
