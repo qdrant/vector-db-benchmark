@@ -555,7 +555,7 @@ jobs:
           MACHINES_PER_BENCH="${{ inputs.machines_per_bench }}"
           echo "setupMachines job result: $SETUP_RESULT"
           echo "machines_per_bench: $MACHINES_PER_BENCH"
-          
+
           if [ "$MACHINES_PER_BENCH" = "false" ] && [ "$SETUP_RESULT" != "success" ]; then
             echo "machines_per_bench is false and setupMachines job did not succeed (result: $SETUP_RESULT)"
             echo "Skipping trigger of next batch"
@@ -565,7 +565,7 @@ jobs:
             echo "Proceeding with next batch trigger"
             echo "should_trigger=true" >> $GITHUB_OUTPUT
           fi
-      
+
       - name: Trigger next batch
         if: steps.check_setup.outputs.should_trigger == 'true'
         run: |
