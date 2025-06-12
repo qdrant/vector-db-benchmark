@@ -489,7 +489,7 @@ This HTML file is designed to visualize vector database benchmark results using 
                 const dataset = point.dataset_name || 'Unknown';
                 const parallel = point.parallel || 1;
                 const groupKey = `${dataset}__${parallel}`;
-                
+
                 if (!datasetParallelGroups[groupKey]) {
                     datasetParallelGroups[groupKey] = [];
                 }
@@ -507,7 +507,7 @@ This HTML file is designed to visualize vector database benchmark results using 
 
                 // Sort by precision descending (highest first) within this group
                 const sortedByPrecision = [...groupData].sort((a, b) => b.mean_precisions - a.mean_precisions);
-                
+
                 // Remove duplicates based on precision value
                 const seenPrecisions = new Set();
                 const uniqueByPrecision = [];
