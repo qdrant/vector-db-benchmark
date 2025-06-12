@@ -285,6 +285,7 @@ jobs:
           export ENGINE_NAME=${{ matrix.config.engine_config }}
           export POSTGRES_TABLE=benchmark_manual
           export QDRANT__FEATURE_FLAGS__ALL=${{ matrix.config.feature_flags_all }}
+          export CURRENT_BATCH=${{ inputs.current_batch || 0 }}
           export CURRENT_INDEX=${{ matrix.config.index }}
           export MACHINES_PER_BENCH="${{ inputs.machines_per_bench }}"
 
