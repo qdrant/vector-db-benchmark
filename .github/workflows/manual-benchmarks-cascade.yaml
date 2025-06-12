@@ -215,7 +215,7 @@ jobs:
               echo "machines_per_bench is false and initial batch (batch=$CURRENT_BATCH), using machines_info from prepareBenchmarks"
               MACHINES_INFO='${{ needs.prepareBenchmarks.outputs.machines_info }}'
             fi
-            
+
             JOB_INDEX=${{ strategy.job-index }}
 
             # Extract server and client names from machines_info array using jq
@@ -348,7 +348,7 @@ jobs:
               echo "Using machines_info from prepareBenchmarks for batch $CURRENT_BATCH"
               MACHINES_INFO='${{ needs.prepareBenchmarks.outputs.machines_info }}'
             fi
-            
+
             JOB_INDEX=${{ strategy.job-index }}
 
             # Extract server and client names from machines_info array using jq
@@ -398,7 +398,7 @@ jobs:
               else
                 MACHINES_INFO='${{ needs.prepareBenchmarks.outputs.machines_info }}'
               fi
-              
+
               JOB_INDEX=${{ strategy.job-index }}
 
               # Extract server and client names from machines_info array using jq
