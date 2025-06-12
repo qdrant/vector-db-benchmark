@@ -600,9 +600,9 @@ jobs:
         run: |
           export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
           export CURRENT_BATCH=${{ inputs.current_batch || 0 }}
-          
+
           echo "Cleaning up all machines from the cascade..."
-          
+
           # Get machines_info array - from inputs for batch 1+, from prepareBenchmarks for batch 0
           if [ "$CURRENT_BATCH" != "0" ]; then
             echo "Using machines_info from inputs for batch $CURRENT_BATCH"
@@ -611,23 +611,23 @@ jobs:
             echo "Using machines_info from prepareBenchmarks for batch $CURRENT_BATCH"
             MACHINES_INFO='${{ needs.prepareBenchmarks.outputs.machines_info }}'
           fi
-          
+
           echo "Machines to cleanup: $MACHINES_INFO"
-          
+
           # Setup tools
           bash -x tools/setup_ci.sh
-          
+
           # Parse machines_info and cleanup each machine pair
           echo "$MACHINES_INFO" | jq -c '.[]' | while read -r machine_pair; do
             SERVER_NAME=$(echo "$machine_pair" | jq -r '.server_name')
             CLIENT_NAME=$(echo "$machine_pair" | jq -r '.client_name')
-            
+
             echo "Attempting to cleanup: SERVER_NAME=$SERVER_NAME, CLIENT_NAME=$CLIENT_NAME"
-            
+
             # Export for tear_down.sh to use
             export SERVER_NAME
             export CLIENT_NAME
-            
+
             # Run teardown with error handling
             if bash -x tools/tear_down.sh; then
               echo "Successfully cleaned up $SERVER_NAME and $CLIENT_NAME"
@@ -635,5 +635,5 @@ jobs:
               echo "Warning: Failed to cleanup $SERVER_NAME and $CLIENT_NAME (may already be deleted)"
             fi
           done
-          
+
           echo "Cleanup process completed"
