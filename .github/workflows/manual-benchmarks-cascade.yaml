@@ -33,7 +33,7 @@ on:
         max_parallel:
             type: number
             description: "Maximum number of parallel jobs to run"
-            default: 40
+            default: 10
 
 jobs:
   prepareBenchmarks:
@@ -364,8 +364,8 @@ jobs:
 
           export FETCH_ALL_RESULTS="true"
 
-          bash -x tools/setup_ci.sh
-          bash -x tools/run_ci.sh
+          #bash -x tools/setup_ci.sh
+          #bash -x tools/run_ci.sh
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v4
