@@ -326,7 +326,7 @@ jobs:
             echo "Machines will be reused for next batch"
           else
             echo "Tearing down machines (machines_per_bench=$MACHINES_PER_BENCH, has_next_batch=$HAS_NEXT_BATCH)"
-            
+
             if [ "$MACHINES_PER_BENCH" = "false" ] && [ "$CURRENT_BATCH" != "0" ]; then
               echo "Using provided server and client names for teardown"
               export SERVER_NAME="${{ inputs.server_name }}"
