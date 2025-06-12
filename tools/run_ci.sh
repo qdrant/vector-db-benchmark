@@ -27,6 +27,8 @@ trap 'handle_term' TERM
 # Possible values for BENCHMARK_STRATEGY: default, tenants, parallel and collection-reload
 export BENCHMARK_STRATEGY=${BENCHMARK_STRATEGY:-"default"}
 
+export FETCH_ALL_RESULTS=${FETCH_ALL_RESULTS:-"false"}
+
 SCRIPT=$(realpath "$0")
 SCRIPT_PATH=$(dirname "$SCRIPT")
 
