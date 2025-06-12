@@ -26,9 +26,9 @@ trap 'cleanup' EXIT
 
 # Uncomment this to dynamically create servers
 
-#SERVER_NAME=$BENCH_SERVER_NAME SERVER_TYPE='cpx51' bash -x "${SCRIPT_PATH}/${CLOUD_NAME}/create_and_install.sh" &
+#SERVER_NAME=$BENCH_SERVER_NAME SERVER_TYPE='ccx13' bash -x "${SCRIPT_PATH}/${CLOUD_NAME}/create_and_install.sh" &
 #SERVER_CREATION_PID=$!
-#SERVER_NAME=$BENCH_CLIENT_NAME SERVER_TYPE='cpx41' bash -x "${SCRIPT_PATH}/${CLOUD_NAME}/create_and_install.sh"
+#SERVER_NAME=$BENCH_CLIENT_NAME SERVER_TYPE='cpx11' bash -x "${SCRIPT_PATH}/${CLOUD_NAME}/create_and_install.sh"
 #wait $SERVER_CREATION_PID
 
 BENCHMARK_STRATEGY=${BENCHMARK_STRATEGY:-"default"}
