@@ -548,16 +548,42 @@ jobs:
     if: always() && (needs.prepareBenchmarks.outputs.has_next_batch == 'true' && inputs.process_results == false)
     runs-on: ubuntu-latest
     steps:
+      - name: Check setupMachines job status
+        id: check_setup
+        run: |
+          SETUP_RESULT="${{ needs.setupMachines.result }}"
+          MACHINES_PER_BENCH="${{ inputs.machines_per_bench }}"
+          echo "setupMachines job result: $SETUP_RESULT"
+          echo "machines_per_bench: $MACHINES_PER_BENCH"
+          
+          if [ "$MACHINES_PER_BENCH" = "false" ] && [ "$SETUP_RESULT" != "success" ]; then
+            echo "machines_per_bench is false and setupMachines job did not succeed (result: $SETUP_RESULT)"
+            echo "Skipping trigger of next batch"
+            echo "should_trigger=false" >> $GITHUB_OUTPUT
+          else
+            echo "Either machines_per_bench is true or setupMachines succeeded"
+            echo "Proceeding with next batch trigger"
+            echo "should_trigger=true" >> $GITHUB_OUTPUT
+          fi
+      
       - name: Trigger next batch
+        if: steps.check_setup.outputs.should_trigger == 'true'
         run: |
           echo "Workflows ids ran so far: ${{ needs.prepareBenchmarks.outputs.workflow_run_ids }}"
 
           echo "🚀 Triggering next batch of benchmarks..."
           echo "Next batch index: ${{ needs.prepareBenchmarks.outputs.next_batch }}"
 
-          # Use machines_info from prepareBenchmarks output
-          MACHINES_INFO='${{ needs.prepareBenchmarks.outputs.machines_info }}'
-          echo "Using machines_info from prepareBenchmarks: $MACHINES_INFO"
+          # Use machines_info - from prepareBenchmarks for batch 0, from inputs for batch 1+
+          CURRENT_BATCH=${{ inputs.current_batch || 0 }}
+          if [ "$CURRENT_BATCH" = "0" ]; then
+            echo "Initial workflow (batch 0), using machines_info from prepareBenchmarks"
+            MACHINES_INFO='${{ needs.prepareBenchmarks.outputs.machines_info }}'
+          else
+            echo "Subsequent workflow (batch $CURRENT_BATCH), using machines_info from inputs"
+            MACHINES_INFO='${{ inputs.machines_info }}'
+          fi
+          echo "Using machines_info: $MACHINES_INFO"
 
           PARAMS_OVERRIDE='${{ inputs.params_override }}'
           # Escape the JSON for embedding in the curl command
