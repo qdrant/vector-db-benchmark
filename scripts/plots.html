@@ -484,8 +484,8 @@ This HTML file is designed to visualize vector database benchmark results using 
 
             console.log(`DEBUG PARETO: Input data length: ${data.length}, yMetric: ${yMetric}`);
             console.log(`DEBUG PARETO: First few points:`, data.slice(0, 3).map(p => ({
-                precision: p.mean_precisions, 
-                rps: p.rps, 
+                precision: p.mean_precisions,
+                rps: p.rps,
                 parallel: p.parallel,
                 fileSource: p.fileSource
             })));
@@ -507,17 +507,17 @@ This HTML file is designed to visualize vector database benchmark results using 
             // Apply Pareto filter to each parallel group separately
             Object.keys(parallelGroups).forEach(parallel => {
                 const groupData = parallelGroups[parallel];
-                
+
                 // Sort by precision descending (highest first) within this group
                 const sortedByPrecision = [...groupData].sort((a, b) => b.mean_precisions - a.mean_precisions);
 
                 if (sortedByPrecision.length === 0) return;
 
                 const filtered = [];
-                
+
                 // Determine if higher or lower values are better for this metric
                 const isHigherBetter = yMetric === 'rps';
-                
+
                 // Start with the highest precision point
                 let bestPerformance = sortedByPrecision[0][yMetric];
                 if (bestPerformance === null || bestPerformance === undefined) {
@@ -531,7 +531,7 @@ This HTML file is designed to visualize vector database benchmark results using 
                     if (currentValue === null || currentValue === undefined) {
                         continue; // Skip points with missing data
                     }
-                    
+
                     const isImprovement = isHigherBetter ?
                         currentValue > bestPerformance :
                         currentValue < bestPerformance;
@@ -738,10 +738,10 @@ This HTML file is designed to visualize vector database benchmark results using 
                 if (values.length > 1) {
                     const div = document.createElement('div');
                     const fieldLabel = field === 'parallel' ? 'PARALLEL THREADS' : field.replace('_', ' ').toUpperCase();
-                    
+
                     // Set default value for parallel field to 100
                     const defaultValue = field === 'parallel' && values.includes(100) ? '100' : '';
-                    
+
                     div.innerHTML = `
                         <label class="block text-sm font-medium text-yellow-700 mb-2">${fieldLabel}</label>
                         <select id="filter_${field}" class="w-full p-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-sm">
@@ -766,7 +766,7 @@ This HTML file is designed to visualize vector database benchmark results using 
             if (filterControls.children.length > 0 || currentData.length > 0) {
                 filtersSection.classList.remove('hidden');
             }
-            
+
             // Apply initial filters
             applyFilters();
         }
@@ -830,7 +830,7 @@ This HTML file is designed to visualize vector database benchmark results using 
                     comparisonDataFiltered = applyParetoFilter(comparisonDataFiltered, yMetric);
 
                     console.log(`DEBUG: After Pareto - Primary: ${primaryDataFiltered.length}, Comparison: ${comparisonDataFiltered.length}`);
-                    
+
                     // Check if we have the A-B-C pattern in the filtered results
                     console.log(`DEBUG: Checking primary data for A-B-C pattern...`);
                     const primarySorted = primaryDataFiltered.sort((a, b) => b.mean_precisions - a.mean_precisions);
@@ -842,7 +842,7 @@ This HTML file is designed to visualize vector database benchmark results using 
                             console.log(`   Parallel: ${primarySorted[i].parallel} -> ${primarySorted[i+1].parallel} -> ${primarySorted[i+2].parallel}`);
                         }
                     }
-                    
+
                     console.log(`DEBUG: Checking comparison data for A-B-C pattern...`);
                     const comparisonSorted = comparisonDataFiltered.sort((a, b) => b.mean_precisions - a.mean_precisions);
                     const comparisonRPS = comparisonSorted.map(p => p.rps);
@@ -858,23 +858,23 @@ This HTML file is designed to visualize vector database benchmark results using 
                     const primaryDataSorted = sortDataByXAxis(primaryDataFiltered);
                     const comparisonDataSorted = sortDataByXAxis(comparisonDataFiltered);
 
-                    console.log(`DEBUG: Primary sorted precision range:`, 
+                    console.log(`DEBUG: Primary sorted precision range:`,
                         primaryDataSorted.map(p => p.mean_precisions).slice(0, 3),
                         '...',
                         primaryDataSorted.map(p => p.mean_precisions).slice(-3)
                     );
-                    console.log(`DEBUG: Comparison sorted precision range:`, 
+                    console.log(`DEBUG: Comparison sorted precision range:`,
                         comparisonDataSorted.map(p => p.mean_precisions).slice(0, 3),
                         '...',
                         comparisonDataSorted.map(p => p.mean_precisions).slice(-3)
                     );
-                    
-                    console.log(`DEBUG: Primary sorted RPS range:`, 
+
+                    console.log(`DEBUG: Primary sorted RPS range:`,
                         primaryDataSorted.map(p => p.rps).slice(0, 3),
                         '...',
                         primaryDataSorted.map(p => p.rps).slice(-3)
                     );
-                    console.log(`DEBUG: Comparison sorted RPS range:`, 
+                    console.log(`DEBUG: Comparison sorted RPS range:`,
                         comparisonDataSorted.map(p => p.rps).slice(0, 3),
                         '...',
                         comparisonDataSorted.map(p => p.rps).slice(-3)

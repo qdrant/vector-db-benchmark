@@ -204,7 +204,7 @@ jobs:
           export CURRENT_INDEX=${{ matrix.config.index }}
           export CURRENT_BATCH=${{ inputs.current_batch || 0 }}
           export MACHINES_PER_BENCH="${{ inputs.machines_per_bench }}"
-          
+
           # Check if we should skip machine setup
           if [ "$MACHINES_PER_BENCH" = "false" ] && [ "$CURRENT_BATCH" != "0" ]; then
             echo "machines_per_bench is false and not initial batch (batch=$CURRENT_BATCH), skipping machine setup"
@@ -274,7 +274,7 @@ jobs:
 
             echo "Both machines created successfully"
           fi
-          
+
           # Set outputs for other jobs to use
           echo "server_name=$SERVER_NAME" >> $GITHUB_OUTPUT
           echo "client_name=$CLIENT_NAME" >> $GITHUB_OUTPUT
@@ -320,7 +320,7 @@ jobs:
             export CLIENT_NAME="benchmark-cascade-client-${CURRENT_INDEX}"
             echo "Using per-benchmark machines: SERVER_NAME=$SERVER_NAME, CLIENT_NAME=$CLIENT_NAME"
           fi
-          
+
           export FETCH_ALL_RESULTS="true"
 
           bash -x tools/setup_ci.sh
@@ -340,7 +340,7 @@ jobs:
           export CURRENT_INDEX=${{ matrix.config.index }}
           export MACHINES_PER_BENCH="${{ inputs.machines_per_bench }}"
           export HAS_NEXT_BATCH="${{ needs.prepareBenchmarks.outputs.has_next_batch }}"
-          
+
           # Check if we should skip machine teardown
           if [ "$MACHINES_PER_BENCH" = "false" ] && [ "$HAS_NEXT_BATCH" = "true" ]; then
             echo "machines_per_bench is false and more batches coming (has_next_batch=$HAS_NEXT_BATCH), skipping machine teardown"
@@ -355,7 +355,7 @@ jobs:
               export SERVER_NAME="benchmark-cascade-server-${CURRENT_INDEX}"
               export CLIENT_NAME="benchmark-cascade-client-${CURRENT_INDEX}"
             fi
-            
+
             bash -x tools/setup_ci.sh
             bash -x tools/tear_down.sh
           fi
@@ -498,7 +498,7 @@ jobs:
       - name: Trigger next batch
         run: |
           echo "Workflows ids ran so far: ${{ needs.prepareBenchmarks.outputs.workflow_run_ids }}"
-          
+
           echo "🚀 Triggering next batch of benchmarks..."
           echo "Next batch index: ${{ needs.prepareBenchmarks.outputs.next_batch }}"
 
