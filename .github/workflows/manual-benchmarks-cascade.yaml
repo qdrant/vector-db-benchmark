@@ -7,36 +7,22 @@ description: |
 on:
   workflow_dispatch:
     inputs:
-        qdrant_version:
-            description: "Version of qdrant to benchmark: docker/v1.5.1, ghcr/dev, etc... (used if benchmark_set=single)"
-            default: ghcr/dev
-        dataset:
-            description: "Dataset to benchmark (used if benchmark_set=single)"
-            default: dbpedia-openai-1M-1536-angular
-        engine_config:
-            description: "Engine config to benchmark (used if benchmark_set=single)"
-            default: qdrant-rps-m-16-ef-128
-        feature_flags_all:
-            type: boolean
-            description: "Enable all feature flags (false by default, used if benchmark_set=single)"
-            default: false
-        # Inputs to control cascade behavior
         process_results:
           type: boolean
           description: "Skip all the jobs except for processBenchmarks (true) or run a normal cascade (false)"
           default: false
+        workflow_run_ids:
+            description: "Comma-separated list of workflow run IDs to process (used when process_results=true or for internal cascade tracking)"
+            default: ""
         benchmark_set:
-            description: "Benchmark set to run (from benchmark_cascade/benchmark-configs.json or 'single' for the benchmark from inputs)"
-            default: "smoke_test"
+            description: "Benchmark set to run (from benchmark_cascade/benchmark-configs.json). Default is 'single': ghcr/dev, dbpedia-openai-1M-1536-angular, qdrant-rps-m-16-ef-128, feature_flags=true."
+            default: "single"
         params_override:
             description: "Override parameters for the benchmark set (JSON format, e.g. '{\"params\": {\"qdrant_version\": [\"ghcr/dev\", \"docker/master\"], \"dataset\": [\"glove-100-angular\"]}}')"
             default: "{}"
         current_batch:
             description: "Current batch index (for cascading, internal use)"
             default: "0"
-        workflow_run_ids:
-            description: "Comma-separated list of workflow run IDs to process (used when process_results=true or for internal cascade tracking)"
-            default: ""
         machines_per_bench:
             type: boolean
             description: "Create/destroy machines for each benchmark run (true) or reuse machines across batches (false)"
@@ -88,93 +74,85 @@ jobs:
           fi
           echo "workflow_run_ids=$WORKFLOW_RUN_IDS" >> "$GITHUB_OUTPUT"
 
-          if [ "$BENCHMARK_SET" = "single" ]; then
-            # Single benchmark - create a matrix with one item
-            MATRIX_JSON='[{"index": 0, "qdrant_version": "'${{ inputs.qdrant_version }}'", "qdrant_version_sanitized": "'$(echo "${{ inputs.qdrant_version }}" | sed "s|/|-|g")'", "dataset": "'${{ inputs.dataset }}'", "engine_config": "'${{ inputs.engine_config }}'", "feature_flags_all": '${{ inputs.feature_flags_all }}'}]'
-            echo "matrix=$MATRIX_JSON" >> $GITHUB_OUTPUT
+          # Benchmark set - read from config file
+          if [ ! -f "$CONFIG_FILE" ]; then
+            echo "Configuration file $CONFIG_FILE not found!"
+            exit 1
+          fi
+
+          BENCHMARK_CONFIGS=$(jq -r ".benchmark_sets.\"$BENCHMARK_SET\"" "$CONFIG_FILE")
+
+          if [ "$BENCHMARK_CONFIGS" = "null" ]; then
+            echo "Benchmark set '$BENCHMARK_SET' not found in configuration file"
+            exit 1
+          fi
+
+          # Apply params_override if provided
+          PARAMS_OVERRIDE='${{ inputs.params_override }}'
+          if [ "$PARAMS_OVERRIDE" != "{}" ]; then
+            echo "Applying params_override: $PARAMS_OVERRIDE"
+
+            # Parse the override params
+            OVERRIDE_PARAMS=$(echo "$PARAMS_OVERRIDE" | jq -r '.params // {}')
+
+            if [ "$OVERRIDE_PARAMS" != "{}" ]; then
+              # Generate all parameter combinations using separate Python script
+              if ! BENCHMARK_CONFIGS=$(python3 benchmark_cascade/generate_configs.py "$OVERRIDE_PARAMS" "$BENCHMARK_CONFIGS"); then
+                echo "Error: Failed to generate benchmark configurations"
+                exit 1
+              fi
+
+              echo "Generated $(echo "$BENCHMARK_CONFIGS" | jq length) configurations after applying params_override"
+            fi
+          fi
+
+          TOTAL_CONFIGS=$(echo "$BENCHMARK_CONFIGS" | jq length)
+          START_INDEX=$((CURRENT_BATCH * BATCH_SIZE))
+          END_INDEX=$((START_INDEX + BATCH_SIZE - 1))
+
+          echo "Batch info: Current batch=$CURRENT_BATCH, Start=$START_INDEX, End=$END_INDEX, Total=$TOTAL_CONFIGS"
+
+          # Check if we need more batches
+          NEXT_START=$((END_INDEX + 1))
+          if [ $NEXT_START -lt $TOTAL_CONFIGS ]; then
+            echo "has_next_batch=true" >> $GITHUB_OUTPUT
+            echo "next_batch=$((CURRENT_BATCH + 1))" >> $GITHUB_OUTPUT
+          else
             echo "has_next_batch=false" >> $GITHUB_OUTPUT
             echo "next_batch=0" >> $GITHUB_OUTPUT
-          else
-            # Benchmark set - read from config file
-            if [ ! -f "$CONFIG_FILE" ]; then
-              echo "Configuration file $CONFIG_FILE not found!"
-              exit 1
-            fi
-
-            BENCHMARK_CONFIGS=$(jq -r ".benchmark_sets.\"$BENCHMARK_SET\"" "$CONFIG_FILE")
-
-            if [ "$BENCHMARK_CONFIGS" = "null" ]; then
-              echo "Benchmark set '$BENCHMARK_SET' not found in configuration file"
-              exit 1
-            fi
-
-            # Apply params_override if provided
-            PARAMS_OVERRIDE='${{ inputs.params_override }}'
-            if [ "$PARAMS_OVERRIDE" != "{}" ]; then
-              echo "Applying params_override: $PARAMS_OVERRIDE"
-
-              # Parse the override params
-              OVERRIDE_PARAMS=$(echo "$PARAMS_OVERRIDE" | jq -r '.params // {}')
-
-              if [ "$OVERRIDE_PARAMS" != "{}" ]; then
-                # Generate all parameter combinations using separate Python script
-                if ! BENCHMARK_CONFIGS=$(python3 benchmark_cascade/generate_configs.py "$OVERRIDE_PARAMS" "$BENCHMARK_CONFIGS"); then
-                  echo "Error: Failed to generate benchmark configurations"
-                  exit 1
-                fi
-
-                echo "Generated $(echo "$BENCHMARK_CONFIGS" | jq length) configurations after applying params_override"
-              fi
-            fi
-
-            TOTAL_CONFIGS=$(echo "$BENCHMARK_CONFIGS" | jq length)
-            START_INDEX=$((CURRENT_BATCH * BATCH_SIZE))
-            END_INDEX=$((START_INDEX + BATCH_SIZE - 1))
-
-            echo "Batch info: Current batch=$CURRENT_BATCH, Start=$START_INDEX, End=$END_INDEX, Total=$TOTAL_CONFIGS"
-
-            # Check if we need more batches
-            NEXT_START=$((END_INDEX + 1))
-            if [ $NEXT_START -lt $TOTAL_CONFIGS ]; then
-              echo "has_next_batch=true" >> $GITHUB_OUTPUT
-              echo "next_batch=$((CURRENT_BATCH + 1))" >> $GITHUB_OUTPUT
-            else
-              echo "has_next_batch=false" >> $GITHUB_OUTPUT
-              echo "next_batch=0" >> $GITHUB_OUTPUT
-            fi
-
-            # Create matrix for current batch
-            MATRIX_JSON="["
-            FIRST=true
-
-            for i in $(seq $START_INDEX $END_INDEX); do
-              if [ $i -ge $TOTAL_CONFIGS ]; then
-                break
-              fi
-
-              if [ "$FIRST" = false ]; then
-                MATRIX_JSON="${MATRIX_JSON},"
-              fi
-              FIRST=false
-
-              CONFIG=$(echo "$BENCHMARK_CONFIGS" | jq -r ".[$i]")
-              QDRANT_VERSION=$(echo "$CONFIG" | jq -r '.qdrant_version')
-              DATASET=$(echo "$CONFIG" | jq -r '.dataset')
-              ENGINE_CONFIG=$(echo "$CONFIG" | jq -r '.engine_config')
-              FEATURE_FLAGS=$(echo "$CONFIG" | jq -r '.feature_flags_all')
-
-              QDRANT_VERSION_SANITIZED=$(echo "$QDRANT_VERSION" | sed 's|/|-|g')
-
-              MATRIX_JSON="${MATRIX_JSON}{\"index\": $i, \"qdrant_version\": \"$QDRANT_VERSION\", \"qdrant_version_sanitized\": \"$QDRANT_VERSION_SANITIZED\", \"dataset\": \"$DATASET\", \"engine_config\": \"$ENGINE_CONFIG\", \"feature_flags_all\": $FEATURE_FLAGS}"
-            done
-
-            MATRIX_JSON="${MATRIX_JSON}]"
-
-            echo "Current batch: $CURRENT_BATCH (indices $START_INDEX-$END_INDEX of $TOTAL_CONFIGS total)"
-            echo "Matrix JSON: $MATRIX_JSON"
-
-            echo "matrix=$MATRIX_JSON" >> $GITHUB_OUTPUT
           fi
+
+          # Create matrix for current batch
+          MATRIX_JSON="["
+          FIRST=true
+
+          for i in $(seq $START_INDEX $END_INDEX); do
+            if [ $i -ge $TOTAL_CONFIGS ]; then
+              break
+            fi
+
+            if [ "$FIRST" = false ]; then
+              MATRIX_JSON="${MATRIX_JSON},"
+            fi
+            FIRST=false
+
+            CONFIG=$(echo "$BENCHMARK_CONFIGS" | jq -r ".[$i]")
+            QDRANT_VERSION=$(echo "$CONFIG" | jq -r '.qdrant_version')
+            DATASET=$(echo "$CONFIG" | jq -r '.dataset')
+            ENGINE_CONFIG=$(echo "$CONFIG" | jq -r '.engine_config')
+            FEATURE_FLAGS=$(echo "$CONFIG" | jq -r '.feature_flags_all')
+
+            QDRANT_VERSION_SANITIZED=$(echo "$QDRANT_VERSION" | sed 's|/|-|g')
+
+            MATRIX_JSON="${MATRIX_JSON}{\"index\": $i, \"qdrant_version\": \"$QDRANT_VERSION\", \"qdrant_version_sanitized\": \"$QDRANT_VERSION_SANITIZED\", \"dataset\": \"$DATASET\", \"engine_config\": \"$ENGINE_CONFIG\", \"feature_flags_all\": $FEATURE_FLAGS}"
+          done
+
+          MATRIX_JSON="${MATRIX_JSON}]"
+
+          echo "Current batch: $CURRENT_BATCH (indices $START_INDEX-$END_INDEX of $TOTAL_CONFIGS total)"
+          echo "Matrix JSON: $MATRIX_JSON"
+
+          echo "matrix=$MATRIX_JSON" >> $GITHUB_OUTPUT
 
   setupMachines:
     name: Setup Machines ${{ matrix.config.index }}

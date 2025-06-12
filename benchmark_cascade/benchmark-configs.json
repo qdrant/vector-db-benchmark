@@ -220,9 +220,9 @@
         "feature_flags_all": false
       }
     ],
-    "template": [
+    "single": [
       {
-        "qdrant_version": "ghcr/hnsw-m-m0",
+        "qdrant_version": "ghcr/dev",
         "dataset": "dbpedia-openai-1M-1536-angular",
         "engine_config": "qdrant-rps-m-16-ef-128",
         "feature_flags_all": true
