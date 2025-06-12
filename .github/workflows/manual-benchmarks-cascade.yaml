@@ -190,17 +190,17 @@ jobs:
             # Use provided machines_info from inputs - select by strategy.job-index
             MACHINES_INFO='${{ inputs.machines_info }}'
             JOB_INDEX=${{ strategy.job-index }}
-            
+
             # Extract server and client names from machines_info array using jq
             export SERVER_NAME=$(echo "$MACHINES_INFO" | jq -r ".[$JOB_INDEX].server_name")
             export CLIENT_NAME=$(echo "$MACHINES_INFO" | jq -r ".[$JOB_INDEX].client_name")
-            
+
             if [ "$SERVER_NAME" = "null" ] || [ "$CLIENT_NAME" = "null" ]; then
               echo "Error: Could not find machine info for job index $JOB_INDEX in machines_info"
               echo "Available machines_info: $MACHINES_INFO"
               exit 1
             fi
-            
+
             echo "Using existing machines: SERVER_NAME=$SERVER_NAME, CLIENT_NAME=$CLIENT_NAME"
           else
             echo "Creating new machines (machines_per_bench=$MACHINES_PER_BENCH, batch=$CURRENT_BATCH)"
@@ -305,11 +305,11 @@ jobs:
             # Use machines_info from inputs - select by strategy.job-index
             MACHINES_INFO='${{ inputs.machines_info }}'
             JOB_INDEX=${{ strategy.job-index }}
-            
+
             # Extract server and client names from machines_info array using jq
             export SERVER_NAME=$(echo "$MACHINES_INFO" | jq -r ".[$JOB_INDEX].server_name")
             export CLIENT_NAME=$(echo "$MACHINES_INFO" | jq -r ".[$JOB_INDEX].client_name")
-            
+
             echo "Using reused machines: SERVER_NAME=$SERVER_NAME, CLIENT_NAME=$CLIENT_NAME"
           else
             export SERVER_NAME="benchmark-cascade-server-${CURRENT_INDEX}"
@@ -350,7 +350,7 @@ jobs:
               # Use machines_info from inputs - select by strategy.job-index
               MACHINES_INFO='${{ inputs.machines_info }}'
               JOB_INDEX=${{ strategy.job-index }}
-              
+
               # Extract server and client names from machines_info array using jq
               export SERVER_NAME=$(echo "$MACHINES_INFO" | jq -r ".[$JOB_INDEX].server_name")
               export CLIENT_NAME=$(echo "$MACHINES_INFO" | jq -r ".[$JOB_INDEX].client_name")
@@ -505,27 +505,27 @@ jobs:
           echo "🚀 Triggering next batch of benchmarks..."
           echo "Next batch index: ${{ needs.prepareBenchmarks.outputs.next_batch }}"
 
-          # Collect machines info from setupMachines outputs  
+          # Collect machines info from setupMachines outputs
           MACHINES_INFO="["
           FIRST=true
-          
+
           # Convert setupMachines outputs to JSON array
           SERVER_NAMES='${{ toJSON(needs.setupMachines.outputs.server_name) }}'
           CLIENT_NAMES='${{ toJSON(needs.setupMachines.outputs.client_name) }}'
-          
+
           # Parse arrays (they come as JSON arrays from matrix outputs)
           for i in $(echo "$SERVER_NAMES" | jq -r 'keys[]'); do
             SERVER_NAME=$(echo "$SERVER_NAMES" | jq -r ".[$i]")
             CLIENT_NAME=$(echo "$CLIENT_NAMES" | jq -r ".[$i]")
-            
+
             if [ "$FIRST" = false ]; then
               MACHINES_INFO="${MACHINES_INFO},"
             fi
             FIRST=false
-            
+
             MACHINES_INFO="${MACHINES_INFO}{\"server_name\":\"$SERVER_NAME\",\"client_name\":\"$CLIENT_NAME\"}"
           done
-          
+
           MACHINES_INFO="${MACHINES_INFO}]"
           echo "Generated machines_info: $MACHINES_INFO"
 
