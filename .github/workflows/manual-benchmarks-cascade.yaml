@@ -289,7 +289,7 @@ jobs:
           export MACHINES_PER_BENCH="${{ inputs.machines_per_bench }}"
 
           # Use appropriate server and client names based on machines_per_bench setting
-          if [ "$MACHINES_PER_BENCH" = "false" ]; then
+          if [ "$MACHINES_PER_BENCH" = "false" ] && [ "$CURRENT_BATCH" != "0" ]; then
             export SERVER_NAME="${{ inputs.server_name }}"
             export CLIENT_NAME="${{ inputs.client_name }}"
             echo "Using reused machines: SERVER_NAME=$SERVER_NAME, CLIENT_NAME=$CLIENT_NAME"
@@ -326,7 +326,7 @@ jobs:
             echo "Machines will be reused for next batch"
           else
             echo "Tearing down machines (machines_per_bench=$MACHINES_PER_BENCH, has_next_batch=$HAS_NEXT_BATCH)"
-
+            
             if [ "$MACHINES_PER_BENCH" = "false" ] && [ "$CURRENT_BATCH" != "0" ]; then
               echo "Using provided server and client names for teardown"
               export SERVER_NAME="${{ inputs.server_name }}"
