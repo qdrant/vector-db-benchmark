@@ -271,8 +271,8 @@ jobs:
           export CLIENT_NAME=${{ steps.extract_names.outputs.client_name }}
           export FETCH_ALL_RESULTS="true"
 
-          #bash -x tools/setup_ci.sh
-          #bash -x tools/run_ci.sh
+          bash -x tools/setup_ci.sh
+          bash -x tools/run_ci.sh
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v4
