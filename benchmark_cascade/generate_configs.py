@@ -44,6 +44,9 @@ def generate_config_combinations(override_params_json, base_configs_json):
             seen.add(config_str)
             unique_configs.append(config)
 
+    # Sort by dataset
+    unique_configs.sort(key=lambda x: x.get("dataset", ""))
+
     return json.dumps(unique_configs)
 
 

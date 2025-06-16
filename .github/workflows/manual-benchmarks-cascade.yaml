@@ -35,6 +35,13 @@ on:
             description: "Maximum number of parallel jobs to run"
             default: 10
 
+env:
+  # Common environment variables
+  HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+  POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+  POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+  POSTGRES_TABLE: benchmark_manual
+
 jobs:
   prepareBenchmarks:
     name: Prepare Benchmarks
@@ -61,7 +68,7 @@ jobs:
           CONFIG_FILE="benchmark_cascade/benchmark-configs.json"
           BENCHMARK_SET="${{ inputs.benchmark_set }}"
           CURRENT_BATCH=${{ inputs.current_batch || 0 }}
-          BATCH_SIZE=${{ inputs.max_parallel || 40 }}
+          BATCH_SIZE=${{ inputs.max_parallel || 10 }}
 
           echo "benchmark_set=$BENCHMARK_SET" >> $GITHUB_OUTPUT
 
@@ -176,7 +183,6 @@ jobs:
           MACHINES_INFO="${MACHINES_INFO}]"
           echo "Generated machines_info: $MACHINES_INFO"
           echo "machines_info=$MACHINES_INFO" >> $GITHUB_OUTPUT
-
   setupMachines:
     name: Setup Machines ${{ matrix.config.index }}
     needs: prepareBenchmarks
@@ -188,8 +194,8 @@ jobs:
       matrix:
         config: ${{ fromJSON(needs.prepareBenchmarks.outputs.matrix) }}
     outputs:
-      server_name: ${{ steps.setup.outputs.server_name }}
-      client_name: ${{ steps.setup.outputs.client_name }}
+      server_name: ${{ steps.extract_names.outputs.server_name }}
+      client_name: ${{ steps.extract_names.outputs.client_name }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -197,116 +203,36 @@ jobs:
       - uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-      - name: Set up server and client machines
-        id: setup
-        run: |
-          export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
-          export CURRENT_INDEX=${{ matrix.config.index }}
-          export CURRENT_BATCH=${{ inputs.current_batch || 0 }}
-          export MACHINES_PER_BENCH="${{ inputs.machines_per_bench }}"
 
-          # Determine machine names based on machines_per_bench and batch
-          if [ "$MACHINES_PER_BENCH" = "false" ]; then
-            # Use machines_info array - from inputs for batch 1+, from prepareBenchmarks for batch 0
-            if [ "$CURRENT_BATCH" != "0" ]; then
-              echo "machines_per_bench is false and not initial batch (batch=$CURRENT_BATCH), using machines_info from inputs"
-              MACHINES_INFO='${{ inputs.machines_info }}'
-            else
-              echo "machines_per_bench is false and initial batch (batch=$CURRENT_BATCH), using machines_info from prepareBenchmarks"
-              MACHINES_INFO='${{ needs.prepareBenchmarks.outputs.machines_info }}'
-            fi
+      - name: Extract Machine Names
+        id: extract_names
+        uses: ./.github/workflows/actions/extract-machine-names
+        with:
+          machines_per_bench: ${{ inputs.machines_per_bench }}
+          current_batch: ${{ inputs.current_batch || 0 }}
+          current_index: ${{ matrix.config.index }}
+          job_index: ${{ strategy.job-index }}
+          machines_info: ${{ (inputs.current_batch != 0 && inputs.machines_info) || needs.prepareBenchmarks.outputs.machines_info }}
 
-            JOB_INDEX=${{ strategy.job-index }}
+      - name: Setup CI
+        if: ${{ inputs.machines_per_bench == true || inputs.current_batch == 0 }}
+        run: bash -x tools/setup_ci.sh
 
-            # Extract server and client names from machines_info array using jq
-            export SERVER_NAME=$(echo "$MACHINES_INFO" | jq -r ".[$JOB_INDEX].server_name")
-            export CLIENT_NAME=$(echo "$MACHINES_INFO" | jq -r ".[$JOB_INDEX].client_name")
+      - name: Create Server
+        if: ${{ inputs.machines_per_bench == true || inputs.current_batch == 0 }}
+        uses: ./.github/workflows/actions/create-server-with-retry
+        with:
+          server_name: ${{ steps.extract_names.outputs.server_name }}
+          server_type: cpx51
+          max_retries: 5
 
-            if [ "$SERVER_NAME" = "null" ] || [ "$CLIENT_NAME" = "null" ]; then
-              echo "Error: Could not find machine info for job index $JOB_INDEX in machines_info"
-              echo "Available machines_info: $MACHINES_INFO"
-              exit 1
-            fi
-
-            # Only create machines on first batch, reuse on subsequent batches
-            if [ "$CURRENT_BATCH" = "0" ]; then
-              echo "Creating new machines: SERVER_NAME=$SERVER_NAME, CLIENT_NAME=$CLIENT_NAME"
-              export BENCH_SERVER_NAME=${SERVER_NAME}
-              export BENCH_CLIENT_NAME=${CLIENT_NAME}
-            else
-              echo "Using existing machines: SERVER_NAME=$SERVER_NAME, CLIENT_NAME=$CLIENT_NAME"
-            fi
-          else
-            echo "Creating new machines per benchmark (machines_per_bench=$MACHINES_PER_BENCH)"
-            export SERVER_NAME="benchmark-cascade-server-${CURRENT_INDEX}"
-            export CLIENT_NAME="benchmark-cascade-client-${CURRENT_INDEX}"
-            export BENCH_SERVER_NAME=${SERVER_NAME}
-            export BENCH_CLIENT_NAME=${CLIENT_NAME}
-          fi
-
-          # Create machines if needed
-          if [ "$MACHINES_PER_BENCH" = "true" ] || [ "$CURRENT_BATCH" = "0" ]; then
-
-            bash -x tools/setup_ci.sh
-
-            # Function to create server with retries
-            create_server_with_retries() {
-              local server_name=$1
-              local server_type=$2
-              local max_retries=5
-              local retry_count=0
-
-              while [ $retry_count -lt $max_retries ]; do
-                echo "Creating server $server_name (attempt $((retry_count + 1))/$max_retries)..."
-
-                if SERVER_NAME=$server_name SERVER_TYPE=$server_type bash -x "tools/hetzner/create_and_install.sh"; then
-                  echo "Successfully created server $server_name"
-                  return 0
-                else
-                  retry_count=$((retry_count + 1))
-                  if [ $retry_count -lt $max_retries ]; then
-                    echo "Failed to create server $server_name, waiting 60 seconds before retry..."
-                    sleep 60
-                  fi
-                fi
-              done
-
-              echo "Failed to create server $server_name after $max_retries attempts"
-              return 1
-            }
-
-            # Create server and client machines with retries in parallel
-            create_server_with_retries "$BENCH_SERVER_NAME" "cpx51" &
-            SERVER_PID=$!
-
-            create_server_with_retries "$BENCH_CLIENT_NAME" "cpx41" &
-            CLIENT_PID=$!
-
-            # Wait for both to complete and check their exit statuses
-            wait $SERVER_PID
-            SERVER_EXIT_CODE=$?
-
-            wait $CLIENT_PID
-            CLIENT_EXIT_CODE=$?
-
-            # Check if both succeeded
-            if [ $SERVER_EXIT_CODE -ne 0 ]; then
-              echo "Failed to create server machine"
-              exit 1
-            fi
-
-            if [ $CLIENT_EXIT_CODE -ne 0 ]; then
-              echo "Failed to create client machine"
-              exit 1
-            fi
-
-            echo "Both machines created successfully"
-          fi
-
-          # Set outputs for other jobs to use
-          echo "server_name=$SERVER_NAME" >> $GITHUB_OUTPUT
-          echo "client_name=$CLIENT_NAME" >> $GITHUB_OUTPUT
-
+      - name: Create Client
+        if: ${{ inputs.machines_per_bench == true || inputs.current_batch == 0 }}
+        uses: ./.github/workflows/actions/create-server-with-retry
+        with:
+          server_name: ${{ steps.extract_names.outputs.client_name }}
+          server_type: cpx41
+          max_retries: 5
   runBenchmarks:
     name: Run Benchmark ${{ matrix.config.index }}
     needs: [prepareBenchmarks, setupMachines]
@@ -324,44 +250,25 @@ jobs:
       - uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Extract Machine Names
+        id: extract_names
+        uses: ./.github/workflows/actions/extract-machine-names
+        with:
+          machines_per_bench: ${{ inputs.machines_per_bench }}
+          current_batch: ${{ inputs.current_batch || 0 }}
+          current_index: ${{ matrix.config.index }}
+          job_index: ${{ strategy.job-index }}
+          machines_info: ${{ (inputs.current_batch != 0 && inputs.machines_info) || needs.prepareBenchmarks.outputs.machines_info }}
+
       - name: Run benchmark
         run: |
-          export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
-          export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-          export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
           export QDRANT_VERSION=${{ matrix.config.qdrant_version }}
           export DATASETS=${{ matrix.config.dataset }}
           export ENGINE_NAME=${{ matrix.config.engine_config }}
-          export POSTGRES_TABLE=benchmark_manual
           export QDRANT__FEATURE_FLAGS__ALL=${{ matrix.config.feature_flags_all }}
-          export CURRENT_BATCH=${{ inputs.current_batch || 0 }}
-          export CURRENT_INDEX=${{ matrix.config.index }}
-          export MACHINES_PER_BENCH="${{ inputs.machines_per_bench }}"
-
-          # Use appropriate server and client names based on machines_per_bench setting
-          if [ "$MACHINES_PER_BENCH" = "false" ]; then
-            # Use machines_info array - from inputs for batch 1+, from prepareBenchmarks for batch 0
-            if [ "$CURRENT_BATCH" != "0" ]; then
-              echo "Using machines_info from inputs for batch $CURRENT_BATCH"
-              MACHINES_INFO='${{ inputs.machines_info }}'
-            else
-              echo "Using machines_info from prepareBenchmarks for batch $CURRENT_BATCH"
-              MACHINES_INFO='${{ needs.prepareBenchmarks.outputs.machines_info }}'
-            fi
-
-            JOB_INDEX=${{ strategy.job-index }}
-
-            # Extract server and client names from machines_info array using jq
-            export SERVER_NAME=$(echo "$MACHINES_INFO" | jq -r ".[$JOB_INDEX].server_name")
-            export CLIENT_NAME=$(echo "$MACHINES_INFO" | jq -r ".[$JOB_INDEX].client_name")
-
-            echo "Using machines: SERVER_NAME=$SERVER_NAME, CLIENT_NAME=$CLIENT_NAME"
-          else
-            export SERVER_NAME="benchmark-cascade-server-${CURRENT_INDEX}"
-            export CLIENT_NAME="benchmark-cascade-client-${CURRENT_INDEX}"
-            echo "Using per-benchmark machines: SERVER_NAME=$SERVER_NAME, CLIENT_NAME=$CLIENT_NAME"
-          fi
-
+          export SERVER_NAME=${{ steps.extract_names.outputs.server_name }}
+          export CLIENT_NAME=${{ steps.extract_names.outputs.client_name }}
           export FETCH_ALL_RESULTS="true"
 
           #bash -x tools/setup_ci.sh
@@ -373,46 +280,28 @@ jobs:
           name: results-${{ matrix.config.qdrant_version_sanitized }}-bench-${{ matrix.config.dataset }}-${{ matrix.config.engine_config }}-${{ matrix.config.index }}
           path: results/
           retention-days: 7
+
       - name: Teardown machines
-        if: ${{ always() }}
+        if: ${{ always() && (inputs.machines_per_bench == true || needs.prepareBenchmarks.outputs.has_next_batch == 'false') }}
+        continue-on-error: true
+        uses: ./.github/workflows/actions/extract-machine-names
+        with:
+          machines_per_bench: ${{ inputs.machines_per_bench }}
+          current_batch: ${{ inputs.current_batch || 0 }}
+          current_index: ${{ matrix.config.index }}
+          job_index: ${{ strategy.job-index }}
+          machines_info: ${{ (inputs.current_batch != 0 && inputs.machines_info) || needs.prepareBenchmarks.outputs.machines_info }}
+        id: teardown_names
+
+      - name: Perform teardown
+        if: ${{ always() && (inputs.machines_per_bench == true || needs.prepareBenchmarks.outputs.has_next_batch == 'false') }}
         continue-on-error: true
         run: |
-          export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
-          export CURRENT_BATCH=${{ inputs.current_batch || 0 }}
-          export CURRENT_INDEX=${{ matrix.config.index }}
-          export MACHINES_PER_BENCH="${{ inputs.machines_per_bench }}"
-          export HAS_NEXT_BATCH="${{ needs.prepareBenchmarks.outputs.has_next_batch }}"
+          export SERVER_NAME=${{ steps.teardown_names.outputs.server_name }}
+          export CLIENT_NAME=${{ steps.teardown_names.outputs.client_name }}
+          bash -x tools/setup_ci.sh
+          bash -x tools/tear_down.sh
 
-          # Check if we should skip machine teardown
-          if [ "$MACHINES_PER_BENCH" = "false" ] && [ "$HAS_NEXT_BATCH" = "true" ]; then
-            echo "machines_per_bench is false and more batches coming (has_next_batch=$HAS_NEXT_BATCH), skipping machine teardown"
-            echo "Machines will be reused for next batch"
-          else
-            echo "Tearing down machines (machines_per_bench=$MACHINES_PER_BENCH, has_next_batch=$HAS_NEXT_BATCH)"
-
-            if [ "$MACHINES_PER_BENCH" = "false" ]; then
-              echo "Using machines_info for teardown"
-              # Use machines_info array - from inputs for batch 1+, from prepareBenchmarks for batch 0
-              if [ "$CURRENT_BATCH" != "0" ]; then
-                MACHINES_INFO='${{ inputs.machines_info }}'
-              else
-                MACHINES_INFO='${{ needs.prepareBenchmarks.outputs.machines_info }}'
-              fi
-
-              JOB_INDEX=${{ strategy.job-index }}
-
-              # Extract server and client names from machines_info array using jq
-              export SERVER_NAME=$(echo "$MACHINES_INFO" | jq -r ".[$JOB_INDEX].server_name")
-              export CLIENT_NAME=$(echo "$MACHINES_INFO" | jq -r ".[$JOB_INDEX].client_name")
-            else
-              echo "Deriving server and client names from CURRENT_INDEX"
-              export SERVER_NAME="benchmark-cascade-server-${CURRENT_INDEX}"
-              export CLIENT_NAME="benchmark-cascade-client-${CURRENT_INDEX}"
-            fi
-
-            bash -x tools/setup_ci.sh
-            bash -x tools/tear_down.sh
-          fi
   processBenchmarks:
     name: Process All Benchmark Results
     needs: [prepareBenchmarks, runBenchmarks]
@@ -603,7 +492,7 @@ jobs:
                 \"params_override\": $ESCAPED_PARAMS,
                 \"machines_per_bench\": \"${{ inputs.machines_per_bench }}\",
                 \"machines_info\": $ESCAPED_MACHINES_INFO,
-                \"max_parallel\": \"${{ inputs.max_parallel || 40 }}\"
+                \"max_parallel\": \"${{ inputs.max_parallel || 10 }}\"
               },
               \"ref\": \"${{ github.ref }}\"
             }"
@@ -612,7 +501,11 @@ jobs:
   cleanupMachines:
     name: Cleanup All Machines
     needs: [prepareBenchmarks, setupMachines, runBenchmarks]
-    if: always() && (inputs.machines_per_bench == false && needs.prepareBenchmarks.outputs.has_next_batch == 'false' && inputs.process_results == false)
+    if: |
+      always() && inputs.process_results == false && (
+        (inputs.machines_per_bench == false && needs.prepareBenchmarks.outputs.has_next_batch == 'false') ||
+        (inputs.machines_per_bench == false && inputs.current_batch == 0 && needs.setupMachines.result == 'failure')
+      )
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -624,12 +517,8 @@ jobs:
       - name: Cleanup all machines
         continue-on-error: true
         run: |
-          export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
-          export CURRENT_BATCH=${{ inputs.current_batch || 0 }}
-
-          echo "Cleaning up all machines from the cascade..."
-
           # Get machines_info array - from inputs for batch 1+, from prepareBenchmarks for batch 0
+          CURRENT_BATCH=${{ inputs.current_batch || 0 }}
           if [ "$CURRENT_BATCH" != "0" ]; then
             echo "Using machines_info from inputs for batch $CURRENT_BATCH"
             MACHINES_INFO='${{ inputs.machines_info }}'
@@ -643,23 +532,66 @@ jobs:
           # Setup tools
           bash -x tools/setup_ci.sh
 
-          # Parse machines_info and cleanup each machine pair
-          echo "$MACHINES_INFO" | jq -c '.[]' | while read -r machine_pair; do
-            SERVER_NAME=$(echo "$machine_pair" | jq -r '.server_name')
-            CLIENT_NAME=$(echo "$machine_pair" | jq -r '.client_name')
-
-            echo "Attempting to cleanup: SERVER_NAME=$SERVER_NAME, CLIENT_NAME=$CLIENT_NAME"
-
-            # Export for tear_down.sh to use
-            export SERVER_NAME
-            export CLIENT_NAME
-
-            # Run teardown with error handling
-            if bash -x tools/tear_down.sh; then
-              echo "Successfully cleaned up $SERVER_NAME and $CLIENT_NAME"
+          # Parse machines_info and store in arrays to avoid subshell issues
+          MACHINE_COUNT=$(echo "$MACHINES_INFO" | jq 'length')
+          echo "Found $MACHINE_COUNT machine pairs to cleanup"
+          
+          # Arrays to store server and client names
+          declare -a SERVER_NAMES
+          declare -a CLIENT_NAMES
+          declare -a PIDS
+          
+          # Extract all machine pairs first
+          for i in $(seq 0 $((MACHINE_COUNT - 1))); do
+            SERVER_NAMES[$i]=$(echo "$MACHINES_INFO" | jq -r ".[$i].server_name")
+            CLIENT_NAMES[$i]=$(echo "$MACHINES_INFO" | jq -r ".[$i].client_name")
+          done
+          
+          # Launch all teardown processes in parallel
+          for i in $(seq 0 $((MACHINE_COUNT - 1))); do
+            SERVER_NAME="${SERVER_NAMES[$i]}"
+            CLIENT_NAME="${CLIENT_NAMES[$i]}"
+            
+            echo "Launching teardown for: SERVER_NAME=$SERVER_NAME, CLIENT_NAME=$CLIENT_NAME"
+            
+            # Run teardown in background and capture PID
+            (
+              export SERVER_NAME
+              export CLIENT_NAME
+              
+              if bash -x tools/tear_down.sh; then
+                echo "Successfully cleaned up $SERVER_NAME and $CLIENT_NAME"
+              else
+                echo "Warning: Failed to cleanup $SERVER_NAME and $CLIENT_NAME (may already be deleted)"
+              fi
+            ) &
+            
+            # Store the PID
+            PIDS[$i]=$!
+          done
+          
+          # Wait for all background teardown processes to complete
+          echo "Waiting for all $MACHINE_COUNT teardown processes to complete..."
+          
+          JOBS_FAILED=0
+          for i in $(seq 0 $((MACHINE_COUNT - 1))); do
+            PID=${PIDS[$i]}
+            SERVER_NAME="${SERVER_NAMES[$i]}"
+            CLIENT_NAME="${CLIENT_NAMES[$i]}"
+            
+            echo "Waiting for teardown of $SERVER_NAME and $CLIENT_NAME (PID: $PID)..."
+            if wait $PID; then
+              echo "Teardown completed for $SERVER_NAME and $CLIENT_NAME"
             else
-              echo "Warning: Failed to cleanup $SERVER_NAME and $CLIENT_NAME (may already be deleted)"
+              echo "Teardown failed for $SERVER_NAME and $CLIENT_NAME"
+              JOBS_FAILED=$((JOBS_FAILED + 1))
             fi
           done
+          
+          if [ $JOBS_FAILED -gt 0 ]; then
+            echo "Warning: $JOBS_FAILED teardown operations failed"
+          else
+            echo "All teardown operations completed successfully"
+          fi
 
           echo "Cleanup process completed"
