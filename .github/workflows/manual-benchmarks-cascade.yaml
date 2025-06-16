@@ -499,7 +499,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   cleanupMachines:
-    name: Cleanup All Machines
+    name: Cleanup Machine ${{ matrix.config.index }}
     needs: [prepareBenchmarks, setupMachines, runBenchmarks]
     if: |
       always() && inputs.process_results == false && (
@@ -507,6 +507,10 @@ jobs:
         (inputs.machines_per_bench == false && inputs.current_batch == 0 && needs.setupMachines.result == 'failure')
       )
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        config: ${{ fromJSON(needs.prepareBenchmarks.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -514,84 +518,21 @@ jobs:
       - uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-      - name: Cleanup all machines
+
+      - name: Extract Machine Names
+        id: extract_names
+        uses: ./.github/workflows/actions/extract-machine-names
+        with:
+          machines_per_bench: ${{ inputs.machines_per_bench }}
+          current_batch: ${{ inputs.current_batch || 0 }}
+          current_index: ${{ matrix.config.index }}
+          job_index: ${{ strategy.job-index }}
+          machines_info: ${{ (inputs.current_batch != 0 && inputs.machines_info) || needs.prepareBenchmarks.outputs.machines_info }}
+
+      - name: Perform teardown
         continue-on-error: true
         run: |
-          # Get machines_info array - from inputs for batch 1+, from prepareBenchmarks for batch 0
-          CURRENT_BATCH=${{ inputs.current_batch || 0 }}
-          if [ "$CURRENT_BATCH" != "0" ]; then
-            echo "Using machines_info from inputs for batch $CURRENT_BATCH"
-            MACHINES_INFO='${{ inputs.machines_info }}'
-          else
-            echo "Using machines_info from prepareBenchmarks for batch $CURRENT_BATCH"
-            MACHINES_INFO='${{ needs.prepareBenchmarks.outputs.machines_info }}'
-          fi
-
-          echo "Machines to cleanup: $MACHINES_INFO"
-
-          # Setup tools
+          export SERVER_NAME=${{ steps.extract_names.outputs.server_name }}
+          export CLIENT_NAME=${{ steps.extract_names.outputs.client_name }}
           bash -x tools/setup_ci.sh
-
-          # Parse machines_info and store in arrays to avoid subshell issues
-          MACHINE_COUNT=$(echo "$MACHINES_INFO" | jq 'length')
-          echo "Found $MACHINE_COUNT machine pairs to cleanup"
-          
-          # Arrays to store server and client names
-          declare -a SERVER_NAMES
-          declare -a CLIENT_NAMES
-          declare -a PIDS
-          
-          # Extract all machine pairs first
-          for i in $(seq 0 $((MACHINE_COUNT - 1))); do
-            SERVER_NAMES[$i]=$(echo "$MACHINES_INFO" | jq -r ".[$i].server_name")
-            CLIENT_NAMES[$i]=$(echo "$MACHINES_INFO" | jq -r ".[$i].client_name")
-          done
-          
-          # Launch all teardown processes in parallel
-          for i in $(seq 0 $((MACHINE_COUNT - 1))); do
-            SERVER_NAME="${SERVER_NAMES[$i]}"
-            CLIENT_NAME="${CLIENT_NAMES[$i]}"
-            
-            echo "Launching teardown for: SERVER_NAME=$SERVER_NAME, CLIENT_NAME=$CLIENT_NAME"
-            
-            # Run teardown in background and capture PID
-            (
-              export SERVER_NAME
-              export CLIENT_NAME
-              
-              if bash -x tools/tear_down.sh; then
-                echo "Successfully cleaned up $SERVER_NAME and $CLIENT_NAME"
-              else
-                echo "Warning: Failed to cleanup $SERVER_NAME and $CLIENT_NAME (may already be deleted)"
-              fi
-            ) &
-            
-            # Store the PID
-            PIDS[$i]=$!
-          done
-          
-          # Wait for all background teardown processes to complete
-          echo "Waiting for all $MACHINE_COUNT teardown processes to complete..."
-          
-          JOBS_FAILED=0
-          for i in $(seq 0 $((MACHINE_COUNT - 1))); do
-            PID=${PIDS[$i]}
-            SERVER_NAME="${SERVER_NAMES[$i]}"
-            CLIENT_NAME="${CLIENT_NAMES[$i]}"
-            
-            echo "Waiting for teardown of $SERVER_NAME and $CLIENT_NAME (PID: $PID)..."
-            if wait $PID; then
-              echo "Teardown completed for $SERVER_NAME and $CLIENT_NAME"
-            else
-              echo "Teardown failed for $SERVER_NAME and $CLIENT_NAME"
-              JOBS_FAILED=$((JOBS_FAILED + 1))
-            fi
-          done
-          
-          if [ $JOBS_FAILED -gt 0 ]; then
-            echo "Warning: $JOBS_FAILED teardown operations failed"
-          else
-            echo "All teardown operations completed successfully"
-          fi
-
-          echo "Cleanup process completed"
+          bash -x tools/tear_down.sh
