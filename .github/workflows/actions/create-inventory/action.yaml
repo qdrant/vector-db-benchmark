@@ -39,3 +39,9 @@ runs:
         EOL
 
         mv inventory.ini ansible/playbooks/inventory.ini
+    - name: Prepare datasets.yml
+      shell: bash
+      run: |
+        apk add yq
+        echo -e "datasets:\n" > ansible/playbooks/group_vars/datasets.yml
+        yq -p json -o yaml datasets/datasets.json >> ansible/playbooks/group_vars/datasets.yml

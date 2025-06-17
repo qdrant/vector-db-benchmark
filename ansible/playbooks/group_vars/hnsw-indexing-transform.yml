@@ -1,11 +1,9 @@
 qdrant_python_client_version: "1.14.0"
 logging_dir: "/tmp/logs"
 working_dir: "/tmp/experiments"
-dataset_url: "https://storage.googleapis.com/ann-filtered-benchmark/datasets/cohere-wiki-100k-no-filters.tgz"
-dataset_name: "cohere-wiki-100k-no-filters"
-dataset_dim: "768"
-dataset_2_url: "https://storage.googleapis.com/ann-filtered-benchmark/datasets/cohere-wiki-100k-no-filters-2.tgz"
-dataset_2_name: "cohere-wiki-100k-no-filters-2"
+# Default dataset values (can be overridden via --extra-vars)
+dataset_name: "laion-small-clip-no-filters-1"
+dataset_2_name: "laion-small-clip-no-filters-2"
 servers:
   - name: "qdrant"
     registry: "ghcr.io"

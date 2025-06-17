@@ -2,6 +2,21 @@ name: Continuous Benchmark Hnsw Indexing
 
 on:
   workflow_dispatch:
+    inputs:
+      dataset_name:
+        description: 'First dataset name for transform benchmark'
+        required: false
+        type: choice
+        options:
+          - 'cohere-wiki-100k-no-filters'
+          - 'laion-small-clip-no-filters-1'
+      dataset_2_name:
+        description: 'Second dataset name for transform benchmark'
+        required: false
+        type: choice
+        options:
+          - 'cohere-wiki-100k-no-filters-2'
+          - 'laion-small-clip-no-filters-2'
   schedule:
     # Run every day at 3am
     - cron: "0 3 * * *"
@@ -30,7 +45,10 @@ jobs:
       - name: Run bench
         id: hnsw-indexing-update
         run: |
-          cd ansible/playbooks && ansible-playbook playbook-hnsw-index.yml --extra-vars "bench=update"
+          cd ansible/playbooks && ansible-playbook playbook-hnsw-index.yml --extra-vars "
+          bench=update
+          dataset_name=dbpedia-openai-100K-1536-angular
+          "
 
   runTransformHealingBenchmark:
     runs-on: ubuntu-latest
@@ -50,4 +68,8 @@ jobs:
       - name: Run bench
         id: hnsw-indexing-transform
         run: |
-            cd ansible/playbooks && ansible-playbook playbook-hnsw-index.yml --extra-vars "bench=transform"
+            cd ansible/playbooks && ansible-playbook playbook-hnsw-index.yml --extra-vars "
+              bench=transform
+              dataset_name=${{ inputs.dataset_name || 'laion-small-clip-no-filters-1' }}
+              dataset_2_name=${{ inputs.dataset_2_name || 'laion-small-clip-no-filters-2' }}
+            "

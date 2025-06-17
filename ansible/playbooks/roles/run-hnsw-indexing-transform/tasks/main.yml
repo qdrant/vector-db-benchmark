@@ -13,6 +13,14 @@
     - "{{ working_dir }}/data/{{ dataset_name }}"
     - "{{ working_dir }}/data/{{ dataset_2_name }}"
 
+- name: Get dataset info for first dataset
+  ansible.builtin.set_fact:
+    dataset_1_info: "{{ datasets | selectattr('name', 'equalto', dataset_name) | first }}"
+
+- name: Get dataset info for second dataset
+  ansible.builtin.set_fact:
+    dataset_2_info: "{{ datasets | selectattr('name', 'equalto', dataset_2_name) | first }}"
+
 - name: Check if the dataset archive already exists
   ansible.builtin.stat:
     path: "{{ working_dir }}/data/{{ dataset_name }}.tgz"
@@ -20,7 +28,7 @@
 
 - name: Download the archive
   ansible.builtin.get_url:
-    url: "{{ dataset_url }}"
+    url: "{{ dataset_1_info.link }}"
     dest: "{{ working_dir }}/data/{{ dataset_name }}.tgz"
   when: not archive_stat.stat.exists
 
@@ -45,7 +53,7 @@
 
 - name: Download the second archive
   ansible.builtin.get_url:
-    url: "{{ dataset_2_url }}"
+    url: "{{ dataset_2_info.link }}"
     dest: "{{ working_dir }}/data/{{ dataset_2_name }}.tgz"
   when: not archive_2_stat.stat.exists
 
@@ -62,6 +70,11 @@
     remote_src: yes
     owner: "{{ ansible_user }}"
   when: dest_2_dir_contents.matched == 0
+
+- name: Set dataset dimensions
+  ansible.builtin.set_fact:
+    dataset_dim: "{{ dataset_1_info.vector_size }}"
+    dataset_2_dim: "{{ dataset_2_info.vector_size }}"
 
 - name: Prepare and execute the benchmark
   ansible.builtin.include_role:

@@ -364,6 +364,38 @@
     "path": "cohere-wiki-50m/cohere_wiki_50m"
   },
   {
+    "name": "cohere-wiki-100k-no-filters",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "tar",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/cohere-wiki-100k-no-filters.tgz",
+    "path": "cohere-wiki-100k/cohere_wiki_100k_no_filters"
+  },
+  {
+    "name": "cohere-wiki-100k-no-filters-2",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "tar",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/cohere-wiki-100k-no-filters-2.tgz",
+    "path": "cohere-wiki-100k/cohere_wiki_100k_no_filters_2"
+  },
+  {
+    "name": "laion-small-clip-no-filters-1",
+    "vector_size": 512,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "laion-small-clip/laion-small-clip-no-filters-1",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/laion-small-clip-no-filters-1.tgz"
+  },
+  {
+    "name": "laion-small-clip-no-filters-2",
+    "vector_size": 512,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "laion-small-clip/laion-small-clip-no-filters-2",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/laion-small-clip-no-filters-2.tgz"
+  },
+  {
     "name": "cohere-wiki-1m",
     "vector_size": 768,
     "distance": "cosine",

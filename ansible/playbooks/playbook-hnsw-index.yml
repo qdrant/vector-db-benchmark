@@ -6,6 +6,9 @@
     - name: Load common variables
       include_vars: "group_vars/hnsw-indexing-{{ bench | default('update') }}.yml"
 
+    - name: Load datasets variables
+      include_vars: "group_vars/datasets.yml"
+
     - name: Ensure necessary packages are installed
       ansible.builtin.package:
         name: "{{ item }}"
