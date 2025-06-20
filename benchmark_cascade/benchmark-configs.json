@@ -1,0 +1,97 @@
+{
+  "_comment": "Benchmark configuration sets for automated cascading",
+  "_usage": "Select a benchmark_set when triggering the workflow. Use 'single' for one-off runs with manual inputs.",
+
+  "benchmark_sets": {
+    "full_regression": [
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "dbpedia-openai-1M-1536-angular",
+        "engine_config": "qdrant-continuous-benchmark",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "deep-image-96-angular",
+        "engine_config": "qdrant-continuous-benchmark",
+        "feature_flags_all": true
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "gist-960-euclidean",
+        "engine_config": "qdrant-continuous-benchmark",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "glove-100-angular",
+        "engine_config": "qdrant-continuous-benchmark",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "dbpedia-openai-1M-1536-angular",
+        "engine_config": "qdrant-continuous-benchmark",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "deep-image-96-angular",
+        "engine_config": "qdrant-continuous-benchmark",
+        "feature_flags_all": true
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "gist-960-euclidean",
+        "engine_config": "qdrant-continuous-benchmark",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "docker/master",
+        "dataset": "glove-100-angular",
+        "engine_config": "qdrant-continuous-benchmark",
+        "feature_flags_all": false
+      }
+    ],
+    "smoke_test": [
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "laion-small-clip",
+        "engine_config": "qdrant-continuous-benchmark",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "laion-small-clip",
+        "engine_config": "qdrant-continuous-benchmark",
+        "feature_flags_all": true
+      }
+    ],
+    "dataset_comparison": [
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "dbpedia-openai-1M-1536-angular",
+        "engine_config": "qdrant-continuous-benchmark",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "deep-image-96-angular",
+        "engine_config": "qdrant-continuous-benchmark",
+        "feature_flags_all": true
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "gist-960-euclidean",
+        "engine_config": "qdrant-continuous-benchmark",
+        "feature_flags_all": false
+      },
+      {
+        "qdrant_version": "ghcr/dev",
+        "dataset": "glove-100-angular",
+        "engine_config": "qdrant-continuous-benchmark",
+        "feature_flags_all": false
+      }
+    ]
+  }
+}

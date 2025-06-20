@@ -1,0 +1,64 @@
+---
+- name: Copy files to the remote machine
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "{{ item.mode | default('0644') }}"
+    owner: "{{ ansible_user }}"
+  loop:
+    - { src: run-bench.sh, dest: "{{ working_dir }}/run-bench.sh", mode: '0755' }
+    - { src: "{{ bench }}.py", dest: "{{ working_dir }}/{{ bench }}.py" }
+    - { src: "../../files/hnsw-indexing/requirements.txt", dest: "{{ working_dir }}/requirements.txt" }
+    - { src: "../../files/hnsw-indexing/docker-compose.yaml", dest: "{{ working_dir }}/docker-compose.yaml" }
+    - { src: "../../files/hnsw-indexing/get_score.py", dest: "{{ working_dir }}/get_score.py" }
+
+- name: Start Docker container on the remote machine
+  ansible.builtin.shell: |
+    docker compose down
+    pkill qdrant
+    docker rm -f qdrant-continuous || true
+    docker rmi -f ${CONTAINER_REGISTRY}/qdrant/qdrant:${QDRANT_VERSION} || true
+    docker compose up -d
+  args:
+    chdir: "{{ working_dir }}"
+  environment:
+    QDRANT_VERSION: "{{ server_version }}"
+    CONTAINER_REGISTRY: "{{ server_registry }}"
+    QDRANT__FEATURE_FLAGS__ALL: "{{ server_feature_flags }}"
+  register: compose_result
+  failed_when: compose_result.rc != 0
+
+- name: "Execute the script on the remote machine: {{ server_name }}-{{ server_version }}"
+  ansible.builtin.shell: |
+    {{ working_dir }}/run-bench.sh > "{{ working_dir }}/log-{{ server_name }}-{{ server_version }}-{{ bench }}.log" 2>&1
+  async: 7200 # 120 minutes
+  poll: 30 # Check every 30 seconds
+  environment:
+    OUTPUT_FILENAME: "{{ working_dir }}/output-{{ server_name }}-{{ server_version }}-{{ bench }}.json"
+    BENCH: "{{ bench }}"
+    WORK_DIR: "{{ working_dir }}"
+    DATASET_NAME: "{{ dataset_name }}"
+    DATASET_DIM: "{{ dataset_dim }}"
+    DATASET_NAME_2: "{{ dataset_2_name | default('') }}"
+  register: bench_result
+  ignore_errors: yes
+
+- name: Save Docker container logs
+  ansible.builtin.shell: |
+    docker logs qdrant-continuous > "{{ working_dir }}/log-qdrant-container-{{ server_name }}-{{ server_version }}-{{ bench }}.log" 2>&1
+  ignore_errors: yes
+
+- name: Show script output if failed
+  ansible.builtin.shell: cat "{{ working_dir }}/log-{{ server_name }}-{{ server_version }}-{{ bench }}.log"
+  when: bench_result.rc != 0
+  register: script_output
+
+- name: Print script output
+  ansible.builtin.debug:
+    msg: "{{ script_output.stdout }}"
+  when: bench_result.rc != 0
+
+- name: Fail if script failed
+  ansible.builtin.fail:
+    msg: "Script failed with rc={{ bench_result.rc }}"
+  when: bench_result.rc != 0

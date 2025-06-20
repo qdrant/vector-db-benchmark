@@ -9,3 +9,4 @@ tools/custom/data.json
 
 .venv
 *.DS_Store
+ansible/playbooks/inventory.ini
