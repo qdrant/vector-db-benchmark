@@ -230,37 +230,37 @@
     ],
     "custom": [
       {
-        "qdrant_version": "ghcr/bq-encodings-2bit-default",
+        "qdrant_version": "ghcr/bq-encodings-1_5bit-default",
         "dataset": "dbpedia-openai-1M-1536-angular",
         "engine_config": "qdrant-bq-rps-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/bq-encodings-2bit-default",
+        "qdrant_version": "ghcr/bq-encodings-1_5bit-default",
         "dataset": "dbpedia-openai-1M-1536-angular",
         "engine_config": "qdrant-bq-rps-m-32-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/bq-encodings-2bit-default",
+        "qdrant_version": "ghcr/bq-encodings-1_5bit-default",
         "dataset": "dbpedia-openai-1M-1536-angular",
         "engine_config": "qdrant-bq-rps-m-32-ef-256",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/bq-encodings-2bit-default",
+        "qdrant_version": "ghcr/bq-encodings-1_5bit-default",
         "dataset": "dbpedia-openai-1M-1536-angular",
         "engine_config": "qdrant-bq-rps-m-32-ef-512",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/bq-encodings-2bit-default",
+        "qdrant_version": "ghcr/bq-encodings-1_5bit-default",
         "dataset": "dbpedia-openai-1M-1536-angular",
         "engine_config": "qdrant-bq-rps-m-64-ef-256",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/bq-encodings-2bit-default",
+        "qdrant_version": "ghcr/bq-encodings-1_5bit-default",
         "dataset": "dbpedia-openai-1M-1536-angular",
         "engine_config": "qdrant-bq-rps-m-64-ef-512",
         "feature_flags_all": true
