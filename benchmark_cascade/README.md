@@ -11,6 +11,16 @@ Benchmarks are defined in [benchmark-configs.json](benchmark-configs.json) with 
 
 ## Running Benchmarks
 
+The workflow accepts these inputs:
+* process_results - Boolean flag to control whether to skip all jobs except for the job that processes results.
+* workflow_run_ids - Comma-separated list of workflow run IDs to process results from (internal use).
+* benchmark_set - Name of the benchmark set to run (e.g., `smoke_test`, `full_regression`, `single`).
+* params_override - JSON string to override benchmark parameters (see below for examples)
+* current_batch - Current batch index (internal use)
+* machines_per_bench - A boolean flag to control whether to run each benchmark on its individual machine or re-use machines.
+* machines_info - JSON string with information about machines to use for the benchmarks (internal use).
+* max_parallel - Maximum number of parallel jobs to run within one workflow run.
+
 ### Option 1: Use Predefined Set
 With all the other inputs untouched, run a predefined benchmark set with name `smoke_test`:
 ```yaml
