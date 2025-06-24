@@ -26,10 +26,10 @@ runs:
         SERVER_TYPE="${{ inputs.server_type }}"
         MAX_RETRIES="${{ inputs.max_retries }}"
         RETRY_COUNT=0
-        
+
         while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
           echo "Creating server $SERVER_NAME (attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)..."
-          
+
           if SERVER_NAME=$SERVER_NAME SERVER_TYPE=$SERVER_TYPE bash -x "tools/hetzner/create_and_install.sh"; then
             echo "Successfully created server $SERVER_NAME"
             echo "success=true" >> $GITHUB_OUTPUT
@@ -42,7 +42,7 @@ runs:
             fi
           fi
         done
-        
+
         echo "Failed to create server $SERVER_NAME after $MAX_RETRIES attempts"
         echo "success=false" >> $GITHUB_OUTPUT
         exit 1
