@@ -7,6 +7,20 @@ description: |
 on:
   workflow_dispatch:
     inputs:
+        benchmark_set:
+            description: "Benchmark set to run (from benchmark_cascade/benchmark-configs.json). Default is 'single': ghcr/dev, dbpedia-openai-1M-1536-angular, qdrant-rps-m-16-ef-128, feature_flags=true."
+            default: "single"
+        params_override:
+            description: "Override parameters for the benchmark set (JSON format, e.g. '{\"params\": {\"qdrant_version\": [\"ghcr/dev\", \"docker/master\"], \"dataset\": [\"glove-100-angular\"]}}')"
+            default: "{}"
+        max_parallel:
+            type: number
+            description: "Maximum number of parallel jobs to run"
+            default: 10
+        machines_per_bench:
+            type: boolean
+            description: "Create/destroy machines for each benchmark run (true) or reuse machines across batches (false)"
+            default: false
         process_results:
           type: boolean
           description: "Skip all the jobs except for processBenchmarks (true) or run a normal cascade (false)"
@@ -14,26 +28,12 @@ on:
         workflow_run_ids:
             description: "Comma-separated list of workflow run IDs to process (used when process_results=true or for internal cascade tracking)"
             default: ""
-        benchmark_set:
-            description: "Benchmark set to run (from benchmark_cascade/benchmark-configs.json). Default is 'single': ghcr/dev, dbpedia-openai-1M-1536-angular, qdrant-rps-m-16-ef-128, feature_flags=true."
-            default: "single"
-        params_override:
-            description: "Override parameters for the benchmark set (JSON format, e.g. '{\"params\": {\"qdrant_version\": [\"ghcr/dev\", \"docker/master\"], \"dataset\": [\"glove-100-angular\"]}}')"
-            default: "{}"
         current_batch:
             description: "Current batch index (for cascading, internal use)"
             default: "0"
-        machines_per_bench:
-            type: boolean
-            description: "Create/destroy machines for each benchmark run (true) or reuse machines across batches (false)"
-            default: false
         machines_info:
-            description: "JSON array of machine pairs to use when machines_per_bench is false, e.g. '[{\"server_name\":\"server-0\",\"client_name\":\"client-0\"},{\"server_name\":\"server-1\",\"client_name\":\"client-1\"}]'"
+            description: "Internal use, JSON array of machine pairs to use when machines_per_bench is false, e.g. '[{\"server_name\":\"server-0\",\"client_name\":\"client-0\"},{\"server_name\":\"server-1\",\"client_name\":\"client-1\"}]'"
             default: "[]"
-        max_parallel:
-            type: number
-            description: "Maximum number of parallel jobs to run"
-            default: 10
 
 env:
   # Common environment variables
