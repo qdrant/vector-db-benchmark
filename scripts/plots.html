@@ -1,0 +1,1036 @@
+<!--
+This HTML file is designed to visualize vector database benchmark results using Chart.js and Tailwind CSS.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vector Database Benchmark Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        .chart-container {
+            position: relative;
+            height: 500px;
+            width: 100%;
+        }
+
+        .file-input {
+            background: linear-gradient(145deg, #f3f4f6, #e5e7eb);
+        }
+
+        .animate-pulse-custom {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="max-w-7xl mx-auto p-6 bg-white min-h-screen">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Vector Database Benchmark Visualization</h1>
+            <p class="text-gray-600">Upload your JSON benchmark data to create interactive performance charts comparing different engines and configurations.</p>
+
+            <!-- Info about Pareto filtering -->
+            <div class="mt-4 p-3 bg-green-100 border-2 border-green-400 rounded">
+                <div style="font-size: 16px; font-weight: bold; color: #059669;">
+                    🎯 Pareto Frontier Filter Applied
+                </div>
+                <div style="font-size: 14px; margin-top: 6px; color: #047857;">
+                    Shows only datapoints that improve performance within each dataset and parallel thread group
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Input Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-semibold text-gray-800">Data Input</h2>
+                    <div class="flex items-center gap-2">
+                        <button
+                            id="addDatasetBtn"
+                            class="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 focus:ring-2 focus:ring-green-500 transition-colors duration-200"
+                        >
+                            + Add Dataset
+                        </button>
+                        <button
+                            id="loadSampleBtn"
+                            class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
+                        >
+                            Load Sample
+                        </button>
+                        <button
+                            id="clearAllBtn"
+                            class="px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700 focus:ring-2 focus:ring-red-500 transition-colors duration-200"
+                        >
+                            Clear All
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Dynamic Dataset Inputs Container -->
+                <div id="datasetInputsContainer" class="space-y-4">
+                    <!-- Dataset inputs will be dynamically added here -->
+                </div>
+
+                <div id="errorMessage" class="hidden p-3 bg-red-50 border border-red-200 rounded-lg text-red-700"></div>
+                <div id="successMessage" class="hidden p-3 bg-green-50 border border-green-200 rounded-lg text-green-700"></div>
+            </div>
+
+            <div class="space-y-4">
+                <h2 class="text-xl font-semibold text-gray-800">Expected Data Format</h2>
+                <div class="p-4 bg-gray-50 rounded-lg text-sm border">
+                    <pre class="whitespace-pre-wrap text-gray-700 text-xs">[
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-rps-m-16-ef-128",
+    "dataset_name": "dbpedia-openai-1M-1536-angular",
+    "rps": 394.08,
+    "mean_time": 0.247,
+    "p95_time": 0.260,
+    "p99_time": 0.267,
+    "mean_precisions": 0.9975,
+    "parallel": 100,
+    "upload_time": 110.66,
+    "engine_params": {
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "hnsw_ef": 512
+    }
+  },
+  ...
+]</pre>
+                </div>
+                <p class="text-sm text-gray-600">
+                    Array of benchmark result objects with engine names, performance metrics, and precision values.
+                </p>
+            </div>
+        </div>
+
+        <!-- Data Summary -->
+        <div id="dataSummary" class="hidden mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h3 class="font-semibold text-blue-800 mb-2">Data Summary:</h3>
+            <div id="datasetSummariesContainer" class="space-y-3">
+                <!-- Dataset summaries will be dynamically added here -->
+            </div>
+        </div>
+
+        <!-- Chart Controls -->
+        <div class="mb-6 p-4 bg-gray-50 rounded-lg border">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Y-Axis Metric</label>
+                    <select
+                        id="yMetricSelect"
+                        class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="rps">RPS (Requests Per Second)</option>
+                        <option value="mean_time">Mean Latency (ms)</option>
+                        <option value="p95_time">P95 Latency (ms)</option>
+                        <option value="p99_time">P99 Latency (ms)</option>
+                        <option value="upload_time">Upload Time (s)</option>
+                        <option value="total_upload_time">Index Time (s)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">X-Axis</label>
+                    <select
+                        id="xAxisSelect"
+                        class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="mean_precisions">Precision</option>
+                        <option value="parallel">Parallel Threads</option>
+                        <option value="setup_name">Setup Name</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Group By</label>
+                    <select
+                        id="groupBySelect"
+                        class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="engine_name">Engine</option>
+                        <option value="dataset_name">Dataset</option>
+                        <option value="setup_name">Setup</option>
+                        <option value="none">No Grouping</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Chart Type</label>
+                    <select
+                        id="chartTypeSelect"
+                        class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="line">Line Chart</option>
+                        <option value="scatter">Scatter Plot</option>
+                        <option value="bar">Bar Chart</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div id="filtersSection" class="hidden mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+            <h3 class="font-semibold text-yellow-800 mb-3">Filters</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="filterControls">
+                <!-- Dynamic filter controls will be added here -->
+            </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="chartTitle" class="text-xl font-semibold text-gray-800">
+                    Performance Chart
+                </h2>
+                <div class="flex items-center gap-4">
+                    <span class="text-sm text-gray-600">🔍 Scroll to zoom • Drag to select area • Alt+Drag to pan</span>
+                    <button
+                        id="resetZoomBtn"
+                        class="px-3 py-1 bg-gray-500 text-white rounded text-xs hover:bg-gray-600 focus:ring-2 focus:ring-gray-400 transition-colors duration-200"
+                    >
+                        Reset Zoom
+                    </button>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="benchmarkChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Sample data matching the user's format
+        const sampleData = [
+            {
+                "engine_name": "qdrant",
+                "setup_name": "qdrant-rps-m-16-ef-128",
+                "dataset_name": "dbpedia-openai-1M-1536-angular",
+                "search_idx": "0",
+                "upload_time": 118.20,
+                "total_upload_time": 318.64,
+                "p95_time": 0.007691,
+                "rps": 130.26,
+                "parallel": 1,
+                "p99_time": 0.008957,
+                "mean_time": 0.006716,
+                "mean_precisions": 0.9784,
+                "engine_params": {
+                    "hnsw_config": {
+                        "m": 16,
+                        "ef_construct": 128
+                    },
+                    "hnsw_ef": 64
+                }
+            },
+            {
+                "engine_name": "qdrant",
+                "setup_name": "qdrant-rps-m-16-ef-128",
+                "dataset_name": "dbpedia-openai-1M-1536-angular",
+                "search_idx": "1",
+                "upload_time": 118.20,
+                "total_upload_time": 318.64,
+                "p95_time": 0.009744,
+                "rps": 112.17,
+                "parallel": 1,
+                "p99_time": 0.011519,
+                "mean_time": 0.007994,
+                "mean_precisions": 0.9901,
+                "engine_params": {
+                    "hnsw_config": {
+                        "m": 16,
+                        "ef_construct": 128
+                    },
+                    "hnsw_ef": 128
+                }
+            },
+            {
+                "engine_name": "qdrant",
+                "setup_name": "qdrant-rps-m-16-ef-128",
+                "dataset_name": "dbpedia-openai-1M-1536-angular",
+                "search_idx": "2",
+                "upload_time": 118.20,
+                "total_upload_time": 318.64,
+                "p95_time": 0.012000,
+                "rps": 92.79,
+                "parallel": 1,
+                "p99_time": 0.015120,
+                "mean_time": 0.009842,
+                "mean_precisions": 0.9950,
+                "engine_params": {
+                    "hnsw_config": {
+                        "m": 16,
+                        "ef_construct": 128
+                    },
+                    "hnsw_ef": 256
+                }
+            },
+            {
+                "engine_name": "qdrant",
+                "setup_name": "qdrant-rps-m-16-ef-128",
+                "dataset_name": "dbpedia-openai-1M-1536-angular",
+                "search_idx": "4",
+                "upload_time": 118.20,
+                "total_upload_time": 318.64,
+                "p95_time": 0.016229,
+                "rps": 808.74,
+                "parallel": 100,
+                "p99_time": 0.026924,
+                "mean_time": 0.009566,
+                "mean_precisions": 0.9784,
+                "engine_params": {
+                    "hnsw_config": {
+                        "m": 16,
+                        "ef_construct": 128
+                    },
+                    "hnsw_ef": 64
+                }
+            },
+            {
+                "engine_name": "qdrant",
+                "setup_name": "qdrant-rps-m-16-ef-128",
+                "dataset_name": "dbpedia-openai-1M-1536-angular",
+                "search_idx": "5",
+                "upload_time": 118.20,
+                "total_upload_time": 318.64,
+                "p95_time": 0.079736,
+                "rps": 823.07,
+                "parallel": 100,
+                "p99_time": 0.114752,
+                "mean_time": 0.033456,
+                "mean_precisions": 0.9901,
+                "engine_params": {
+                    "hnsw_config": {
+                        "m": 16,
+                        "ef_construct": 128
+                    },
+                    "hnsw_ef": 128
+                }
+            }
+        ];
+
+        // Color palettes for different datasets (up to 10 distinct colors)
+        const datasetColors = [
+            '#1E40AF', // Blue
+            '#EA580C', // Orange
+            '#059669', // Green
+            '#7C3AED', // Purple
+            '#DC2626', // Red
+            '#0891B2', // Cyan
+            '#D97706', // Amber
+            '#DB2777', // Pink
+            '#4B5563', // Gray
+            '#84CC16'  // Lime
+        ];
+
+        // Legacy colors array for backward compatibility
+        const colors = datasetColors;
+
+        // Utility function to get filename without extension and 'results-' prefix
+        function getFilenameWithoutExtension(filename) {
+            if (!filename) return '';
+            // Remove extension
+            const lastDotIndex = filename.lastIndexOf('.');
+            let name = lastDotIndex === -1 ? filename : filename.substring(0, lastDotIndex);
+            // Remove 'results-' prefix if present
+            if (name.startsWith('results-')) {
+                name = name.substring(8); // 'results-' is 8 characters
+            }
+            return name;
+        }
+
+        // State
+        let datasets = []; // Array of dataset objects: {id, data, filename, label, color}
+        let currentData = [];
+        let filteredData = [];
+        let chart = null;
+        let filters = {};
+        let datasetIdCounter = 0;
+
+        // DOM elements
+        const datasetInputsContainer = document.getElementById('datasetInputsContainer');
+        const addDatasetBtn = document.getElementById('addDatasetBtn');
+        const clearAllBtn = document.getElementById('clearAllBtn');
+        const loadSampleBtn = document.getElementById('loadSampleBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const yMetricSelect = document.getElementById('yMetricSelect');
+        const xAxisSelect = document.getElementById('xAxisSelect');
+        const groupBySelect = document.getElementById('groupBySelect');
+        const chartTypeSelect = document.getElementById('chartTypeSelect');
+        const chartTitle = document.getElementById('chartTitle');
+        const dataSummary = document.getElementById('dataSummary');
+        const datasetSummariesContainer = document.getElementById('datasetSummariesContainer');
+        const filtersSection = document.getElementById('filtersSection');
+        const filterControls = document.getElementById('filterControls');
+        const resetZoomBtn = document.getElementById('resetZoomBtn');
+
+        // Initialize with one empty dataset input
+        addDatasetInput();
+
+        // Event listeners for new buttons
+        addDatasetBtn.addEventListener('click', () => {
+            if (datasets.length < 10) {
+                addDatasetInput();
+            } else {
+                showMessage(errorMessage, 'Maximum 10 datasets allowed', true);
+            }
+        });
+
+        clearAllBtn.addEventListener('click', () => {
+            datasets = [];
+            datasetInputsContainer.innerHTML = '';
+            datasetIdCounter = 0;
+            currentData = [];
+            filteredData = [];
+            updateDataSummary();
+            updateChart();
+            addDatasetInput();
+            showMessage(successMessage, 'All datasets cleared!');
+        });
+
+        loadSampleBtn.addEventListener('click', () => {
+            // Load sample data into the first available empty dataset slot
+            const emptyDataset = datasets.find(d => d.data.length === 0);
+            if (emptyDataset) {
+                loadDatasetData(emptyDataset.id, sampleData, 'sample-data.json');
+            } else if (datasets.length < 10) {
+                // Add new dataset slot and load sample
+                const newId = addDatasetInput();
+                loadDatasetData(newId, sampleData, 'sample-data.json');
+            } else {
+                showMessage(errorMessage, 'No empty dataset slots available', true);
+            }
+        });
+
+        // Pareto frontier filtering function
+        function applyParetoFilter(data, yMetric) {
+            // Always apply Pareto filter for all metrics
+            if (data.length === 0) {
+                return data;
+            }
+
+
+            // Group data by dataset and parallel thread count
+            const datasetParallelGroups = {};
+            data.forEach(point => {
+                const dataset = point.dataset_name || 'Unknown';
+                const parallel = point.parallel || 1;
+                const groupKey = `${dataset}__${parallel}`;
+
+                if (!datasetParallelGroups[groupKey]) {
+                    datasetParallelGroups[groupKey] = [];
+                }
+                datasetParallelGroups[groupKey].push(point);
+            });
+
+
+            const allFiltered = [];
+
+            // Apply Pareto filter to each dataset-parallel group separately
+            Object.keys(datasetParallelGroups).forEach(groupKey => {
+                const [dataset, parallel] = groupKey.split('__');
+                const groupData = datasetParallelGroups[groupKey];
+
+
+                // Sort by precision descending (highest first) within this group
+                const sortedByPrecision = [...groupData].sort((a, b) => b.mean_precisions - a.mean_precisions);
+
+                // Remove duplicates based on precision value
+                const seenPrecisions = new Set();
+                const uniqueByPrecision = [];
+                for (const point of sortedByPrecision) {
+                    const precision = point.mean_precisions || 0;
+                    if (!seenPrecisions.has(precision)) {
+                        seenPrecisions.add(precision);
+                        uniqueByPrecision.push(point);
+                    }
+                }
+                const sortedByPrecisionUnique = uniqueByPrecision;
+
+                if (sortedByPrecisionUnique.length === 0) return;
+
+                const filtered = [];
+
+                // Determine if higher or lower values are better for this metric
+                const isHigherBetter = yMetric === 'rps';
+
+                // Start with the highest precision point
+                let bestPerformance = sortedByPrecisionUnique[0][yMetric];
+                if (bestPerformance === null || bestPerformance === undefined) {
+                    return;
+                }
+                filtered.push(sortedByPrecisionUnique[0]);
+
+
+                // For each subsequent point (lower precision), only include if it improves performance
+                for (let i = 1; i < sortedByPrecisionUnique.length; i++) {
+                    const currentValue = sortedByPrecisionUnique[i][yMetric];
+                    if (currentValue === null || currentValue === undefined) {
+                        continue; // Skip points with missing data
+                    }
+
+                    const isImprovement = isHigherBetter ?
+                        currentValue > bestPerformance :
+                        currentValue < bestPerformance;
+
+                    if (isImprovement) {
+                        filtered.push(sortedByPrecisionUnique[i]);
+                        bestPerformance = currentValue;
+                    }
+                }
+
+                allFiltered.push(...filtered);
+            });
+
+            return allFiltered;
+        }
+
+        // New functions for multiple datasets
+        function addDatasetInput() {
+            const datasetId = datasetIdCounter++;
+            const colorIndex = datasets.length % datasetColors.length;
+            const color = datasetColors[colorIndex];
+
+            // Create dataset object
+            const dataset = {
+                id: datasetId,
+                data: [],
+                filename: '',
+                label: '',
+                color: color
+            };
+            datasets.push(dataset);
+
+            // Create HTML for dataset input
+            const datasetDiv = document.createElement('div');
+            datasetDiv.id = `dataset-${datasetId}`;
+            datasetDiv.className = 'p-4 border rounded-lg';
+            datasetDiv.style.borderColor = color;
+            datasetDiv.style.backgroundColor = color + '10';
+
+            datasetDiv.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-sm font-semibold" style="color: ${color}" id="dataset-title-${datasetId}">Dataset ${datasets.length}</h3>
+                    <button
+                        onclick="removeDataset(${datasetId})"
+                        class="text-red-600 hover:text-red-800 text-xs font-medium"
+                    >
+                        Remove
+                    </button>
+                </div>
+                <div class="space-y-3">
+                    <div class="hidden">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Dataset Label</label>
+                        <input
+                            type="text"
+                            id="label-${datasetId}"
+                            placeholder="e.g., v1.0, Production, Test"
+                            class="w-full p-2 border border-gray-300 rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            value=""
+                            onchange="updateDatasetLabel(${datasetId}, this.value)"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Upload JSON File</label>
+                        <input
+                            type="file"
+                            id="file-${datasetId}"
+                            accept=".json"
+                            class="block w-full text-xs text-gray-500 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
+                            onchange="handleFileUpload(${datasetId}, this)"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Or Paste JSON Data</label>
+                        <textarea
+                            id="json-${datasetId}"
+                            placeholder="Paste your JSON benchmark data here..."
+                            class="w-full h-20 p-2 border border-gray-300 rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                        ></textarea>
+                    </div>
+                    <button
+                        onclick="handleJsonInput(${datasetId})"
+                        class="px-3 py-1 bg-gray-600 text-white rounded text-xs hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 transition-colors duration-200"
+                    >
+                        Load Data
+                    </button>
+                    <span id="status-${datasetId}" class="text-xs text-gray-600 ml-2"></span>
+                </div>
+            `;
+
+            datasetInputsContainer.appendChild(datasetDiv);
+            return datasetId;
+        }
+
+        function removeDataset(datasetId) {
+            datasets = datasets.filter(d => d.id !== datasetId);
+            document.getElementById(`dataset-${datasetId}`).remove();
+            combineDatasets();
+            showMessage(successMessage, 'Dataset removed!');
+        }
+
+        function updateDatasetLabel(datasetId, label) {
+            const dataset = datasets.find(d => d.id === datasetId);
+            if (dataset) {
+                dataset.label = label;
+                updateChart();
+            }
+        }
+
+        async function handleFileUpload(datasetId, fileInput) {
+            const file = fileInput.files[0];
+            if (file) {
+                try {
+                    const text = await file.text();
+                    const parsedData = JSON.parse(text);
+                    if (Array.isArray(parsedData)) {
+                        loadDatasetData(datasetId, parsedData, file.name);
+                        document.getElementById(`json-${datasetId}`).value = JSON.stringify(parsedData, null, 2);
+                        showMessage(successMessage, `File "${file.name}" loaded successfully!`);
+                    } else {
+                        throw new Error('Data should be an array of objects');
+                    }
+                } catch (err) {
+                    showMessage(errorMessage, 'Error reading file or invalid JSON format.', true);
+                }
+            }
+        }
+
+        function handleJsonInput(datasetId) {
+            try {
+                const jsonTextarea = document.getElementById(`json-${datasetId}`);
+                const parsedData = JSON.parse(jsonTextarea.value);
+                if (Array.isArray(parsedData)) {
+                    loadDatasetData(datasetId, parsedData, 'pasted-data.json');
+                    showMessage(successMessage, 'JSON data loaded successfully!');
+                } else {
+                    throw new Error('Data should be an array of objects');
+                }
+            } catch (err) {
+                showMessage(errorMessage, 'Invalid JSON format. Please check your data structure.', true);
+            }
+        }
+
+        function loadDatasetData(datasetId, data, filename) {
+            const dataset = datasets.find(d => d.id === datasetId);
+            if (dataset) {
+                dataset.filename = filename;
+                // Set label to filename without extension and 'results-' prefix
+                dataset.label = getFilenameWithoutExtension(filename);
+
+                dataset.data = data.map(row => ({
+                    ...row,
+                    datasetId: datasetId,
+                    datasetLabel: dataset.label,
+                    datasetColor: dataset.color,
+                    filename: filename
+                }));
+
+                // Update the dataset title and label input
+                const titleElement = document.getElementById(`dataset-title-${datasetId}`);
+                if (titleElement) {
+                    titleElement.textContent = dataset.label;
+                }
+                const labelInput = document.getElementById(`label-${datasetId}`);
+                if (labelInput) {
+                    labelInput.value = dataset.label;
+                }
+
+                document.getElementById(`status-${datasetId}`).textContent = `✓ ${data.length} records loaded`;
+                combineDatasets();
+            }
+        }
+
+        // Make functions globally accessible
+        window.removeDataset = removeDataset;
+        window.updateDatasetLabel = updateDatasetLabel;
+        window.handleFileUpload = handleFileUpload;
+        window.handleJsonInput = handleJsonInput;
+
+        // Event listeners
+        yMetricSelect.addEventListener('change', updateChart);
+        xAxisSelect.addEventListener('change', updateChart);
+        groupBySelect.addEventListener('change', updateChart);
+        chartTypeSelect.addEventListener('change', updateChart);
+        resetZoomBtn.addEventListener('click', () => {
+            if (chart) {
+                chart.resetZoom();
+            }
+        });
+
+        function showMessage(element, message, isError = false) {
+            element.textContent = message;
+            element.className = `p-3 border rounded-lg ${isError ? 'bg-red-50 border-red-200 text-red-700' : 'bg-green-50 border-green-200 text-green-700'}`;
+            element.classList.remove('hidden');
+
+            const otherMessage = isError ? successMessage : errorMessage;
+            otherMessage.classList.add('hidden');
+
+            setTimeout(() => {
+                element.classList.add('hidden');
+            }, 5000);
+        }
+
+
+        function combineDatasets() {
+            currentData = [];
+            datasets.forEach(dataset => {
+                currentData.push(...dataset.data);
+            });
+            filteredData = [...currentData];
+            updateDataSummary();
+            createFilterControls();
+            updateChart();
+        }
+
+        function updateDataSummary() {
+            datasetSummariesContainer.innerHTML = '';
+
+            let hasData = false;
+            datasets.forEach((dataset, index) => {
+                if (dataset.data.length > 0) {
+                    hasData = true;
+                    const engines = new Set(dataset.data.map(d => d.engine_name));
+                    const datasetNames = new Set(dataset.data.map(d => d.dataset_name));
+
+                    const summaryDiv = document.createElement('div');
+                    summaryDiv.className = 'mb-2';
+                    summaryDiv.innerHTML = `
+                        <h4 class="font-medium text-sm" style="color: ${dataset.color}">${dataset.label}:</h4>
+                        <div class="text-xs text-gray-600 ml-4 mb-1">
+                            <strong>File:</strong> ${dataset.filename || 'No file'}
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-gray-600 ml-4">
+                            <div><strong>Engines:</strong> ${engines.size}</div>
+                            <div><strong>Datasets:</strong> ${datasetNames.size}</div>
+                            <div><strong>Records:</strong> ${dataset.data.length}</div>
+                        </div>
+                    `;
+                    datasetSummariesContainer.appendChild(summaryDiv);
+                }
+            });
+
+            if (hasData) {
+                dataSummary.classList.remove('hidden');
+            } else {
+                dataSummary.classList.add('hidden');
+            }
+        }
+
+        function createFilterControls() {
+            const filterFields = ['engine_name', 'dataset_name', 'setup_name', 'parallel'];
+            filterControls.innerHTML = '';
+            filters = {};
+
+            filterFields.forEach(field => {
+                const values = [...new Set(currentData.map(d => d[field]))].sort((a, b) => {
+                    // Sort numerically for parallel field
+                    if (field === 'parallel') {
+                        return Number(a) - Number(b);
+                    }
+                    return String(a).localeCompare(String(b));
+                });
+                if (values.length > 1) {
+                    const div = document.createElement('div');
+                    const fieldLabel = field === 'parallel' ? 'PARALLEL THREADS' : field.replace('_', ' ').toUpperCase();
+
+                    // Set default value for parallel field to 100
+                    const defaultValue = field === 'parallel' && values.includes(100) ? '100' : '';
+
+                    div.innerHTML = `
+                        <label class="block text-sm font-medium text-yellow-700 mb-2">${fieldLabel}</label>
+                        <select id="filter_${field}" class="w-full p-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-sm">
+                            <option value="">All</option>
+                            ${values.map(v => `<option value="${v}" ${v == defaultValue ? 'selected' : ''}>${field === 'parallel' ? v + ' threads' : v}</option>`).join('')}
+                        </select>
+                    `;
+                    filterControls.appendChild(div);
+
+                    // Set initial filter value
+                    if (defaultValue) {
+                        filters[field] = defaultValue;
+                    }
+
+                    document.getElementById(`filter_${field}`).addEventListener('change', (e) => {
+                        filters[field] = e.target.value;
+                        applyFilters();
+                    });
+                }
+            });
+
+            if (filterControls.children.length > 0 || currentData.length > 0) {
+                filtersSection.classList.remove('hidden');
+            }
+
+            // Apply initial filters
+            applyFilters();
+        }
+
+        function applyFilters() {
+            filteredData = currentData.filter(row => {
+                return Object.entries(filters).every(([field, value]) => {
+                    if (!value) return true;
+
+                    // Handle numeric comparison for parallel field
+                    if (field === 'parallel') {
+                        return Number(row[field]) === Number(value);
+                    }
+
+                    // String comparison for other fields
+                    return row[field] === value;
+                });
+            });
+            updateChart();
+        }
+
+        function getChartConfig() {
+            const yMetric = yMetricSelect.value;
+            const xAxis = xAxisSelect.value;
+            const groupBy = groupBySelect.value;
+            const chartType = chartTypeSelect.value;
+
+            let chartDatasets = [];
+
+            // Helper function to sort data by x-axis value
+            function sortDataByXAxis(data) {
+                return data.sort((a, b) => {
+                    const aValue = xAxis === 'mean_precisions' ? a[xAxis] * 100 : a[xAxis];
+                    const bValue = xAxis === 'mean_precisions' ? b[xAxis] * 100 : b[xAxis];
+
+                    // Handle numeric vs string sorting
+                    if (typeof aValue === 'number' && typeof bValue === 'number') {
+                        return aValue - bValue;
+                    } else {
+                        return String(aValue).localeCompare(String(bValue));
+                    }
+                });
+            }
+
+            // Process each dataset
+            datasets.forEach((dataset) => {
+                if (dataset.data.length === 0) return;
+
+                const datasetData = filteredData.filter(row => row.datasetId === dataset.id);
+                if (datasetData.length === 0) return;
+
+                const filenameShort = getFilenameWithoutExtension(dataset.filename) || dataset.label;
+
+                if (groupBy === 'none') {
+                    // No grouping - one line per dataset
+                    let dataToPlot = [...datasetData];
+                    dataToPlot = applyParetoFilter(dataToPlot, yMetric);
+                    const sortedData = sortDataByXAxis(dataToPlot);
+
+                    chartDatasets.push({
+                        label: dataset.label,
+                        data: sortedData.map(row => ({
+                            x: xAxis === 'mean_precisions' ? row[xAxis] * 100 : row[xAxis],
+                            y: yMetric.includes('time') && yMetric !== 'total_upload_time' ? row[yMetric] * 1000 : row[yMetric],
+                            originalData: row
+                        })),
+                        borderColor: dataset.color,
+                        backgroundColor: dataset.color + '20',
+                        borderWidth: chartType === 'line' ? 3 : 1,
+                        fill: false,
+                        tension: 0.4,
+                        pointRadius: chartType === 'scatter' ? 6 : 4,
+                        pointStyle: 'circle'
+                    });
+                } else {
+                    // Group by the selected field within each dataset
+                    const groups = [...new Set(datasetData.map(d => d[groupBy]))];
+
+                    groups.forEach((group, groupIndex) => {
+                        let groupData = datasetData.filter(d => d[groupBy] === group);
+                        groupData = applyParetoFilter(groupData, yMetric);
+                        groupData = sortDataByXAxis(groupData);
+
+                        chartDatasets.push({
+                            label: `${dataset.label}: ${group}`,
+                            data: groupData.map(row => ({
+                                x: xAxis === 'mean_precisions' ? row[xAxis] * 100 : row[xAxis],
+                                y: yMetric.includes('time') && yMetric !== 'total_upload_time' ? row[yMetric] * 1000 : row[yMetric],
+                                originalData: row
+                            })),
+                            borderColor: dataset.color,
+                            backgroundColor: dataset.color + '20',
+                            borderWidth: chartType === 'line' ? 3 : 1,
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: chartType === 'scatter' ? 6 : 4,
+                            pointStyle: 'circle',
+                            borderDash: groupIndex > 0 ? [5, 5] : undefined // Dashed lines for additional groups
+                        });
+                    });
+                }
+            });
+
+            const isTimeMetric = yMetric.includes('time');
+            const yLabel = yMetric === 'total_upload_time' ? 'Index Time (s)' :
+                          isTimeMetric ? yMetric.replace('_', ' ').toUpperCase() + ' (ms)' :
+                          yMetric.replace('_', ' ').toUpperCase();
+
+            const xLabel = xAxis === 'mean_precisions' ? 'Precision (%)' :
+                          xAxis.replace('_', ' ').toUpperCase();
+
+            return {
+                type: chartType === 'scatter' ? 'scatter' : chartType,
+                data: { datasets: chartDatasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        zoom: {
+                            pan: {
+                                enabled: true,
+                                mode: 'xy',
+                                threshold: 10
+                            },
+                            zoom: {
+                                wheel: {
+                                    enabled: true,
+                                    speed: 0.1
+                                },
+                                pinch: {
+                                    enabled: true
+                                },
+                                drag: {
+                                    enabled: true,
+                                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                    borderColor: 'rgba(59, 130, 246, 0.5)',
+                                    borderWidth: 1
+                                },
+                                mode: 'xy'
+                            }
+                        },
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    const item = tooltipItems[0];
+                                    const originalData = item.raw.originalData;
+                                    return originalData.setup_name || 'Unknown Setup';
+                                },
+                                label: function(context) {
+                                    const originalData = context.raw.originalData;
+                                    const yUnit = yMetric === 'total_upload_time' ? 's' :
+                                                 yMetric.includes('time') ? 'ms' :
+                                                 (yMetric === 'rps' ? 'RPS' : '');
+                                    const xUnit = xAxis === 'mean_precisions' ? '%' : '';
+
+                                    let labels = [];
+                                    labels.push(`${xLabel}: ${context.parsed.x}${xUnit}`);
+                                    labels.push(`${yLabel}: ${context.parsed.y.toFixed(2)}${yUnit}`);
+
+                                    // Add parallel threads info
+                                    if (originalData.parallel !== undefined) {
+                                        labels.push(`Parallel: ${originalData.parallel} threads`);
+                                    }
+
+                                    if (originalData.engine_params && originalData.engine_params.hnsw_config) {
+                                        const hnsw = originalData.engine_params.hnsw_config;
+                                        labels.push(`HNSW Config:`);
+                                        if (hnsw.m) labels.push(`  • m: ${hnsw.m}`);
+                                        if (hnsw.ef_construct) labels.push(`  • ef_construct: ${hnsw.ef_construct}`);
+                                        if (hnsw.ef) labels.push(`  • ef: ${hnsw.ef}`);
+                                        if (originalData.engine_params.hnsw_ef) labels.push(`  • hnsw_ef: ${originalData.engine_params.hnsw_ef}`);
+                                    }
+
+                                    return labels;
+                                },
+                                footer: function(tooltipItems) {
+                                    const item = tooltipItems[0];
+                                    const originalData = item.raw.originalData;
+                                    let footerLines = [];
+
+                                    if (originalData.engine_name) {
+                                        footerLines.push(`Engine: ${originalData.engine_name}`);
+                                    }
+                                    if (originalData.dataset_name) {
+                                        footerLines.push(`Dataset: ${originalData.dataset_name}`);
+                                    }
+
+                                    // Show dataset label and filename
+                                    if (originalData.datasetLabel) {
+                                        footerLines.push(`Dataset: ${originalData.datasetLabel}`);
+                                    }
+                                    if (originalData.filename) {
+                                        footerLines.push(`File: ${originalData.filename}`);
+                                    }
+
+                                    return footerLines;
+                                }
+                            },
+                            displayColors: false,
+                            titleAlign: 'center',
+                            bodyAlign: 'left',
+                            footerAlign: 'center',
+                            titleFont: { weight: 'bold', size: 14 },
+                            bodyFont: { size: 12 },
+                            footerFont: { size: 10, style: 'italic' },
+                            padding: 12,
+                            cornerRadius: 8,
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            footerColor: '#ccc'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: xLabel },
+                            grid: { color: '#E5E7EB' },
+                            type: xAxis === 'setup_name' ? 'category' : 'linear'
+                        },
+                        y: {
+                            title: { display: true, text: yLabel },
+                            grid: { color: '#E5E7EB' }
+                        }
+                    }
+                }
+            };
+        }
+
+        function updateChart() {
+            const yMetric = yMetricSelect.value;
+            const xAxis = xAxisSelect.value;
+
+            const yMetricDisplay = yMetric === 'total_upload_time' ? 'Index Time' :
+                                  yMetric.replace('_', ' ').toUpperCase();
+            chartTitle.textContent = `${yMetricDisplay} vs ${xAxis.replace('_', ' ').toUpperCase()}`;
+
+            if (chart) {
+                chart.destroy();
+            }
+
+            if (filteredData.length > 0) {
+                const ctx = document.getElementById('benchmarkChart').getContext('2d');
+                chart = new Chart(ctx, getChartConfig());
+            }
+        }
+    </script>
+</body>
+</html>

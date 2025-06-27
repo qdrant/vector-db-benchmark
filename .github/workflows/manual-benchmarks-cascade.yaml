@@ -1,186 +1,597 @@
 name: Automated Cascade of Benchmarks
 description: |
   This workflow runs a series of benchmarks in a cascade fashion.
-  It can be triggered manually or via repository dispatch events.
-  The benchmarks are defined in `benchmark_cascade/benchmark-configs.json`.
+  It is triggered manually. The benchmarks are defined in `benchmark_cascade/benchmark-configs.json`.
+  Benchmarks are run in parallel. Instructions can be found in `benchmark_cascade/README.md`.
 
 on:
-  repository_dispatch:
-    types: [run-benchmark, run-benchmark-cascade]
   workflow_dispatch:
     inputs:
-        qdrant_version:
-            description: "Version of qdrant to benchmark (docker/v1.5.1, ghcr/dev etc), used when benchmark_set=single"
-            default: ghcr/dev
-        dataset:
-            description: "Dataset to benchmark (used if benchmark_set=single)"
-            default: laion-small-clip
-        engine_config:
-            description: "Engine config to benchmark (used if benchmark_set=single)"
-            default: qdrant-continuous-benchmark
-        feature_flags_all:
-            type: boolean
-            description: "Enable all feature flags (false by default, used if benchmark_set=single)"
-            default: false
-        # Inputs to control cascade behavior
         benchmark_set:
-            description: "Benchmark set to run (from benchmark_cascade/benchmark-configs.json)"
+            description: "Benchmark set to run (from benchmark_cascade/benchmark-configs.json). Default is 'single': ghcr/dev, dbpedia-openai-1M-1536-angular, qdrant-rps-m-16-ef-128, feature_flags=true."
             default: "single"
-        current_index:
-            description: "Current benchmark index in cascade (internal use)"
+        params_override:
+            description: "Override parameters for the benchmark set (JSON format, e.g. '{\"params\": {\"qdrant_version\": [\"ghcr/dev\", \"docker/master\"], \"dataset\": [\"glove-100-angular\"]}}')"
+            default: "{}"
+        max_parallel:
+            type: number
+            description: "Maximum number of parallel jobs to run"
+            default: 10
+        machines_per_bench:
+            type: boolean
+            description: "Create/destroy machines for each benchmark run (true) or reuse machines across batches (false)"
+            default: false
+        process_results:
+          type: boolean
+          description: "Skip all the jobs except for processBenchmarks (true) or run a normal cascade (false)"
+          default: false
+        workflow_run_ids:
+            description: "Comma-separated list of workflow run IDs to process (used when process_results=true or for internal cascade tracking)"
+            default: ""
+        current_batch:
+            description: "Current batch index (for cascading, internal use)"
             default: "0"
+        machines_info:
+            description: "Internal use, JSON array of machine pairs to use when machines_per_bench is false, e.g. '[{\"server_name\":\"server-0\",\"client_name\":\"client-0\"},{\"server_name\":\"server-1\",\"client_name\":\"client-1\"}]'"
+            default: "[]"
 
-# Restrict to only running this workflow one at a time.
-# Any new runs will be queued until the previous run is complete.
-# Any existing pending runs will be cancelled and replaced with current run.
-concurrency:
-  group: continuous-benchmark
+env:
+  # Common environment variables
+  HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+  POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+  POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+  POSTGRES_TABLE: benchmark_manual
 
 jobs:
-  runBenchmark:
-    name: benchmark - ${{ github.event.client_payload.qdrant_version || inputs.qdrant_version }} - ${{ github.event.client_payload.dataset || inputs.dataset }}
+  prepareBenchmarks:
+    name: Prepare Benchmarks
     runs-on: ubuntu-latest
+    if: inputs.process_results == false
+    outputs:
+      matrix: ${{ steps.prepare.outputs.matrix }}
+      has_next_batch: ${{ steps.prepare.outputs.has_next_batch }}
+      next_batch: ${{ steps.prepare.outputs.next_batch }}
+      benchmark_set: ${{ steps.prepare.outputs.benchmark_set }}
+      workflow_run_ids: ${{ steps.prepare.outputs.workflow_run_ids }}
+      machines_info: ${{ steps.prepare.outputs.machines_info }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10.12'
+      - name: Prepare benchmark matrix
+        id: prepare
+        run: |
+          CONFIG_FILE="benchmark_cascade/benchmark-configs.json"
+          BENCHMARK_SET="${{ inputs.benchmark_set }}"
+          CURRENT_BATCH=${{ inputs.current_batch || 0 }}
+          BATCH_SIZE=${{ inputs.max_parallel || 10 }}
+
+          echo "benchmark_set=$BENCHMARK_SET" >> $GITHUB_OUTPUT
+
+          # Accumulate workflow run IDs
+          WORKFLOW_RUN_IDS="${{ inputs.workflow_run_ids }}"
+          if [ -n "$WORKFLOW_RUN_IDS" ]; then
+            WORKFLOW_RUN_IDS="${WORKFLOW_RUN_IDS},${{ github.run_id }}"
+          else
+            WORKFLOW_RUN_IDS="${{ github.run_id }}"
+          fi
+          echo "workflow_run_ids=$WORKFLOW_RUN_IDS" >> "$GITHUB_OUTPUT"
+
+          # Benchmark set - read from config file
+          if [ ! -f "$CONFIG_FILE" ]; then
+            echo "Configuration file $CONFIG_FILE not found!"
+            exit 1
+          fi
+
+          BENCHMARK_CONFIGS=$(jq -r ".benchmark_sets.\"$BENCHMARK_SET\"" "$CONFIG_FILE")
+
+          if [ "$BENCHMARK_CONFIGS" = "null" ]; then
+            echo "Benchmark set '$BENCHMARK_SET' not found in configuration file"
+            exit 1
+          fi
+
+          # Apply params_override if provided
+          PARAMS_OVERRIDE='${{ inputs.params_override }}'
+          if [ "$PARAMS_OVERRIDE" != "{}" ]; then
+            echo "Applying params_override: $PARAMS_OVERRIDE"
+
+            # Parse the override params
+            OVERRIDE_PARAMS=$(echo "$PARAMS_OVERRIDE" | jq -r '.params // {}')
+
+            if [ "$OVERRIDE_PARAMS" != "{}" ]; then
+              # Generate all parameter combinations using separate Python script
+              if ! BENCHMARK_CONFIGS=$(python3 benchmark_cascade/generate_configs.py "$OVERRIDE_PARAMS" "$BENCHMARK_CONFIGS"); then
+                echo "Error: Failed to generate benchmark configurations"
+                exit 1
+              fi
+
+              echo "Generated $(echo "$BENCHMARK_CONFIGS" | jq length) configurations after applying params_override"
+            fi
+          fi
+
+          TOTAL_CONFIGS=$(echo "$BENCHMARK_CONFIGS" | jq length)
+          START_INDEX=$((CURRENT_BATCH * BATCH_SIZE))
+          END_INDEX=$((START_INDEX + BATCH_SIZE - 1))
+
+          echo "Batch info: Current batch=$CURRENT_BATCH, Start=$START_INDEX, End=$END_INDEX, Total=$TOTAL_CONFIGS"
+
+          # Check if we need more batches
+          NEXT_START=$((END_INDEX + 1))
+          if [ $NEXT_START -lt $TOTAL_CONFIGS ]; then
+            echo "has_next_batch=true" >> $GITHUB_OUTPUT
+            echo "next_batch=$((CURRENT_BATCH + 1))" >> $GITHUB_OUTPUT
+          else
+            echo "has_next_batch=false" >> $GITHUB_OUTPUT
+            echo "next_batch=0" >> $GITHUB_OUTPUT
+          fi
+
+          # Create matrix for current batch
+          MATRIX_JSON="["
+          FIRST=true
+
+          for i in $(seq $START_INDEX $END_INDEX); do
+            if [ $i -ge $TOTAL_CONFIGS ]; then
+              break
+            fi
+
+            if [ "$FIRST" = false ]; then
+              MATRIX_JSON="${MATRIX_JSON},"
+            fi
+            FIRST=false
+
+            CONFIG=$(echo "$BENCHMARK_CONFIGS" | jq -r ".[$i]")
+            QDRANT_VERSION=$(echo "$CONFIG" | jq -r '.qdrant_version')
+            DATASET=$(echo "$CONFIG" | jq -r '.dataset')
+            ENGINE_CONFIG=$(echo "$CONFIG" | jq -r '.engine_config')
+            FEATURE_FLAGS=$(echo "$CONFIG" | jq -r '.feature_flags_all')
+
+            QDRANT_VERSION_SANITIZED=$(echo "$QDRANT_VERSION" | sed 's|/|-|g')
+
+            MATRIX_JSON="${MATRIX_JSON}{\"index\": $i, \"qdrant_version\": \"$QDRANT_VERSION\", \"qdrant_version_sanitized\": \"$QDRANT_VERSION_SANITIZED\", \"dataset\": \"$DATASET\", \"engine_config\": \"$ENGINE_CONFIG\", \"feature_flags_all\": $FEATURE_FLAGS}"
+          done
+
+          MATRIX_JSON="${MATRIX_JSON}]"
+
+          echo "Current batch: $CURRENT_BATCH (indices $START_INDEX-$END_INDEX of $TOTAL_CONFIGS total)"
+          echo "Matrix JSON: $MATRIX_JSON"
+
+          echo "matrix=$MATRIX_JSON" >> $GITHUB_OUTPUT
+
+          # Generate machines_info array for the current batch
+          MACHINES_INFO="["
+          MACHINES_FIRST=true
+
+          for i in $(seq $START_INDEX $END_INDEX); do
+            if [ $i -ge $TOTAL_CONFIGS ]; then
+              break
+            fi
+
+            if [ "$MACHINES_FIRST" = false ]; then
+              MACHINES_INFO="${MACHINES_INFO},"
+            fi
+            MACHINES_FIRST=false
+
+            SERVER_NAME="benchmark-cascade-server-${i}"
+            CLIENT_NAME="benchmark-cascade-client-${i}"
+            MACHINES_INFO="${MACHINES_INFO}{\"server_name\":\"$SERVER_NAME\",\"client_name\":\"$CLIENT_NAME\"}"
+          done
+
+          MACHINES_INFO="${MACHINES_INFO}]"
+          echo "Generated machines_info: $MACHINES_INFO"
+          echo "machines_info=$MACHINES_INFO" >> $GITHUB_OUTPUT
+  setupMachines:
+    name: Setup Machines ${{ matrix.config.index }}
+    needs: prepareBenchmarks
+    if: inputs.process_results == false
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: ${{ fromJSON(inputs.max_parallel) }}
+      fail-fast: false
+      matrix:
+        config: ${{ fromJSON(needs.prepareBenchmarks.outputs.matrix) }}
+    outputs:
+      server_name: ${{ steps.extract_names.outputs.server_name }}
+      client_name: ${{ steps.extract_names.outputs.client_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
       - uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      # Load benchmark configurations from file and set current config
-      - name: Set benchmark configuration
-        id: config
-        run: |
-          CONFIG_FILE="benchmark_cascade/benchmark-configs.json"
+      - name: Extract Machine Names
+        id: extract_names
+        uses: ./.github/workflows/actions/extract-machine-names
+        with:
+          machines_per_bench: ${{ inputs.machines_per_bench }}
+          current_batch: ${{ inputs.current_batch || 0 }}
+          current_index: ${{ matrix.config.index }}
+          job_index: ${{ strategy.job-index }}
+          machines_info: ${{ (inputs.current_batch != 0 && inputs.machines_info) || needs.prepareBenchmarks.outputs.machines_info }}
 
-          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
-            # Repository dispatch - get values from payload
-            BENCHMARK_SET="${{ github.event.client_payload.benchmark_set }}"
-            CURRENT_INDEX=${{ github.event.client_payload.current_index || 0 }}
+      - name: Setup CI
+        if: ${{ inputs.machines_per_bench == true || inputs.current_batch == 0 }}
+        run: bash -x tools/setup_ci.sh
 
-            echo "qdrant_version=${{ github.event.client_payload.qdrant_version }}" >> $GITHUB_OUTPUT
-            echo "dataset=${{ github.event.client_payload.dataset }}" >> $GITHUB_OUTPUT
-            echo "engine_config=${{ github.event.client_payload.engine_config }}" >> $GITHUB_OUTPUT
-            echo "feature_flags_all=${{ github.event.client_payload.feature_flags_all }}" >> $GITHUB_OUTPUT
-            echo "benchmark_set=$BENCHMARK_SET" >> $GITHUB_OUTPUT
-            echo "current_index=$CURRENT_INDEX" >> $GITHUB_OUTPUT
-          else
-            # Workflow dispatch - get benchmark set from input and read from file
-            BENCHMARK_SET="${{ inputs.benchmark_set }}"
-            CURRENT_INDEX=${{ inputs.current_index || 0 }}
+      - name: Create Server
+        if: ${{ inputs.machines_per_bench == true || inputs.current_batch == 0 }}
+        uses: ./.github/workflows/actions/create-server-with-retry
+        with:
+          server_name: ${{ steps.extract_names.outputs.server_name }}
+          server_type: cpx51
+          max_retries: 5
 
-            if [ "$BENCHMARK_SET" = "single" ]; then
-              # Single benchmark - use the input values directly
-              echo "qdrant_version=${{ inputs.qdrant_version }}" >> $GITHUB_OUTPUT
-              echo "dataset=${{ inputs.dataset }}" >> $GITHUB_OUTPUT
-              echo "engine_config=${{ inputs.engine_config }}" >> $GITHUB_OUTPUT
-              echo "feature_flags_all=${{ inputs.feature_flags_all }}" >> $GITHUB_OUTPUT
-              echo "benchmark_set=single" >> $GITHUB_OUTPUT
-              echo "current_index=0" >> $GITHUB_OUTPUT
-            else
-              # Benchmark set - read from config file
-              if [ ! -f "$CONFIG_FILE" ]; then
-                echo "Configuration file $CONFIG_FILE not found!"
-                exit 1
-              fi
+      - name: Create Client
+        if: ${{ inputs.machines_per_bench == true || inputs.current_batch == 0 }}
+        uses: ./.github/workflows/actions/create-server-with-retry
+        with:
+          server_name: ${{ steps.extract_names.outputs.client_name }}
+          server_type: cpx41
+          max_retries: 5
+  runBenchmarks:
+    name: Run Benchmark ${{ matrix.config.index }}
+    needs: [prepareBenchmarks, setupMachines]
+    if: inputs.process_results == false
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: ${{ fromJSON(inputs.max_parallel) }}
+      fail-fast: false
+      matrix:
+        config: ${{ fromJSON(needs.prepareBenchmarks.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-              if ! jq empty "$CONFIG_FILE" 2>/dev/null; then
-                echo "Invalid JSON in $CONFIG_FILE"
-                exit 1
-              fi
-
-              BENCHMARK_CONFIGS=$(jq -r ".benchmark_sets.\"$BENCHMARK_SET\"" "$CONFIG_FILE")
-
-              if [ "$BENCHMARK_CONFIGS" = "null" ]; then
-                echo "Benchmark set '$BENCHMARK_SET' not found in configuration file"
-                echo "Available sets:"
-                jq -r '.benchmark_sets | keys[]' "$CONFIG_FILE"
-                exit 1
-              fi
-
-              CURRENT_CONFIG=$(echo "$BENCHMARK_CONFIGS" | jq -r ".[$CURRENT_INDEX]")
-
-              if [ "$CURRENT_CONFIG" = "null" ]; then
-                echo "Invalid index $CURRENT_INDEX for benchmark set '$BENCHMARK_SET'"
-                exit 1
-              fi
-
-              QDRANT_VERSION=$(echo "$CURRENT_CONFIG" | jq -r '.qdrant_version')
-              DATASET=$(echo "$CURRENT_CONFIG" | jq -r '.dataset')
-              ENGINE_CONFIG=$(echo "$CURRENT_CONFIG" | jq -r '.engine_config')
-              FEATURE_FLAGS=$(echo "$CURRENT_CONFIG" | jq -r '.feature_flags_all')
-
-              echo "qdrant_version=$QDRANT_VERSION" >> $GITHUB_OUTPUT
-              echo "dataset=$DATASET" >> $GITHUB_OUTPUT
-              echo "engine_config=$ENGINE_CONFIG" >> $GITHUB_OUTPUT
-              echo "feature_flags_all=$FEATURE_FLAGS" >> $GITHUB_OUTPUT
-              echo "benchmark_set=$BENCHMARK_SET" >> $GITHUB_OUTPUT
-              echo "current_index=$CURRENT_INDEX" >> $GITHUB_OUTPUT
-            fi
-          fi
+      - name: Extract Machine Names
+        id: extract_names
+        uses: ./.github/workflows/actions/extract-machine-names
+        with:
+          machines_per_bench: ${{ inputs.machines_per_bench }}
+          current_batch: ${{ inputs.current_batch || 0 }}
+          current_index: ${{ matrix.config.index }}
+          job_index: ${{ strategy.job-index }}
+          machines_info: ${{ (inputs.current_batch != 0 && inputs.machines_info) || needs.prepareBenchmarks.outputs.machines_info }}
 
       - name: Run benchmark
         run: |
-          export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
-          export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-          export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
-          export QDRANT_VERSION=${{ steps.config.outputs.qdrant_version }}
-          export DATASETS=${{ steps.config.outputs.dataset }}
-          export ENGINE_NAME=${{ steps.config.outputs.engine_config }}
-          export POSTGRES_TABLE=benchmark_manual
-          export QDRANT__FEATURE_FLAGS__ALL=${{ steps.config.outputs.feature_flags_all }}
+          export QDRANT_VERSION=${{ matrix.config.qdrant_version }}
+          export DATASETS=${{ matrix.config.dataset }}
+          export ENGINE_NAME=${{ matrix.config.engine_config }}
+          export QDRANT__FEATURE_FLAGS__ALL=${{ matrix.config.feature_flags_all }}
+          export SERVER_NAME=${{ steps.extract_names.outputs.server_name }}
+          export CLIENT_NAME=${{ steps.extract_names.outputs.client_name }}
+          export FETCH_ALL_RESULTS="true"
+
           bash -x tools/setup_ci.sh
           bash -x tools/run_ci.sh
 
-      # Trigger next benchmark in cascade if there are more to run
-      - name: Trigger next benchmark
-        if: steps.config.outputs.benchmark_set != 'single'
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: results-${{ matrix.config.qdrant_version_sanitized }}-bench-${{ matrix.config.dataset }}-${{ matrix.config.engine_config }}-${{ matrix.config.index }}
+          path: results/
+          retention-days: 7
+
+      - name: Teardown machines
+        if: ${{ always() && (inputs.machines_per_bench == true || needs.prepareBenchmarks.outputs.has_next_batch == 'false') }}
+        continue-on-error: true
+        uses: ./.github/workflows/actions/extract-machine-names
+        with:
+          machines_per_bench: ${{ inputs.machines_per_bench }}
+          current_batch: ${{ inputs.current_batch || 0 }}
+          current_index: ${{ matrix.config.index }}
+          job_index: ${{ strategy.job-index }}
+          machines_info: ${{ (inputs.current_batch != 0 && inputs.machines_info) || needs.prepareBenchmarks.outputs.machines_info }}
+        id: teardown_names
+
+      - name: Perform teardown
+        if: ${{ always() && (inputs.machines_per_bench == true || needs.prepareBenchmarks.outputs.has_next_batch == 'false') }}
+        continue-on-error: true
         run: |
-          CONFIG_FILE="benchmark_cascade/benchmark-configs.json"
-          BENCHMARK_SET="${{ steps.config.outputs.benchmark_set }}"
-          CURRENT_INDEX=${{ steps.config.outputs.current_index }}
-          NEXT_INDEX=$((CURRENT_INDEX + 1))
+          export SERVER_NAME=${{ steps.teardown_names.outputs.server_name }}
+          export CLIENT_NAME=${{ steps.teardown_names.outputs.client_name }}
+          bash -x tools/setup_ci.sh
+          bash -x tools/tear_down.sh
 
-          # Get the benchmark configurations for this set
-          BENCHMARK_CONFIGS=$(jq -r ".benchmark_sets.\"$BENCHMARK_SET\"" "$CONFIG_FILE")
-          TOTAL_CONFIGS=$(echo "$BENCHMARK_CONFIGS" | jq length)
+  processBenchmarks:
+    name: Process All Benchmark Results
+    needs: [prepareBenchmarks, runBenchmarks]
+    if: always() && (needs.prepareBenchmarks.outputs.has_next_batch == 'false' || inputs.process_results == true)
+    runs-on: ubuntu-latest
+    container:
+      image: python:3.11-slim
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - name: Install dependencies
+        run: pip install pandas jupyter nbconvert
+      - name: Download artifacts from specific workflow runs
+        shell: bash
+        run: |
+          # Install GitHub CLI
+          apt-get update && apt-get install -y curl unzip jq
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          apt-get update && apt-get install -y gh
 
-          echo "Benchmark set: $BENCHMARK_SET"
-          echo "Current index: $CURRENT_INDEX"
-          echo "Next index: $NEXT_INDEX"
-          echo "Total configs: $TOTAL_CONFIGS"
+          # Download artifacts from specific workflow runs
+          mkdir -p artifacts
 
-          if [ $NEXT_INDEX -lt $TOTAL_CONFIGS ]; then
-            # Get next configuration
-            NEXT_CONFIG=$(echo "$BENCHMARK_CONFIGS" | jq -r ".[$NEXT_INDEX]")
-            NEXT_QDRANT_VERSION=$(echo "$NEXT_CONFIG" | jq -r '.qdrant_version')
-            NEXT_DATASET=$(echo "$NEXT_CONFIG" | jq -r '.dataset')
-            NEXT_ENGINE_CONFIG=$(echo "$NEXT_CONFIG" | jq -r '.engine_config')
-            NEXT_FEATURE_FLAGS=$(echo "$NEXT_CONFIG" | jq -r '.feature_flags_all')
-
-            echo "🚀 Triggering next benchmark ($NEXT_INDEX/$((TOTAL_CONFIGS-1))):"
-            echo "  - qdrant_version: $NEXT_QDRANT_VERSION"
-            echo "  - dataset: $NEXT_DATASET"
-            echo "  - engine_config: $NEXT_ENGINE_CONFIG"
-            echo "  - feature_flags_all: $NEXT_FEATURE_FLAGS"
-
-            # Trigger next benchmark via repository dispatch
-            curl -X POST \
-              -H "Accept: application/vnd.github.v3+json" \
-              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              https://api.github.com/repos/${{ github.repository }}/dispatches \
-              -d "{
-                \"event_type\": \"run-benchmark-cascade\",
-                \"client_payload\": {
-                  \"qdrant_version\": \"$NEXT_QDRANT_VERSION\",
-                  \"dataset\": \"$NEXT_DATASET\",
-                  \"engine_config\": \"$NEXT_ENGINE_CONFIG\",
-                  \"feature_flags_all\": $NEXT_FEATURE_FLAGS,
-                  \"benchmark_set\": \"$BENCHMARK_SET\",
-                  \"current_index\": $NEXT_INDEX
-                }
-              }"
+          # Get workflow run IDs from the accumulated list
+          # If process_results is true, use the input workflow_run_ids instead
+          if [ "${{ inputs.process_results }}" = "true" ]; then
+            WORKFLOW_RUN_IDS="${{ inputs.workflow_run_ids }}"
+            echo "Using workflow run IDs from input (process_results=true): $WORKFLOW_RUN_IDS"
           else
-            echo "🎉 All benchmarks in set '$BENCHMARK_SET' completed! ($TOTAL_CONFIGS total)"
+            WORKFLOW_RUN_IDS="${{ needs.prepareBenchmarks.outputs.workflow_run_ids }}"
+            echo "Using workflow run IDs from prepareBenchmarks: $WORKFLOW_RUN_IDS"
           fi
+
+          # Convert comma-separated list to array and download artifacts from each run
+          echo "$WORKFLOW_RUN_IDS" | tr ',' '\n' | while read run_id; do
+            if [ -n "$run_id" ]; then
+              echo "Downloading artifacts from run $run_id"
+
+              # List artifacts for this run
+              gh api repos/${{ github.repository }}/actions/runs/$run_id/artifacts \
+                --jq '.artifacts[] | select(.name | startswith("results-")) | {name: .name, url: .archive_download_url}' \
+                | while IFS= read -r line; do
+                    artifact_name=$(echo "$line" | jq -r '.name')
+                    artifact_url=$(echo "$line" | jq -r '.url')
+
+                    if [ -n "$artifact_url" ] && [ "$artifact_url" != "null" ]; then
+                      echo "Downloading $artifact_name from run $run_id"
+                      gh api "$artifact_url" > "artifacts/${run_id}-${artifact_name}.zip" || true
+                    fi
+                  done
+            fi
+          done
+
+          # Keep zips for version parsing, don't extract yet
+          ls -la artifacts/
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload all artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-unprocessed-results
+          path: artifacts/
+          retention-days: 7
+      - name: Process results by Qdrant version
+        run: |
+          ROOT_DIR=$(pwd)
+          mkdir -p final_results
+          cd artifacts
+
+          # Check if there are any zip files
+          if ! ls *.zip >/dev/null 2>&1; then
+            echo "No artifacts found to process"
+            exit 0
+          fi
+
+          # Extract version from artifact names (between "results-" and "-bench-")
+          VERSIONS=$(ls *.zip | sed -n 's/^[0-9]*-results-\(.*\)-bench-.*/\1/p' | sort -u)
+
+          echo "Found the following Qdrant versions:"
+          echo "$VERSIONS"
+
+          # Process each version separately
+          for VERSION in $VERSIONS; do
+            echo "Processing version: $VERSION"
+
+            # Create results directory for this version
+            rm -rf "$ROOT_DIR/results"
+            mkdir -p "$ROOT_DIR/results"
+
+            # Extract only artifacts for this version
+            for zip_file in *results-${VERSION}-bench-*.zip; do
+              if [ -f "$zip_file" ]; then
+                echo "Extracting $zip_file"
+                unzip -o "$zip_file" -d "$ROOT_DIR/results/"
+              fi
+            done
+
+            # Run Jupyter notebook
+            cd "$ROOT_DIR/scripts"
+            jupyter nbconvert --to notebook --execute process-benchmarks.ipynb --output process-benchmarks-executed.ipynb
+
+            # Copy results to final_results with version suffix
+            if [ -f "results.json" ]; then
+              cp results.json "$ROOT_DIR/final_results/results-${VERSION}.json"
+              echo "Created final_results/results-${VERSION}.json"
+            else
+              echo "Warning: results.json not found for version $VERSION"
+            fi
+
+            # Go back to artifacts directory for next iteration
+            cd "$ROOT_DIR/artifacts"
+
+            # Clean up results directory for next iteration
+            rm -rf "$ROOT_DIR/results"
+          done
+
+          cd "$ROOT_DIR"
+
+          echo "Final results:"
+          ls -la final_results/
+
+      - name: Upload processed results
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-processed-results
+          path: final_results/
+          retention-days: 7
+  triggerNextBatch:
+    name: Trigger Next Batch
+    needs: [prepareBenchmarks, setupMachines, runBenchmarks]
+    if: always() && (needs.prepareBenchmarks.outputs.has_next_batch == 'true' && inputs.process_results == false)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check setupMachines job status
+        id: check_setup
+        run: |
+          SETUP_RESULT="${{ needs.setupMachines.result }}"
+          MACHINES_PER_BENCH="${{ inputs.machines_per_bench }}"
+          echo "setupMachines job result: $SETUP_RESULT"
+          echo "machines_per_bench: $MACHINES_PER_BENCH"
+
+          if [ "$MACHINES_PER_BENCH" = "false" ] && [ "$SETUP_RESULT" != "success" ]; then
+            echo "machines_per_bench is false and setupMachines job did not succeed (result: $SETUP_RESULT)"
+            echo "Skipping trigger of next batch"
+            echo "should_trigger=false" >> $GITHUB_OUTPUT
+          else
+            echo "Either machines_per_bench is true or setupMachines succeeded"
+            echo "Proceeding with next batch trigger"
+            echo "should_trigger=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Trigger next batch
+        if: steps.check_setup.outputs.should_trigger == 'true'
+        run: |
+          echo "Workflows ids ran so far: ${{ needs.prepareBenchmarks.outputs.workflow_run_ids }}"
+
+          echo "🚀 Triggering next batch of benchmarks..."
+          echo "Next batch index: ${{ needs.prepareBenchmarks.outputs.next_batch }}"
+
+          # Use machines_info - from prepareBenchmarks for batch 0, from inputs for batch 1+
+          CURRENT_BATCH=${{ inputs.current_batch || 0 }}
+          if [ "$CURRENT_BATCH" = "0" ]; then
+            echo "Initial workflow (batch 0), using machines_info from prepareBenchmarks"
+            MACHINES_INFO='${{ needs.prepareBenchmarks.outputs.machines_info }}'
+          else
+            echo "Subsequent workflow (batch $CURRENT_BATCH), using machines_info from inputs"
+            MACHINES_INFO='${{ inputs.machines_info }}'
+          fi
+          echo "Using machines_info: $MACHINES_INFO"
+
+          PARAMS_OVERRIDE='${{ inputs.params_override }}'
+          # Escape the JSON for embedding in the curl command
+          ESCAPED_PARAMS=$(echo "$PARAMS_OVERRIDE" | jq -Rs .)
+          ESCAPED_MACHINES_INFO=$(echo "$MACHINES_INFO" | jq -Rs .)
+
+          # Trigger next batch via workflow dispatch
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/workflows/manual-benchmarks-cascade.yaml/dispatches" \
+            -d "{
+              \"inputs\": {
+                \"benchmark_set\": \"${{ needs.prepareBenchmarks.outputs.benchmark_set }}\",
+                \"current_batch\": \"${{ needs.prepareBenchmarks.outputs.next_batch }}\",
+                \"workflow_run_ids\": \"${{ needs.prepareBenchmarks.outputs.workflow_run_ids }}\",
+                \"params_override\": $ESCAPED_PARAMS,
+                \"machines_per_bench\": \"${{ inputs.machines_per_bench }}\",
+                \"machines_info\": $ESCAPED_MACHINES_INFO,
+                \"max_parallel\": \"${{ inputs.max_parallel || 10 }}\"
+              },
+              \"ref\": \"${{ github.ref }}\"
+            }"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  cleanupMachines:
+    name: Cleanup All Machines
+    needs: [prepareBenchmarks, setupMachines, runBenchmarks]
+    if: |
+      always() && inputs.process_results == false && (
+        (inputs.machines_per_bench == false && needs.prepareBenchmarks.outputs.has_next_batch == 'false') ||
+        (inputs.machines_per_bench == false && inputs.current_batch == 0 && needs.setupMachines.result == 'failure')
+      )
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Cleanup all machines
+        continue-on-error: true
+        run: |
+          # Get machines_info array - from inputs for batch 1+, from prepareBenchmarks for batch 0
+          CURRENT_BATCH=${{ inputs.current_batch || 0 }}
+          if [ "$CURRENT_BATCH" != "0" ]; then
+            echo "Using machines_info from inputs for batch $CURRENT_BATCH"
+            MACHINES_INFO='${{ inputs.machines_info }}'
+          else
+            echo "Using machines_info from prepareBenchmarks for batch $CURRENT_BATCH"
+            MACHINES_INFO='${{ needs.prepareBenchmarks.outputs.machines_info }}'
+          fi
+
+          echo "Machines to cleanup: $MACHINES_INFO"
+
+          # Setup tools
+          bash -x tools/setup_ci.sh
+
+          # Parse machines_info and store in arrays to avoid subshell issues
+          MACHINE_COUNT=$(echo "$MACHINES_INFO" | jq 'length')
+          echo "Found $MACHINE_COUNT machine pairs to cleanup"
+
+          # Arrays to store server and client names
+          declare -a SERVER_NAMES
+          declare -a CLIENT_NAMES
+          declare -a PIDS
+
+          # Extract all machine pairs first
+          for i in $(seq 0 $((MACHINE_COUNT - 1))); do
+            SERVER_NAMES[$i]=$(echo "$MACHINES_INFO" | jq -r ".[$i].server_name")
+            CLIENT_NAMES[$i]=$(echo "$MACHINES_INFO" | jq -r ".[$i].client_name")
+          done
+
+          # Launch all teardown processes in parallel
+          for i in $(seq 0 $((MACHINE_COUNT - 1))); do
+            SERVER_NAME="${SERVER_NAMES[$i]}"
+            CLIENT_NAME="${CLIENT_NAMES[$i]}"
+
+            echo "Launching teardown for: SERVER_NAME=$SERVER_NAME, CLIENT_NAME=$CLIENT_NAME"
+
+            # Run teardown in background and capture PID
+            (
+              export SERVER_NAME
+              export CLIENT_NAME
+
+              if bash -x tools/tear_down.sh; then
+                echo "Successfully cleaned up $SERVER_NAME and $CLIENT_NAME"
+              else
+                echo "Warning: Failed to cleanup $SERVER_NAME and $CLIENT_NAME (may already be deleted)"
+              fi
+            ) &
+
+            # Store the PID
+            PIDS[$i]=$!
+          done
+
+          # Wait for all background teardown processes to complete
+          echo "Waiting for all $MACHINE_COUNT teardown processes to complete..."
+
+          JOBS_FAILED=0
+          for i in $(seq 0 $((MACHINE_COUNT - 1))); do
+            PID=${PIDS[$i]}
+            SERVER_NAME="${SERVER_NAMES[$i]}"
+            CLIENT_NAME="${CLIENT_NAMES[$i]}"
+
+            echo "Waiting for teardown of $SERVER_NAME and $CLIENT_NAME (PID: $PID)..."
+            if wait $PID; then
+              echo "Teardown completed for $SERVER_NAME and $CLIENT_NAME"
+            else
+              echo "Teardown failed for $SERVER_NAME and $CLIENT_NAME"
+              JOBS_FAILED=$((JOBS_FAILED + 1))
+            fi
+          done
+
+          if [ $JOBS_FAILED -gt 0 ]; then
+            echo "Warning: $JOBS_FAILED teardown operations failed"
+          else
+            echo "All teardown operations completed successfully"
+          fi
+
+          echo "Cleanup process completed"

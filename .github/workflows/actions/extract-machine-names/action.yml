@@ -1,0 +1,57 @@
+name: 'Extract Machine Names'
+description: 'Extract server and client machine names based on configuration'
+inputs:
+  machines_per_bench:
+    description: 'Whether to create/destroy machines per benchmark'
+    required: true
+  current_batch:
+    description: 'Current batch index'
+    required: true
+  current_index:
+    description: 'Current configuration index'
+    required: true
+  job_index:
+    description: 'Strategy job index'
+    required: true
+  machines_info:
+    description: 'JSON array of machine pairs'
+    required: false
+    default: '[]'
+outputs:
+  server_name:
+    description: 'The server machine name'
+    value: ${{ steps.extract.outputs.server_name }}
+  client_name:
+    description: 'The client machine name'
+    value: ${{ steps.extract.outputs.client_name }}
+runs:
+  using: "composite"
+  steps:
+    - name: Extract machine names
+      id: extract
+      shell: bash
+      run: |
+        MACHINES_PER_BENCH="${{ inputs.machines_per_bench }}"
+        CURRENT_BATCH="${{ inputs.current_batch }}"
+        CURRENT_INDEX="${{ inputs.current_index }}"
+        JOB_INDEX="${{ inputs.job_index }}"
+        MACHINES_INFO='${{ inputs.machines_info }}'
+
+        if [ "$MACHINES_PER_BENCH" = "false" ]; then
+          # Extract server and client names from machines_info array using jq
+          SERVER_NAME=$(echo "$MACHINES_INFO" | jq -r ".[$JOB_INDEX].server_name")
+          CLIENT_NAME=$(echo "$MACHINES_INFO" | jq -r ".[$JOB_INDEX].client_name")
+
+          if [ "$SERVER_NAME" = "null" ] || [ "$CLIENT_NAME" = "null" ]; then
+            echo "Error: Could not find machine info for job index $JOB_INDEX in machines_info"
+            echo "Available machines_info: $MACHINES_INFO"
+            exit 1
+          fi
+        else
+          SERVER_NAME="benchmark-cascade-server-${CURRENT_INDEX}"
+          CLIENT_NAME="benchmark-cascade-client-${CURRENT_INDEX}"
+        fi
+
+        echo "server_name=$SERVER_NAME" >> $GITHUB_OUTPUT
+        echo "client_name=$CLIENT_NAME" >> $GITHUB_OUTPUT
+        echo "Using machines: SERVER_NAME=$SERVER_NAME, CLIENT_NAME=$CLIENT_NAME"
