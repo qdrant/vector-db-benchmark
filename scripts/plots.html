@@ -507,7 +507,7 @@ This HTML file is designed to visualize vector database benchmark results using 
             const datasetId = datasetIdCounter++;
             const colorIndex = datasets.length % datasetColors.length;
             const color = datasetColors[colorIndex];
-            
+
             // Create dataset object
             const dataset = {
                 id: datasetId,
@@ -517,14 +517,14 @@ This HTML file is designed to visualize vector database benchmark results using 
                 color: color
             };
             datasets.push(dataset);
-            
+
             // Create HTML for dataset input
             const datasetDiv = document.createElement('div');
             datasetDiv.id = `dataset-${datasetId}`;
             datasetDiv.className = 'p-4 border rounded-lg';
             datasetDiv.style.borderColor = color;
             datasetDiv.style.backgroundColor = color + '10';
-            
+
             datasetDiv.innerHTML = `
                 <div class="flex justify-between items-center mb-2">
                     <h3 class="text-sm font-semibold" style="color: ${color}" id="dataset-title-${datasetId}">Dataset ${datasets.length}</h3>
@@ -574,7 +574,7 @@ This HTML file is designed to visualize vector database benchmark results using 
                     <span id="status-${datasetId}" class="text-xs text-gray-600 ml-2"></span>
                 </div>
             `;
-            
+
             datasetInputsContainer.appendChild(datasetDiv);
             return datasetId;
         }
@@ -634,7 +634,7 @@ This HTML file is designed to visualize vector database benchmark results using 
                 dataset.filename = filename;
                 // Set label to filename without extension and 'results-' prefix
                 dataset.label = getFilenameWithoutExtension(filename);
-                
+
                 dataset.data = data.map(row => ({
                     ...row,
                     datasetId: datasetId,
@@ -642,7 +642,7 @@ This HTML file is designed to visualize vector database benchmark results using 
                     datasetColor: dataset.color,
                     filename: filename
                 }));
-                
+
                 // Update the dataset title and label input
                 const titleElement = document.getElementById(`dataset-title-${datasetId}`);
                 if (titleElement) {
@@ -652,7 +652,7 @@ This HTML file is designed to visualize vector database benchmark results using 
                 if (labelInput) {
                     labelInput.value = dataset.label;
                 }
-                
+
                 document.getElementById(`status-${datasetId}`).textContent = `✓ ${data.length} records loaded`;
                 combineDatasets();
             }
@@ -702,14 +702,14 @@ This HTML file is designed to visualize vector database benchmark results using 
 
         function updateDataSummary() {
             datasetSummariesContainer.innerHTML = '';
-            
+
             let hasData = false;
             datasets.forEach((dataset, index) => {
                 if (dataset.data.length > 0) {
                     hasData = true;
                     const engines = new Set(dataset.data.map(d => d.engine_name));
                     const datasetNames = new Set(dataset.data.map(d => d.dataset_name));
-                    
+
                     const summaryDiv = document.createElement('div');
                     summaryDiv.className = 'mb-2';
                     summaryDiv.innerHTML = `
@@ -726,7 +726,7 @@ This HTML file is designed to visualize vector database benchmark results using 
                     datasetSummariesContainer.appendChild(summaryDiv);
                 }
             });
-            
+
             if (hasData) {
                 dataSummary.classList.remove('hidden');
             } else {
@@ -826,12 +826,12 @@ This HTML file is designed to visualize vector database benchmark results using 
             // Process each dataset
             datasets.forEach((dataset) => {
                 if (dataset.data.length === 0) return;
-                
+
                 const datasetData = filteredData.filter(row => row.datasetId === dataset.id);
                 if (datasetData.length === 0) return;
-                
+
                 const filenameShort = getFilenameWithoutExtension(dataset.filename) || dataset.label;
-                
+
                 if (groupBy === 'none') {
                     // No grouping - one line per dataset
                     let dataToPlot = [...datasetData];
@@ -856,7 +856,7 @@ This HTML file is designed to visualize vector database benchmark results using 
                 } else {
                     // Group by the selected field within each dataset
                     const groups = [...new Set(datasetData.map(d => d[groupBy]))];
-                    
+
                     groups.forEach((group, groupIndex) => {
                         let groupData = datasetData.filter(d => d[groupBy] === group);
                         groupData = applyParetoFilter(groupData, yMetric);
