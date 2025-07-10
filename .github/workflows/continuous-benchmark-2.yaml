@@ -1,4 +1,4 @@
-name: Continuous Benchmark 2
+name: "Continuous Benchmark: Collection reload"
 
 on:
   workflow_dispatch:
