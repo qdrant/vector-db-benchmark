@@ -12,6 +12,10 @@
     - "{{ working_dir }}/data"
     - "{{ working_dir }}/data/{{ dataset_name }}"
 
+- name: Get dataset info
+  ansible.builtin.set_fact:
+    dataset_info: "{{ datasets | selectattr('name', 'equalto', dataset_name) | first }}"
+
 - name: Check if the dataset archive already exists
   ansible.builtin.stat:
     path: "{{ working_dir }}/data/{{ dataset_name }}.tgz"
@@ -19,7 +23,7 @@
 
 - name: Download the archive
   ansible.builtin.get_url:
-    url: "{{ dataset_url }}"
+    url: "{{ dataset_info.link }}"
     dest: "{{ working_dir }}/data/{{ dataset_name }}.tgz"
   when: not archive_stat.stat.exists
 
@@ -36,6 +40,10 @@
     remote_src: yes
     owner: "{{ ansible_user }}"
   when: dest_dir_contents.matched == 0
+
+- name: Set dataset dimension
+  ansible.builtin.set_fact:
+    dataset_dim: "{{ dataset_info.vector_size }}"
 
 - name: Prepare and execute the benchmark
   ansible.builtin.include_role:

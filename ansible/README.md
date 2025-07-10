@@ -3,6 +3,7 @@
 ### Prerequisites
 * ssh keys (to connect to the remote machines)
 * inventory.ini (to define the actual machine on which the benchmark is run)
+* datasets.yml (to define the datasets used in the benchmark)
 
 Add inventory.ini in [ansible/playbooks/](playbooks) with the following content:
 ```ini
@@ -11,6 +12,12 @@ Add inventory.ini in [ansible/playbooks/](playbooks) with the following content:
 benchmark-machine ansible_host=${YOUR_SERVER_IP} ansible_user=${YOUR_USER}
 [db_hosts]
 benchmark-db ansible_host=${YOUR_SERVER_IP} ansible_user=${YOUR_USER}
+```
+
+Convert [datasets/datasets.json](../datasets/datasets.json) into datasets.yml in [ansible/playbooks/group_vars](playbooks/group_vars).
+You can use `yq` for it. Note that the yaml should start with `datasets:`. From [ansible](.) run:
+```bash
+yq -p json -o=yaml ../datasets/datasets.json >> playbooks/group_vars/datasets.yml
 ```
 
 ### Run ansible inside Docker
