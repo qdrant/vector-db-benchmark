@@ -34,12 +34,13 @@
   async: 7200 # 120 minutes
   poll: 30 # Check every 30 seconds
   environment:
-    OUTPUT_FILENAME: "{{ working_dir }}/output-{{ server_name }}-{{ server_version }}-{{ bench }}.json"
+    OUTPUT_FILENAME: "{{ working_dir }}/output-{{ server_name }}-{{ server_version }}-{{ bench }}-{{ points_percentage }}.json"
     BENCH: "{{ bench }}"
     WORK_DIR: "{{ working_dir }}"
     DATASET_NAME: "{{ dataset_name }}"
     DATASET_DIM: "{{ dataset_dim }}"
     DATASET_NAME_2: "{{ dataset_2_name | default('') }}"
+    POINTS_PERCENTAGE: "{{ points_percentage | default('') }}"
   register: bench_result
   ignore_errors: yes
 

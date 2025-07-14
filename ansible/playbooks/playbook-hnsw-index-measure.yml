@@ -1,0 +1,37 @@
+---
+- name: Run load
+  hosts: remote_machines
+  become: yes
+  tasks:
+    - name: Load common variables
+      include_vars: "group_vars/hnsw-indexing-measure.yml"
+
+    - name: Load datasets variables
+      include_vars: "group_vars/datasets.yml"
+
+    - name: Ensure necessary packages are installed
+      ansible.builtin.package:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - wget
+        - python3-venv
+
+    - name: Ensure Docker is installed
+      ansible.builtin.command: docker --version
+      register: docker_check
+      failed_when: docker_check.rc not in [0, 127]
+
+    - name: Execute benchmark
+      include_role:
+        name: "run-hnsw-indexing-measure"
+      loop: "{{ servers | product(points_percentages) | list }}"
+      loop_control:
+        loop_var: "server_points_combo"
+      vars:
+        server_name: "{{ server_points_combo[0].name }}"
+        server_version: "{{ server_points_combo[0].version }}"
+        server_registry: "{{ server_points_combo[0].registry }}"
+        server_feature_flags: "{{ server_points_combo[0].feature_flags }}"
+        points_percentage: "{{ server_points_combo[1] }}"
+        bench: "measure"
