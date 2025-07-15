@@ -7,6 +7,10 @@ inputs:
   server_type:
     description: 'Type of server to create'
     required: true
+  region:
+    description: 'Region to create the server in'
+    required: false
+    default: 'fsn1'
   max_retries:
     description: 'Maximum number of retry attempts'
     required: false
@@ -25,12 +29,13 @@ runs:
         SERVER_NAME="${{ inputs.server_name }}"
         SERVER_TYPE="${{ inputs.server_type }}"
         MAX_RETRIES="${{ inputs.max_retries }}"
+        SERVER_LOCATION="${{ inputs.region }}"
         RETRY_COUNT=0
 
         while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
           echo "Creating server $SERVER_NAME (attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)..."
 
-          if SERVER_NAME=$SERVER_NAME SERVER_TYPE=$SERVER_TYPE bash -x "tools/hetzner/create_and_install.sh"; then
+          if SERVER_NAME=$SERVER_NAME SERVER_TYPE=$SERVER_TYPE SERVER_LOCATION=$SERVER_LOCATION bash -x "tools/hetzner/create_and_install.sh"; then
             echo "Successfully created server $SERVER_NAME"
             echo "success=true" >> $GITHUB_OUTPUT
             exit 0

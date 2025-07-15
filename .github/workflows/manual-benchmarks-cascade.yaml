@@ -34,6 +34,15 @@ on:
         machines_info:
             description: "Internal use, JSON array of machine pairs to use when machines_per_bench is false, e.g. '[{\"server_name\":\"server-0\",\"client_name\":\"client-0\"},{\"server_name\":\"server-1\",\"client_name\":\"client-1\"}]'"
             default: "[]"
+        region:
+            description: "Hetzner region to run the benchmarks in"
+            default: "fsn1"
+        server_machine_type:
+            description: "Hetzner server machine type to run the benchmarks in"
+            default: "cpx41"
+        client_machine_type:
+            description: "Hetzner server machine type to run the benchmarks in"
+            default: "cpx31"
 
 env:
   # Common environment variables
@@ -223,7 +232,8 @@ jobs:
         uses: ./.github/workflows/actions/create-server-with-retry
         with:
           server_name: ${{ steps.extract_names.outputs.server_name }}
-          server_type: cpx41
+          server_type: ${{ inputs.server_machine_type }}
+          region: ${{ inputs.region }}
           max_retries: 5
 
       - name: Create Client
@@ -231,7 +241,8 @@ jobs:
         uses: ./.github/workflows/actions/create-server-with-retry
         with:
           server_name: ${{ steps.extract_names.outputs.client_name }}
-          server_type: cpx31
+          server_type: ${{ inputs.client_machine_type }}
+          region: ${{ inputs.region }}
           max_retries: 5
   runBenchmarks:
     name: Run Benchmark ${{ matrix.config.index }}
