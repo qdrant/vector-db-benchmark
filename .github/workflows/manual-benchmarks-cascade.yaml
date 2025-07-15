@@ -223,7 +223,7 @@ jobs:
         uses: ./.github/workflows/actions/create-server-with-retry
         with:
           server_name: ${{ steps.extract_names.outputs.server_name }}
-          server_type: cpx51
+          server_type: cpx41
           max_retries: 5
 
       - name: Create Client
@@ -231,7 +231,7 @@ jobs:
         uses: ./.github/workflows/actions/create-server-with-retry
         with:
           server_name: ${{ steps.extract_names.outputs.client_name }}
-          server_type: cpx41
+          server_type: cpx31
           max_retries: 5
   runBenchmarks:
     name: Run Benchmark ${{ matrix.config.index }}
