@@ -18,7 +18,6 @@ from datetime import datetime
 from pathlib import Path
 
 import numpy as np
-import tqdm
 from qdrant_client import QdrantClient, models
 
 QDRANT_COLLECTION_NAME = "benchmark"
@@ -136,7 +135,7 @@ def main():
     # Calculate number of points to delete based on percentage
     num_points_to_delete = int(TOTAL_VECTORS * POINTS_PERCENTAGE / 100)
     # Select points to delete
-    points_to_delete = random.sample(list(vectors), num_points_to_delete)
+    points_to_delete = random.sample(range(TOTAL_VECTORS), num_points_to_delete)
     benchmark.delete_points(points_to_delete)
 
     total_indexing_time = benchmark.wait_ready()
