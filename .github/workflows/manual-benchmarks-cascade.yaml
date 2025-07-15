@@ -40,10 +40,6 @@ on:
         server_machine_type:
             description: "Hetzner server machine type to run the benchmarks in"
             default: "cpx41"
-        client_machine_type:
-            description: "Hetzner server machine type to run the benchmarks in"
-            default: "cpx31"
-
 env:
   # Common environment variables
   HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
@@ -241,7 +237,7 @@ jobs:
         uses: ./.github/workflows/actions/create-server-with-retry
         with:
           server_name: ${{ steps.extract_names.outputs.client_name }}
-          server_type: ${{ inputs.client_machine_type }}
+          server_type: "cpx31"
           region: ${{ inputs.region }}
           max_retries: 5
   runBenchmarks:
