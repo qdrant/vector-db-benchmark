@@ -2,7 +2,8 @@ qdrant_python_client_version: "1.14.0"
 logging_dir: "/tmp/logs"
 working_dir: "/tmp/experiments"
 # Defaults (can be overridden via --extra-vars)
-dataset_name: "dbpedia_openai_100K"
+dataset_name: "random-float-1536-200k"
+dataset_2_name: "random-float-1536-200k-2"
 points_percentages:
   - "1"
   - "2"

@@ -1,12 +1,11 @@
 """
-Test Qdrant's indexing time after delete+upload a specified % of points.
+Test Qdrant's indexing time after removal of specified % of points.
 
 
 This script will:
 
 - Create a Qdrant collection, and make initial upload of all vectors.
-- Select and remove a specified % of points.
-- Upload a specified % of points and measure the time it takes to re-index the collection.
+- Remove the specified number of points from the collection and measure the time it takes to re-index the collection.
 
 """
 
@@ -23,20 +22,19 @@ from qdrant_client import QdrantClient, models
 
 QDRANT_COLLECTION_NAME = "benchmark"
 DATASET_DIM = int(os.getenv("DATASET_DIM", 1536))
-DATASET_NAME = os.getenv("DATASET_NAME", "random_float_200k_1536")
-DATASET_NAME_2 = os.getenv("DATASET_NAME_2", "random_float_200k_1536_2")
+DATASET_NAME = os.getenv("DATASET_NAME", "dbpedia_openai_100K")
 DATA_DIR = Path(__file__).parent / "data" / DATASET_NAME
-DATA_DIR_2 = Path(__file__).parent / "data" / DATASET_NAME_2
 OUTPUT_FILENAME = os.getenv("OUTPUT_FILENAME", "output.json")
 POINTS_PERCENTAGE = int(os.getenv("POINTS_PERCENTAGE", 1))
 
-VECTORS_FILE_2 = DATA_DIR_2 / "vectors.npy"
-VECTORS_FILE_1 = DATA_DIR / "vectors.npy"
+VECTORS_FILE = DATA_DIR / "vectors.npy"
 
-TOTAL_VECTORS = 200_000
+TEST_DATA_FILE = DATA_DIR / "tests.jsonl"
+
+TOTAL_VECTORS = 100_000
 
 
-def read_test_data(file: Path, limit: int = 1000):
+def read_test_data(limit: int = 1000):
     """
     {
         "query": [
@@ -51,7 +49,7 @@ def read_test_data(file: Path, limit: int = 1000):
         ]
     }
     """
-    with open(file, "r") as f:
+    with open(TEST_DATA_FILE, "r") as f:
         for idx, line in enumerate(f):
             if idx >= limit:
                 break
@@ -94,18 +92,6 @@ class QdrantBenchmark:
             ),
         )
 
-    def upload_points(self, vectors: np.ndarray, ids: list[int], batch_size: int = 500):
-        for i in range(0, len(ids), batch_size):
-            batch_ids = ids[i:i + batch_size]
-            points = [
-                models.PointStruct(id=idx, vector=vectors[idx].tolist()) for idx in batch_ids
-            ]
-            
-            self.client.upsert(
-                collection_name=QDRANT_COLLECTION_NAME,
-                points=points,
-            )
-
     def wait_ready(self) -> float:
         wait_interval = 0.2
         confirmations_required = 2
@@ -140,19 +126,17 @@ def store_to_file(data_dict):
 
 def main():
     result = {}
-    vectors_1 = np.load(VECTORS_FILE_1)
-    vectors_2 = np.load(VECTORS_FILE_2)
+    vectors = np.load(VECTORS_FILE)
 
     benchmark = QdrantBenchmark("http://localhost:6333")
-    benchmark.initial_upload(vectors_1)
+    benchmark.initial_upload(vectors)
     benchmark.wait_ready()
 
-    # Calculate number of points to update based on percentage
-    num_points_to_update = int(TOTAL_VECTORS * POINTS_PERCENTAGE / 100)
-    # Select points to update
-    points_to_update = random.sample(range(TOTAL_VECTORS), num_points_to_update)
-    benchmark.delete_points(points_to_update)
-    benchmark.upload_points(vectors_2, points_to_update)
+    # Calculate number of points to delete based on percentage
+    num_points_to_delete = int(TOTAL_VECTORS * POINTS_PERCENTAGE / 100)
+    # Select points to delete
+    points_to_delete = random.sample(range(TOTAL_VECTORS), num_points_to_delete)
+    benchmark.delete_points(points_to_delete)
 
     total_indexing_time = benchmark.wait_ready()
 
