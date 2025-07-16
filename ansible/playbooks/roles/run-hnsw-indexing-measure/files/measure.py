@@ -75,7 +75,7 @@ class QdrantBenchmark:
                 distance=models.Distance.COSINE,
             ),
             optimizers_config=models.OptimizersConfigDiff(
-                deleted_threshold=0.001, vacuum_min_vector_number=100
+                indexing_threshold=0, vacuum_min_vector_number=100
             ),
         )
 
@@ -105,6 +105,14 @@ class QdrantBenchmark:
                 collection_name=QDRANT_COLLECTION_NAME,
                 points=points,
             )
+
+    def update_indexing_threshold(self, indexing_threshold: int):
+        self.client.update_collection(
+            collection_name=QDRANT_COLLECTION_NAME,
+            optimizer_config=models.OptimizersConfigDiff(
+                indexing_threshold=indexing_threshold
+            )
+        )
 
     def wait_ready(self) -> float:
         wait_interval = 0.2
@@ -151,8 +159,9 @@ def main():
     num_points_to_update = int(TOTAL_VECTORS * POINTS_PERCENTAGE / 100)
     # Select points to update
     points_to_update = random.sample(range(TOTAL_VECTORS), num_points_to_update)
-    benchmark.delete_points(points_to_update)
+    # benchmark.delete_points(points_to_update)
     benchmark.upload_points(vectors_2, points_to_update)
+    benchmark.update_indexing_threshold(indexing_threshold=1)
 
     total_indexing_time = benchmark.wait_ready()
 
