@@ -75,7 +75,7 @@ class QdrantBenchmark:
                 distance=models.Distance.COSINE,
             ),
             optimizers_config=models.OptimizersConfigDiff(
-                indexing_threshold=0, vacuum_min_vector_number=100
+                deleted_threshold=0.001, vacuum_min_vector_number=100
             ),
         )
 
@@ -160,6 +160,7 @@ def main():
     # Select points to update
     points_to_update = random.sample(range(TOTAL_VECTORS), num_points_to_update)
     # benchmark.delete_points(points_to_update)
+    benchmark.update_indexing_threshold(indexing_threshold=0)
     benchmark.upload_points(vectors_2, points_to_update)
     benchmark.update_indexing_threshold(indexing_threshold=1)
 
