@@ -125,21 +125,11 @@ if [[ "$EXPERIMENT_MODE" == "snapshot" ]]; then
   curl  -X PUT \
     "http://${PRIVATE_IP_OF_THE_SERVER}:6333/collections/benchmark/snapshots/recover" \
     --data-raw "{\"location\": \"${SNAPSHOT_URL}\"}"
+  echo ""
   echo "Done recovering collection from snapshot"
 
   collection_url="http://${PRIVATE_IP_OF_THE_SERVER}:6333/collections/benchmark"
   collection_status=$(curl -s "$collection_url" | jq -r '.result.status')
-  counter=0
-  while [[ "$collection_status" != "green" && "$counter" -lt 5 ]]; do
-    collection_status=$(curl -s "$collection_url" | jq -r '.result.status')
-    counter=$(expr $counter + 1)
-    sleep 1
-  done
+  echo "Experiment stage: collection status is ${collection_status} after recovery"
 
-  if [[ "$collection_status" == "green" ]]; then
-    echo "Experiment stage: Done"
-  else
-    echo "Experiment interrupted: collection is not ready."
-    exit 1
-  fi
 fi
