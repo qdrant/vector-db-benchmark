@@ -155,7 +155,7 @@ jobs:
 
             # Benchmark parallel search&upload
 
-            export ENGINE_NAME="qdrant-continuous-benchmark${SUFFIX}"
+            export ENGINE_NAME="qdrant-continuous-benchmark-indexed-only{SUFFIX}"
             export DATASETS="laion-small-clip"
             export BENCHMARK_STRATEGY="parallel"
             export POSTGRES_TABLE="benchmark_parallel_search_upload"
