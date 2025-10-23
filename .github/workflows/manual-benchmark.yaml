@@ -17,6 +17,11 @@ on:
             description: "Enable all feature flags (false by default)"
             default: false
 
+# Restrict to only running workflows of this group one at a time.
+# Any new runs will be queued until the previous run is complete.
+# Any existing pending runs will be cancelled and replaced with current run.
+concurrency:
+  group: continuous-benchmark
 
 jobs:
   runManualBenchmark:
