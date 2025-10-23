@@ -47,7 +47,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
+          username: qdrant
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build Vector DB image
         if: ${{ inputs.build_vector_db_image == 'true' }}
@@ -55,7 +55,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.actor }}/vector-db-benchmark:${{ github.ref_name }}
+          tags: ghcr.io/qdrant/vector-db-benchmark:${{ github.ref_name }}
           provenance: false
       - name: Benches
         run: |
@@ -68,7 +68,7 @@ jobs:
           export POSTGRES_TABLE=benchmark_manual
           export QDRANT__FEATURE_FLAGS__ALL=${{ inputs.feature_flags_all }}
           if [ "${{ inputs.build_vector_db_image }}" = "true" ]; then
-            export VECTOR_DB_BENCHMARK_IMAGE=ghcr.io/${{ github.actor }}/vector-db-benchmark:${{ github.ref_name }}
+            export VECTOR_DB_BENCHMARK_IMAGE=ghcr.io/qdrant/vector-db-benchmark:${{ github.ref_name }}
             export GHCR_PASSWORD=${{ secrets.GITHUB_TOKEN }}
           fi
           bash -x tools/setup_ci.sh
