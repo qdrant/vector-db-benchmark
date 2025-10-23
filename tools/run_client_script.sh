@@ -27,6 +27,9 @@ FETCH_ALL_RESULTS=${FETCH_ALL_RESULTS:-"false"}
 
 PRIVATE_IP_OF_THE_SERVER=$(bash "${SCRIPT_PATH}/${CLOUD_NAME}/get_private_ip.sh" "$BENCH_SERVER_NAME")
 
+VECTOR_DB_BENCHMARK_IMAGE=${VECTOR_DB_BENCHMARK_IMAGE:-"qdrant/vector-db-benchmark:latest"}
+GHCR_PASSWORD=${GHCR_PASSWORD:-""}
+
 if [[ "$EXPERIMENT_MODE" == "snapshot" ]]; then
   scp "${SCRIPT_PATH}/run_experiment.sh" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/run_experiment_snapshot.sh"
   scp "${SCRIPT_PATH}/../datasets/datasets.json" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/datasets.json"
@@ -36,6 +39,8 @@ if [[ "$EXPERIMENT_MODE" == "snapshot" ]]; then
   PRIVATE_IP_OF_THE_SERVER=${PRIVATE_IP_OF_THE_SERVER} \
   EXPERIMENT_MODE=${EXPERIMENT_MODE} \
   SNAPSHOT_URL=${SNAPSHOT_URL} \
+  VECTOR_DB_BENCHMARK_IMAGE=${VECTOR_DB_BENCHMARK_IMAGE} \
+  GHCR_PASSWORD=${GHCR_PASSWORD} \
   bash ~/run_experiment_snapshot.sh"
 
   ssh -tt -o ServerAliveInterval=120 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "${RUN_EXPERIMENT}"
@@ -48,6 +53,8 @@ else
   DATASETS=${DATASETS} \
   PRIVATE_IP_OF_THE_SERVER=${PRIVATE_IP_OF_THE_SERVER} \
   EXPERIMENT_MODE=${EXPERIMENT_MODE} \
+  VECTOR_DB_BENCHMARK_IMAGE=${VECTOR_DB_BENCHMARK_IMAGE} \
+  GHCR_PASSWORD=${GHCR_PASSWORD} \
   bash ~/run_experiment.sh"
 
   ssh -tt -o ServerAliveInterval=60 -o ServerAliveCountMax=3 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "${RUN_EXPERIMENT}"
