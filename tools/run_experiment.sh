@@ -3,6 +3,17 @@
 PS4='ts=$(date "+%Y-%m-%dT%H:%M:%SZ") level=DEBUG line=$LINENO file=$BASH_SOURCE '
 set -euo pipefail
 
+VECTOR_DB_BENCHMARK_IMAGE=${VECTOR_DB_BENCHMARK_IMAGE:-"qdrant/vector-db-benchmark:latest"}
+GHCR_PASSWORD=${GHCR_PASSWORD:-""}
+
+if [[ -n "${GHCR_PASSWORD}" ]] || [[ "${VECTOR_DB_BENCHMARK_IMAGE}" == ghcr.io/* ]]; then
+  if [[ -z "${GHCR_PASSWORD}" ]]; then
+    echo "GHCR_PASSWORD is required to pull images from ghcr.io"
+    exit 1
+  fi
+  echo "${GHCR_PASSWORD}" | docker login ghcr.io -u qdrant --password-stdin
+fi
+
 ENGINE_NAME=${ENGINE_NAME:-"qdrant-continuous-benchmark"}
 
 DATASETS=${DATASETS:-""}
@@ -42,7 +53,7 @@ if [[ "$EXPERIMENT_MODE" != "snapshot" ]]; then
   docker container rm -f ci-benchmark-upload || true
   docker container rm -f ci-benchmark-search || true
 
-  docker rmi --force qdrant/vector-db-benchmark:latest || true
+  docker rmi --force "${VECTOR_DB_BENCHMARK_IMAGE}" || true
 fi
 
 echo "Ensure datasets volume exists and contains latest datasets.json"
@@ -62,7 +73,7 @@ if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "upload" ]]; t
     --name ci-benchmark-upload \
     -v "$HOME/results:/code/results" \
     -v "ci-datasets:/code/datasets" \
-    qdrant/vector-db-benchmark:latest \
+    "${VECTOR_DB_BENCHMARK_IMAGE}" \
     python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-search
 fi
 
@@ -81,7 +92,7 @@ if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "search" ]]; t
     --name ci-benchmark-search \
     -v "$HOME/results:/code/results" \
     -v "ci-datasets:/code/datasets" \
-    qdrant/vector-db-benchmark:latest \
+    "${VECTOR_DB_BENCHMARK_IMAGE}" \
     python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-upload
 fi
 
@@ -89,7 +100,7 @@ fi
 if [[ "$EXPERIMENT_MODE" == "parallel" ]]; then
   echo "EXPERIMENT_MODE=$EXPERIMENT_MODE"
 
-  docker pull qdrant/vector-db-benchmark:latest
+  docker pull "${VECTOR_DB_BENCHMARK_IMAGE}"
 
   echo "Starting ci-benchmark-upload container"
   docker run \
@@ -97,7 +108,7 @@ if [[ "$EXPERIMENT_MODE" == "parallel" ]]; then
     --name ci-benchmark-upload \
     -v "$HOME/results/parallel:/code/results" \
     -v "ci-datasets:/code/datasets" \
-    qdrant/vector-db-benchmark:latest \
+    "${VECTOR_DB_BENCHMARK_IMAGE}" \
     python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-search --skip-configure &
   UPLOAD_PID=$!
 
@@ -107,7 +118,7 @@ if [[ "$EXPERIMENT_MODE" == "parallel" ]]; then
     --name ci-benchmark-search \
     -v "$HOME/results/parallel:/code/results" \
     -v "ci-datasets:/code/datasets" \
-    qdrant/vector-db-benchmark:latest \
+    "${VECTOR_DB_BENCHMARK_IMAGE}" \
     python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-upload &
   SEARCH_PID=$!
 
