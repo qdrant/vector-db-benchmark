@@ -5,13 +5,14 @@ set -euo pipefail
 
 VECTOR_DB_BENCHMARK_IMAGE=${VECTOR_DB_BENCHMARK_IMAGE:-"qdrant/vector-db-benchmark:latest"}
 GHCR_PASSWORD=${GHCR_PASSWORD:-""}
+GHCR_USERNAME=${GHCR_USERNAME:-""}
 
 if [[ -n "${GHCR_PASSWORD}" ]] || [[ "${VECTOR_DB_BENCHMARK_IMAGE}" == ghcr.io/* ]]; then
-  if [[ -z "${GHCR_PASSWORD}" ]]; then
-    echo "GHCR_PASSWORD is required to pull images from ghcr.io"
+  if [[ -z "${GHCR_PASSWORD}" ]] || [[ -z "${GHCR_USERNAME}" ]]; then
+    echo "GHCR_PASSWORD and GHCR_USERNAME is required to pull images from ghcr.io"
     exit 1
   fi
-  echo "${GHCR_PASSWORD}" | docker login ghcr.io -u qdrant --password-stdin
+  echo "${GHCR_PASSWORD}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
 fi
 
 ENGINE_NAME=${ENGINE_NAME:-"qdrant-continuous-benchmark"}

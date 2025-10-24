@@ -41,6 +41,7 @@ if [[ "$EXPERIMENT_MODE" == "snapshot" ]]; then
   SNAPSHOT_URL=${SNAPSHOT_URL} \
   VECTOR_DB_BENCHMARK_IMAGE=${VECTOR_DB_BENCHMARK_IMAGE} \
   GHCR_PASSWORD=${GHCR_PASSWORD} \
+  GHCR_USERNAME=${GHCR_USERNAME} \
   bash ~/run_experiment_snapshot.sh"
 
   ssh -tt -o ServerAliveInterval=120 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "${RUN_EXPERIMENT}"
@@ -55,6 +56,7 @@ else
   EXPERIMENT_MODE=${EXPERIMENT_MODE} \
   VECTOR_DB_BENCHMARK_IMAGE=${VECTOR_DB_BENCHMARK_IMAGE} \
   GHCR_PASSWORD=${GHCR_PASSWORD} \
+  GHCR_USERNAME=${GHCR_USERNAME} \
   bash ~/run_experiment.sh"
 
   ssh -tt -o ServerAliveInterval=60 -o ServerAliveCountMax=3 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "${RUN_EXPERIMENT}"
