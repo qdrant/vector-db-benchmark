@@ -29,6 +29,7 @@ PRIVATE_IP_OF_THE_SERVER=$(bash "${SCRIPT_PATH}/${CLOUD_NAME}/get_private_ip.sh"
 
 VECTOR_DB_BENCHMARK_IMAGE=${VECTOR_DB_BENCHMARK_IMAGE:-"qdrant/vector-db-benchmark:latest"}
 GHCR_PASSWORD=${GHCR_PASSWORD:-""}
+GHCR_USERNAME=${GHCR_USERNAME:-""}
 
 if [[ "$EXPERIMENT_MODE" == "snapshot" ]]; then
   scp "${SCRIPT_PATH}/run_experiment.sh" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/run_experiment_snapshot.sh"
