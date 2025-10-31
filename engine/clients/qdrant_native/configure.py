@@ -96,7 +96,9 @@ class QdrantNativeConfigurator(BaseConfigurator):
         for field_name, field_type in dataset.config.schema.items():
             self._create_payload_index(field_name, field_type, payload_index_params)
 
-    def _create_payload_index(self, field_name: str, field_type: str, payload_index_params: dict):
+    def _create_payload_index(
+        self, field_name: str, field_type: str, payload_index_params: dict
+    ):
         """Create a payload index for a specific field"""
         url = f"{self.host}/collections/{QDRANT_COLLECTION_NAME}/index"
 
@@ -126,5 +128,5 @@ class QdrantNativeConfigurator(BaseConfigurator):
 
     def delete_client(self):
         """Cleanup HTTP client"""
-        if hasattr(self, 'client') and self.client is not None:
+        if hasattr(self, "client") and self.client is not None:
             self.client.close()
