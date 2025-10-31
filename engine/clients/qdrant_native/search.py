@@ -17,7 +17,7 @@ class QdrantNativeSearcher(BaseSearcher):
 
     @classmethod
     def init_client(cls, host, distance, connection_params: dict, search_params: dict):
-        cls.host = host.rstrip('/')
+        cls.host = f"http://{host.rstrip('/')}:6333"
         cls.search_params = search_params
 
         # Build headers

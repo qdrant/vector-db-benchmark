@@ -24,7 +24,7 @@ class QdrantNativeConfigurator(BaseConfigurator):
     def __init__(self, host, collection_params: dict, connection_params: dict):
         super().__init__(host, collection_params, connection_params)
 
-        self.host = host.rstrip('/')
+        self.host = f"http://{host.rstrip('/')}:6333"
         self.connection_params = connection_params
 
         # Build headers

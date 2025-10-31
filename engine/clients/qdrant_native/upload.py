@@ -16,7 +16,7 @@ class QdrantNativeUploader(BaseUploader):
 
     @classmethod
     def init_client(cls, host, distance, connection_params, upload_params):
-        cls.host = host.rstrip('/')
+        cls.host = f"http://{host.rstrip('/')}:6333"
         cls.upload_params = upload_params
 
         # Build headers
