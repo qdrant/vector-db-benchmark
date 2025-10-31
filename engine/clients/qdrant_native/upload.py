@@ -35,7 +35,6 @@ class QdrantNativeUploader(BaseUploader):
     @classmethod
     def upload_batch(cls, batch: List[Record]):
         """Upload a batch of records using REST API"""
-        # Build the batch payload
         points = []
         for point in batch:
             point_data = {
@@ -45,10 +44,8 @@ class QdrantNativeUploader(BaseUploader):
 
             # Handle vector (dense or sparse)
             if point.sparse_vector is None:
-                # Dense vector
                 point_data["vector"] = point.vector
             else:
-                # Sparse vector
                 point_data["vector"] = {
                     "sparse": {
                         "indices": point.sparse_vector.indices,
@@ -58,7 +55,6 @@ class QdrantNativeUploader(BaseUploader):
 
             points.append(point_data)
 
-        # Upsert the batch
         url = f"{cls.host}/collections/{QDRANT_COLLECTION_NAME}/points"
         payload = {
             "points": points,
@@ -74,7 +70,6 @@ class QdrantNativeUploader(BaseUploader):
         1. Enable index optimization if it was disabled
         2. Wait for collection to become GREEN
         """
-        # Get current collection info
         url = f"{cls.host}/collections/{QDRANT_COLLECTION_NAME}"
         response = cls.client.get(url)
         response.raise_for_status()
@@ -96,7 +91,6 @@ class QdrantNativeUploader(BaseUploader):
             response = cls.client.patch(patch_url, json=patch_payload)
             response.raise_for_status()
 
-        # Wait for collection to become GREEN
         cls.wait_collection_green()
         return {}
 

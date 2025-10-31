@@ -38,38 +38,30 @@ class QdrantNativeSearcher(BaseSearcher):
         """Execute a single search query using REST API"""
         url = f"{cls.host}/collections/{QDRANT_COLLECTION_NAME}/points/query"
 
-        # Build the query vector
         if query.sparse_vector is None:
-            # Dense vector query
             query_vector = query.vector
         else:
-            # Sparse vector query
             query_vector = {
                 "indices": query.sparse_vector.indices,
                 "values": query.sparse_vector.values,
             }
 
-        # Build the request payload
         payload = {
             "query": query_vector,
             "limit": top,
         }
 
-        # Add 'using' parameter for sparse vectors
         if query.sparse_vector is not None:
             payload["using"] = "sparse"
 
-        # Add filter if present
         query_filter = cls.parser.parse(query.meta_conditions)
         if query_filter:
             payload["filter"] = query_filter
 
-        # Add search params configuration
         search_config = cls.search_params.get("config", {})
         if search_config:
             payload["params"] = search_config
 
-        # Handle prefetch (for hybrid search)
         prefetch_config = cls.search_params.get("prefetch")
         if prefetch_config:
             prefetch = {
@@ -78,7 +70,6 @@ class QdrantNativeSearcher(BaseSearcher):
             }
             payload["prefetch"] = [prefetch]
 
-        # Add with_payload option
         with_payload = cls.search_params.get("with_payload", False)
         payload["with_payload"] = with_payload
 
@@ -87,7 +78,6 @@ class QdrantNativeSearcher(BaseSearcher):
             response.raise_for_status()
             result = response.json()
 
-            # Extract results from response
             points = result["result"]["points"]
             return [(point["id"], point["score"]) for point in points]
 

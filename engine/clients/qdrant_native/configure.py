@@ -27,12 +27,10 @@ class QdrantNativeConfigurator(BaseConfigurator):
         self.host = f"http://{host.rstrip('/')}:6333"
         self.connection_params = connection_params
 
-        # Build headers
         self.headers = {"Content-Type": "application/json"}
         if QDRANT_API_KEY:
             self.headers["api-key"] = QDRANT_API_KEY
 
-        # Create HTTP client
         timeout = connection_params.get("timeout", 30)
         self.client = httpx.Client(
             headers=self.headers,
@@ -74,7 +72,6 @@ class QdrantNativeConfigurator(BaseConfigurator):
             }
             sparse_vectors_config = None
 
-        # Extract payload index params
         payload_index_params = self.collection_params.pop("payload_index_params", {})
         if not set(payload_index_params.keys()).issubset(dataset.config.schema.keys()):
             raise ValueError("payload_index_params are not found in dataset schema")
@@ -90,15 +87,12 @@ class QdrantNativeConfigurator(BaseConfigurator):
         if sparse_vectors_config:
             payload["sparse_vectors"] = sparse_vectors_config
 
-        # Add other collection params
         for key, value in self.collection_params.items():
             payload[key] = value
 
-        # Create the collection
         response = self.client.put(url, json=payload)
         response.raise_for_status()
 
-        # Create payload indices for each field in the schema
         for field_name, field_type in dataset.config.schema.items():
             self._create_payload_index(field_name, field_type, payload_index_params)
 
