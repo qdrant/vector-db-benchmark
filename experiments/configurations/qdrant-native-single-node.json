@@ -1,0 +1,217 @@
+[
+  {
+    "name": "qdrant-native-default",
+    "engine": "qdrant_native",
+    "connection_params": { "timeout": 30 },
+    "collection_params": {
+      "optimizers_config": { "memmap_threshold": 10000000 }
+    },
+    "search_params": [
+      { "parallel": 8, "config": { "hnsw_ef": 128 } }
+    ],
+    "upload_params": { "parallel": 16, "batch_size": 1024 }
+  },
+  {
+    "name": "qdrant-native-continuous-benchmark",
+    "engine": "qdrant_native",
+    "connection_params": { "timeout": 30 },
+    "collection_params": {
+      "hnsw_config": {
+        "m": 32,
+        "ef_construct": 256
+      },
+      "quantization_config": {
+        "scalar": {
+          "type": "int8",
+          "quantile": 0.99
+        }
+      },
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "default_segment_number": 3,
+        "memmap_threshold": 10000000,
+        "max_optimization_threads": null
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 8,
+        "config": {
+          "hnsw_ef": 256,
+          "quantization": {
+            "oversampling": 2.0,
+            "rescore": true
+          }
+        }
+      }
+    ],
+    "upload_params": { "parallel": 16, "batch_size": 1024 }
+  },
+  {
+    "name": "qdrant-continuous-benchmark-with-payload",
+    "engine": "qdrant_native",
+    "connection_params": { "timeout": 30 },
+    "collection_params": {
+      "hnsw_config": {
+        "m": 32,
+        "ef_construct": 256
+      },
+      "quantization_config": {
+        "scalar": {
+          "type": "int8",
+          "quantile": 0.99
+        }
+      },
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "default_segment_number": 3,
+        "memmap_threshold": 10000000,
+        "max_optimization_threads": null
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 8,
+        "config": {
+          "hnsw_ef": 256,
+          "quantization": {
+            "oversampling": 2.0
+          }
+        },
+        "with_payload": true
+      }
+    ],
+    "upload_params": { "parallel": 16, "batch_size": 1024 }
+  },
+  {
+    "name": "qdrant-continuous-benchmark-indexed-only",
+    "engine": "qdrant_native",
+    "connection_params": { "timeout": 30 },
+    "collection_params": {
+      "hnsw_config": {
+        "m": 32,
+        "ef_construct": 256
+      },
+      "quantization_config": {
+        "scalar": {
+          "type": "int8",
+          "quantile": 0.99
+        }
+      },
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "default_segment_number": 3,
+        "memmap_threshold": 10000000,
+        "max_optimization_threads": null
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 8,
+        "config": {
+          "hnsw_ef": 256,
+          "quantization": {
+            "oversampling": 2.0,
+            "rescore": true
+          },
+          "indexed_only": true
+        }
+      }
+    ],
+    "upload_params": { "parallel": 16, "batch_size": 1024 }
+  },
+  {
+    "name": "qdrant-continuous-benchmark-indexed-only-with-payload",
+    "engine": "qdrant_native",
+    "connection_params": { "timeout": 30 },
+    "collection_params": {
+      "hnsw_config": {
+        "m": 32,
+        "ef_construct": 256
+      },
+      "quantization_config": {
+        "scalar": {
+          "type": "int8",
+          "quantile": 0.99
+        }
+      },
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "default_segment_number": 3,
+        "memmap_threshold": 10000000,
+        "max_optimization_threads": null
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 8,
+        "config": {
+          "hnsw_ef": 256,
+          "quantization": {
+            "oversampling": 2.0
+          },
+          "indexed_only": true
+        },
+        "with_payload": true
+      }
+    ],
+    "upload_params": { "parallel": 16, "batch_size": 1024 }
+  },
+  {
+    "name": "qdrant-bq-continuous-benchmark",
+    "engine": "qdrant_native",
+    "connection_params": { "timeout": 30 },
+    "collection_params": {
+      "hnsw_config": {
+        "m": 32,
+        "ef_construct": 256
+      },
+      "quantization_config": { "binary": {"always_ram": true} },
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "default_segment_number": 3,
+        "memmap_threshold": 10000000,
+        "max_optimization_threads": null
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 8,
+        "config": {
+          "hnsw_ef": 256,
+          "quantization": { "rescore": true, "oversampling": 2.0 }
+        }
+      }
+    ],
+    "upload_params": { "parallel": 16, "batch_size": 1024 }
+  },
+  {
+    "name": "qdrant-bq-continuous-benchmark-with-payload",
+    "engine": "qdrant_native",
+    "connection_params": { "timeout": 30 },
+    "collection_params": {
+      "hnsw_config": {
+        "m": 32,
+        "ef_construct": 256
+      },
+      "quantization_config": { "binary": {"always_ram": true} },
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "default_segment_number": 3,
+        "memmap_threshold": 10000000,
+        "max_optimization_threads": null
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 8,
+        "config": {
+          "hnsw_ef": 256,
+          "quantization": { "rescore": true, "oversampling": 2.0 }
+        },
+        "with_payload": true
+      }
+    ],
+    "upload_params": { "parallel": 16, "batch_size": 1024 }
+  }
+]

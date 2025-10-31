@@ -24,6 +24,11 @@ from engine.clients.pgvector import (
     PgVectorUploader,
 )
 from engine.clients.qdrant import QdrantConfigurator, QdrantSearcher, QdrantUploader
+from engine.clients.qdrant_native import (
+    QdrantNativeConfigurator,
+    QdrantNativeSearcher,
+    QdrantNativeUploader,
+)
 from engine.clients.redis import RedisConfigurator, RedisSearcher, RedisUploader
 from engine.clients.weaviate import (
     WeaviateConfigurator,
@@ -33,6 +38,7 @@ from engine.clients.weaviate import (
 
 ENGINE_CONFIGURATORS = {
     "qdrant": QdrantConfigurator,
+    "qdrant_native": QdrantNativeConfigurator,
     "weaviate": WeaviateConfigurator,
     "milvus": MilvusConfigurator,
     "elasticsearch": ElasticConfigurator,
@@ -43,6 +49,7 @@ ENGINE_CONFIGURATORS = {
 
 ENGINE_UPLOADERS = {
     "qdrant": QdrantUploader,
+    "qdrant_native": QdrantNativeUploader,
     "weaviate": WeaviateUploader,
     "milvus": MilvusUploader,
     "elasticsearch": ElasticUploader,
@@ -53,6 +60,7 @@ ENGINE_UPLOADERS = {
 
 ENGINE_SEARCHERS = {
     "qdrant": QdrantSearcher,
+    "qdrant_native": QdrantNativeSearcher,
     "weaviate": WeaviateSearcher,
     "milvus": MilvusSearcher,
     "elasticsearch": ElasticSearcher,
