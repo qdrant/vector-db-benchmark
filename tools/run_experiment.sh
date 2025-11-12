@@ -70,7 +70,6 @@ if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "upload" ]]; t
   echo "EXPERIMENT_MODE=$EXPERIMENT_MODE"
   docker run \
     --rm \
-    -it \
     --name ci-benchmark-upload \
     -v "$HOME/results:/code/results" \
     -v "ci-datasets:/code/datasets" \
@@ -89,7 +88,6 @@ if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "search" ]]; t
 
   docker run \
     --rm \
-    -it \
     --name ci-benchmark-search \
     -v "$HOME/results:/code/results" \
     -v "ci-datasets:/code/datasets" \

@@ -90,7 +90,7 @@
             '${precision_score}',
             '${indexing_time_s}'
         );"
-        docker exec -it qdrant-postgres psql -U qdrant -d postgres -c "${pg_query}"
+        docker exec qdrant-postgres psql -U qdrant -d postgres -c "${pg_query}"
       loop: "{{ servers }}"
       loop_control:
         loop_var: "server"

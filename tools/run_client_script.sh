@@ -45,7 +45,7 @@ if [[ "$EXPERIMENT_MODE" == "snapshot" ]]; then
   GHCR_USERNAME=${GHCR_USERNAME} \
   bash ~/run_experiment_snapshot.sh"
 
-  ssh -tt -o ServerAliveInterval=120 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "${RUN_EXPERIMENT}"
+  ssh -o ServerAliveInterval=120 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "${RUN_EXPERIMENT}"
 
 else
   scp "${SCRIPT_PATH}/run_experiment.sh" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/run_experiment.sh"
@@ -60,7 +60,7 @@ else
   GHCR_USERNAME=${GHCR_USERNAME} \
   bash ~/run_experiment.sh"
 
-  ssh -tt -o ServerAliveInterval=60 -o ServerAliveCountMax=3 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "${RUN_EXPERIMENT}"
+  ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=3 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "${RUN_EXPERIMENT}"
 
 fi
 
