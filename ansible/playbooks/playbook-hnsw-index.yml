@@ -22,6 +22,20 @@
       register: docker_check
       failed_when: docker_check.rc not in [0, 127]
 
+    - name: Check if uv is installed
+      ansible.builtin.shell: command -v uv
+      register: uv_check
+      failed_when: no
+      become: no
+
+    - name: Install uv
+      ansible.builtin.shell: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+      environment:
+        PATH: "{{ ansible_env.PATH }}:$HOME/.cargo/bin"
+      when: uv_check.rc != 0
+      become: no
+
     - name: Execute benchmark
       include_role:
         name: "run-hnsw-indexing-{{ bench | default('update') }}"

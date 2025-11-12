@@ -31,27 +31,10 @@ fi
 
 cd "${WORK_DIR}"
 
-# Remove existing venv if present
-if [ -d "${WORK_DIR}/venv" ]; then
-    echo "Removing existing virtual environment..."
-    rm -rf "${WORK_DIR}/venv"
-fi
-
-# Create and setup virtual environment
-echo "Creating virtual environment..."
-python3 -m venv "${WORK_DIR}/venv"
-
-echo "Activating virtual environment..."
-source "${WORK_DIR}/venv/bin/activate"
-
-echo "Installing requirements..."
-pip install -r "${WORK_DIR}/requirements.txt"
-
 NOW=$(date "+%Y-%m-%dT%H:%M:%SZ")
 echo "${NOW}"
 echo "Running..."
-python "${WORK_DIR}/${BENCH}.py"
+uv run --no-project --with-requirements "${WORK_DIR}/requirements.txt" python3 "${WORK_DIR}/${BENCH}.py"
 echo "Python script completed with exit code: $?"
-deactivate
 
 exit 0
