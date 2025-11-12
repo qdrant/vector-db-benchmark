@@ -48,6 +48,20 @@ fi
 echo "Activating virtual environment..."
 source "${WORK_DIR}/venv/bin/activate"
 
+# Verify qdrant_client import works
+if ! python -c "from qdrant_client import QdrantClient" 2>/dev/null; then
+    echo "Import verification failed. Recreating virtual environment..."
+    deactivate
+    rm -rf "${WORK_DIR}/venv"
+
+    echo "Creating virtual environment..."
+    python3 -m venv "${WORK_DIR}/venv"
+    source "${WORK_DIR}/venv/bin/activate"
+
+    echo "Installing requirements..."
+    pip install -r "${WORK_DIR}/requirements.txt"
+fi
+
 NOW=$(date "+%Y-%m-%dT%H:%M:%SZ")
 echo "${NOW}"
 echo "Running..."
