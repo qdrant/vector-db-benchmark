@@ -3,8 +3,10 @@ import shutil
 import tarfile
 import urllib.request
 from dataclasses import dataclass, field
-from typing import Dict, Optional
+from typing import Callable, Dict, Optional
 from urllib.request import build_opener, install_opener
+
+import tqdm
 
 from benchmark import DATASETS_DIR
 from dataset_reader.ann_compound_reader import AnnCompoundReader
@@ -54,7 +56,12 @@ class Dataset:
 
         if self.config.link:
             print(f"Downloading {self.config.link}...")
-            tmp_path, _ = urllib.request.urlretrieve(self.config.link)
+            with tqdm.tqdm(
+                unit="B", unit_scale=True, miniters=1, dynamic_ncols=True, disable=None
+            ) as t:
+                tmp_path, _ = urllib.request.urlretrieve(
+                    self.config.link, reporthook=_tqdm_reporthook(t)
+                )
 
             if self.config.link.endswith(".tgz") or self.config.link.endswith(
                 ".tar.gz"
@@ -74,6 +81,15 @@ class Dataset:
     def get_reader(self, normalize: bool) -> BaseReader:
         reader_class = READER_TYPE[self.config.type]
         return reader_class(DATASETS_DIR / self.config.path, normalize=normalize)
+
+
+def _tqdm_reporthook(t: tqdm.tqdm) -> Callable[[int, int, int], None]:
+    def reporthook(blocknum: int, block_size: int, total_size: int) -> None:
+        if total_size > 0:
+            t.total = total_size
+        t.update(blocknum * block_size - t.n)
+
+    return reporthook
 
 
 if __name__ == "__main__":
