@@ -31,15 +31,19 @@ fi
 
 cd "${WORK_DIR}"
 
-# Check if venv exists
-if [ ! -d "${WORK_DIR}/venv" ]; then
+# Function to create and setup virtual environment
+setup_venv() {
     echo "Creating virtual environment..."
     python3 -m venv "${WORK_DIR}/venv"
     source "${WORK_DIR}/venv/bin/activate"
 
     echo "Installing requirements..."
     pip install -r "${WORK_DIR}/requirements.txt"
+}
 
+# Check if venv exists
+if [ ! -d "${WORK_DIR}/venv" ]; then
+    setup_venv
     deactivate
 else
     echo "Virtual environment already exists. Skipping setup."
@@ -53,13 +57,7 @@ if ! python -c "from qdrant_client import QdrantClient" 2>/dev/null; then
     echo "Import verification failed. Recreating virtual environment..."
     deactivate
     rm -rf "${WORK_DIR}/venv"
-
-    echo "Creating virtual environment..."
-    python3 -m venv "${WORK_DIR}/venv"
-    source "${WORK_DIR}/venv/bin/activate"
-
-    echo "Installing requirements..."
-    pip install -r "${WORK_DIR}/requirements.txt"
+    setup_venv
 fi
 
 NOW=$(date "+%Y-%m-%dT%H:%M:%SZ")
