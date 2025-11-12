@@ -40,7 +40,6 @@
     DATASET_NAME: "{{ dataset_name }}"
     DATASET_DIM: "{{ dataset_dim }}"
     DATASET_NAME_2: "{{ dataset_2_name | default('') }}"
-    PATH: "{{ ansible_env.HOME }}/.cargo/bin:{{ ansible_env.PATH }}"
   register: bench_result
   ignore_errors: yes
 
