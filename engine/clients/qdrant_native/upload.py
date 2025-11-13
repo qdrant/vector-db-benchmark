@@ -48,7 +48,7 @@ class QdrantNativeUploader(BaseUploader):
         if len(batch) > MAX_BATCH_SIZE:
             # Split into smaller sub-batches
             for i in range(0, len(batch), MAX_BATCH_SIZE):
-                cls.upload_batch(batch[i:i + MAX_BATCH_SIZE])
+                cls.upload_batch(batch[i : i + MAX_BATCH_SIZE])
             return
 
         points = []
