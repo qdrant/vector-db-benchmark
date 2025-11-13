@@ -35,22 +35,21 @@ fi
 
 cd "${WORK_DIR}"
 
-# Check if venv exists
-if [ ! -d "${WORK_DIR}/venv" ]; then
-    echo "Creating virtual environment..."
-    python3 -m venv "${WORK_DIR}/venv"
-    source "${WORK_DIR}/venv/bin/activate"
-
-    echo "Installing requirements..."
-    pip install -r "${WORK_DIR}/requirements.txt"
-
-    deactivate
-else
-    echo "Virtual environment already exists. Skipping setup."
+# Remove existing venv if present
+if [ -d "${WORK_DIR}/venv" ]; then
+    echo "Removing existing virtual environment..."
+    rm -rf "${WORK_DIR}/venv"
 fi
+
+# Create and setup virtual environment
+echo "Creating virtual environment..."
+python3 -m venv "${WORK_DIR}/venv"
 
 echo "Activating virtual environment..."
 source "${WORK_DIR}/venv/bin/activate"
+
+echo "Installing requirements..."
+pip install -r "${WORK_DIR}/requirements.txt"
 
 NOW=$(date "+%Y-%m-%dT%H:%M:%SZ")
 echo "${NOW}"
