@@ -25,16 +25,32 @@ class QdrantNativeUploader(BaseUploader):
             cls.headers["api-key"] = QDRANT_API_KEY
 
         # Create HTTP client with connection pooling
-        timeout = connection_params.get("timeout", 30)
+        # Use longer timeout for write operations to handle large payloads
+        base_timeout = connection_params.get("timeout", 30)
         cls.client = httpx.Client(
             headers=cls.headers,
-            timeout=httpx.Timeout(timeout=timeout),
+            timeout=httpx.Timeout(
+                connect=base_timeout,
+                read=base_timeout,
+                write=base_timeout * 10,  # 10x longer for writes
+                pool=base_timeout,
+            ),
             limits=httpx.Limits(max_connections=100, max_keepalive_connections=20),
         )
 
     @classmethod
     def upload_batch(cls, batch: List[Record]):
         """Upload a batch of records using REST API"""
+        # Qdrant has a 32MB JSON payload limit
+        # For large batches with dense high-dim vectors, split into smaller sub-batches
+        MAX_BATCH_SIZE = 512
+
+        if len(batch) > MAX_BATCH_SIZE:
+            # Split into smaller sub-batches
+            for i in range(0, len(batch), MAX_BATCH_SIZE):
+                cls.upload_batch(batch[i:i + MAX_BATCH_SIZE])
+            return
+
         points = []
         for point in batch:
             point_data = {
@@ -48,8 +64,8 @@ class QdrantNativeUploader(BaseUploader):
             else:
                 point_data["vector"] = {
                     "sparse": {
-                        "indices": point.sparse_vector.indices,
-                        "values": point.sparse_vector.values,
+                        "indices": [int(i) for i in point.sparse_vector.indices],
+                        "values": [float(v) for v in point.sparse_vector.values],
                     }
                 }
 

@@ -26,10 +26,16 @@ class QdrantNativeSearcher(BaseSearcher):
             cls.headers["api-key"] = QDRANT_API_KEY
 
         # Create HTTP client
-        timeout = connection_params.get("timeout", 30)
+        # Use longer timeout for write operations to handle large query payloads
+        base_timeout = connection_params.get("timeout", 30)
         cls.client = httpx.Client(
             headers=cls.headers,
-            timeout=httpx.Timeout(timeout=timeout),
+            timeout=httpx.Timeout(
+                connect=base_timeout,
+                read=base_timeout,
+                write=base_timeout * 5,  # 5x longer for writes
+                pool=base_timeout,
+            ),
             limits=httpx.Limits(max_connections=None, max_keepalive_connections=0),
         )
 
@@ -41,9 +47,10 @@ class QdrantNativeSearcher(BaseSearcher):
         if query.sparse_vector is None:
             query_vector = query.vector
         else:
+            # Convert numpy types to native Python types for JSON serialization
             query_vector = {
-                "indices": query.sparse_vector.indices,
-                "values": query.sparse_vector.values,
+                "indices": [int(i) for i in query.sparse_vector.indices],
+                "values": [float(v) for v in query.sparse_vector.values],
             }
 
         payload = {
