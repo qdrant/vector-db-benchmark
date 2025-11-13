@@ -34,11 +34,11 @@ class BaseUploader:
         parallel = self.upload_params.get("parallel", 1)
         batch_size = self.upload_params.get("batch_size", 64)
 
-        self.init_client(
-            self.host, distance, self.connection_params, self.upload_params
-        )
-
         if parallel == 1:
+            # Initialize client in parent process for serial uploads
+            self.init_client(
+                self.host, distance, self.connection_params, self.upload_params
+            )
             for batch in iter_batches(tqdm.tqdm(records), batch_size):
                 latencies.append(self._upload_batch(batch))
         else:
@@ -59,6 +59,10 @@ class BaseUploader:
                         iter_batches(tqdm.tqdm(records), batch_size),
                     )
                 )
+            # Initialize client in parent process for post-upload operations
+            self.init_client(
+                self.host, distance, self.connection_params, self.upload_params
+            )
 
         upload_time = time.perf_counter() - start
 
