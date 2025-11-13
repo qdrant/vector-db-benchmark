@@ -37,7 +37,6 @@ VECTORS_FILE_1 = DATA_DIR / "vectors.npy"
 TEST_DATA_FILE_2 = DATA_DIR_2 / "tests.jsonl"
 TEST_DATA_FILE_1 = DATA_DIR / "tests.jsonl"
 
-TOTAL_VECTORS = 100_000
 BATCH_SIZE = 500
 
 
@@ -176,7 +175,7 @@ def main():
     result["initial_precision"] = initial_precision
     result["precision_before_iteration"] = initial_precision
 
-    points_to_migrate = list(range(TOTAL_VECTORS))
+    points_to_migrate = list(range(len(vectors_1)))
 
     random.shuffle(points_to_migrate)
 
