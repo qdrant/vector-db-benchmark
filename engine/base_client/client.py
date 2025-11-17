@@ -90,6 +90,20 @@ class BaseClient:
             distance=dataset.config.distance, vector_size=dataset.config.vector_size
         )
 
+        # Ensure Doris components (and other engines that might need it) know the vector dim
+        vector_dim = dataset.config.vector_size
+        if vector_dim is not None:
+            self.configurator.collection_params.setdefault("vector_dim", vector_dim)
+            uploader_collection = self.uploader.upload_params.setdefault(
+                "collection_params", {}
+            )
+            uploader_collection.setdefault("vector_dim", vector_dim)
+            for searcher in self.searchers:
+                search_collection = searcher.search_params.setdefault(
+                    "collection_params", {}
+                )
+                search_collection.setdefault("vector_dim", vector_dim)
+
         reader = dataset.get_reader(execution_params.get("normalize", False))
 
         if skip_if_exists:

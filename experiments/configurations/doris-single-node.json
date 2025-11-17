@@ -1,0 +1,69 @@
+[
+  {
+    "name": "doris-default",
+    "engine": "doris",
+    "connection_params": {
+      "host": "localhost",
+      "query_port": 6937,
+      "http_port": 5937,
+      "user": "root",
+      "password": ""
+    },
+    "collection_params": {
+      "database": "qdrant_benchmark",
+      "table_name": "doris_default"
+    },
+    "upload_params": {
+      "parallel": 8,
+      "batch_size": 526336,
+      "collection_params": { "table_name": "vectors" }
+    },
+    "search_params": [
+      { "parallel": 8, "table_name": "vectors", "config": { "hnsw_ef_search": 128 } }
+    ]
+  },
+  {
+    "name": "doris-m-96-ef-512",
+    "engine": "doris",
+    "connection_params": {
+      "host": "localhost",
+      "query_port": 6937,
+      "http_port": 5937,
+      "user": "root",
+      "password": ""
+    },
+    "collection_params": { "database": "qdrant_benchmark", "table_name": "doris_m_96_ef_512" },
+    "upload_params": {
+      "parallel": 16,
+      "batch_size": 526336,
+      "collection_params": { "table_name": "doris_m_96_ef_512" },
+      "hnsw_config": { "m": 96, "ef_construct": 512 }
+    },
+    "search_params": [
+      { "parallel": 1, "table_name": "doris_m_96_ef_512", "config": { "hnsw_ef_search": 512 } },
+      { "parallel": 100, "table_name": "doris_m_96_ef_512", "config": { "hnsw_ef_search": 512 } }
+    ]
+  },
+  {
+    "name": "doris-m-64-ef-256",
+    "engine": "doris",
+    "connection_params": {
+      "host": "localhost",
+      "query_port": 6937,
+      "http_port": 5937,
+      "user": "root",
+      "password": ""
+    },
+    "collection_params": { "database": "qdrant_benchmark", "table_name": "doris_m_64_ef_256" },
+    "upload_params": {
+      "parallel": 16,
+      "batch_size": 526336,
+      "collection_params": { "table_name": "doris_m_64_ef_256" },
+      "hnsw_config": { "m": 64, "ef_construct": 256 }
+    },
+    "search_params": [
+      { "parallel": 1, "table_name": "doris_m_64_ef_256", "config": { "hnsw_ef_search": 256 } },
+      { "parallel": 100, "table_name": "doris_m_64_ef_256", "config": { "hnsw_ef_search": 256 } }
+    ]
+  }
+]
