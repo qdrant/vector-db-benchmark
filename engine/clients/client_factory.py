@@ -30,6 +30,11 @@ from engine.clients.weaviate import (
     WeaviateSearcher,
     WeaviateUploader,
 )
+from engine.clients.doris import (
+    DorisConfigurator,
+    DorisSearcher,
+    DorisUploader,
+)
 
 ENGINE_CONFIGURATORS = {
     "qdrant": QdrantConfigurator,
@@ -39,6 +44,7 @@ ENGINE_CONFIGURATORS = {
     "opensearch": OpenSearchConfigurator,
     "redis": RedisConfigurator,
     "pgvector": PgVectorConfigurator,
+    "doris": DorisConfigurator,
 }
 
 ENGINE_UPLOADERS = {
@@ -49,6 +55,7 @@ ENGINE_UPLOADERS = {
     "opensearch": OpenSearchUploader,
     "redis": RedisUploader,
     "pgvector": PgVectorUploader,
+    "doris": DorisUploader,
 }
 
 ENGINE_SEARCHERS = {
@@ -59,6 +66,7 @@ ENGINE_SEARCHERS = {
     "opensearch": OpenSearchSearcher,
     "redis": RedisSearcher,
     "pgvector": PgVectorSearcher,
+    "doris": DorisSearcher,
 }
 
 
@@ -79,10 +87,18 @@ class ClientFactory(ABC):
 
     def _create_uploader(self, experiment) -> BaseUploader:
         engine_uploader_class = ENGINE_UPLOADERS[experiment["engine"]]
+        upload_params = {**experiment.get("upload_params", {})}
+        # Propagate collection_params for engines that need database/table info during upload (e.g., doris)
+        if experiment["engine"] == "doris":
+            merged_collection = {
+                **experiment.get("collection_params", {}),
+                **upload_params.get("collection_params", {}),
+            }
+            upload_params["collection_params"] = merged_collection
         engine_uploader = engine_uploader_class(
             self.host,
             connection_params={**experiment.get("connection_params", {})},
-            upload_params={**experiment.get("upload_params", {})},
+            upload_params=upload_params,
         )
         return engine_uploader
 
@@ -90,15 +106,22 @@ class ClientFactory(ABC):
         engine_searcher_class: Type[BaseSearcher] = ENGINE_SEARCHERS[
             experiment["engine"]
         ]
-
-        engine_searchers = [
-            engine_searcher_class(
-                self.host,
-                connection_params={**experiment.get("connection_params", {})},
-                search_params=search_params,
+        engine_searchers = []
+        for search_params in experiment.get("search_params", [{}]):
+            params = {**search_params}
+            if experiment["engine"] == "doris":
+                merged_collection = {
+                    **experiment.get("collection_params", {}),
+                    **params.get("collection_params", {}),
+                }
+                params["collection_params"] = merged_collection
+            engine_searchers.append(
+                engine_searcher_class(
+                    self.host,
+                    connection_params={**experiment.get("connection_params", {})},
+                    search_params=params,
+                )
             )
-            for search_params in experiment.get("search_params", [{}])
-        ]
 
         return engine_searchers
 
