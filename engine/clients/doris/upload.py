@@ -2,16 +2,13 @@ import atexit
 from contextlib import closing
 from typing import List
 
-from doris_vector_search import DorisVectorClient, AuthOptions, IndexOptions
 import mysql.connector
-from mysql.connector import ProgrammingError, Error
+from doris_vector_search import AuthOptions, DorisVectorClient, IndexOptions
+from mysql.connector import Error, ProgrammingError
 
 from dataset_reader.base_reader import Record
 from engine.base_client.upload import BaseUploader
-from engine.clients.doris.config import (
-    DEFAULT_DORIS_DATABASE,
-    DEFAULT_DORIS_TABLE,
-)
+from engine.clients.doris.config import DEFAULT_DORIS_DATABASE, DEFAULT_DORIS_TABLE
 
 
 class DorisUploader(BaseUploader):
@@ -60,9 +57,8 @@ class DorisUploader(BaseUploader):
 
         cls.upload_params = upload_params
         cls.collection_params = upload_params.get("collection_params", {})
-        cls.vector_dim = (
-            upload_params.get("vector_dim")
-            or cls.collection_params.get("vector_dim")
+        cls.vector_dim = upload_params.get("vector_dim") or cls.collection_params.get(
+            "vector_dim"
         )
         if cls.vector_dim:
             try:
@@ -71,6 +67,7 @@ class DorisUploader(BaseUploader):
                 cls.vector_dim = None
         # Map distance to Doris metric type
         from engine.clients.doris.config import DISTANCE_MAPPING as _MAP
+
         # distance can be Distance enum or string
         if hasattr(distance, "value"):
             cls.metric_type = _MAP.get(distance.value, "l2_distance")

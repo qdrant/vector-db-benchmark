@@ -3,7 +3,9 @@ import pytest
 from engine.clients.client_factory import ClientFactory
 
 
-@pytest.mark.skip(reason="Requires running Doris instance; integration test skipped by default")
+@pytest.mark.skip(
+    reason="Requires running Doris instance; integration test skipped by default"
+)
 def test_doris_factory_registration():
     factory = ClientFactory(host="localhost")
     experiment = {

@@ -7,6 +7,7 @@ from engine.base_client.client import (
     BaseSearcher,
     BaseUploader,
 )
+from engine.clients.doris import DorisConfigurator, DorisSearcher, DorisUploader
 from engine.clients.elasticsearch import (
     ElasticConfigurator,
     ElasticSearcher,
@@ -29,11 +30,6 @@ from engine.clients.weaviate import (
     WeaviateConfigurator,
     WeaviateSearcher,
     WeaviateUploader,
-)
-from engine.clients.doris import (
-    DorisConfigurator,
-    DorisSearcher,
-    DorisUploader,
 )
 
 ENGINE_CONFIGURATORS = {

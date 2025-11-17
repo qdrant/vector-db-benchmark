@@ -2,13 +2,13 @@ import atexit
 import math
 from typing import Dict, List, Tuple
 
-from doris_vector_search import DorisVectorClient, AuthOptions
 import mysql.connector
+from doris_vector_search import AuthOptions, DorisVectorClient
 from mysql.connector import ProgrammingError
 
 from dataset_reader.base_reader import Query
-from engine.base_client.search import BaseSearcher
 from engine.base_client.distances import Distance
+from engine.base_client.search import BaseSearcher
 from engine.clients.doris.config import (
     DEFAULT_DORIS_DATABASE,
     DEFAULT_DORIS_TABLE,
@@ -70,10 +70,9 @@ class DorisSearcher(BaseSearcher):
         else:
             distance_key = str(distance).lower()
         cls.metric_type = DISTANCE_MAPPING.get(distance_key, "l2_distance")
-        cls.vector_dim = (
-            search_params.get("vector_dim")
-            or search_params.get("collection_params", {}).get("vector_dim")
-        )
+        cls.vector_dim = search_params.get("vector_dim") or search_params.get(
+            "collection_params", {}
+        ).get("vector_dim")
         if cls.vector_dim:
             try:
                 cls.vector_dim = int(cls.vector_dim)
@@ -141,7 +140,9 @@ class DorisSearcher(BaseSearcher):
 
     @classmethod
     def _execute_vector_query(cls, vector_query) -> List[Dict[str, object]]:
-        select_columns = vector_query.selected_columns or vector_query.table.column_names
+        select_columns = (
+            vector_query.selected_columns or vector_query.table.column_names
+        )
         distance_range = None
         if (
             vector_query.distance_range_lower is not None
@@ -196,7 +197,11 @@ class DorisSearcher(BaseSearcher):
     ) -> Dict[str, object]:
         vector_data = row.get(vector_column)
 
-        if isinstance(vector_data, str) and vector_data.startswith("[") and vector_data.endswith("]"):
+        if (
+            isinstance(vector_data, str)
+            and vector_data.startswith("[")
+            and vector_data.endswith("]")
+        ):
             try:
                 vector_values = [
                     float(item.strip())

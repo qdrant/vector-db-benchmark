@@ -1,6 +1,6 @@
 from .configure import DorisConfigurator
-from .upload import DorisUploader
 from .search import DorisSearcher
+from .upload import DorisUploader
 
 __all__ = [
     "DorisConfigurator",

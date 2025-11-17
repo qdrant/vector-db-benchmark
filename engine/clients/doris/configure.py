@@ -1,7 +1,7 @@
 from typing import Optional
 
-from doris_vector_search import DorisVectorClient, AuthOptions, IndexOptions
 import mysql.connector
+from doris_vector_search import AuthOptions, DorisVectorClient
 from mysql.connector import ProgrammingError
 
 from benchmark.dataset import Dataset
@@ -46,7 +46,7 @@ class DorisConfigurator(BaseConfigurator):
             cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{database}`")
             cursor.close()
             tmp_conn.close()
-        except ProgrammingError as e:
+        except ProgrammingError:
             # If we cannot create database, proceed and let actual client raise clearer error
             pass
         self.client = DorisVectorClient(database=database, auth_options=auth)
