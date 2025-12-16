@@ -40,10 +40,10 @@ ssh-keygen -f "$HOME/.ssh/known_hosts" -R "${SERVER_IP}" || true
 
 # Wait for server to be ready
 
-while ! ssh -oStrictHostKeyChecking=no root@${SERVER_IP} echo "Server is ready"; do
+while ! ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no "root@${SERVER_IP}" echo "Server is ready"; do
     sleep 1
 done
 
 # Create and install docker
 
-cat "${SCRIPTPATH}/setup_hetzner.sh" | ssh "root@${SERVER_IP}" bash
+cat "${SCRIPTPATH}/setup_hetzner.sh" | ssh -o ConnectTimeout=10 "root@${SERVER_IP}" bash

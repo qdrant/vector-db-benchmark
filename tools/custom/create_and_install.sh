@@ -23,10 +23,10 @@ ssh-keygen -f "$HOME/.ssh/known_hosts" -R "${SERVER_IP}" || true
 
 # Wait for server to be ready
 
-while ! ssh -oStrictHostKeyChecking=no ${SSH_USER}@${SERVER_IP} echo "Server is ready"; do
+while ! ssh -o ConnectTimeout=10 -o StrictHostKeyChecking=no "${SSH_USER}@${SERVER_IP}" echo "Server is ready"; do
     sleep 1
 done
 
 # Create and install docker, poetry, etc
 
-cat "${SCRIPTPATH}/setup_vm.sh" | ssh "${SSH_USER}@${SERVER_IP}" sudo bash
+cat "${SCRIPTPATH}/setup_vm.sh" | ssh -o ConnectTimeout=10 "${SSH_USER}@${SERVER_IP}" sudo bash

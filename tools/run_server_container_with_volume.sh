@@ -14,6 +14,8 @@ SERVER_USERNAME=${SERVER_USERNAME:-"root"}
 SCRIPT=$(realpath "$0")
 SCRIPT_PATH=$(dirname "$SCRIPT")
 
+source "$SCRIPT_PATH/ssh.sh"
+
 BENCH_SERVER_NAME=${SERVER_NAME:-"benchmark-server-1"}
 
 QDRANT_VERSION=${QDRANT_VERSION:-"dev"}
@@ -48,7 +50,7 @@ if [[ ${QDRANT_VERSION} == docker/* ]] || [[ ${QDRANT_VERSION} == ghcr/* ]]; the
       exit 1
     fi
 
-    ssh -t  -o ServerAliveInterval=60 -o ServerAliveCountMax=3 "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "cd ./projects/vector-db-benchmark/engine/servers/${CONTAINER_NAME} ; $DOCKER_COMPOSE"
+    ssh_with_retry -t -o ServerAliveInterval=60 -o ServerAliveCountMax=3 "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "cd ./projects/vector-db-benchmark/engine/servers/${CONTAINER_NAME} ; $DOCKER_COMPOSE"
 else
     echo "Error: unknown version ${QDRANT_VERSION}. Version name should start with 'docker/' or 'ghcr/'"
     exit 1

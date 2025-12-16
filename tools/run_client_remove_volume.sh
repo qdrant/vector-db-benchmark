@@ -9,6 +9,8 @@ SERVER_USERNAME=${SERVER_USERNAME:-"root"}
 SCRIPT=$(realpath "$0")
 SCRIPT_PATH=$(dirname "$SCRIPT")
 
+source "$SCRIPT_PATH/ssh.sh"
+
 BENCH_CLIENT_NAME=${CLIENT_NAME:-"benchmark-client-1"}
 
 IP_OF_THE_CLIENT=$(bash "${SCRIPT_PATH}/${CLOUD_NAME}/get_public_ip.sh" "$BENCH_CLIENT_NAME")
@@ -16,4 +18,4 @@ IP_OF_THE_CLIENT=$(bash "${SCRIPT_PATH}/${CLOUD_NAME}/get_public_ip.sh" "$BENCH_
 echo "Remove ci-datasets volume from client"
 RUN_CMD="docker volume rm -f ci-datasets || true"
 
-ssh -tt -o ServerAliveInterval=120 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "${RUN_CMD}"
+ssh_with_retry -tt -o ServerAliveInterval=120 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "${RUN_CMD}"
