@@ -6,7 +6,7 @@ SCRIPT_PATH="$(cd "$(dirname "$0")" && pwd)"
 
 SERVER_NAME=${SERVER_NAME:-test-server-1}
 
-SERVER_IP=$("$SCRIPT_PATH/get_public_ip.sh" "${SERVER_NAME}")
+SERVER_IP=$(bash "$SCRIPT_PATH/get_public_ip.sh" "${SERVER_NAME}")
 
 echo "Server IP: ${SERVER_IP}"
 
