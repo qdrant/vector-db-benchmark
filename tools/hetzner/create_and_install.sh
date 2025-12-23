@@ -46,7 +46,7 @@ for ((i=1; i<=max_retries; i++)); do
 done
 
 # Get server IP
-SERVER_IP=$("${SCRIPTPATH}/get_public_ip.sh" "${SERVER_NAME}")
+SERVER_IP=$(bash "${SCRIPTPATH}/get_public_ip.sh" "${SERVER_NAME}")
 
 echo "Server IP: ${SERVER_IP}"
 
