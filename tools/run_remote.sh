@@ -5,6 +5,7 @@ set -e
 SCRIPT_PATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 CLOUD_NAME=${CLOUD_NAME:-"hetzner"}
 
+source "$SCRIPT_PATH/ssh.sh"
 
 RUN_SCRIPT=${RUN_SCRIPT:-""}
 SERVER_NAME=${SERVER_NAME:-""}
@@ -36,5 +37,5 @@ SERVER_IP=$(bash $SCRIPT_PATH/$CLOUD_NAME/get_public_ip.sh $SERVER_NAME)
 
 
 
-echo $ENV_CONTEXT | cat - "$RUN_SCRIPT" | ssh -oStrictHostKeyChecking=no "$SSH_USER@$SERVER_IP" sudo bash -x
+echo $ENV_CONTEXT | cat - "$RUN_SCRIPT" | ssh_with_retry -o StrictHostKeyChecking=no "$SSH_USER@$SERVER_IP" sudo bash -x
 

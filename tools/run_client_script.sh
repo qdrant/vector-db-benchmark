@@ -12,6 +12,8 @@ SERVER_USERNAME=${SERVER_USERNAME:-"root"}
 SCRIPT=$(realpath "$0")
 SCRIPT_PATH=$(dirname "$SCRIPT")
 
+source "$SCRIPT_PATH/ssh.sh"
+
 BENCH_SERVER_NAME=${SERVER_NAME:-"benchmark-server-1"}
 BENCH_CLIENT_NAME=${CLIENT_NAME:-"benchmark-client-1"}
 
@@ -32,8 +34,8 @@ GHCR_PASSWORD=${GHCR_PASSWORD:-""}
 GHCR_USERNAME=${GHCR_USERNAME:-""}
 
 if [[ "$EXPERIMENT_MODE" == "snapshot" ]]; then
-  scp "${SCRIPT_PATH}/run_experiment.sh" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/run_experiment_snapshot.sh"
-  scp "${SCRIPT_PATH}/../datasets/datasets.json" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/datasets.json"
+  scp_with_retry "${SCRIPT_PATH}/run_experiment.sh" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/run_experiment_snapshot.sh"
+  scp_with_retry "${SCRIPT_PATH}/../datasets/datasets.json" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/datasets.json"
 
   RUN_EXPERIMENT="ENGINE_NAME=${ENGINE_NAME} \
   DATASETS=${DATASETS} \
@@ -45,11 +47,11 @@ if [[ "$EXPERIMENT_MODE" == "snapshot" ]]; then
   GHCR_USERNAME=${GHCR_USERNAME} \
   bash ~/run_experiment_snapshot.sh"
 
-  ssh -tt -o ServerAliveInterval=120 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "${RUN_EXPERIMENT}"
+  ssh_with_retry -tt -o ServerAliveInterval=120 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "${RUN_EXPERIMENT}"
 
 else
-  scp "${SCRIPT_PATH}/run_experiment.sh" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/run_experiment.sh"
-  scp "${SCRIPT_PATH}/../datasets/datasets.json" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/datasets.json"
+  scp_with_retry "${SCRIPT_PATH}/run_experiment.sh" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/run_experiment.sh"
+  scp_with_retry "${SCRIPT_PATH}/../datasets/datasets.json" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/datasets.json"
 
   RUN_EXPERIMENT="ENGINE_NAME=${ENGINE_NAME} \
   DATASETS=${DATASETS} \
@@ -60,7 +62,7 @@ else
   GHCR_USERNAME=${GHCR_USERNAME} \
   bash ~/run_experiment.sh"
 
-  ssh -tt -o ServerAliveInterval=60 -o ServerAliveCountMax=3 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "${RUN_EXPERIMENT}"
+  ssh_with_retry -tt -o ServerAliveInterval=60 -o ServerAliveCountMax=3 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "${RUN_EXPERIMENT}"
 
 fi
 
@@ -69,32 +71,32 @@ result_files_arr=()
 result_parallel_files_arr=()
 
 if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "upload" ]]; then
-  UPLOAD_RESULT_FILE=$(ssh -o ServerAliveInterval=10 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "find results/ -maxdepth 1 -type f -name '*-upload-*.json' -printf '%T@ %p\n' | sort -nr | head -n 1 | cut -d' ' -f2-")
+  UPLOAD_RESULT_FILE=$(ssh_with_retry -o ServerAliveInterval=10 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "find results/ -maxdepth 1 -type f -name '*-upload-*.json' -printf '%T@ %p\n' | sort -nr | head -n 1 | cut -d' ' -f2-")
   result_files_arr+=("$UPLOAD_RESULT_FILE")
 fi
 
 if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "search" ]]; then
-  SEARCH_RESULT_FILE=$(ssh -o ServerAliveInterval=10 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "find results/ -maxdepth 1 -type f -name '*-search-*.json' -printf '%T@ %p\n' | sort -nr | head -n 1 | cut -d' ' -f2-")
+  SEARCH_RESULT_FILE=$(ssh_with_retry -o ServerAliveInterval=10 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "find results/ -maxdepth 1 -type f -name '*-search-*.json' -printf '%T@ %p\n' | sort -nr | head -n 1 | cut -d' ' -f2-")
 
   if [[ "$FETCH_ALL_RESULTS" == "true" ]]; then
     # Extract the prefix pattern
     # Example: qdrant-sq-rps-m-16-ef-128-random-100-search-0-2025-06-10-12-50-26.json
     # Prefix: qdrant-sq-rps-m-16-ef-128-random-100
-    PREFIX=$(ssh -o ServerAliveInterval=10 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "basename '$SEARCH_RESULT_FILE' | sed 's/-search-.*$//'")
+    PREFIX=$(ssh_with_retry -o ServerAliveInterval=10 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "basename '$SEARCH_RESULT_FILE' | sed 's/-search-.*$//'")
     # Find all result files matching the prefix
     while IFS= read -r file; do
       result_files_arr+=("$file")
-    done < <(ssh -o ServerAliveInterval=10 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "find results/ -maxdepth 1 -type f -name '${PREFIX}-search-*.json' -printf '%T@ %p\n' | sort -nr | cut -d' ' -f2-")
+    done < <(ssh_with_retry -o ServerAliveInterval=10 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "find results/ -maxdepth 1 -type f -name '${PREFIX}-search-*.json' -printf '%T@ %p\n' | sort -nr | cut -d' ' -f2-")
   else
     result_files_arr+=("$SEARCH_RESULT_FILE")
   fi
 fi
 
 if [[ "$EXPERIMENT_MODE" == "parallel" ]]; then
-  UPLOAD_RESULT_FILE=$(ssh -o ServerAliveInterval=10 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "ls -t results/parallel/*-upload-*.json | head -n 1")
+  UPLOAD_RESULT_FILE=$(ssh_with_retry -o ServerAliveInterval=10 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "ls -t results/parallel/*-upload-*.json | head -n 1")
   result_parallel_files_arr+=("$UPLOAD_RESULT_FILE")
 
-  SEARCH_RESULT_FILE=$(ssh -o ServerAliveInterval=10 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "ls -t results/parallel/*-search-*.json | head -n 1")
+  SEARCH_RESULT_FILE=$(ssh_with_retry -o ServerAliveInterval=10 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "ls -t results/parallel/*-search-*.json | head -n 1")
   result_parallel_files_arr+=("$SEARCH_RESULT_FILE")
 fi
 
@@ -103,9 +105,9 @@ mkdir -p results/parallel
 
 for RESULT_FILE in "${result_files_arr[@]}"; do
     # -p preseves modification time, access time, and modes (but not change time)
-    scp -o ServerAliveInterval=10 -o ServerAliveCountMax=10 -p "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/${RESULT_FILE}" "./results"
+    scp_with_retry -o ServerAliveInterval=10 -o ServerAliveCountMax=10 -p "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/${RESULT_FILE}" "./results"
 done
 
 for RESULT_FILE in "${result_parallel_files_arr[@]}"; do
-    scp -o ServerAliveInterval=10 -o ServerAliveCountMax=10 -p "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/${RESULT_FILE}" "./results/parallel"
+    scp_with_retry -o ServerAliveInterval=10 -o ServerAliveCountMax=10 -p "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/${RESULT_FILE}" "./results/parallel"
 done

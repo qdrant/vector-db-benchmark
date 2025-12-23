@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 
-PROJECT_PATH=$(realpath "$(dirname "$0")/..")
+set -e
 
-max_retries=5
-retry_delay=5
-for ((i=1; i<=max_retries; i++)); do
-    if rsync -e "ssh -o ConnectTimeout=30 -o ServerAliveInterval=10 -o ServerAliveCountMax=10" \
-       -avP --mkpath "$PROJECT_PATH/engine/servers/" "$1:./projects/vector-db-benchmark/engine/servers/"; then
-        break
-    fi
-    echo "rsync failed (attempt $i/$max_retries), retrying in ${retry_delay}s..."
-    sleep $retry_delay
-done
+SCRIPT_PATH="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_PATH="$(realpath "$SCRIPT_PATH/..")"
+
+if [[ -z "$1" ]]; then
+    echo "Usage: $0 user@host" >&2
+    exit 1
+fi
+
+source "$SCRIPT_PATH/ssh.sh"
+
+rsync_with_retry -avP --mkpath "$PROJECT_PATH/engine/servers/" "$1:./projects/vector-db-benchmark/engine/servers/"

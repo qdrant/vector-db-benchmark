@@ -12,11 +12,13 @@ SERVER_USERNAME=${SERVER_USERNAME:-"root"}
 SCRIPT=$(realpath "$0")
 SCRIPT_PATH=$(dirname "$SCRIPT")
 
+source "$SCRIPT_PATH/ssh.sh"
+
 BENCH_SERVER_NAME=${SERVER_NAME:-"benchmark-server-1"}
 
 IP_OF_THE_SERVER=$(bash "${SCRIPT_PATH}/${CLOUD_NAME}/get_public_ip.sh" "$BENCH_SERVER_NAME")
 
-UTIME=$(ssh -tt -o ServerAliveInterval=10 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "cat /proc/\$(pidof qdrant)/stat | awk '{print \$14}'")
+UTIME=$(ssh_with_retry -tt -o ServerAliveInterval=10 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "cat /proc/\$(pidof qdrant)/stat | awk '{print \$14}'")
 # Clean up any whitespace characters
 UTIME=$(echo "$UTIME" | tr -d '[:space:]')
 
