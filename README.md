@@ -103,3 +103,15 @@ See the examples in the [clients](./engine/clients) directory.
 
 Once all the necessary classes are implemented, you can register the engine in the [ClientFactory](./engine/clients/client_factory.py).
 
+### Doris Vector Search Support
+
+This repository now includes experimental support for benchmarking Apache Doris vector search via the [`doris_vector_search`](https://github.com/uchenily/doris_vector_search) SDK.
+
+To run a Doris benchmark (server docker unchanged for now), start your Doris cluster separately, then invoke:
+
+```bash
+python run.py --engines "doris" --datasets "dbpedia-openai-100K-1536-angular"
+```
+
+You can adjust connection parameters and table/database names through the `experiments/configurations` engine configuration files (add a section for `doris`). Table schema is inferred automatically on first upload batch; vector distance mapping uses `l2_distance` or `inner_product` depending on dataset distance (cosine mapped to inner product assuming normalized vectors).
+

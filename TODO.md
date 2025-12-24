@@ -1,0 +1,3 @@
+- [ ] Fix Doris search init when distance argument is string
+- [ ] Ensure Doris searcher opens existing table or handles missing gracefully
+- [ ] Address missing column detection due to newly created table
