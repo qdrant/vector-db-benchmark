@@ -28,12 +28,6 @@ on:
             description: "Enable all feature flags (false by default), version 2"
             default: false
 
-# Restrict to only running this workflow one at a time.
-# Any new runs will be queued until the previous run is complete.
-# Any existing pending runs will be cancelled and replaced with current run.
-#concurrency:
-#  group: continuous-benchmark
-
 jobs:
   prepareImage1:
     name: Prepare image ${{ inputs.qdrant_version_1 }}
