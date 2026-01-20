@@ -237,7 +237,7 @@ jobs:
         uses: ./.github/workflows/actions/create-server-with-retry
         with:
           server_name: ${{ steps.extract_names.outputs.client_name }}
-          server_type: "cpx31"
+          server_type: "cpx32"
           region: ${{ inputs.region }}
           max_retries: 5
   runBenchmarks:
