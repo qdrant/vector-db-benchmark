@@ -6,7 +6,7 @@ authors = ["Qdrant Team <info@qdrant.tech>"]
 package-mode = false
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.13"
+python = ">=3.10,<3.13"
 qdrant-client = { git = "https://github.com/qdrant/qdrant-client.git", branch = "dev" }
 typer = "^0.6.1"
 jsons = "^1.6.3"
