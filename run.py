@@ -18,13 +18,13 @@ app = typer.Typer()
 def run(
     engines: List[str] = typer.Option(["*"]),
     datasets: List[str] = typer.Option(["*"]),
-    host: str = "localhost",
-    skip_upload: bool = False,
-    skip_search: bool = False,
-    skip_if_exists: bool = False,
-    exit_on_error: bool = True,
-    timeout: float = 86400.0,
-    skip_configure: Optional[bool] = False,
+    host: str = typer.Option("localhost"),
+    skip_upload: bool = typer.Option(False),
+    skip_search: bool = typer.Option(False),
+    skip_if_exists: bool = typer.Option(False),
+    exit_on_error: bool = typer.Option(True),
+    timeout: float = typer.Option(86400.0),
+    skip_configure: bool = typer.Option(False),
 ):
     """
     Examples:
