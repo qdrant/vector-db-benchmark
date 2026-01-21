@@ -47,11 +47,22 @@ class BaseSearcher:
         end = time.perf_counter()
 
         precision = 1.0
+        recall = 1.0
         if query.expected_result:
             ids = set(x[0] for x in search_res)
-            precision = len(ids.intersection(query.expected_result[:top])) / top
 
-        return precision, end - start
+            # precision equals True Positives / (True Positives + False Positives)
+            # recall equals True Positives / (True Positives + False Negatives)
+            # See https://en.wikipedia.org/wiki/Precision_and_recall
+            true_positives = len(ids.intersection(query.expected_result[:top]))
+            precision = (
+                true_positives / top
+            )  # 1 means that the results consist of expected elements.
+            recall = true_positives / len(
+                query.expected_result
+            )  # 1 means that all expected elements are in the results.
+
+        return precision, recall, end - start
 
     def search_all(
         self,
@@ -71,7 +82,7 @@ class BaseSearcher:
 
         if parallel == 1:
             start = time.perf_counter()
-            precisions, latencies = list(
+            precisions, recalls, latencies = list(
                 zip(*[search_one(query) for query in tqdm.tqdm(queries)])
             )
         else:
@@ -90,7 +101,7 @@ class BaseSearcher:
                 if parallel > 10:
                     time.sleep(15)  # Wait for all processes to start
                 start = time.perf_counter()
-                precisions, latencies = list(
+                precisions, recalls, latencies = list(
                     zip(*pool.imap_unordered(search_one, iterable=tqdm.tqdm(queries)))
                 )
 
@@ -109,6 +120,7 @@ class BaseSearcher:
             "p95_time": np.percentile(latencies, 95),
             "p99_time": np.percentile(latencies, 99),
             "precisions": precisions,
+            "recalls": recalls,
             "latencies": latencies,
         }
 
