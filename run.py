@@ -1,8 +1,8 @@
 import fnmatch
 import traceback
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 from typing import List, Optional
 
-import stopit
 import typer
 
 from benchmark.config_read import read_dataset_config, read_engine_configs
@@ -59,26 +59,28 @@ def run(
                     )
                 dataset.download()
 
-                with stopit.ThreadingTimeout(timeout) as tt:
-                    client.run_experiment(
+                with ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(
+                        client.run_experiment,
                         dataset,
                         skip_upload,
                         skip_search,
                         skip_if_exists,
                         skip_configure,
                     )
+                    try:
+                        future.result(timeout=timeout)
+                    except FuturesTimeoutError:
+                        # If the timeout is reached, the server might be still in the
+                        # middle of some background processing, like creating the index.
+                        # Next experiment should not be launched. It's better to reset
+                        # the server state manually.
+                        print(
+                            f"Timed out {engine_name} - {dataset_name}, "
+                            f"exceeded {timeout} seconds"
+                        )
+                        exit(2)
                 client.delete_client()
-
-                # If the timeout is reached, the server might be still in the
-                # middle of some background processing, like creating the index.
-                # Next experiment should not be launched. It's better to reset
-                # the server state manually.
-                if tt.state != stopit.ThreadingTimeout.EXECUTED:
-                    print(
-                        f"Timed out {engine_name} - {dataset_name}, "
-                        f"exceeded {timeout} seconds"
-                    )
-                    exit(2)
             except IncompatibilityError as e:
                 print(
                     f"Skipping {engine_name} - {dataset_name}, incompatible params:", e
