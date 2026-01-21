@@ -32,7 +32,8 @@ class PgVectorConfigurator(BaseConfigurator):
             );"""
         )
         self.conn.execute("ALTER TABLE items ALTER COLUMN embedding SET STORAGE PLAIN")
-        self.conn.close()
 
     def delete_client(self):
-        self.conn.close()
+        if self.conn:
+            self.conn.close()
+            self.conn = None

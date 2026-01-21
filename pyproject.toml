@@ -6,9 +6,9 @@ authors = ["Qdrant Team <info@qdrant.tech>"]
 package-mode = false
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.13"
+python = ">=3.10,<3.13"
 qdrant-client = { git = "https://github.com/qdrant/qdrant-client.git", branch = "dev" }
-typer = "^0.6.1"
+typer = "^0.15.0"
 jsons = "^1.6.3"
 h5py = "^3.7.0"
 weaviate-client = ">= 4.5, < 4.7"
@@ -16,7 +16,6 @@ elasticsearch = "^8.10.0"
 pymilvus = "^2.5.0"
 redis = "^5.0.1"
 ipdb = "^0.13.9"
-stopit = "^1.1.2"
 opensearch-py = "^2.3.2"
 tqdm = "^4.66.1"
 psycopg = {extras = ["binary"], version = "^3.1.17"}

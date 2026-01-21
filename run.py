@@ -1,8 +1,9 @@
 import fnmatch
 import traceback
-from typing import List, Optional
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FuturesTimeoutError
+from typing import List
 
-import stopit
 import typer
 
 from benchmark.config_read import read_dataset_config, read_engine_configs
@@ -17,13 +18,13 @@ app = typer.Typer()
 def run(
     engines: List[str] = typer.Option(["*"]),
     datasets: List[str] = typer.Option(["*"]),
-    host: str = "localhost",
-    skip_upload: bool = False,
-    skip_search: bool = False,
-    skip_if_exists: bool = False,
-    exit_on_error: bool = True,
-    timeout: float = 86400.0,
-    skip_configure: Optional[bool] = False,
+    host: str = typer.Option("localhost"),
+    skip_upload: bool = typer.Option(False),
+    skip_search: bool = typer.Option(False),
+    skip_if_exists: bool = typer.Option(False),
+    exit_on_error: bool = typer.Option(True),
+    timeout: float = typer.Option(86400.0),
+    skip_configure: bool = typer.Option(False),
 ):
     """
     Examples:
@@ -59,26 +60,28 @@ def run(
                     )
                 dataset.download()
 
-                with stopit.ThreadingTimeout(timeout) as tt:
-                    client.run_experiment(
+                with ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(
+                        client.run_experiment,
                         dataset,
                         skip_upload,
                         skip_search,
                         skip_if_exists,
                         skip_configure,
                     )
+                    try:
+                        future.result(timeout=timeout)
+                    except FuturesTimeoutError:
+                        # If the timeout is reached, the server might be still in the
+                        # middle of some background processing, like creating the index.
+                        # Next experiment should not be launched. It's better to reset
+                        # the server state manually.
+                        print(
+                            f"Timed out {engine_name} - {dataset_name}, "
+                            f"exceeded {timeout} seconds"
+                        )
+                        exit(2)
                 client.delete_client()
-
-                # If the timeout is reached, the server might be still in the
-                # middle of some background processing, like creating the index.
-                # Next experiment should not be launched. It's better to reset
-                # the server state manually.
-                if tt.state != stopit.ThreadingTimeout.EXECUTED:
-                    print(
-                        f"Timed out {engine_name} - {dataset_name}, "
-                        f"exceeded {timeout} seconds"
-                    )
-                    exit(2)
             except IncompatibilityError as e:
                 print(
                     f"Skipping {engine_name} - {dataset_name}, incompatible params:", e
