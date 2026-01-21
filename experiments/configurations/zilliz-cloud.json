@@ -1,0 +1,24 @@
+[
+  {
+    "name": "milvus-cloud-default",
+    "engine": "milvus",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      { "parallel": 1, "config": { "level": 1 } },
+      { "parallel": 100, "config": { "level": 1 } }
+    ],
+    "upload_params": { "parallel": 1, "batch_size": 1600, "index_type": "AUTOINDEX", "index_params": {} }
+  },
+  {
+    "name": "milvus-cloud",
+    "engine": "milvus",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      { "parallel": 1, "config": { "level": 1 } }, { "parallel": 1, "config": { "level": 2 } }, { "parallel": 1, "config": { "level": 3 } }, { "parallel": 1, "config": { "level": 4 } }, { "parallel": 1, "config": { "level": 5 } },
+      { "parallel": 100, "config": { "level": 1 } }, { "parallel": 100, "config": { "level": 2 } }, { "parallel": 100, "config": { "level": 3 } }, { "parallel": 100, "config": { "level": 4 } }, { "parallel": 100, "config": { "level": 5 } }
+    ],
+    "upload_params": { "parallel": 1, "batch_size": 1600, "index_type": "AUTOINDEX", "index_params": {} }
+  }
+]
