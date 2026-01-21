@@ -13,6 +13,7 @@ from engine.clients.elasticsearch import (
     ElasticUploader,
 )
 from engine.clients.milvus import MilvusConfigurator, MilvusSearcher, MilvusUploader
+from engine.clients.mongodb import MongoConfigurator, MongoSearcher, MongoUploader
 from engine.clients.opensearch import (
     OpenSearchConfigurator,
     OpenSearchSearcher,
@@ -45,6 +46,7 @@ ENGINE_CONFIGURATORS = {
     "opensearch": OpenSearchConfigurator,
     "redis": RedisConfigurator,
     "pgvector": PgVectorConfigurator,
+    "mongodb": MongoConfigurator,
 }
 
 ENGINE_UPLOADERS = {
@@ -56,6 +58,7 @@ ENGINE_UPLOADERS = {
     "opensearch": OpenSearchUploader,
     "redis": RedisUploader,
     "pgvector": PgVectorUploader,
+    "mongodb": MongoUploader,
 }
 
 ENGINE_SEARCHERS = {
@@ -67,6 +70,7 @@ ENGINE_SEARCHERS = {
     "opensearch": OpenSearchSearcher,
     "redis": RedisSearcher,
     "pgvector": PgVectorSearcher,
+    "mongodb": MongoSearcher,
 }
 
 
