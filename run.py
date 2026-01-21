@@ -2,7 +2,7 @@ import fnmatch
 import traceback
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FuturesTimeoutError
-from typing import List, Optional
+from typing import List
 
 import typer
 
