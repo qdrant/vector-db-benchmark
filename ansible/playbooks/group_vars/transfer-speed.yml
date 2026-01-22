@@ -1,0 +1,12 @@
+logging_dir: "/tmp/logs"
+working_dir: "/tmp/experiments"
+
+# Benchmark parameters (can be overridden via --extra-vars)
+dataset_name: "dbpedia-openai-1M-1536-angular"
+runs: 3
+servers:
+  - name: "qdrant"
+    registry: "ghcr.io"
+    image: "qdrant/qdrant"
+    version: "dev"
+    feature_flags: "true"

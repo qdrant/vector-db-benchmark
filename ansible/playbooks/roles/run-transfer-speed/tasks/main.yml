@@ -1,0 +1,62 @@
+---
+# Setup Qdrant cluster node and prepare for benchmark
+
+- name: Create working directory
+  ansible.builtin.file:
+    path: "{{ working_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Copy files to remote machine
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "{{ item.mode | default('0644') }}"
+    owner: "{{ ansible_user }}"
+  loop:
+    - { src: "../../files/transfer-speed/docker-compose-cluster.yaml", dest: "{{ working_dir }}/docker-compose.yaml" }
+
+- name: Stop existing containers
+  ansible.builtin.shell: |
+    docker compose down || true
+    docker rm -f qdrant-node || true
+  args:
+    chdir: "{{ working_dir }}"
+  ignore_errors: yes
+
+- name: Remove old image to ensure fresh pull
+  ansible.builtin.shell: |
+    docker rmi -f {{ server_registry }}/qdrant/qdrant:{{ server_version }} || true
+  ignore_errors: yes
+
+- name: Start Qdrant node
+  ansible.builtin.shell: |
+    docker compose up -d
+  args:
+    chdir: "{{ working_dir }}"
+  environment:
+    QDRANT_VERSION: "{{ server_version }}"
+    CONTAINER_REGISTRY: "{{ server_registry }}"
+    CLUSTER_BOOTSTRAP_URI: "{{ cluster_bootstrap_uri | default('') }}"
+  register: compose_result
+  failed_when: compose_result.rc != 0
+
+- name: Wait for Qdrant to be ready
+  ansible.builtin.uri:
+    url: "http://localhost:6333/readyz"
+    status_code: 200
+  register: result
+  until: result.status == 200
+  retries: 60
+  delay: 2
+
+- name: Wait for node to join cluster
+  ansible.builtin.uri:
+    url: "http://localhost:6333/cluster"
+    method: GET
+    return_content: yes
+  register: cluster_status
+  until: cluster_status.json.result.peer_id is defined
+  retries: 30
+  delay: 2
+  when: cluster_bootstrap_uri | default('') != ''

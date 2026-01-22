@@ -1,0 +1,2 @@
+numpy>=2.2.5
+qdrant-client>=1.16.0

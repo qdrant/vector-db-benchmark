@@ -4,9 +4,13 @@ inputs:
   hcloud_token:
     description: "Hetzner Cloud API token"
     required: true
-  server_name:
-    description: "Name of the server"
+  server_names:
+    description: "Comma-separated list of server names"
     required: true
+  client_names:
+    description: "Comma-separated list of client names (optional)"
+    required: false
+    default: ""
   db_host:
     description: "Database host"
     required: true
@@ -19,7 +23,6 @@ runs:
       run: |
         export HCLOUD_TOKEN=${{ inputs.hcloud_token }}
         export POSTGRES_HOST=${{ inputs.db_host }}
-        export SERVER_NAME="${{ inputs.server_name }}"
 
         # Download and install hcloud
         HCVERSION=v1.36.0
@@ -28,20 +31,43 @@ runs:
         mv hcloud /usr/local/bin
         chmod +x /usr/local/bin/hcloud
 
-        IP_OF_THE_SERVER=$(bash "tools/hetzner/get_public_ip.sh" "$SERVER_NAME")
-
         # Create ansible inventory.ini file
-        cat <<EOL > inventory.ini
-        [remote_machines]
-        benchmark-machine ansible_host=${IP_OF_THE_SERVER} ansible_user=root
-        [db_hosts]
-        benchmark-db ansible_host=${POSTGRES_HOST} ansible_user=root
-        EOL
+        echo "[remote_machines]" > inventory.ini
+
+        # Add each server to inventory
+        i=0
+        IFS=',' read -ra SERVERS <<< "${{ inputs.server_names }}"
+        for SERVER_NAME in "${SERVERS[@]}"; do
+          IP=$(SERVER_NAME=${SERVER_NAME} bash "tools/hetzner/get_public_ip.sh")
+          echo "node-${i} ansible_host=${IP} ansible_user=root" >> inventory.ini
+          i=$((i + 1))
+        done
+
+        # Add client_machines group if client_names is provided
+        CLIENT_NAMES="${{ inputs.client_names }}"
+        if [ -n "$CLIENT_NAMES" ]; then
+          echo "" >> inventory.ini
+          echo "[client_machines]" >> inventory.ini
+          i=0
+          IFS=',' read -ra CLIENTS <<< "$CLIENT_NAMES"
+          for CLIENT_NAME in "${CLIENTS[@]}"; do
+            IP=$(SERVER_NAME=${CLIENT_NAME} bash "tools/hetzner/get_public_ip.sh")
+            echo "client-${i} ansible_host=${IP} ansible_user=root" >> inventory.ini
+            i=$((i + 1))
+          done
+        fi
+
+        # Add db_hosts group
+        echo "" >> inventory.ini
+        echo "[db_hosts]" >> inventory.ini
+        echo "benchmark-db ansible_host=${POSTGRES_HOST} ansible_user=root" >> inventory.ini
 
         mv inventory.ini ansible/playbooks/inventory.ini
     - name: Prepare datasets.yml
       shell: bash
       run: |
-        apk add yq
+        if ! command -v yq &> /dev/null; then
+          apk add --no-cache yq || apt-get install -y yq || true
+        fi
         echo -e "datasets:\n" > ansible/playbooks/group_vars/datasets.yml
         yq -p json -o yaml datasets/datasets.json >> ansible/playbooks/group_vars/datasets.yml

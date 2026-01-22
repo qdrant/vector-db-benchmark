@@ -1,0 +1,181 @@
+name: Continuous Benchmark Shard Transfer Speed
+
+on:
+  workflow_dispatch:
+    inputs:
+      dataset_name:
+        description: 'Dataset name'
+        default: 'dbpedia-openai-1M-1536-angular'
+        type: string
+      qdrant_version:
+        description: 'Version of qdrant to benchmark (ghcr/dev, docker/v1.7.0)'
+        default: 'ghcr/dev'
+        type: string
+      region:
+        description: 'Hetzner region'
+        default: 'fsn1'
+        type: string
+      server_type:
+        description: 'Hetzner server type'
+        default: 'cpx41'
+        type: string
+  schedule:
+    - cron: "0 4 * * *"  # Daily at 4am UTC
+
+concurrency:
+  group: transfer-benchmark
+
+env:
+  HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+
+jobs:
+  setupCluster:
+    name: Setup Cluster Nodes
+    runs-on: ubuntu-latest
+    outputs:
+      node_names: ${{ steps.create_nodes.outputs.node_names }}
+      client_name: ${{ steps.create_nodes.outputs.client_name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Setup CI tools
+        run: bash -x tools/setup_ci.sh
+
+      - name: Create nodes
+        id: create_nodes
+        run: |
+          echo "node_names=transfer-bench-node-0-${{ github.run_id }},transfer-bench-node-1-${{ github.run_id }}" >> $GITHUB_OUTPUT
+          echo "client_name=transfer-bench-client-${{ github.run_id }}" >> $GITHUB_OUTPUT
+
+      - name: Create node 0
+        uses: ./.github/workflows/actions/create-server-with-retry
+        with:
+          server_name: transfer-bench-node-0-${{ github.run_id }}
+          server_type: ${{ inputs.server_type }}
+          region: ${{ inputs.region }}
+
+      - name: Create node 1
+        uses: ./.github/workflows/actions/create-server-with-retry
+        with:
+          server_name: transfer-bench-node-1-${{ github.run_id }}
+          server_type: ${{ inputs.server_type }}
+          region: ${{ inputs.region }}
+
+      - name: Create client
+        uses: ./.github/workflows/actions/create-server-with-retry
+        with:
+          server_name: transfer-bench-client-${{ github.run_id }}
+          server_type: cpx32
+          region: ${{ inputs.region }}
+
+  runBenchmark:
+    name: Run Transfer Benchmark
+    needs: setupCluster
+    runs-on: ubuntu-latest
+    container: alpine/ansible:2.18.1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Parse qdrant version
+        id: parse_version
+        run: |
+          QDRANT_VERSION="${{ inputs.qdrant_version }}"
+
+          case "${QDRANT_VERSION}" in
+            docker/*)
+              CONTAINER_REGISTRY="docker.io"
+              VERSION=${QDRANT_VERSION#docker/}
+              ;;
+            ghcr/*)
+              CONTAINER_REGISTRY="ghcr.io"
+              VERSION=${QDRANT_VERSION#ghcr/}
+              ;;
+            *)
+              echo "Error: unknown version ${QDRANT_VERSION}. Version name should start with 'docker/' or 'ghcr/'"
+              exit 1
+              ;;
+          esac
+
+          echo "registry=${CONTAINER_REGISTRY}" >> $GITHUB_OUTPUT
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+      - name: Create inventory
+        uses: ./.github/workflows/actions/create-inventory
+        with:
+          hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
+          server_names: ${{ needs.setupCluster.outputs.node_names }}
+          client_names: ${{ needs.setupCluster.outputs.client_name }}
+          db_host: ${{ secrets.POSTGRES_HOST }}
+      - name: Run bench
+        run: |
+          cd ansible/playbooks
+          ansible-playbook playbook-transfer-speed.yml \
+            -i inventory.ini \
+            --extra-vars "
+              dataset_name=${{ inputs.dataset_name }}
+              servers=[{'name':'qdrant','registry':'${{ steps.parse_version.outputs.registry }}','image':'qdrant/qdrant','version':'${{ steps.parse_version.outputs.version }}'}]
+            "
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+
+  cleanup:
+    name: Cleanup Cluster
+    needs: [setupCluster, runBenchmark]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup CI tools
+        run: bash -x tools/setup_ci.sh
+        env:
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+      - name: Delete cluster nodes and client
+        run: |
+          NODE_NAMES="${{ needs.setupCluster.outputs.node_names }}"
+          CLIENT_NAME="${{ needs.setupCluster.outputs.client_name }}"
+
+          # Build list of all machines to delete
+          ALL_MACHINES=()
+          IFS=',' read -ra NODES <<< "$NODE_NAMES"
+          for NODE in "${NODES[@]}"; do
+            if [ -n "$NODE" ]; then
+              ALL_MACHINES+=("$NODE")
+            fi
+          done
+          if [ -n "$CLIENT_NAME" ]; then
+            ALL_MACHINES+=("$CLIENT_NAME")
+          fi
+
+          echo "Deleting ${#ALL_MACHINES[@]} machines in parallel..."
+
+          # Launch all deletions in parallel
+          PIDS=()
+          for MACHINE in "${ALL_MACHINES[@]}"; do
+            (
+              echo "Deleting $MACHINE..."
+              SERVER_NAME=$MACHINE bash tools/hetzner/remove_server.sh
+            ) &
+            PIDS+=($!)
+          done
+
+          # Wait for all deletions to complete
+          FAILED=0
+          for i in "${!PIDS[@]}"; do
+            if wait ${PIDS[$i]}; then
+              echo "Deleted ${ALL_MACHINES[$i]}"
+            else
+              echo "Failed to delete ${ALL_MACHINES[$i]}"
+              FAILED=$((FAILED + 1))
+            fi
+          done
+
+          if [ $FAILED -gt 0 ]; then
+            echo "Warning: $FAILED deletion(s) failed"
+          fi
+        env:
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}

@@ -60,7 +60,7 @@
 
     - name: Insert data into table
       ansible.builtin.shell: |
-        result="{{ hostvars['benchmark-machine']['precision_score'] }}"
+        result="{{ hostvars[groups['remote_machines'][0]]['precision_score'] }}"
         engine="{{ server.name }}-{{ server.version }}"
         precision_before_iteration=$(echo "$result" | grep -oP "${engine}_precision_before_iteration=\K[^,]+")
         precision_after_iteration=$(echo "$result" | grep -oP "${engine}_precision_after_iteration=\K[^,]+")
