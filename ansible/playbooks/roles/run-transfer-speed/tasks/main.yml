@@ -1,62 +1,66 @@
 ---
-# Setup Qdrant cluster node and prepare for benchmark
+- name: Install python3-venv
+  ansible.builtin.package:
+    name: python3-venv
+    state: present
 
-- name: Create working directory
-  ansible.builtin.file:
-    path: "{{ working_dir }}"
-    state: directory
-    mode: '0755'
+- name: Setup
+  ansible.builtin.shell: mkdir -p {{ working_dir }}/data/{{ dataset_name }}
+  args:
+    creates: "{{ working_dir }}/data/{{ dataset_name }}"
 
-- name: Copy files to remote machine
+- name: Get dataset info
+  set_fact:
+    dataset: "{{ datasets | selectattr('name', 'equalto', dataset_name) | first }}"
+
+- name: Copy files
   ansible.builtin.copy:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
     mode: "{{ item.mode | default('0644') }}"
-    owner: "{{ ansible_user }}"
   loop:
-    - { src: "../../files/transfer-speed/docker-compose-cluster.yaml", dest: "{{ working_dir }}/docker-compose.yaml" }
+    - {src: "shard_transfer.py", dest: "{{ working_dir }}/shard_transfer.py"}
+    - {src: "run-bench.sh", dest: "{{ working_dir }}/run-bench.sh", mode: '0755'}
+    - {src: "{{ playbook_dir }}/files/transfer-speed/requirements.txt", dest: "{{ working_dir }}/requirements.txt"}
 
-- name: Stop existing containers
-  ansible.builtin.shell: |
-    docker compose down || true
-    docker rm -f qdrant-node || true
-  args:
-    chdir: "{{ working_dir }}"
-  ignore_errors: yes
+- name: Check dataset
+  stat:
+    path: "{{ working_dir }}/data/{{ dataset_name }}/vectors.npy"
+  register: vectors_file
 
-- name: Remove old image to ensure fresh pull
-  ansible.builtin.shell: |
-    docker rmi -f {{ server_registry }}/qdrant/qdrant:{{ server_version }} || true
-  ignore_errors: yes
+- name: Download dataset
+  ansible.builtin.get_url:
+    url: "{{ dataset.link }}"
+    dest: "{{ working_dir }}/data/{{ dataset_name }}.tgz"
+  when: not vectors_file.stat.exists
 
-- name: Start Qdrant node
-  ansible.builtin.shell: |
-    docker compose up -d
-  args:
-    chdir: "{{ working_dir }}"
+- name: Extract dataset
+  ansible.builtin.unarchive:
+    src: "{{ working_dir }}/data/{{ dataset_name }}.tgz"
+    dest: "{{ working_dir }}/data/{{ dataset_name }}"
+    remote_src: yes
+  when: not vectors_file.stat.exists
+
+- name: Run benchmark
+  ansible.builtin.shell: "{{ working_dir }}/run-bench.sh"
   environment:
-    QDRANT_VERSION: "{{ server_version }}"
-    CONTAINER_REGISTRY: "{{ server_registry }}"
-    CLUSTER_BOOTSTRAP_URI: "{{ cluster_bootstrap_uri | default('') }}"
-  register: compose_result
-  failed_when: compose_result.rc != 0
+    QDRANT_URIS: "{{ qdrant_uris }}"
+    DATASET_NAME: "{{ dataset_name }}"
+    RUNS: "{{ runs }}"
+    OUTPUT_FILENAME: "{{ working_dir }}/results.json"
+    WORK_DIR: "{{ working_dir }}"
+    PYTHONUNBUFFERED: "1"
+  register: benchmark_output
 
-- name: Wait for Qdrant to be ready
-  ansible.builtin.uri:
-    url: "http://localhost:6333/readyz"
-    status_code: 200
-  register: result
-  until: result.status == 200
-  retries: 60
-  delay: 2
+- name: Show benchmark output
+  debug:
+    msg: "{{ benchmark_output.stdout_lines }}"
 
-- name: Wait for node to join cluster
-  ansible.builtin.uri:
-    url: "http://localhost:6333/cluster"
-    method: GET
-    return_content: yes
-  register: cluster_status
-  until: cluster_status.json.result.peer_id is defined
-  retries: 30
-  delay: 2
-  when: cluster_bootstrap_uri | default('') != ''
+- name: Read results
+  ansible.builtin.slurp:
+    src: "{{ working_dir }}/results.json"
+  register: results_file
+
+- name: Output
+  debug:
+    msg: "{{ (results_file.content | b64decode | from_json).stats }}"

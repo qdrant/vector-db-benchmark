@@ -5,11 +5,11 @@ on:
     inputs:
       dataset_name:
         description: 'Dataset name'
-        default: 'dbpedia-openai-1M-1536-angular'
+        default: 'laion-small-clip'
         type: string
-      qdrant_version:
-        description: 'Version of qdrant to benchmark (ghcr/dev, docker/v1.7.0)'
-        default: 'ghcr/dev'
+      qdrant_versions:
+        description: 'Comma-separated versions to compare (ghcr/dev, docker/master, docker/v1.13.0). Can be just single version.'
+        default: 'ghcr/dev,docker/v1.16.3'
         type: string
       region:
         description: 'Hetzner region'
@@ -17,24 +17,50 @@ on:
         type: string
       server_type:
         description: 'Hetzner server type'
-        default: 'cpx41'
+        default: 'ccx13'
         type: string
-  schedule:
-    - cron: "0 4 * * *"  # Daily at 4am UTC
+      client_type:
+        description: 'Hetzner client type'
+        default: 'cx33'
+        type: string
+  push:
+    branches:
+      - transfer-speed-benchmark
+#  schedule:
+#    - cron: "0 4 * * *"  # Daily at 4am UTC
 
 concurrency:
-  group: transfer-benchmark
+  group: hetzner-machines
 
 env:
   HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+  # Defaults for push trigger (inputs.* is empty on push)
+  SERVER_TYPE: ${{ inputs.server_type || 'ccx13' }}
+  CLIENT_TYPE: ${{ inputs.client_type || 'cx33' }}
+  REGION: ${{ inputs.region || 'fsn1' }}
+  DATASET_NAME: ${{ inputs.dataset_name || 'laion-small-clip' }}
+  QDRANT_VERSIONS: ${{ inputs.qdrant_versions || 'ghcr/dev,docker/v1.16.3' }}
 
 jobs:
   setupCluster:
-    name: Setup Cluster Nodes
+    name: Setup ${{ matrix.machine.name }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        machine:
+          - name: node-0
+            server_name_suffix: node-0
+            server_type_env: SERVER_TYPE
+          - name: node-1
+            server_name_suffix: node-1
+            server_type_env: SERVER_TYPE
+          - name: client
+            server_name_suffix: client
+            server_type_env: CLIENT_TYPE
     outputs:
-      node_names: ${{ steps.create_nodes.outputs.node_names }}
-      client_name: ${{ steps.create_nodes.outputs.client_name }}
+      node_names: transfer-bench-node-0-${{ github.run_id }},transfer-bench-node-1-${{ github.run_id }}
+      client_name: transfer-bench-client-${{ github.run_id }}
     steps:
       - uses: actions/checkout@v4
 
@@ -45,32 +71,13 @@ jobs:
       - name: Setup CI tools
         run: bash -x tools/setup_ci.sh
 
-      - name: Create nodes
-        id: create_nodes
-        run: |
-          echo "node_names=transfer-bench-node-0-${{ github.run_id }},transfer-bench-node-1-${{ github.run_id }}" >> $GITHUB_OUTPUT
-          echo "client_name=transfer-bench-client-${{ github.run_id }}" >> $GITHUB_OUTPUT
-
-      - name: Create node 0
+      - name: Create machine
         uses: ./.github/workflows/actions/create-server-with-retry
         with:
-          server_name: transfer-bench-node-0-${{ github.run_id }}
-          server_type: ${{ inputs.server_type }}
-          region: ${{ inputs.region }}
-
-      - name: Create node 1
-        uses: ./.github/workflows/actions/create-server-with-retry
-        with:
-          server_name: transfer-bench-node-1-${{ github.run_id }}
-          server_type: ${{ inputs.server_type }}
-          region: ${{ inputs.region }}
-
-      - name: Create client
-        uses: ./.github/workflows/actions/create-server-with-retry
-        with:
-          server_name: transfer-bench-client-${{ github.run_id }}
-          server_type: cpx32
-          region: ${{ inputs.region }}
+          server_name: transfer-bench-${{ matrix.machine.server_name_suffix }}-${{ github.run_id }}
+          server_type: ${{ matrix.machine.server_type_env == 'CLIENT_TYPE' && env.CLIENT_TYPE || env.SERVER_TYPE }}
+          region: ${{ env.REGION }}
+          max_retries: 2
 
   runBenchmark:
     name: Run Transfer Benchmark
@@ -82,28 +89,6 @@ jobs:
       - uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-      - name: Parse qdrant version
-        id: parse_version
-        run: |
-          QDRANT_VERSION="${{ inputs.qdrant_version }}"
-
-          case "${QDRANT_VERSION}" in
-            docker/*)
-              CONTAINER_REGISTRY="docker.io"
-              VERSION=${QDRANT_VERSION#docker/}
-              ;;
-            ghcr/*)
-              CONTAINER_REGISTRY="ghcr.io"
-              VERSION=${QDRANT_VERSION#ghcr/}
-              ;;
-            *)
-              echo "Error: unknown version ${QDRANT_VERSION}. Version name should start with 'docker/' or 'ghcr/'"
-              exit 1
-              ;;
-          esac
-
-          echo "registry=${CONTAINER_REGISTRY}" >> $GITHUB_OUTPUT
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
       - name: Create inventory
         uses: ./.github/workflows/actions/create-inventory
         with:
@@ -111,17 +96,41 @@ jobs:
           server_names: ${{ needs.setupCluster.outputs.node_names }}
           client_names: ${{ needs.setupCluster.outputs.client_name }}
           db_host: ${{ secrets.POSTGRES_HOST }}
-      - name: Run bench
+      - name: Run benchmarks for all versions
         run: |
-          cd ansible/playbooks
-          ansible-playbook playbook-transfer-speed.yml \
-            -i inventory.ini \
-            --extra-vars "
-              dataset_name=${{ inputs.dataset_name }}
-              servers=[{'name':'qdrant','registry':'${{ steps.parse_version.outputs.registry }}','image':'qdrant/qdrant','version':'${{ steps.parse_version.outputs.version }}'}]
-            "
+          echo "$QDRANT_VERSIONS" | tr ',' '\n' | while read -r QDRANT_VERSION; do
+            QDRANT_VERSION=$(echo "$QDRANT_VERSION" | xargs)  # trim whitespace
+            [ -z "$QDRANT_VERSION" ] && continue
+
+            echo "=========================================="
+            echo "Benchmarking Qdrant version: $QDRANT_VERSION"
+            echo "=========================================="
+
+            case "${QDRANT_VERSION}" in
+              docker/*)
+                CONTAINER_REGISTRY="docker.io"
+                VERSION=${QDRANT_VERSION#docker/}
+                ;;
+              ghcr/*)
+                CONTAINER_REGISTRY="ghcr.io"
+                VERSION=${QDRANT_VERSION#ghcr/}
+                ;;
+              *)
+                echo "Error: unknown version ${QDRANT_VERSION}. Version name should start with 'docker/' or 'ghcr/'"
+                exit 1
+                ;;
+            esac
+
+            ansible-playbook ansible/playbooks/playbook-transfer-speed.yml \
+              -i ansible/playbooks/inventory.ini \
+              --extra-vars "dataset_name=${DATASET_NAME} server_registry=${CONTAINER_REGISTRY} server_version=${VERSION}"
+          done
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
+          ANSIBLE_SSH_ARGS: "-o ServerAliveInterval=30 -o ServerAliveCountMax=10 -o ControlMaster=no"
+          ANSIBLE_STDOUT_CALLBACK: yaml
+          QDRANT_VERSIONS: ${{ env.QDRANT_VERSIONS }}
+          DATASET_NAME: ${{ env.DATASET_NAME }}
 
   cleanup:
     name: Cleanup Cluster
@@ -158,7 +167,7 @@ jobs:
           for MACHINE in "${ALL_MACHINES[@]}"; do
             (
               echo "Deleting $MACHINE..."
-              SERVER_NAME=$MACHINE bash tools/hetzner/remove_server.sh
+              bash tools/hetzner/remove_server.sh "$MACHINE"
             ) &
             PIDS+=($!)
           done

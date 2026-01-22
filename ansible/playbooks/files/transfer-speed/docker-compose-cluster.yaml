@@ -1,8 +1,9 @@
 services:
   qdrant:
     image: ${CONTAINER_REGISTRY}/qdrant/qdrant:${QDRANT_VERSION}
-    container_name: qdrant-node
+    container_name: qdrant-continuous
     restart: unless-stopped
+    privileged: true
     ports:
       - "6333:6333"
       - "6334:6334"
@@ -13,7 +14,5 @@ services:
       - QDRANT__LOG_LEVEL=DEBUG
       - QDRANT__FEATURE_FLAGS__ALL=${QDRANT__FEATURE_FLAGS__ALL:-false}
       - QDRANT__STORAGE__PERFORMANCE__ASYNC_SCORER=true
-    volumes:
-      - ./qdrant_data:/qdrant/storage
     command: >
-      sh -c "./qdrant ${CLUSTER_BOOTSTRAP_URI:+--uri $CLUSTER_BOOTSTRAP_URI}"
+      sh -c "${BOOTSTRAP_URI:+sleep 5 && }./qdrant --uri '${NODE_URI}' ${BOOTSTRAP_URI:+--bootstrap '${BOOTSTRAP_URI}'}"

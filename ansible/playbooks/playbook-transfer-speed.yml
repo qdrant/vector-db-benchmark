@@ -1,168 +1,44 @@
 ---
-- name: Setup Qdrant cluster nodes
+- name: Setup cluster
   hosts: remote_machines
   become: yes
-  serial: 1  # Run on nodes one at a time to ensure proper cluster formation
-  tasks:
-    - name: Load variables
-      include_vars: "group_vars/transfer-speed.yml"
-
-    - name: Load datasets
-      include_vars: "group_vars/datasets.yml"
-
-    - name: Set bootstrap URI for non-first nodes
-      set_fact:
-        cluster_bootstrap_uri: "{{ 'http://' + hostvars[groups['remote_machines'][0]]['ansible_host'] + ':6335' if inventory_hostname != groups['remote_machines'][0] else '' }}"
-
-    - name: Execute cluster setup role
-      include_role:
-        name: "run-transfer-speed"
-      vars:
-        server_version: "{{ servers[0].version }}"
-        server_registry: "{{ servers[0].registry }}"
-
-- name: Verify cluster formation
-  hosts: remote_machines[0]
-  tasks:
-    - name: Wait for all peers to join cluster
-      ansible.builtin.uri:
-        url: "http://localhost:6333/cluster"
-        method: GET
-        return_content: yes
-      register: cluster_info
-      until: (cluster_info.json.result.peers | default({}) | length) >= (groups['remote_machines'] | length)
-      retries: 60
-      delay: 5
-
-    - name: Display cluster info
-      ansible.builtin.debug:
-        msg: "Cluster has {{ cluster_info.json.result.peers | length }} peers"
+  vars_files: ["group_vars/transfer-speed.yml"]
+  vars:
+    node_uri: "http://{{ private_ip }}:6335"
+    bootstrap_uri: "{{ '' if inventory_hostname == groups['remote_machines'][0] else 'http://' + hostvars[groups['remote_machines'][0]]['private_ip'] + ':6335' }}"
+  roles:
+    - setup-qdrant-cluster
 
 - name: Run benchmark
   hosts: client_machines
   become: yes
+  vars_files:
+    - group_vars/transfer-speed.yml
+    - group_vars/datasets.yml
   vars:
-    node_urls: "{{ groups['remote_machines'] | map('extract', hostvars, 'ansible_host') | map('regex_replace', '^(.*)$', 'http://\\1:6333') | list }}"
-  tasks:
-    - name: Load variables
-      include_vars: "group_vars/transfer-speed.yml"
+    qdrant_uris: "{{ groups['remote_machines'] | map('extract', hostvars, 'private_ip') | map('regex_replace', '^(.*)$', 'http://\\1:6333') | join(',') }}"
+  roles:
+    - run-transfer-speed
 
-    - name: Load datasets
-      include_vars: "group_vars/datasets.yml"
-
-    - name: Ensure necessary packages are installed
-      ansible.builtin.package:
-        name: "{{ item }}"
-        state: present
-      loop:
-        - python3-venv
-
-    - name: Get dataset info
-      ansible.builtin.set_fact:
-        dataset_info: "{{ datasets | selectattr('name', 'equalto', dataset_name) | first }}"
-
-    - name: Display dataset info
-      ansible.builtin.debug:
-        msg: "Dataset: {{ dataset_info.name }}, dims: {{ dataset_info.vector_size }}, link: {{ dataset_info.link }}"
-
-    - name: Ensure directories exist
-      ansible.builtin.file:
-        path: "{{ item }}"
-        state: directory
-        mode: '0755'
-      loop:
-        - "{{ working_dir }}"
-        - "{{ working_dir }}/data"
-        - "{{ working_dir }}/data/{{ dataset_name }}"
-
-    - name: Copy benchmark files
-      ansible.builtin.copy:
-        src: "{{ item.src }}"
-        dest: "{{ item.dest }}"
-        mode: "{{ item.mode | default('0644') }}"
-        owner: "{{ ansible_user }}"
-      loop:
-        - { src: "roles/run-transfer-speed/files/shard_transfer.py", dest: "{{ working_dir }}/shard_transfer.py" }
-        - { src: "roles/run-transfer-speed/files/run-bench.sh", dest: "{{ working_dir }}/run-bench.sh", mode: '0755' }
-        - { src: "files/transfer-speed/requirements.txt", dest: "{{ working_dir }}/requirements.txt" }
-
-    - name: Check if the dataset archive already exists
-      ansible.builtin.stat:
-        path: "{{ working_dir }}/data/{{ dataset_name }}.tgz"
-      register: archive_stat
-
-    - name: Download the dataset archive
-      ansible.builtin.get_url:
-        url: "{{ dataset_info.link }}"
-        dest: "{{ working_dir }}/data/{{ dataset_name }}.tgz"
-      when: not archive_stat.stat.exists
-
-    - name: Check if the dataset directory is empty
-      ansible.builtin.find:
-        paths: "{{ working_dir }}/data/{{ dataset_name }}"
-        file_type: any
-      register: dest_dir_contents
-
-    - name: Extract the dataset archive
-      ansible.builtin.unarchive:
-        src: "{{ working_dir }}/data/{{ dataset_name }}.tgz"
-        dest: "{{ working_dir }}/data/{{ dataset_name }}"
-        remote_src: yes
-      when: dest_dir_contents.matched == 0
-
-    - name: Run transfer benchmark
-      ansible.builtin.shell: |
-        {{ working_dir }}/run-bench.sh
-      environment:
-        QDRANT_URIS: "{{ node_urls | join(',') }}"
-        DATASET_NAME: "{{ dataset_name }}"
-        RUNS: "{{ runs }}"
-        OUTPUT_FILENAME: "{{ working_dir }}/results.json"
-        WORK_DIR: "{{ working_dir }}"
-      register: benchmark_result
-
-    - name: Display benchmark output
-      ansible.builtin.debug:
-        msg: "{{ benchmark_result.stdout_lines }}"
-
-    - name: Read results file
-      ansible.builtin.slurp:
-        src: "{{ working_dir }}/results.json"
-      register: results_file
-
-    - name: Set results fact
-      set_fact:
-        transfer_results: "{{ results_file.content | b64decode | from_json }}"
-
-    - name: Display results summary
-      ansible.builtin.debug:
-        msg: |
-          Transfer Benchmark Results:
-          - Dataset: {{ transfer_results.params.dataset }}
-          - Points: {{ transfer_results.params.points }}
-          - Throughput: {{ transfer_results.stats.throughput_mean }} pts/s
-          - MB/s: {{ transfer_results.stats.mbps_mean }}
-          - Duration: {{ transfer_results.stats.duration_mean }}s
-
-- name: Export data into postgres
-  hosts: db_hosts
-  tasks:
-    - name: Insert data into table
-      ansible.builtin.shell: |
-        results='{{ hostvars[groups["client_machines"][0]]["transfer_results"] | to_json }}'
-
-        throughput_pts_s=$(echo "$results" | jq -r '.stats.throughput_mean')
-        duration_s=$(echo "$results" | jq -r '.stats.duration_mean')
-        dataset_name=$(echo "$results" | jq -r '.params.dataset')
-        measure_timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-
-        pg_query="INSERT INTO transfer_speed (
-            engine, engine_version, dataset, measure_timestamp, throughput_pts_s, duration_s
-        ) VALUES (
-            '{{ server.name }}', '{{ server.version }}', '\${dataset_name}', '\${measure_timestamp}', \${throughput_pts_s}, \${duration_s}
-        );"
-
-        docker exec -i qdrant-postgres psql -U qdrant -d postgres -c "${pg_query}"
-      loop: "{{ servers }}"
-      loop_control:
-        loop_var: "server"
+#- name: Export data into postgres
+#  hosts: db_hosts
+#  tasks:
+#    - name: Insert data into table
+#      ansible.builtin.shell: |
+#        results='{{ hostvars[groups["client_machines"][0]]["transfer_results"] | to_json }}'
+#
+#        throughput_pts_s=$(echo "$results" | jq -r '.stats.throughput_mean')
+#        duration_s=$(echo "$results" | jq -r '.stats.duration_mean')
+#        dataset_name=$(echo "$results" | jq -r '.params.dataset')
+#        measure_timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+#
+#        pg_query="INSERT INTO benchmark_shard_transfer (
+#            engine, engine_version, dataset, measure_timestamp, throughput_pts_s, duration_s
+#        ) VALUES (
+#            '{{ server.name }}', '{{ server.version }}', '\${dataset_name}', '\${measure_timestamp}', \${throughput_pts_s}, \${duration_s}
+#        );"
+#
+#        docker exec -i qdrant-postgres psql -U qdrant -d postgres -c "${pg_query}"
+#      loop: "{{ servers }}"
+#      loop_control:
+#        loop_var: "server"

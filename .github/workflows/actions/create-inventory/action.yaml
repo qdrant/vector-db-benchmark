@@ -24,6 +24,8 @@ runs:
         export HCLOUD_TOKEN=${{ inputs.hcloud_token }}
         export POSTGRES_HOST=${{ inputs.db_host }}
 
+        apk add --no-cache jq || apt-get install -y jq
+
         # Download and install hcloud
         HCVERSION=v1.36.0
         wget https://github.com/hetznercloud/cli/releases/download/${HCVERSION}/hcloud-linux-amd64.tar.gz
@@ -38,8 +40,9 @@ runs:
         i=0
         IFS=',' read -ra SERVERS <<< "${{ inputs.server_names }}"
         for SERVER_NAME in "${SERVERS[@]}"; do
-          IP=$(SERVER_NAME=${SERVER_NAME} bash "tools/hetzner/get_public_ip.sh")
-          echo "node-${i} ansible_host=${IP} ansible_user=root" >> inventory.ini
+          PUBLIC_IP=$(bash "tools/hetzner/get_public_ip.sh" "$SERVER_NAME")
+          PRIVATE_IP=$(bash "tools/hetzner/get_private_ip.sh" "$SERVER_NAME")
+          echo "node-${i} ansible_host=${PUBLIC_IP} private_ip=${PRIVATE_IP} ansible_user=root" >> inventory.ini
           i=$((i + 1))
         done
 
@@ -51,7 +54,7 @@ runs:
           i=0
           IFS=',' read -ra CLIENTS <<< "$CLIENT_NAMES"
           for CLIENT_NAME in "${CLIENTS[@]}"; do
-            IP=$(SERVER_NAME=${CLIENT_NAME} bash "tools/hetzner/get_public_ip.sh")
+            IP=$(bash "tools/hetzner/get_public_ip.sh" "$CLIENT_NAME")
             echo "client-${i} ansible_host=${IP} ansible_user=root" >> inventory.ini
             i=$((i + 1))
           done

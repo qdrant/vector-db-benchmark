@@ -1,0 +1,43 @@
+---
+- name: Prepare
+  ansible.builtin.shell: |
+    mkdir -p {{ working_dir }}
+    cd {{ working_dir }} && docker compose down -v 2>/dev/null || true
+    docker rm -f qdrant-continuous 2>/dev/null || true
+    docker ps -q --filter "publish=6333" | xargs -r docker rm -f 2>/dev/null || true
+    docker volume rm qdrant_storage 2>/dev/null || true
+    docker rmi -f {{ server_registry }}/qdrant/qdrant:{{ server_version }} 2>/dev/null || true
+  ignore_errors: yes
+
+- name: Copy docker-compose
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/files/transfer-speed/docker-compose-cluster.yaml"
+    dest: "{{ working_dir }}/docker-compose.yaml"
+
+- name: Start Qdrant
+  ansible.builtin.shell: docker compose up -d
+  args:
+    chdir: "{{ working_dir }}"
+  environment:
+    QDRANT_VERSION: "{{ server_version }}"
+    CONTAINER_REGISTRY: "{{ server_registry }}"
+    NODE_URI: "{{ node_uri }}"
+    BOOTSTRAP_URI: "{{ bootstrap_uri | default('') }}"
+    QDRANT__FEATURE_FLAGS__ALL: "{{ feature_flags | default('false') }}"
+
+- name: Wait ready
+  ansible.builtin.uri:
+    url: "http://localhost:6333/readyz"
+  register: result
+  until: result.status == 200
+  retries: 15
+  delay: 2
+
+- name: Wait cluster join
+  ansible.builtin.uri:
+    url: "http://localhost:6333/cluster"
+  register: cluster
+  until: cluster.json.result.peer_id is defined
+  retries: 15
+  delay: 2
+  when: bootstrap_uri | default('') != ''
