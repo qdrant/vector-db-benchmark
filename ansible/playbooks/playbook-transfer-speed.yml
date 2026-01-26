@@ -36,7 +36,7 @@
         pg_query="INSERT INTO benchmark_shard_transfer (
             engine, engine_version, dataset, measure_timestamp, throughput_pts_s, duration_s
         ) VALUES (
-            'qdrant', '{{ server_registry }}/{{ server_version }}', '\${dataset_name}', '\${measure_timestamp}', \${throughput_pts_s}, \${duration_s}
+            'qdrant', '{{ server_registry }}/{{ server_version }}', '${dataset_name}', '${measure_timestamp}', ${throughput_pts_s}, ${duration_s}
         );"
 
         docker exec -i qdrant-postgres psql -U qdrant -d postgres -c "${pg_query}"

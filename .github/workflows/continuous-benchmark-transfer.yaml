@@ -194,6 +194,9 @@ jobs:
             fi
           done
 
-          [ $FAILED -gt 0 ] && echo "Warning: $FAILED deletion(s) failed"
+          if [ $FAILED -gt 0 ]; then
+            echo "Warning: $FAILED deletion(s) failed"
+            exit 1
+          fi
         env:
           HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
