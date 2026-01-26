@@ -9,7 +9,7 @@ on:
         type: string
       qdrant_versions:
         description: 'Comma-separated versions to compare (ghcr/dev, docker/master, docker/v1.13.0). Can be just single version.'
-        default: 'ghcr/dev,docker/v1.16.3'
+        default: 'ghcr/dev,docker/master'
         type: string
       cluster_nodes:
         description: 'Number of cluster nodes'
@@ -43,7 +43,7 @@ env:
   CLIENT_TYPE: ${{ inputs.client_type || 'cx33' }}
   REGION: ${{ inputs.region || 'fsn1' }}
   DATASET_NAME: ${{ inputs.dataset_name || 'h-and-m-2048-angular-filters' }}
-  QDRANT_VERSIONS: ${{ inputs.qdrant_versions || 'ghcr/dev,docker/v1.16.3' }}
+  QDRANT_VERSIONS: ${{ inputs.qdrant_versions || 'ghcr/dev,docker/master' }}
   CLUSTER_NODES: ${{ inputs.cluster_nodes || '2' }}
 
 jobs:

@@ -32,11 +32,12 @@
         duration_s=$(echo "$results" | jq -r '.stats.duration_mean')
         dataset_name=$(echo "$results" | jq -r '.params.dataset')
         measure_timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        engine_version=$(echo '{{ server_registry }}/{{ server_version }}' | sed 's/\.io//')
 
         pg_query="INSERT INTO benchmark_shard_transfer (
             engine, engine_version, dataset, measure_timestamp, throughput_pts_s, duration_s
         ) VALUES (
-            'qdrant', '{{ server_registry }}/{{ server_version }}', '${dataset_name}', '${measure_timestamp}', ${throughput_pts_s}, ${duration_s}
+            'qdrant', '${engine_version}', '${dataset_name}', '${measure_timestamp}', ${throughput_pts_s}, ${duration_s}
         );"
 
         docker exec -i qdrant-postgres psql -U qdrant -d postgres -c "${pg_query}"
