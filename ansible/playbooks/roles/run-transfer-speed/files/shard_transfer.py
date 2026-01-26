@@ -20,11 +20,20 @@ COLLECTION = "benchmark"
 
 class TransferBenchmark:
     def __init__(self, uris: list[str]):
-        self.clients = {u: QdrantClient(url=u, api_key=QDRANT_API_KEY, prefer_grpc=True, grpc_port=6334) for u in uris}
+        self.clients = {
+            u: QdrantClient(
+                url=u, api_key=QDRANT_API_KEY, prefer_grpc=True, grpc_port=6334
+            )
+            for u in uris
+        }
         self.primary = self.clients[uris[0]]
 
     def cluster_info(self, client=None):
-        return (client or self.primary).http.distributed_api.collection_cluster_info(COLLECTION).dict()["result"]
+        return (
+            (client or self.primary)
+            .http.distributed_api.collection_cluster_info(COLLECTION)
+            .dict()["result"]
+        )
 
     def setup(self, dims: int):
         try:
@@ -34,9 +43,13 @@ class TransferBenchmark:
             pass
         self.primary.create_collection(
             COLLECTION,
-            vectors_config=models.VectorParams(size=dims, distance=models.Distance.COSINE, on_disk=True),
+            vectors_config=models.VectorParams(
+                size=dims, distance=models.Distance.COSINE, on_disk=True
+            ),
             optimizers_config=models.OptimizersConfigDiff(
-                default_segment_number=3, max_segment_size=1_000_000, memmap_threshold=10_000_000
+                default_segment_number=3,
+                max_segment_size=1_000_000,
+                memmap_threshold=10_000_000,
             ),
         )
 
@@ -45,7 +58,10 @@ class TransferBenchmark:
         for i in range(0, n, batch):
             self.primary.upsert(
                 COLLECTION,
-                points=models.Batch(ids=list(range(i, min(i + batch, n))), vectors=vectors[i:i + batch].tolist()),
+                points=models.Batch(
+                    ids=list(range(i, min(i + batch, n))),
+                    vectors=vectors[i : i + batch].tolist(),
+                ),
                 wait=False,
             )
         print(f"Uploaded {n:,} vectors")
@@ -58,7 +74,10 @@ class TransferBenchmark:
             info = self.primary.get_collection(COLLECTION)
             if info.status == models.CollectionStatus.GREEN:
                 time.sleep(5)
-                if self.primary.get_collection(COLLECTION).status == models.CollectionStatus.GREEN:
+                if (
+                    self.primary.get_collection(COLLECTION).status
+                    == models.CollectionStatus.GREEN
+                ):
                     return
         raise TimeoutError(f"Collection not green after {timeout}s")
 
@@ -69,9 +88,13 @@ class TransferBenchmark:
                 print(f"    Telemetry request failed: {r.status_code}")
                 return {}
             data = r.json()
-            collections = data.get("result", {}).get("collections", {}).get("collections", [])
+            collections = (
+                data.get("result", {}).get("collections", {}).get("collections", [])
+            )
             if not collections:
-                print(f"    No collections in telemetry, keys: {list(data.get('result', {}).keys())}")
+                print(
+                    f"    No collections in telemetry, keys: {list(data.get('result', {}).keys())}"
+                )
                 return {}
             for coll in collections:
                 if coll.get("id") == COLLECTION:
@@ -81,17 +104,21 @@ class TransferBenchmark:
                         if not local:
                             continue
                         for seg in local.get("segments", []):
-                            for vec in seg.get("config", {}).get("vector_data", {}).values():
+                            for vec in (
+                                seg.get("config", {}).get("vector_data", {}).values()
+                            ):
                                 st = vec.get("storage_type", "unknown")
                                 types[st] = types.get(st, 0) + 1
                     return types
-            print(f"    Collection '{COLLECTION}' not found, available: {[c.get('id') for c in collections]}")
+            print(
+                f"    Collection '{COLLECTION}' not found, available: {[c.get('id') for c in collections]}"
+            )
         except Exception as e:
             print(f"    Telemetry error: {e}")
         return {}
 
     def wait_mmap(self, uri: str, timeout=180):
-        print(f"Waiting for Mmap segments...")
+        print("Waiting for Mmap segments...")
         start = time.time()
         types = {}
         while time.time() - start < timeout:
@@ -177,7 +204,9 @@ class TransferBenchmark:
             "stats": {
                 "runs": runs,
                 "duration_mean": round(statistics.mean(durations), 3),
-                "duration_std": round(statistics.stdev(durations), 3) if runs > 1 else 0,
+                "duration_std": (
+                    round(statistics.stdev(durations), 3) if runs > 1 else 0
+                ),
                 "throughput_mean": round(statistics.mean(throughputs), 1),
                 "mbps_mean": round(statistics.mean(mbps), 2),
             },
@@ -201,7 +230,9 @@ def main():
         result = bench.run(vectors, RUNS)
         with open(OUTPUT_FILE, "w") as f:
             json.dump(result, f, indent=2)
-        print(f"Result: {result['stats']['throughput_mean']:,.0f} pts/s, {result['stats']['mbps_mean']:.2f} MB/s")
+        print(
+            f"Result: {result['stats']['throughput_mean']:,.0f} pts/s, {result['stats']['mbps_mean']:.2f} MB/s"
+        )
     finally:
         bench.close()
 
