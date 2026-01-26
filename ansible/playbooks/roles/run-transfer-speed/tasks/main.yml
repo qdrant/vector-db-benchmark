@@ -61,6 +61,10 @@
     src: "{{ working_dir }}/results.json"
   register: results_file
 
+- name: Set transfer_results fact
+  set_fact:
+    transfer_results: "{{ results_file.content | b64decode | from_json }}"
+
 - name: Output
   debug:
-    msg: "{{ (results_file.content | b64decode | from_json).stats }}"
+    msg: "{{ transfer_results.stats }}"

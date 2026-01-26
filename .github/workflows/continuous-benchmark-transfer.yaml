@@ -5,11 +5,15 @@ on:
     inputs:
       dataset_name:
         description: 'Dataset name'
-        default: 'laion-small-clip'
+        default: 'h-and-m-2048-angular-filters'
         type: string
       qdrant_versions:
         description: 'Comma-separated versions to compare (ghcr/dev, docker/master, docker/v1.13.0). Can be just single version.'
         default: 'ghcr/dev,docker/v1.16.3'
+        type: string
+      cluster_nodes:
+        description: 'Number of cluster nodes'
+        default: '2'
         type: string
       region:
         description: 'Hetzner region'
@@ -38,50 +42,64 @@ env:
   SERVER_TYPE: ${{ inputs.server_type || 'ccx13' }}
   CLIENT_TYPE: ${{ inputs.client_type || 'cx33' }}
   REGION: ${{ inputs.region || 'fsn1' }}
-  DATASET_NAME: ${{ inputs.dataset_name || 'laion-small-clip' }}
+  DATASET_NAME: ${{ inputs.dataset_name || 'h-and-m-2048-angular-filters' }}
   QDRANT_VERSIONS: ${{ inputs.qdrant_versions || 'ghcr/dev,docker/v1.16.3' }}
+  CLUSTER_NODES: ${{ inputs.cluster_nodes || '2' }}
 
 jobs:
+  generateMatrix:
+    name: Generate Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.generate.outputs.matrix }}
+      node_names: ${{ steps.generate.outputs.node_names }}
+      client_name: ${{ steps.generate.outputs.client_name }}
+    steps:
+      - name: Generate machine matrix
+        id: generate
+        run: |
+          NODES=${{ env.CLUSTER_NODES }}
+          RUN_ID=${{ github.run_id }}
+
+          MACHINES='['
+          NODE_NAMES=''
+          for i in $(seq 0 $((NODES - 1))); do
+            [ $i -gt 0 ] && MACHINES+=','
+            MACHINES+="{\"name\":\"node-${i}\",\"suffix\":\"node-${i}\",\"type\":\"SERVER_TYPE\"}"
+            [ -n "$NODE_NAMES" ] && NODE_NAMES+=','
+            NODE_NAMES+="transfer-bench-node-${i}-${RUN_ID}"
+          done
+          MACHINES+=",{\"name\":\"client\",\"suffix\":\"client\",\"type\":\"CLIENT_TYPE\"}]"
+
+          echo "matrix={\"machine\":${MACHINES}}" >> $GITHUB_OUTPUT
+          echo "node_names=${NODE_NAMES}" >> $GITHUB_OUTPUT
+          echo "client_name=transfer-bench-client-${RUN_ID}" >> $GITHUB_OUTPUT
+
   setupCluster:
     name: Setup ${{ matrix.machine.name }}
+    needs: generateMatrix
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
-      matrix:
-        machine:
-          - name: node-0
-            server_name_suffix: node-0
-            server_type_env: SERVER_TYPE
-          - name: node-1
-            server_name_suffix: node-1
-            server_type_env: SERVER_TYPE
-          - name: client
-            server_name_suffix: client
-            server_type_env: CLIENT_TYPE
-    outputs:
-      node_names: transfer-bench-node-0-${{ github.run_id }},transfer-bench-node-1-${{ github.run_id }}
-      client_name: transfer-bench-client-${{ github.run_id }}
+      matrix: ${{ fromJSON(needs.generateMatrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
-
       - uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
       - name: Setup CI tools
         run: bash -x tools/setup_ci.sh
-
       - name: Create machine
         uses: ./.github/workflows/actions/create-server-with-retry
         with:
-          server_name: transfer-bench-${{ matrix.machine.server_name_suffix }}-${{ github.run_id }}
-          server_type: ${{ matrix.machine.server_type_env == 'CLIENT_TYPE' && env.CLIENT_TYPE || env.SERVER_TYPE }}
+          server_name: transfer-bench-${{ matrix.machine.suffix }}-${{ github.run_id }}
+          server_type: ${{ matrix.machine.type == 'CLIENT_TYPE' && env.CLIENT_TYPE || env.SERVER_TYPE }}
           region: ${{ env.REGION }}
           max_retries: 2
 
   runBenchmark:
     name: Run Transfer Benchmark
-    needs: setupCluster
+    needs: [generateMatrix, setupCluster]
     runs-on: ubuntu-latest
     container: alpine/ansible:2.18.1
     steps:
@@ -93,13 +111,13 @@ jobs:
         uses: ./.github/workflows/actions/create-inventory
         with:
           hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
-          server_names: ${{ needs.setupCluster.outputs.node_names }}
-          client_names: ${{ needs.setupCluster.outputs.client_name }}
+          server_names: ${{ needs.generateMatrix.outputs.node_names }}
+          client_names: ${{ needs.generateMatrix.outputs.client_name }}
           db_host: ${{ secrets.POSTGRES_HOST }}
       - name: Run benchmarks for all versions
         run: |
           echo "$QDRANT_VERSIONS" | tr ',' '\n' | while read -r QDRANT_VERSION; do
-            QDRANT_VERSION=$(echo "$QDRANT_VERSION" | xargs)  # trim whitespace
+            QDRANT_VERSION=$(echo "$QDRANT_VERSION" | xargs)
             [ -z "$QDRANT_VERSION" ] && continue
 
             echo "=========================================="
@@ -134,7 +152,7 @@ jobs:
 
   cleanup:
     name: Cleanup Cluster
-    needs: [setupCluster, runBenchmark]
+    needs: [generateMatrix, runBenchmark]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -143,26 +161,20 @@ jobs:
         run: bash -x tools/setup_ci.sh
         env:
           HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
-      - name: Delete cluster nodes and client
+      - name: Delete machines
         run: |
-          NODE_NAMES="${{ needs.setupCluster.outputs.node_names }}"
-          CLIENT_NAME="${{ needs.setupCluster.outputs.client_name }}"
+          NODE_NAMES="${{ needs.generateMatrix.outputs.node_names }}"
+          CLIENT_NAME="${{ needs.generateMatrix.outputs.client_name }}"
 
-          # Build list of all machines to delete
           ALL_MACHINES=()
           IFS=',' read -ra NODES <<< "$NODE_NAMES"
           for NODE in "${NODES[@]}"; do
-            if [ -n "$NODE" ]; then
-              ALL_MACHINES+=("$NODE")
-            fi
+            [ -n "$NODE" ] && ALL_MACHINES+=("$NODE")
           done
-          if [ -n "$CLIENT_NAME" ]; then
-            ALL_MACHINES+=("$CLIENT_NAME")
-          fi
+          [ -n "$CLIENT_NAME" ] && ALL_MACHINES+=("$CLIENT_NAME")
 
           echo "Deleting ${#ALL_MACHINES[@]} machines in parallel..."
 
-          # Launch all deletions in parallel
           PIDS=()
           for MACHINE in "${ALL_MACHINES[@]}"; do
             (
@@ -172,7 +184,6 @@ jobs:
             PIDS+=($!)
           done
 
-          # Wait for all deletions to complete
           FAILED=0
           for i in "${!PIDS[@]}"; do
             if wait ${PIDS[$i]}; then
@@ -183,8 +194,6 @@ jobs:
             fi
           done
 
-          if [ $FAILED -gt 0 ]; then
-            echo "Warning: $FAILED deletion(s) failed"
-          fi
+          [ $FAILED -gt 0 ] && echo "Warning: $FAILED deletion(s) failed"
         env:
           HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
