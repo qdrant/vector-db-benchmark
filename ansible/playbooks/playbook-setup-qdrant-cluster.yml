@@ -1,0 +1,10 @@
+---
+- name: Setup Qdrant cluster only
+  hosts: remote_machines
+  become: yes
+  vars_files: ["group_vars/qdrant-cluster.yml"]
+  vars:
+    node_uri: "http://{{ private_ip }}:6335"
+    bootstrap_uri: "{{ '' if inventory_hostname == groups['remote_machines'][0] else 'http://' + hostvars[groups['remote_machines'][0]]['private_ip'] + ':6335' }}"
+  roles:
+    - setup-qdrant-cluster

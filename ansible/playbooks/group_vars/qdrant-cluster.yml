@@ -1,0 +1,7 @@
+logging_dir: "/tmp/logs"
+working_dir: "/tmp/experiments"
+
+# Server configuration (overridden via --extra-vars from workflow)
+server_registry: "ghcr.io"
+server_version: "dev"
+feature_flags: "true"
