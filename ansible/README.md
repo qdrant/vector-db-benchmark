@@ -11,7 +11,7 @@ Add inventory.ini in [ansible/playbooks/](playbooks) with the following content:
 ;note that machine's name should be benchmark-machine
 node-0 ansible_host=${YOUR_SERVER_IP} ansible_user=${YOUR_USER}
 
-;optional, only required for some benchmarks, i.e for playbook-transfer-speed.yml 
+;optional, only required for some benchmarks, i.e for playbook-transfer-speed.yml
 [client_machines]
 client-0 ansible_host=x.x.x.x private_ip=x.x.x.x ansible_user=root
 
