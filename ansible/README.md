@@ -9,7 +9,7 @@ Add inventory.ini in [ansible/playbooks/](playbooks) with the following content:
 ```ini
 [remote_machines]
 ;note that machine's name should be benchmark-machine
-benchmark-machine ansible_host=${YOUR_SERVER_IP} ansible_user=${YOUR_USER}
+node-0 ansible_host=${YOUR_SERVER_IP} ansible_user=${YOUR_USER}
 [db_hosts]
 benchmark-db ansible_host=${YOUR_SERVER_IP} ansible_user=${YOUR_USER}
 ```
