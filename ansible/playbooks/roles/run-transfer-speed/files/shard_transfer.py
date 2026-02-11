@@ -1,8 +1,15 @@
+"""Benchmark shard transfer speed between Qdrant cluster nodes.
+
+Uploads a dataset to a Qdrant cluster, then repeatedly replicates a shard
+between two peers to measure transfer throughput (points/s and MB/s).
+"""
+
 import json
 import os
 import statistics
 import sys
 import time
+from collections import Counter
 from pathlib import Path
 
 import numpy as np
@@ -28,12 +35,14 @@ class TransferBenchmark:
         }
         self.primary = self.clients[uris[0]]
 
-    def cluster_info(self, client=None):
-        return (
+    def cluster_info(self, client=None) -> models.CollectionClusterInfo:
+        result = (
             (client or self.primary)
             .http.distributed_api.collection_cluster_info(COLLECTION)
-            .dict()["result"]
+            .result
         )
+        assert result
+        return result
 
     def setup(self, dims: int):
         try:
@@ -81,46 +90,25 @@ class TransferBenchmark:
                     return
         raise TimeoutError(f"Collection not green after {timeout}s")
 
-    def storage_types(self, uri: str) -> dict:
+    def storage_types(self, uri: str) -> Counter:
         try:
-            r = requests.get(f"{uri}/telemetry?details_level=6", timeout=10)
-            if not r.ok:
-                print(f"    Telemetry request failed: {r.status_code}")
-                return {}
-            data = r.json()
-            collections = (
-                data.get("result", {}).get("collections", {}).get("collections", [])
-            )
-            if not collections:
-                print(
-                    f"    No collections in telemetry, keys: {list(data.get('result', {}).keys())}"
-                )
-                return {}
-            for coll in collections:
-                if coll.get("id") == COLLECTION:
-                    types = {}
-                    for shard in coll.get("shards", []):
-                        local = shard.get("local")
-                        if not local:
-                            continue
-                        for seg in local.get("segments", []):
-                            for vec in (
-                                seg.get("config", {}).get("vector_data", {}).values()
-                            ):
-                                st = vec.get("storage_type", "unknown")
-                                types[st] = types.get(st, 0) + 1
-                    return types
-            print(
-                f"    Collection '{COLLECTION}' not found, available: {[c.get('id') for c in collections]}"
+            data = requests.get(f"{uri}/telemetry?details_level=6", timeout=10).json()
+            return Counter(
+                vec["storage_type"]
+                for coll in data["result"]["collections"]["collections"]
+                if coll.get("id") == COLLECTION
+                for shard in coll["shards"]
+                for seg in (shard["local"] or {}).get("segments", [])
+                for vec in seg["config"]["vector_data"].values()
             )
         except Exception as e:
             print(f"    Telemetry error: {e}")
-        return {}
+        return Counter()
 
     def wait_mmap(self, uri: str, timeout=180):
         print("Waiting for Mmap segments...")
         start = time.time()
-        types = {}
+        types = Counter()
         while time.time() - start < timeout:
             types = self.storage_types(uri)
             mmap = types.get("Mmap", 0)
@@ -134,7 +122,7 @@ class TransferBenchmark:
     def wait_transfer(self, timeout=600):
         start = time.time()
         while time.time() - start < timeout:
-            if not self.cluster_info().get("shard_transfers"):
+            if not self.cluster_info().shard_transfers:
                 return
             time.sleep(0.5)
         raise TimeoutError("Transfer timeout")
@@ -165,15 +153,15 @@ class TransferBenchmark:
         self.wait_mmap(list(self.clients.keys())[0])
 
         info = self.cluster_info()
-        from_peer = info["peer_id"]
-        shard_id = info["local_shards"][0]["shard_id"]
+        from_peer = info.peer_id
+        shard_id = info.local_shards[0].shard_id
 
         to_peer = None
         for client in self.clients.values():
             node = self.cluster_info(client)
-            if node["peer_id"] != from_peer:
-                to_peer = node["peer_id"]
-                if shard_id in {s["shard_id"] for s in node.get("local_shards", [])}:
+            if node.peer_id != from_peer:
+                to_peer = node.peer_id
+                if shard_id in {s.shard_id for s in node.local_shards}:
                     self.drop_replica(shard_id, to_peer)
                     time.sleep(2)
                 break

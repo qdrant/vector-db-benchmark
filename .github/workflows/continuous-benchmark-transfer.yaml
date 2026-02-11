@@ -27,8 +27,11 @@ on:
         description: 'Hetzner client type'
         default: 'cx33'
         type: string
-  schedule:
-    - cron: "0 4 * * *"  # Daily at 4am UTC
+#  schedule:
+#    - cron: "0 4 * * *"  # Daily at 4am UTC
+  push:
+    branches:
+      - transfer-speed-benchmark
 
 concurrency:
   group: hetzner-machines
@@ -55,22 +58,30 @@ jobs:
       - name: Generate machine matrix
         id: generate
         run: |
-          NODES=${{ env.CLUSTER_NODES }}
           RUN_ID=${{ github.run_id }}
 
-          MACHINES='['
-          NODE_NAMES=''
-          for i in $(seq 0 $((NODES - 1))); do
-            [ $i -gt 0 ] && MACHINES+=','
-            MACHINES+="{\"name\":\"node-${i}\",\"suffix\":\"node-${i}\",\"type\":\"SERVER_TYPE\"}"
-            [ -n "$NODE_NAMES" ] && NODE_NAMES+=','
-            NODE_NAMES+="transfer-bench-node-${i}-${RUN_ID}"
-          done
-          MACHINES+=",{\"name\":\"client\",\"suffix\":\"client\",\"type\":\"CLIENT_TYPE\"}]"
+          python >> $GITHUB_OUTPUT << "EOF"
+          import json
+          import os
 
-          echo "matrix={\"machine\":${MACHINES}}" >> $GITHUB_OUTPUT
-          echo "node_names=${NODE_NAMES}" >> $GITHUB_OUTPUT
-          echo "client_name=transfer-bench-client-${RUN_ID}" >> $GITHUB_OUTPUT
+          NODES = int(os.environ["CLUSTER_NODES"])
+          RUN_ID = ${{ github.run_id }}
+
+          machines = []
+          node_names = []
+          for i in range(NODES):
+              machines.append({
+                  "name": f"node-{i}", "suffix": f"node-{i}", "type": "SERVER_TYPE"
+              })
+              node_names.append(f"transfer-bench-node-{i}-{RUN_ID}")
+          machines.append({
+              "name": "client", "suffix": "client", "type": "CLIENT_TYPE"
+          })
+
+          print(f"matrix={json.dumps({'machine': machines})}")
+          print(f'node_names={" ".join(node_names)}')
+          print(f"client_name=transfer-bench-client-{RUN_ID}")
+          EOF
 
   setupCluster:
     name: Setup ${{ matrix.machine.name }}
@@ -159,41 +170,8 @@ jobs:
         env:
           HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
       - name: Delete machines
-        run: |
-          NODE_NAMES="${{ needs.generateMatrix.outputs.node_names }}"
-          CLIENT_NAME="${{ needs.generateMatrix.outputs.client_name }}"
-
-          ALL_MACHINES=()
-          IFS=',' read -ra NODES <<< "$NODE_NAMES"
-          for NODE in "${NODES[@]}"; do
-            [ -n "$NODE" ] && ALL_MACHINES+=("$NODE")
-          done
-          [ -n "$CLIENT_NAME" ] && ALL_MACHINES+=("$CLIENT_NAME")
-
-          echo "Deleting ${#ALL_MACHINES[@]} machines in parallel..."
-
-          PIDS=()
-          for MACHINE in "${ALL_MACHINES[@]}"; do
-            (
-              echo "Deleting $MACHINE..."
-              bash tools/hetzner/remove_server.sh "$MACHINE"
-            ) &
-            PIDS+=($!)
-          done
-
-          FAILED=0
-          for i in "${!PIDS[@]}"; do
-            if wait ${PIDS[$i]}; then
-              echo "Deleted ${ALL_MACHINES[$i]}"
-            else
-              echo "Failed to delete ${ALL_MACHINES[$i]}"
-              FAILED=$((FAILED + 1))
-            fi
-          done
-
-          if [ $FAILED -gt 0 ]; then
-            echo "Warning: $FAILED deletion(s) failed"
-            exit 1
-          fi
         env:
+          NODE_NAMES: ${{ needs.generateMatrix.outputs.node_names }}
+          CLIENT_NAME: ${{ needs.generateMatrix.outputs.client_name }}
           HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+        run: echo $NODE_NAMES $CLIENT_NAME | xargs -P0 -n1 hcloud server delete

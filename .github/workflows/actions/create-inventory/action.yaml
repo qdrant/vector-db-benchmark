@@ -5,10 +5,10 @@ inputs:
     description: "Hetzner Cloud API token"
     required: true
   server_names:
-    description: "Comma-separated list of server names"
+    description: "Space-separated list of server names"
     required: true
   client_names:
-    description: "Comma-separated list of client names (optional)"
+    description: "Space-separated list of client names (optional)"
     required: false
     default: ""
   db_host:
@@ -38,8 +38,7 @@ runs:
 
         # Add each server to inventory
         i=0
-        IFS=',' read -ra SERVERS <<< "${{ inputs.server_names }}"
-        for SERVER_NAME in "${SERVERS[@]}"; do
+        for SERVER_NAME in ${{ inputs.server_names }}; do
           PUBLIC_IP=$(bash "tools/hetzner/get_public_ip.sh" "$SERVER_NAME")
           PRIVATE_IP=$(bash "tools/hetzner/get_private_ip.sh" "$SERVER_NAME")
           echo "node-${i} ansible_host=${PUBLIC_IP} private_ip=${PRIVATE_IP} ansible_user=root" >> inventory.ini
@@ -52,8 +51,7 @@ runs:
           echo "" >> inventory.ini
           echo "[client_machines]" >> inventory.ini
           i=0
-          IFS=',' read -ra CLIENTS <<< "$CLIENT_NAMES"
-          for CLIENT_NAME in "${CLIENTS[@]}"; do
+          for CLIENT_NAME in $CLIENT_NAMES; do
             IP=$(bash "tools/hetzner/get_public_ip.sh" "$CLIENT_NAME")
             echo "client-${i} ansible_host=${IP} ansible_user=root" >> inventory.ini
             i=$((i + 1))
