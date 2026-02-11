@@ -1,8 +1,8 @@
 ---
-- name: Install python3-venv
-  ansible.builtin.package:
-    name: python3-venv
-    state: present
+- name: Install uv
+  ansible.builtin.shell: curl -LsSf https://astral.sh/uv/install.sh | sh
+  args:
+    creates: /root/.local/bin/uv
 
 - name: Setup
   ansible.builtin.shell: mkdir -p {{ working_dir }}/data/{{ dataset_name }}
@@ -13,15 +13,11 @@
   set_fact:
     dataset: "{{ datasets | selectattr('name', 'equalto', dataset_name) | first }}"
 
-- name: Copy files
+- name: Copy benchmark script
   ansible.builtin.copy:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
-    mode: "{{ item.mode | default('0644') }}"
-  loop:
-    - {src: "shard_transfer.py", dest: "{{ working_dir }}/shard_transfer.py"}
-    - {src: "run-bench.sh", dest: "{{ working_dir }}/run-bench.sh", mode: '0755'}
-    - {src: "{{ playbook_dir }}/files/transfer-speed/requirements.txt", dest: "{{ working_dir }}/requirements.txt"}
+    src: shard_transfer.py
+    dest: "{{ working_dir }}/shard_transfer.py"
+    mode: '0755'
 
 - name: Check dataset
   stat:
@@ -42,14 +38,14 @@
   when: not vectors_file.stat.exists
 
 - name: Run benchmark
-  ansible.builtin.shell: "{{ working_dir }}/run-bench.sh"
+  ansible.builtin.shell: "{{ working_dir }}/shard_transfer.py"
   environment:
+    PATH: "/root/.local/bin:{{ ansible_env.PATH }}"
     QDRANT_URIS: "{{ qdrant_uris }}"
     DATASET_NAME: "{{ dataset_name }}"
     RUNS: "{{ runs }}"
     OUTPUT_FILENAME: "{{ working_dir }}/results.json"
     WORK_DIR: "{{ working_dir }}"
-    PYTHONUNBUFFERED: "1"
   register: benchmark_output
 
 - name: Show benchmark output

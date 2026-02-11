@@ -1,3 +1,11 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# dependencies = [
+#   "numpy>=2.2.5",
+#   "qdrant-client>=1.16.0",
+#   "requests>=2.31.0",
+# ]
+# ///
 """Benchmark shard transfer speed between Qdrant cluster nodes.
 
 Uploads a dataset to a Qdrant cluster, then repeatedly replicates a shard
