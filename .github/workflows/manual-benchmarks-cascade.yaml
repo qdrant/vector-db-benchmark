@@ -40,6 +40,10 @@ on:
         server_machine_type:
             description: "Hetzner server machine type to run the benchmarks in"
             default: "cpx41"
+
+concurrency:
+  group: hetzner-machines
+
 env:
   # Common environment variables
   HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}

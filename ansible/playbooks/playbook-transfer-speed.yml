@@ -1,0 +1,43 @@
+---
+- name: Setup cluster
+  hosts: remote_machines
+  become: yes
+  vars_files: ["group_vars/transfer-speed.yml"]
+  vars:
+    node_uri: "http://{{ private_ip }}:6335"
+    bootstrap_uri: "{{ '' if inventory_hostname == groups['remote_machines'][0] else 'http://' + hostvars[groups['remote_machines'][0]]['private_ip'] + ':6335' }}"
+  roles:
+    - setup-qdrant-cluster
+
+- name: Run benchmark
+  hosts: client_machines
+  become: yes
+  vars_files:
+    - group_vars/transfer-speed.yml
+    - group_vars/datasets.yml
+  vars:
+    qdrant_uris: "{{ groups['remote_machines'] | map('extract', hostvars, 'private_ip') | map('regex_replace', '^(.*)$', 'http://\\1:6333') | join(',') }}"
+  roles:
+    - run-transfer-speed
+
+- name: Export data into postgres
+  hosts: db_hosts
+  vars_files: ["group_vars/transfer-speed.yml"]
+  tasks:
+    - name: Insert data into table
+      ansible.builtin.shell: |
+        results='{{ hostvars[groups["client_machines"][0]]["transfer_results"] | to_json }}'
+
+        throughput_pts_s=$(echo "$results" | jq -r '.stats.throughput_mean')
+        duration_s=$(echo "$results" | jq -r '.stats.duration_mean')
+        dataset_name=$(echo "$results" | jq -r '.params.dataset')
+        measure_timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        engine_version=$(echo '{{ server_registry }}/{{ server_version }}' | sed 's/\.io//')
+
+        pg_query="INSERT INTO benchmark_shard_transfer (
+            engine, engine_version, dataset, measure_timestamp, throughput_pts_s, duration_s
+        ) VALUES (
+            'qdrant', '${engine_version}', '${dataset_name}', '${measure_timestamp}', ${throughput_pts_s}, ${duration_s}
+        );"
+
+        docker exec -i qdrant-postgres psql -U qdrant -d postgres -c "${pg_query}"

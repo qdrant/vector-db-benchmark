@@ -8,8 +8,15 @@
 Add inventory.ini in [ansible/playbooks/](playbooks) with the following content:
 ```ini
 [remote_machines]
-;note that machine's name should be benchmark-machine
-benchmark-machine ansible_host=${YOUR_SERVER_IP} ansible_user=${YOUR_USER}
+;note that machine's name should be node-*
+node-0 ansible_host=${YOUR_SERVER_IP} private_ip=${YOUR_SERVER_PRIVATE_IP} ansible_user=${YOUR_USER}
+;for multi-node benchmarks (playbook-transfer-speed.yml), add more machines here, i.e.:
+;node-1 ansible_host=x.x.x.x private_ip=x.x.x.x ansible_user=root
+
+;optional, only required for some benchmarks, i.e for playbook-transfer-speed.yml
+[client_machines]
+client-0 ansible_host=x.x.x.x private_ip=x.x.x.x ansible_user=root
+
 [db_hosts]
 benchmark-db ansible_host=${YOUR_SERVER_IP} ansible_user=${YOUR_USER}
 ```

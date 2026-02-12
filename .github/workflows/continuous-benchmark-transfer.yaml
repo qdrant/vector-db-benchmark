@@ -1,0 +1,174 @@
+name: Continuous Benchmark Shard Transfer Speed
+
+on:
+  workflow_dispatch:
+    inputs:
+      dataset_name:
+        description: 'Dataset name'
+        default: 'h-and-m-2048-angular-filters'
+        type: string
+      qdrant_versions:
+        description: 'Comma-separated versions to compare (ghcr/dev, docker/master, docker/v1.13.0). Can be just single version.'
+        default: 'ghcr/dev,docker/master'
+        type: string
+      cluster_nodes:
+        description: 'Number of cluster nodes'
+        default: '2'
+        type: string
+      region:
+        description: 'Hetzner region'
+        default: 'fsn1'
+        type: string
+      server_type:
+        description: 'Hetzner server type'
+        default: 'ccx13'
+        type: string
+      client_type:
+        description: 'Hetzner client type'
+        default: 'cx33'
+        type: string
+  schedule:
+    - cron: "0 4 * * *"  # Daily at 4am UTC
+
+concurrency:
+  group: hetzner-machines
+
+env:
+  HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+  # Defaults for push trigger (inputs.* is empty on push)
+  SERVER_TYPE: ${{ inputs.server_type || 'ccx13' }}
+  CLIENT_TYPE: ${{ inputs.client_type || 'cx33' }}
+  REGION: ${{ inputs.region || 'fsn1' }}
+  DATASET_NAME: ${{ inputs.dataset_name || 'h-and-m-2048-angular-filters' }}
+  QDRANT_VERSIONS: ${{ inputs.qdrant_versions || 'ghcr/dev,docker/master' }}
+  CLUSTER_NODES: ${{ inputs.cluster_nodes || '2' }}
+
+jobs:
+  generateMatrix:
+    name: Generate Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.generate.outputs.matrix }}
+      node_names: ${{ steps.generate.outputs.node_names }}
+      client_name: ${{ steps.generate.outputs.client_name }}
+    steps:
+      - name: Generate machine matrix
+        id: generate
+        run: |
+          RUN_ID=${{ github.run_id }}
+
+          python >> $GITHUB_OUTPUT << "EOF"
+          import json
+          import os
+
+          NODES = int(os.environ["CLUSTER_NODES"])
+          RUN_ID = ${{ github.run_id }}
+
+          machines = []
+          node_names = []
+          for i in range(NODES):
+              machines.append({
+                  "name": f"node-{i}", "suffix": f"node-{i}", "type": "SERVER_TYPE"
+              })
+              node_names.append(f"transfer-bench-node-{i}-{RUN_ID}")
+          machines.append({
+              "name": "client", "suffix": "client", "type": "CLIENT_TYPE"
+          })
+
+          print(f"matrix={json.dumps({'machine': machines})}")
+          print(f'node_names={" ".join(node_names)}')
+          print(f"client_name=transfer-bench-client-{RUN_ID}")
+          EOF
+
+  setupCluster:
+    name: Setup ${{ matrix.machine.name }}
+    needs: generateMatrix
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix: ${{ fromJSON(needs.generateMatrix.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Setup CI tools
+        run: bash -x tools/setup_ci.sh
+      - name: Create machine
+        uses: ./.github/workflows/actions/create-server-with-retry
+        with:
+          server_name: transfer-bench-${{ matrix.machine.suffix }}-${{ github.run_id }}
+          server_type: ${{ matrix.machine.type == 'CLIENT_TYPE' && env.CLIENT_TYPE || env.SERVER_TYPE }}
+          region: ${{ env.REGION }}
+          max_retries: 2
+
+  runBenchmark:
+    name: Run Transfer Benchmark
+    needs: [generateMatrix, setupCluster]
+    runs-on: ubuntu-latest
+    container: alpine/ansible:2.18.1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Create inventory
+        uses: ./.github/workflows/actions/create-inventory
+        with:
+          hcloud_token: ${{ secrets.HCLOUD_TOKEN }}
+          server_names: ${{ needs.generateMatrix.outputs.node_names }}
+          client_names: ${{ needs.generateMatrix.outputs.client_name }}
+          db_host: ${{ secrets.POSTGRES_HOST }}
+      - name: Run benchmarks for all versions
+        run: |
+          echo "$QDRANT_VERSIONS" | tr ',' '\n' | while read -r QDRANT_VERSION; do
+            QDRANT_VERSION=$(echo "$QDRANT_VERSION" | xargs)
+            [ -z "$QDRANT_VERSION" ] && continue
+
+            echo "=========================================="
+            echo "Benchmarking Qdrant version: $QDRANT_VERSION"
+            echo "=========================================="
+
+            case "${QDRANT_VERSION}" in
+              docker/*)
+                CONTAINER_REGISTRY="docker.io"
+                VERSION=${QDRANT_VERSION#docker/}
+                ;;
+              ghcr/*)
+                CONTAINER_REGISTRY="ghcr.io"
+                VERSION=${QDRANT_VERSION#ghcr/}
+                ;;
+              *)
+                echo "Error: unknown version ${QDRANT_VERSION}. Version name should start with 'docker/' or 'ghcr/'"
+                exit 1
+                ;;
+            esac
+
+            ansible-playbook ansible/playbooks/playbook-transfer-speed.yml \
+              -i ansible/playbooks/inventory.ini \
+              --extra-vars "dataset_name=${DATASET_NAME} server_registry=${CONTAINER_REGISTRY} server_version=${VERSION}"
+          done
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+          ANSIBLE_SSH_ARGS: "-o ServerAliveInterval=30 -o ServerAliveCountMax=10 -o ControlMaster=no"
+          ANSIBLE_STDOUT_CALLBACK: yaml
+          QDRANT_VERSIONS: ${{ env.QDRANT_VERSIONS }}
+          DATASET_NAME: ${{ env.DATASET_NAME }}
+
+  cleanup:
+    name: Cleanup Cluster
+    needs: [generateMatrix, runBenchmark]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup CI tools
+        run: bash -x tools/setup_ci.sh
+        env:
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+      - name: Delete machines
+        env:
+          NODE_NAMES: ${{ needs.generateMatrix.outputs.node_names }}
+          CLIENT_NAME: ${{ needs.generateMatrix.outputs.client_name }}
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+        run: echo $NODE_NAMES $CLIENT_NAME | xargs -P0 -n1 hcloud server delete

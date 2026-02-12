@@ -1,0 +1,66 @@
+---
+- name: Install uv
+  ansible.builtin.shell: curl -LsSf https://astral.sh/uv/install.sh | sh
+  args:
+    creates: /root/.local/bin/uv
+
+- name: Setup
+  ansible.builtin.shell: mkdir -p {{ working_dir }}/data/{{ dataset_name }}
+  args:
+    creates: "{{ working_dir }}/data/{{ dataset_name }}"
+
+- name: Get dataset info
+  set_fact:
+    dataset: "{{ datasets | selectattr('name', 'equalto', dataset_name) | first }}"
+
+- name: Copy benchmark script
+  ansible.builtin.copy:
+    src: shard_transfer.py
+    dest: "{{ working_dir }}/shard_transfer.py"
+    mode: '0755'
+
+- name: Check dataset
+  stat:
+    path: "{{ working_dir }}/data/{{ dataset_name }}/vectors.npy"
+  register: vectors_file
+
+- name: Download dataset
+  ansible.builtin.get_url:
+    url: "{{ dataset.link }}"
+    dest: "{{ working_dir }}/data/{{ dataset_name }}.tgz"
+  when: not vectors_file.stat.exists
+
+- name: Extract dataset
+  ansible.builtin.unarchive:
+    src: "{{ working_dir }}/data/{{ dataset_name }}.tgz"
+    dest: "{{ working_dir }}/data/{{ dataset_name }}"
+    remote_src: yes
+  when: not vectors_file.stat.exists
+
+- name: Run benchmark
+  ansible.builtin.shell: "{{ working_dir }}/shard_transfer.py"
+  environment:
+    PATH: "/root/.local/bin:{{ ansible_env.PATH }}"
+    QDRANT_URIS: "{{ qdrant_uris }}"
+    DATASET_NAME: "{{ dataset_name }}"
+    RUNS: "{{ runs }}"
+    OUTPUT_FILENAME: "{{ working_dir }}/results.json"
+    WORK_DIR: "{{ working_dir }}"
+  register: benchmark_output
+
+- name: Show benchmark output
+  debug:
+    msg: "{{ benchmark_output.stdout_lines }}"
+
+- name: Read results
+  ansible.builtin.slurp:
+    src: "{{ working_dir }}/results.json"
+  register: results_file
+
+- name: Set transfer_results fact
+  set_fact:
+    transfer_results: "{{ results_file.content | b64decode | from_json }}"
+
+- name: Output
+  debug:
+    msg: "{{ transfer_results.stats }}"
