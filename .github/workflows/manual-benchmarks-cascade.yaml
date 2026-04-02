@@ -39,7 +39,7 @@ on:
             default: "fsn1"
         server_machine_type:
             description: "Hetzner server machine type to run the benchmarks in"
-            default: "cpx41"
+            default: "cpx42"
 
 concurrency:
   group: hetzner-machines
