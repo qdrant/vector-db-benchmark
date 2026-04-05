@@ -220,5 +220,18 @@
             { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } }
         ],
         "upload_params": { "parallel": 16, "batch_size": 1024 }
+    },
+    {
+        "name": "qdrant-m-16-ef-128",
+        "engine": "qdrant_native",
+        "connection_params": { "timeout": 30 },
+        "collection_params": {
+            "optimizers_config": { "max_segment_size": 1000000, "memmap_threshold": 10000000, "default_segment_number": 2 },
+            "hnsw_config": { "m": 16, "ef_construct": 128 }
+        },
+        "search_params": [
+            { "parallel": 100, "config": { "hnsw_ef": 64 } }
+        ],
+        "upload_params": { "parallel": 16, "batch_size": 1024 }
     }
 ]
