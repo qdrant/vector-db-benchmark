@@ -80,6 +80,21 @@ class QdrantNativeUploader(BaseUploader):
         response.raise_for_status()
 
     @classmethod
+    def _upload_batch(cls, batch) -> float:
+        max_retries = 5
+        for attempt in range(max_retries):
+            try:
+                start = time.perf_counter()
+                cls.upload_batch(batch)
+                return time.perf_counter() - start
+            except (httpx.RemoteProtocolError, httpx.TransportError) as e:
+                if attempt == max_retries - 1:
+                    raise
+                wait = 2 ** attempt
+                print(f"Upload attempt {attempt + 1} failed ({e}), retrying in {wait}s...")
+                time.sleep(wait)
+
+    @classmethod
     def post_upload(cls, _distance):
         """
         Post-upload operations:
