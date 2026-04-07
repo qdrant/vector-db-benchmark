@@ -90,8 +90,10 @@ class QdrantNativeUploader(BaseUploader):
             except (httpx.RemoteProtocolError, httpx.TransportError) as e:
                 if attempt == max_retries - 1:
                     raise
-                wait = 2 ** attempt
-                print(f"Upload attempt {attempt + 1} failed ({e}), retrying in {wait}s...")
+                wait = 2**attempt
+                print(
+                    f"Upload attempt {attempt + 1} failed ({e}), retrying in {wait}s..."
+                )
                 time.sleep(wait)
 
     @classmethod
