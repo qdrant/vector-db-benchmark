@@ -18,3 +18,4 @@ services:
           memory: 25Gb
     environment:
       - QDRANT__FEATURE_FLAGS__ALL=${QDRANT__FEATURE_FLAGS__ALL:-false}
+      - QDRANT__LOG_LEVEL=ERROR
