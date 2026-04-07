@@ -222,7 +222,7 @@
         "upload_params": { "parallel": 16, "batch_size": 1024 }
     },
     {
-        "name": "qdrant-m-16-ef-128",
+        "name": "qdrant-turbo-m-16-ef-128",
         "engine": "qdrant_native",
         "connection_params": { "timeout": 30 },
         "collection_params": {
