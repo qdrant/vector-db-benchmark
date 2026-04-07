@@ -16,8 +16,6 @@
             }
         },
         "search_params": [
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
             { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } }
         ],
         "upload_params": { "parallel": 16, "batch_size": 1024 }
@@ -39,8 +37,6 @@
             }
         },
         "search_params": [
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
             { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } }
         ],
         "upload_params": { "parallel": 16, "batch_size": 1024 }
@@ -62,8 +58,6 @@
             }
         },
         "search_params": [
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
             { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } }
         ],
         "upload_params": { "parallel": 16, "batch_size": 1024 }
@@ -85,8 +79,6 @@
             }
         },
         "search_params": [
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
             { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } }
         ],
         "upload_params": { "parallel": 16, "batch_size": 1024 }
@@ -108,8 +100,6 @@
             }
         },
         "search_params": [
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
             { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } }
         ],
         "upload_params": { "parallel": 16, "batch_size": 1024 }
@@ -131,8 +121,6 @@
             }
         },
         "search_params": [
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
             { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } }
         ],
         "upload_params": { "parallel": 16, "batch_size": 1024 }
@@ -153,8 +141,6 @@
             }
         },
         "search_params": [
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
             { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } }
         ],
         "upload_params": { "parallel": 16, "batch_size": 1024 }
@@ -173,8 +159,6 @@
             }
         },
         "search_params": [
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
             { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } }
         ],
         "upload_params": { "parallel": 16, "batch_size": 1024 }
@@ -194,8 +178,6 @@
             }
         },
         "search_params": [
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
             { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } }
         ],
         "upload_params": { "parallel": 16, "batch_size": 1024 }
@@ -215,14 +197,12 @@
             }
         },
         "search_params": [
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
             { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } }
         ],
         "upload_params": { "parallel": 16, "batch_size": 1024 }
     },
     {
-        "name": "qdrant-turbo-m-16-ef-128",
+        "name": "qdrant-no-quant-m-16-ef-128",
         "engine": "qdrant_native",
         "connection_params": { "timeout": 30 },
         "collection_params": {
