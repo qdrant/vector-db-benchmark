@@ -36,7 +36,7 @@ class QdrantNativeSearcher(BaseSearcher):
                 write=base_timeout * 5,  # 5x longer for writes
                 pool=base_timeout,
             ),
-            limits=httpx.Limits(max_connections=None, max_keepalive_connections=0),
+            limits=httpx.Limits(max_connections=None, max_keepalive_connections=20),
         )
 
     @classmethod
