@@ -15,8 +15,13 @@ from collections import defaultdict
 from pathlib import Path
 
 NUMERIC_FIELDS = [
-    "rps", "mean_time", "p95_time", "p99_time",
-    "mean_precisions", "upload_time", "total_upload_time",
+    "rps",
+    "mean_time",
+    "p95_time",
+    "p99_time",
+    "mean_precisions",
+    "upload_time",
+    "total_upload_time",
 ]
 
 KEY_FIELDS = ("setup_name", "dataset_name", "search_idx", "parallel")
@@ -76,9 +81,16 @@ def merge(files):
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("files", nargs="+", help="Result JSON files to merge")
-    parser.add_argument("-o", "--output", default="merged-results.json", help="Output file (default: merged-results.json)")
+    parser.add_argument(
+        "-o",
+        "--output",
+        default="merged-results.json",
+        help="Output file (default: merged-results.json)",
+    )
     args = parser.parse_args()
 
     for f in args.files:
@@ -93,7 +105,9 @@ def main():
     counts = defaultdict(int)
     for r in merged:
         counts[r.get("_merged_from", 1)] += 1
-    print(f"Merged {sum(len(json.loads(Path(f).read_text())) for f in args.files)} records from {len(args.files)} files into {len(merged)} entries")
+    print(
+        f"Merged {sum(len(json.loads(Path(f).read_text())) for f in args.files)} records from {len(args.files)} files into {len(merged)} entries"
+    )
     for n, c in sorted(counts.items()):
         print(f"  {c} entries averaged from {n} run(s)")
     print(f"Written to {args.output}")
