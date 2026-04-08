@@ -202,7 +202,7 @@ jobs:
             MACHINES_FIRST=false
 
             SERVER_NAME="benchmark-cascade-server-${i}"
-            CLIENT_NAME="benchmark-cascade-client-${i}"
+            CLIENT_NAME="benchmark-cascade-server-${i}"
             MACHINES_INFO="${MACHINES_INFO}{\"server_name\":\"$SERVER_NAME\",\"client_name\":\"$CLIENT_NAME\"}"
           done
 
@@ -291,7 +291,7 @@ jobs:
           max_retries: 5
 
       - name: Create Client
-        if: ${{ inputs.machines_per_bench == true || inputs.current_batch == 0 }}
+        if: ${{ (inputs.machines_per_bench == true || inputs.current_batch == 0) && steps.extract_names.outputs.client_name != steps.extract_names.outputs.server_name }}
         uses: ./.github/workflows/actions/create-server-with-retry
         with:
           server_name: ${{ steps.extract_names.outputs.client_name }}
