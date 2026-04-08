@@ -1,0 +1,18 @@
+{
+    "params": {
+        "qdrant_version": ["ghcr/dev-c9c4227691b4d1dbeb6dea8f23783266cdcb6db6"],
+        "dataset": [
+            "dbpedia-openai-100K-1536-angular",
+            "laion-small-clip",
+            "glove-100-angular",
+            "cohere-wiki-100k-no-filters"
+        ],
+        "engine_config": [
+            "qdrant-no-quant-m-16-ef-128",
+            "qdrant-sq-m-16-ef-128",
+            "qdrant-bq2-m-16-ef-128",
+            "qdrant-bq-asym-m-16-ef-128",
+            "qdrant-bq-m-16-ef-128"
+        ]
+    }
+}
