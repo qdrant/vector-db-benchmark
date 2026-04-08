@@ -14,7 +14,6 @@ on:
             description: "Override parameters for the benchmark set (JSON format, e.g. '{\"params\": {\"qdrant_version\": [\"ghcr/dev\", \"docker/master\"], \"dataset\": [\"glove-100-angular\"]}}')"
             default: "{}"
         build_vector_db_image:
-            required: false
             description: "Build vector DB image from source branch and use it (false by default)"
             default: "false"
         machines_per_bench:
@@ -286,6 +285,9 @@ jobs:
     needs: [prepareBenchmarks, setupMachines, buildImage]
     if: ${{ !cancelled() && inputs.process_results == false && needs.prepareBenchmarks.result == 'success' && needs.setupMachines.result == 'success' && (needs.buildImage.result == 'success' || needs.buildImage.result == 'skipped') }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     strategy:
       max-parallel: 10
       fail-fast: false
@@ -488,8 +490,8 @@ jobs:
           retention-days: 7
   triggerNextBatch:
     name: Trigger Next Batch
-    needs: [prepareBenchmarks, setupMachines, runBenchmarks]
-    if: always() && (needs.prepareBenchmarks.outputs.has_next_batch == 'true' && inputs.process_results == false)
+    needs: [prepareBenchmarks, setupMachines, runBenchmarks, buildImage]
+    if: always() && (needs.prepareBenchmarks.outputs.has_next_batch == 'true' && inputs.process_results == false && (needs.buildImage.result == 'success' || needs.buildImage.result == 'skipped'))
     runs-on: ubuntu-latest
     steps:
       - name: Check setupMachines job status
