@@ -650,3 +650,44 @@ jobs:
           fi
 
           echo "Cleanup process completed"
+  cleanupImage:
+    name: Cleanup Vector DB Image
+    needs: [prepareBenchmarks, runBenchmarks]
+    if: |
+      always() && inputs.build_vector_db_image == 'true' && inputs.process_results == false &&
+      needs.prepareBenchmarks.outputs.has_next_batch == 'false'
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Delete image from ghcr.io
+        continue-on-error: true
+        run: |
+          branch_tmp="${{ github.ref_name }}"
+          branch=${branch_tmp//\//-}
+          PACKAGE_NAME="vector-db-benchmark"
+          TAG="${branch}"
+
+          if [ "$TAG" = "master" ]; then
+            echo "Refusing to delete master image, skipping cleanup"
+            exit 0
+          fi
+
+          echo "Cleaning up image ghcr.io/${{ github.repository_owner }}/${PACKAGE_NAME}:${TAG}"
+
+          # Find the package version ID by tag
+          VERSION_ID=$(gh api \
+            "/orgs/${{ github.repository_owner }}/packages/container/${PACKAGE_NAME}/versions?per_page=100" \
+            --jq ".[] | select(.metadata.container.tags[] == \"${TAG}\") | .id") || true
+
+          if [ -n "$VERSION_ID" ]; then
+            echo "Found version ID: $VERSION_ID, deleting..."
+            gh api --method DELETE \
+              "/orgs/${{ github.repository_owner }}/packages/container/${PACKAGE_NAME}/versions/${VERSION_ID}" \
+              && echo "Image deleted successfully" \
+              || echo "Warning: Failed to delete image (may require manual cleanup)"
+          else
+            echo "Warning: Could not find image version with tag ${TAG}"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
