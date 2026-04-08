@@ -1,5 +1,47 @@
 [
     {
+        "name": "qdrant-tq6-m-16-ef-128",
+        "engine": "qdrant_native",
+        "connection_params": { "timeout": 30 },
+        "collection_params": {
+            "optimizers_config": { "max_segment_size": 1000000, "memmap_threshold": 10000000, "default_segment_number": 2 },
+            "hnsw_config": { "m": 16, "ef_construct": 128 },
+            "quantization_config": {
+                "turbo_quant": {
+                    "correction": "normalization",
+                    "bits": 6,
+                    "plus": false,
+                    "always_ram": true
+                }
+            }
+        },
+        "search_params": [
+            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } }
+        ],
+        "upload_params": { "parallel": 16, "batch_size": 1024 }
+    },
+    {
+        "name": "qdrant-tq6-plus-m-16-ef-128",
+        "engine": "qdrant_native",
+        "connection_params": { "timeout": 30 },
+        "collection_params": {
+            "optimizers_config": { "max_segment_size": 1000000, "memmap_threshold": 10000000, "default_segment_number": 2 },
+            "hnsw_config": { "m": 16, "ef_construct": 128 },
+            "quantization_config": {
+                "turbo_quant": {
+                    "correction": "normalization",
+                    "bits": 6,
+                    "plus": true,
+                    "always_ram": true
+                }
+            }
+        },
+        "search_params": [
+            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } }
+        ],
+        "upload_params": { "parallel": 16, "batch_size": 1024 }
+    },
+    {
         "name": "qdrant-tq4-m-16-ef-128",
         "engine": "qdrant_hybrid",
         "connection_params": { "timeout": 30 },
