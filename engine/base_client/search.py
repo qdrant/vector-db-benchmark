@@ -59,7 +59,7 @@ class BaseSearcher:
             try:
                 nn_pos = result_ids.index(true_nn) + 1  # 1-based position
             except ValueError:
-                nn_pos = float('inf')  # not found at all
+                nn_pos = float("inf")  # not found at all
             for k in RECALL_AT_K_VALUES:
                 if k <= len(result_ids):
                     recall_at_1_at_k[k] = 1.0 if nn_pos <= k else 0.0
