@@ -1,8 +1,8 @@
 name: Automated Cascade of Benchmarks
-description: |
-  This workflow runs a series of benchmarks in a cascade fashion.
-  It is triggered manually. The benchmarks are defined in `benchmark_cascade/benchmark-configs.json`.
-  Benchmarks are run in parallel. Instructions can be found in `benchmark_cascade/README.md`.
+#description: |
+#  This workflow runs a series of benchmarks in a cascade fashion.
+#  It is triggered manually. The benchmarks are defined in `benchmark_cascade/benchmark-configs.json`.
+#  Benchmarks are run in parallel. Instructions can be found in `benchmark_cascade/README.md`.
 
 on:
   workflow_dispatch:
@@ -13,10 +13,9 @@ on:
         params_override:
             description: "Override parameters for the benchmark set (JSON format, e.g. '{\"params\": {\"qdrant_version\": [\"ghcr/dev\", \"docker/master\"], \"dataset\": [\"glove-100-angular\"]}}')"
             default: "{}"
-        max_parallel:
-            type: number
-            description: "Maximum number of parallel jobs to run"
-            default: 10
+        build_vector_db_image:
+            description: "Build vector DB image from source branch and use it (false by default)"
+            default: "false"
         machines_per_bench:
             type: boolean
             description: "Create/destroy machines for each benchmark run (true) or reuse machines across batches (false)"
@@ -26,10 +25,10 @@ on:
           description: "Skip all the jobs except for processBenchmarks (true) or run a normal cascade (false)"
           default: false
         workflow_run_ids:
-            description: "Comma-separated list of workflow run IDs to process (used when process_results=true or for internal cascade tracking)"
+            description: "Internal use, comma-separated list of workflow run IDs to process (used when process_results=true or for cascade tracking)"
             default: ""
         current_batch:
-            description: "Current batch index (for cascading, internal use)"
+            description: "Internal use, current batch index"
             default: "0"
         machines_info:
             description: "Internal use, JSON array of machine pairs to use when machines_per_bench is false, e.g. '[{\"server_name\":\"server-0\",\"client_name\":\"client-0\"},{\"server_name\":\"server-1\",\"client_name\":\"client-1\"}]'"
@@ -77,7 +76,7 @@ jobs:
           CONFIG_FILE="benchmark_cascade/benchmark-configs.json"
           BENCHMARK_SET="${{ inputs.benchmark_set }}"
           CURRENT_BATCH=${{ inputs.current_batch || 0 }}
-          BATCH_SIZE=${{ inputs.max_parallel || 10 }}
+          BATCH_SIZE=10
 
           echo "benchmark_set=$BENCHMARK_SET" >> $GITHUB_OUTPUT
 
@@ -192,13 +191,50 @@ jobs:
           MACHINES_INFO="${MACHINES_INFO}]"
           echo "Generated machines_info: $MACHINES_INFO"
           echo "machines_info=$MACHINES_INFO" >> $GITHUB_OUTPUT
+  buildImage:
+    name: Build Vector DB Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    if: ${{ inputs.build_vector_db_image == 'true' && inputs.process_results == false && (inputs.current_batch == '' || inputs.current_batch == '0') }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ github.ref }}
+      - name: prepare image tag
+        id: prepare-tag
+        shell: bash
+        run: |
+          branch_tmp="${{ github.ref_name }}"
+          branch=${branch_tmp//\//-} # replace all / with -
+          tag="ghcr.io/${{ github.repository_owner }}/vector-db-benchmark:${branch}"
+          echo "Use tag ${tag}"
+          echo "tag=${tag}" >> $GITHUB_OUTPUT
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - name: Login to ghcr.io
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build Vector DB image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.prepare-tag.outputs.tag }}
+          provenance: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
   setupMachines:
     name: Setup Machines ${{ matrix.config.index }}
     needs: prepareBenchmarks
     if: inputs.process_results == false
     runs-on: ubuntu-latest
     strategy:
-      max-parallel: ${{ fromJSON(inputs.max_parallel) }}
+      max-parallel: 10
       fail-fast: false
       matrix:
         config: ${{ fromJSON(needs.prepareBenchmarks.outputs.matrix) }}
@@ -246,11 +282,14 @@ jobs:
           max_retries: 5
   runBenchmarks:
     name: Run Benchmark ${{ matrix.config.index }}
-    needs: [prepareBenchmarks, setupMachines]
-    if: inputs.process_results == false
+    needs: [prepareBenchmarks, setupMachines, buildImage]
+    if: ${{ !cancelled() && inputs.process_results == false && needs.prepareBenchmarks.result == 'success' && needs.setupMachines.result == 'success' && (needs.buildImage.result == 'success' || needs.buildImage.result == 'skipped') }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     strategy:
-      max-parallel: ${{ fromJSON(inputs.max_parallel) }}
+      max-parallel: 10
       fail-fast: false
       matrix:
         config: ${{ fromJSON(needs.prepareBenchmarks.outputs.matrix) }}
@@ -281,6 +320,13 @@ jobs:
           export SERVER_NAME=${{ steps.extract_names.outputs.server_name }}
           export CLIENT_NAME=${{ steps.extract_names.outputs.client_name }}
           export FETCH_ALL_RESULTS="true"
+          if [ "${{ inputs.build_vector_db_image }}" = "true" ]; then
+            branch_tmp="${{ github.ref_name }}"
+            branch=${branch_tmp//\//-}
+            export VECTOR_DB_BENCHMARK_IMAGE="ghcr.io/${{ github.repository_owner }}/vector-db-benchmark:${branch}"
+            export GHCR_USERNAME=${{ github.repository_owner }}
+            export GHCR_PASSWORD=${{ secrets.GITHUB_TOKEN }}
+          fi
 
           bash -x tools/setup_ci.sh
           bash -x tools/run_ci.sh
@@ -444,8 +490,8 @@ jobs:
           retention-days: 7
   triggerNextBatch:
     name: Trigger Next Batch
-    needs: [prepareBenchmarks, setupMachines, runBenchmarks]
-    if: always() && (needs.prepareBenchmarks.outputs.has_next_batch == 'true' && inputs.process_results == false)
+    needs: [prepareBenchmarks, setupMachines, runBenchmarks, buildImage]
+    if: always() && (needs.prepareBenchmarks.outputs.has_next_batch == 'true' && inputs.process_results == false && (needs.buildImage.result == 'success' || needs.buildImage.result == 'skipped'))
     runs-on: ubuntu-latest
     steps:
       - name: Check setupMachines job status
@@ -503,7 +549,7 @@ jobs:
                 \"params_override\": $ESCAPED_PARAMS,
                 \"machines_per_bench\": \"${{ inputs.machines_per_bench }}\",
                 \"machines_info\": $ESCAPED_MACHINES_INFO,
-                \"max_parallel\": \"${{ inputs.max_parallel || 10 }}\"
+                \"build_vector_db_image\": \"${{ inputs.build_vector_db_image }}\"
               },
               \"ref\": \"${{ github.ref }}\"
             }"
@@ -606,3 +652,44 @@ jobs:
           fi
 
           echo "Cleanup process completed"
+  cleanupImage:
+    name: Cleanup Vector DB Image
+    needs: [prepareBenchmarks, runBenchmarks]
+    if: |
+      always() && inputs.build_vector_db_image == 'true' && inputs.process_results == false &&
+      needs.prepareBenchmarks.outputs.has_next_batch == 'false'
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Delete image from ghcr.io
+        continue-on-error: true
+        run: |
+          branch_tmp="${{ github.ref_name }}"
+          branch=${branch_tmp//\//-}
+          PACKAGE_NAME="vector-db-benchmark"
+          TAG="${branch}"
+
+          if [ "$TAG" = "master" ]; then
+            echo "Refusing to delete master image, skipping cleanup"
+            exit 0
+          fi
+
+          echo "Cleaning up image ghcr.io/${{ github.repository_owner }}/${PACKAGE_NAME}:${TAG}"
+
+          # Find the package version ID by tag
+          VERSION_ID=$(gh api \
+            "/orgs/${{ github.repository_owner }}/packages/container/${PACKAGE_NAME}/versions?per_page=100" \
+            --jq ".[] | select(.metadata.container.tags[] == \"${TAG}\") | .id") || true
+
+          if [ -n "$VERSION_ID" ]; then
+            echo "Found version ID: $VERSION_ID, deleting..."
+            gh api --method DELETE \
+              "/orgs/${{ github.repository_owner }}/packages/container/${PACKAGE_NAME}/versions/${VERSION_ID}" \
+              && echo "Image deleted successfully" \
+              || echo "Warning: Failed to delete image (may require manual cleanup)"
+          else
+            echo "Warning: Could not find image version with tag ${TAG}"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

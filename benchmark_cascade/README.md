@@ -19,7 +19,7 @@ The workflow accepts these inputs:
 * current_batch - Current batch index (internal use)
 * machines_per_bench - A boolean flag to control whether to run each benchmark on its individual machine or re-use machines.
 * machines_info - JSON string with information about machines to use for the benchmarks (internal use).
-* max_parallel - Maximum number of parallel jobs to run within one workflow run.
+* build_vector_db_image - Build vector DB image from source branch and use it (default: false). The image is built once on the first batch and reused across subsequent batches.
 
 ### Option 1: Use Predefined Set
 With all the other inputs untouched, run a predefined benchmark set with name `smoke_test`:
