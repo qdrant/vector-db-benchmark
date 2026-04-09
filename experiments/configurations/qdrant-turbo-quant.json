@@ -274,7 +274,9 @@
             "hnsw_config": { "m": 16, "ef_construct": 128 }
         },
         "search_params": [
-            { "parallel": 100, "config": { "hnsw_ef": 64 } }
+            { "parallel": 100, "config": { "hnsw_ef": 64 } },
+            { "parallel": 100, "config": { "hnsw_ef": 128 } },
+            { "parallel": 100, "config": { "hnsw_ef": 256 } }
         ],
         "upload_params": { "parallel": 16, "batch_size": 1024 }
     }
