@@ -305,601 +305,601 @@
     ],
     "turbo_quant": [
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-no-quant-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-no-quant-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-no-quant-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-no-quant-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-no-quant-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-sq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-sq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-sq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-sq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-sq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-bq2-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-bq2-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-bq2-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-bq2-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-bq2-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-bq-asym-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-bq-asym-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-bq-asym-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-bq-asym-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-bq-asym-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-bq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-bq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-bq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-bq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-bq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-no-quant-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-no-quant-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-no-quant-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-no-quant-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-no-quant-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-sq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-sq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-sq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-sq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-sq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-bq2-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-bq2-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-bq2-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-bq2-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-bq2-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-bq-asym-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-bq-asym-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-bq-asym-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-bq-asym-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-bq-asym-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-bq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-bq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-bq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-bq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-bq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-no-quant-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-no-quant-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-no-quant-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-no-quant-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-no-quant-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-sq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-sq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-sq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-sq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-sq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-bq2-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-bq2-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-bq2-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-bq2-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-bq2-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-bq-asym-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-bq-asym-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-bq-asym-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-bq-asym-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-bq-asym-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-bq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-bq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-bq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-bq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-bq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-no-quant-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-no-quant-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-no-quant-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-no-quant-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-no-quant-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-sq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-sq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-sq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-sq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-sq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-bq2-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-bq2-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-bq2-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-bq2-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-bq2-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-bq-asym-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-bq-asym-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-bq-asym-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-bq-asym-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-bq-asym-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-bq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-bq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-bq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-bq-m-16-ef-128",
         "feature_flags_all": true
       },
       {
-        "qdrant_version": "ghcr/dev",
+        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-bq-m-16-ef-128",
         "feature_flags_all": true
