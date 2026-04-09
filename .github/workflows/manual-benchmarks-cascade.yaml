@@ -329,15 +329,6 @@ jobs:
           job_index: ${{ strategy.job-index }}
           machines_info: ${{ (inputs.current_batch != 0 && inputs.machines_info) || needs.prepareBenchmarks.outputs.machines_info }}
 
-      - name: Clear previous results on remote client
-        continue-on-error: true
-        run: |
-          source tools/ssh.sh
-          CLOUD_NAME=${CLOUD_NAME:-"hetzner"}
-          CLIENT_NAME=${{ steps.extract_names.outputs.client_name }}
-          IP_OF_THE_CLIENT=$(bash "tools/${CLOUD_NAME}/get_public_ip.sh" "$CLIENT_NAME")
-          ssh_with_retry "root@${IP_OF_THE_CLIENT}" "rm -rf ~/results"
-
       - name: Run benchmark
         run: |
           export QDRANT_VERSION=${{ matrix.config.qdrant_version }}
