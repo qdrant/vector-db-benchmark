@@ -36,6 +36,7 @@ GHCR_USERNAME=${GHCR_USERNAME:-""}
 if [[ "$EXPERIMENT_MODE" == "snapshot" ]]; then
   scp_with_retry "${SCRIPT_PATH}/run_experiment.sh" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/run_experiment_snapshot.sh"
   scp_with_retry "${SCRIPT_PATH}/../datasets/datasets.json" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/datasets.json"
+  scp_with_retry -r "${SCRIPT_PATH}/../experiments/configurations" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/configurations"
 
   RUN_EXPERIMENT="ENGINE_NAME=${ENGINE_NAME} \
   DATASETS=${DATASETS} \
@@ -52,6 +53,7 @@ if [[ "$EXPERIMENT_MODE" == "snapshot" ]]; then
 else
   scp_with_retry "${SCRIPT_PATH}/run_experiment.sh" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/run_experiment.sh"
   scp_with_retry "${SCRIPT_PATH}/../datasets/datasets.json" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/datasets.json"
+  scp_with_retry -r "${SCRIPT_PATH}/../experiments/configurations" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/configurations"
 
   RUN_EXPERIMENT="ENGINE_NAME=${ENGINE_NAME} \
   DATASETS=${DATASETS} \
