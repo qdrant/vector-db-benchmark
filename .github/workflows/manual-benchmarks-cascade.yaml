@@ -102,6 +102,9 @@ jobs:
             exit 1
           fi
 
+          # Expand per-item "repeat" field: each item with "repeat": N becomes N copies (default 1)
+          BENCHMARK_CONFIGS=$(jq '[.[] | . as $c | range($c.repeat // 1) | $c | del(.repeat)]' <<< "$BENCHMARK_CONFIGS")
+
           # Apply params_override if provided
           PARAMS_OVERRIDE='${{ inputs.params_override }}'
           if [ "$PARAMS_OVERRIDE" != "{}" ]; then
@@ -111,6 +114,10 @@ jobs:
             OVERRIDE_PARAMS=$(echo "$PARAMS_OVERRIDE" | jq -r '.params // {}')
 
             if [ "$OVERRIDE_PARAMS" != "{}" ]; then
+              # Extract and remove repeat before passing to generate_configs.py
+              OVERRIDE_REPEAT=$(echo "$OVERRIDE_PARAMS" | jq -r '.repeat // 1')
+              OVERRIDE_PARAMS=$(echo "$OVERRIDE_PARAMS" | jq 'del(.repeat)')
+
               # Generate all parameter combinations using separate Python script
               if ! BENCHMARK_CONFIGS=$(python3 benchmark_cascade/generate_configs.py "$OVERRIDE_PARAMS" "$BENCHMARK_CONFIGS"); then
                 echo "Error: Failed to generate benchmark configurations"
@@ -118,8 +125,19 @@ jobs:
               fi
 
               echo "Generated $(echo "$BENCHMARK_CONFIGS" | jq length) configurations after applying params_override"
+
+              # Apply override repeat to all generated configs
+              if [ "$OVERRIDE_REPEAT" -gt 1 ]; then
+                BENCHMARK_CONFIGS=$(jq --argjson n "$OVERRIDE_REPEAT" '[.[] as $c | range($n) | $c]' <<< "$BENCHMARK_CONFIGS")
+                echo "Applied repeat=$OVERRIDE_REPEAT, total configs: $(echo "$BENCHMARK_CONFIGS" | jq length)"
+              fi
             fi
           fi
+
+          # Shuffle so that repeated configs land on different machines/batches
+          # Use the first workflow run ID as seed for deterministic shuffle across batches
+          SHUFFLE_SEED=$(echo "$WORKFLOW_RUN_IDS" | cut -d',' -f1)
+          BENCHMARK_CONFIGS=$(python3 -c "import json, random, sys; d=json.load(sys.stdin); random.seed(int(sys.argv[1])); random.shuffle(d); print(json.dumps(d))" "$SHUFFLE_SEED" <<< "$BENCHMARK_CONFIGS")
 
           TOTAL_CONFIGS=$(echo "$BENCHMARK_CONFIGS" | jq length)
           START_INDEX=$((CURRENT_BATCH * BATCH_SIZE))
@@ -329,6 +347,13 @@ jobs:
           fi
 
           bash -x tools/setup_ci.sh
+
+          # Clear previous results on remote client to avoid mixing data from different runs
+          source tools/ssh.sh
+          CLOUD_NAME=${CLOUD_NAME:-"hetzner"}
+          IP_OF_THE_CLIENT=$(bash "tools/${CLOUD_NAME}/get_public_ip.sh" "$CLIENT_NAME")
+          ssh_with_retry -o StrictHostKeyChecking=no "root@${IP_OF_THE_CLIENT}" "rm -rf ~/results" || true
+
           bash -x tools/run_ci.sh
 
       - name: Upload benchmark results

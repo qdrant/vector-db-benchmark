@@ -223,9 +223,10 @@
     "single": [
       {
         "qdrant_version": "ghcr/dev",
-        "dataset": "dbpedia-openai-1M-1536-angular",
+        "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-rps-m-16-ef-128",
-        "feature_flags_all": true
+        "feature_flags_all": true,
+        "repeat": 2
       }
     ],
     "custom": [

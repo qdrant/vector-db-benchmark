@@ -57,6 +57,13 @@ if [[ "$EXPERIMENT_MODE" != "snapshot" ]]; then
   docker rmi --force "${VECTOR_DB_BENCHMARK_IMAGE}" || true
 fi
 
+# Mount custom configurations if available
+CONFIGURATIONS_MOUNT=""
+if [[ -d "$HOME/configurations" ]]; then
+  echo "Found custom configurations directory, will mount into container"
+  CONFIGURATIONS_MOUNT="$HOME/configurations:/code/experiments/configurations"
+fi
+
 echo "Ensure datasets volume exists and contains latest datasets.json"
 docker volume create ci-datasets
 if [[ -f "$HOME/datasets.json" ]]; then
@@ -74,6 +81,7 @@ if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "upload" ]]; t
     --name ci-benchmark-upload \
     -v "$HOME/results:/code/results" \
     -v "ci-datasets:/code/datasets" \
+    ${CONFIGURATIONS_MOUNT:+"-v" "$CONFIGURATIONS_MOUNT"} \
     "${VECTOR_DB_BENCHMARK_IMAGE}" \
     python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-search
 fi
@@ -93,6 +101,7 @@ if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "search" ]]; t
     --name ci-benchmark-search \
     -v "$HOME/results:/code/results" \
     -v "ci-datasets:/code/datasets" \
+    ${CONFIGURATIONS_MOUNT:+"-v" "$CONFIGURATIONS_MOUNT"} \
     "${VECTOR_DB_BENCHMARK_IMAGE}" \
     python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-upload
 fi
@@ -109,6 +118,7 @@ if [[ "$EXPERIMENT_MODE" == "parallel" ]]; then
     --name ci-benchmark-upload \
     -v "$HOME/results/parallel:/code/results" \
     -v "ci-datasets:/code/datasets" \
+    ${CONFIGURATIONS_MOUNT:+"-v" "$CONFIGURATIONS_MOUNT"} \
     "${VECTOR_DB_BENCHMARK_IMAGE}" \
     python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-search --skip-configure &
   UPLOAD_PID=$!
@@ -119,6 +129,7 @@ if [[ "$EXPERIMENT_MODE" == "parallel" ]]; then
     --name ci-benchmark-search \
     -v "$HOME/results/parallel:/code/results" \
     -v "ci-datasets:/code/datasets" \
+    ${CONFIGURATIONS_MOUNT:+"-v" "$CONFIGURATIONS_MOUNT"} \
     "${VECTOR_DB_BENCHMARK_IMAGE}" \
     python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-upload &
   SEARCH_PID=$!
