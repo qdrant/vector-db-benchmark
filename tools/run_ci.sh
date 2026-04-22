@@ -46,6 +46,8 @@ else
 
   if [[ "$BENCHMARK_STRATEGY" == "default" ]]; then
     export CPU_USAGE_FILE=$(ls -t results/cpu/cpu-usage-*.txt | head -n 1)
+    export STORAGE_SIZE_ALLOCATED_FILE=$(ls -t results/storage-size-allocated-*.txt 2>/dev/null | head -n 1)
+    export STORAGE_SIZE_APPARENT_FILE=$(ls -t results/storage-size-apparent-*.txt 2>/dev/null | head -n 1)
   fi
 
   if [[ "$BENCHMARK_STRATEGY" == "parallel" ]]; then

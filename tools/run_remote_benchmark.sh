@@ -51,6 +51,8 @@ case "$BENCHMARK_STRATEGY" in
   bash -x "${SCRIPT_PATH}/qdrant_collect_cpu_usage.sh" "end"
 
   bash -x "${SCRIPT_PATH}/qdrant_collect_stats.sh" "$SERVER_CONTAINER_NAME"
+
+  bash -x "${SCRIPT_PATH}/qdrant_collect_storage_size.sh" "$SERVER_CONTAINER_NAME"
   ;;
   "tenants")
   if [[ -z "${CONTAINER_MEM_LIMIT:-}" ]]; then
