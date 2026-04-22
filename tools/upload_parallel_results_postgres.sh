@@ -21,6 +21,8 @@
 # 	no_upsert_search_time real,
 # 	cpu real,
 # 	cpu_telemetry real,
+# 	storage_size_bytes bigint,
+# 	storage_size_apparent_bytes bigint,
 # );
 
 PARALLEL_SEARCH_RESULTS_FILE=${PARALLEL_SEARCH_RESULTS_FILE:-""}
