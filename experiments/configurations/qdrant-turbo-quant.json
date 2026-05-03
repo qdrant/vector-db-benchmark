@@ -1,51 +1,5 @@
 [
     {
-        "name": "qdrant-tq6-m-16-ef-128",
-        "engine": "qdrant_hybrid",
-        "connection_params": { "timeout": 30 },
-        "collection_params": {
-            "optimizers_config": { "max_segment_size": 1000000, "memmap_threshold": 10000000, "default_segment_number": 2 },
-            "hnsw_config": { "m": 16, "ef_construct": 128 },
-            "quantization_config": {
-                "turbo_quant": {
-                    "correction": "normalization",
-                    "bits": 6,
-                    "plus": false,
-                    "always_ram": true
-                }
-            }
-        },
-        "search_params": [
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } }
-        ],
-        "upload_params": { "parallel": 16, "batch_size": 1024 }
-    },
-    {
-        "name": "qdrant-tq6-plus-m-16-ef-128",
-        "engine": "qdrant_hybrid",
-        "connection_params": { "timeout": 30 },
-        "collection_params": {
-            "optimizers_config": { "max_segment_size": 1000000, "memmap_threshold": 10000000, "default_segment_number": 2 },
-            "hnsw_config": { "m": 16, "ef_construct": 128 },
-            "quantization_config": {
-                "turbo_quant": {
-                    "correction": "normalization",
-                    "bits": 6,
-                    "plus": true,
-                    "always_ram": true
-                }
-            }
-        },
-        "search_params": [
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } }
-        ],
-        "upload_params": { "parallel": 16, "batch_size": 1024 }
-    },
-    {
         "name": "qdrant-tq4-m-16-ef-128",
         "engine": "qdrant_hybrid",
         "connection_params": { "timeout": 30 },
@@ -53,18 +7,17 @@
             "optimizers_config": { "max_segment_size": 1000000, "memmap_threshold": 10000000, "default_segment_number": 2 },
             "hnsw_config": { "m": 16, "ef_construct": 128 },
             "quantization_config": {
-                "turbo_quant": {
-                    "correction": "normalization",
-                    "bits": 4,
+                "turbo": {
+                    "bits": "bits4",
                     "plus": false,
                     "always_ram": true
                 }
             }
         },
         "search_params": [
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } }
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } },
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } }
         ],
         "upload_params": { "parallel": 16, "batch_size": 1024 }
     },
@@ -76,18 +29,17 @@
             "optimizers_config": { "max_segment_size": 1000000, "memmap_threshold": 10000000, "default_segment_number": 2 },
             "hnsw_config": { "m": 16, "ef_construct": 128 },
             "quantization_config": {
-                "turbo_quant": {
-                    "correction": "normalization",
-                    "bits": 4,
+                "turbo": {
+                    "bits": "bits4",
                     "plus": true,
                     "always_ram": true
                 }
             }
         },
         "search_params": [
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } }
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } },
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } }
         ],
         "upload_params": { "parallel": 16, "batch_size": 1024 }
     },
@@ -99,18 +51,17 @@
             "optimizers_config": { "max_segment_size": 1000000, "memmap_threshold": 10000000, "default_segment_number": 2 },
             "hnsw_config": { "m": 16, "ef_construct": 128 },
             "quantization_config": {
-                "turbo_quant": {
-                    "correction": "normalization",
-                    "bits": 2,
+                "turbo": {
+                    "bits": "bits2",
                     "plus": false,
                     "always_ram": true
                 }
             }
         },
         "search_params": [
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } }
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } },
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } }
         ],
         "upload_params": { "parallel": 16, "batch_size": 1024 }
     },
@@ -122,18 +73,61 @@
             "optimizers_config": { "max_segment_size": 1000000, "memmap_threshold": 10000000, "default_segment_number": 2 },
             "hnsw_config": { "m": 16, "ef_construct": 128 },
             "quantization_config": {
-                "turbo_quant": {
-                    "correction": "normalization",
-                    "bits": 2,
+                "turbo": {
+                    "bits": "bits2",
                     "plus": true,
                     "always_ram": true
                 }
             }
         },
         "search_params": [
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } }
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } },
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } }
+        ],
+        "upload_params": { "parallel": 16, "batch_size": 1024 }
+    },
+    {
+        "name": "qdrant-tq15-m-16-ef-128",
+        "engine": "qdrant_hybrid",
+        "connection_params": { "timeout": 30 },
+        "collection_params": {
+            "optimizers_config": { "max_segment_size": 1000000, "memmap_threshold": 10000000, "default_segment_number": 2 },
+            "hnsw_config": { "m": 16, "ef_construct": 128 },
+            "quantization_config": {
+                "turbo": {
+                    "bits": "bits1_5",
+                    "plus": false,
+                    "always_ram": true
+                }
+            }
+        },
+        "search_params": [
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } },
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } }
+        ],
+        "upload_params": { "parallel": 16, "batch_size": 1024 }
+    },
+    {
+        "name": "qdrant-tq15-plus-m-16-ef-128",
+        "engine": "qdrant_hybrid",
+        "connection_params": { "timeout": 30 },
+        "collection_params": {
+            "optimizers_config": { "max_segment_size": 1000000, "memmap_threshold": 10000000, "default_segment_number": 2 },
+            "hnsw_config": { "m": 16, "ef_construct": 128 },
+            "quantization_config": {
+                "turbo": {
+                    "bits": "bits1_5",
+                    "plus": true,
+                    "always_ram": true
+                }
+            }
+        },
+        "search_params": [
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } },
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } }
         ],
         "upload_params": { "parallel": 16, "batch_size": 1024 }
     },
@@ -145,18 +139,17 @@
             "optimizers_config": { "max_segment_size": 1000000, "memmap_threshold": 10000000, "default_segment_number": 2 },
             "hnsw_config": { "m": 16, "ef_construct": 128 },
             "quantization_config": {
-                "turbo_quant": {
-                    "correction": "normalization",
-                    "bits": 1,
+                "turbo": {
+                    "bits": "bits1",
                     "plus": false,
                     "always_ram": true
                 }
             }
         },
         "search_params": [
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } }
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } },
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } }
         ],
         "upload_params": { "parallel": 16, "batch_size": 1024 }
     },
@@ -168,18 +161,17 @@
             "optimizers_config": { "max_segment_size": 1000000, "memmap_threshold": 10000000, "default_segment_number": 2 },
             "hnsw_config": { "m": 16, "ef_construct": 128 },
             "quantization_config": {
-                "turbo_quant": {
-                    "correction": "normalization",
-                    "bits": 1,
+                "turbo": {
+                    "bits": "bits1",
                     "plus": true,
                     "always_ram": true
                 }
             }
         },
         "search_params": [
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } }
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } },
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } }
         ],
         "upload_params": { "parallel": 16, "batch_size": 1024 }
     },
@@ -199,9 +191,9 @@
             }
         },
         "search_params": [
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } }
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } },
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } }
         ],
         "upload_params": { "parallel": 16, "batch_size": 1024 }
     },
@@ -219,9 +211,9 @@
             }
         },
         "search_params": [
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } }
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } },
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } }
         ],
         "upload_params": { "parallel": 16, "batch_size": 1024 }
     },
@@ -240,9 +232,9 @@
             }
         },
         "search_params": [
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } }
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } },
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } }
         ],
         "upload_params": { "parallel": 16, "batch_size": 1024 }
     },
@@ -261,9 +253,9 @@
             }
         },
         "search_params": [
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
-            { "parallel": 100, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } }
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } },
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } }
         ],
         "upload_params": { "parallel": 16, "batch_size": 1024 }
     },
@@ -276,9 +268,9 @@
             "hnsw_config": { "m": 16, "ef_construct": 128 }
         },
         "search_params": [
-            { "parallel": 100, "config": { "hnsw_ef": 64 } },
-            { "parallel": 100, "config": { "hnsw_ef": 128 } },
-            { "parallel": 100, "config": { "hnsw_ef": 256 } }
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": false } } },
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 2.0 } } },
+            {"parallel": 4, "config": { "hnsw_ef": 64, "quantization": { "rescore": true, "oversampling": 4.0 } } }
         ],
         "upload_params": { "parallel": 16, "batch_size": 1024 }
     }
