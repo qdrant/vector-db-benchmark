@@ -9,6 +9,7 @@ from pathlib import Path
 import boto3
 import faiss
 import numpy as np
+from botocore.config import Config
 from datasets import load_dataset
 
 
@@ -86,6 +87,10 @@ def main():
         endpoint_url="https://storage.googleapis.com",
         aws_access_key_id=os.environ["GCS_KEY"],
         aws_secret_access_key=os.environ["GCS_SECRET"],
+        config=Config(
+            request_checksum_calculation="when_required",
+            response_checksum_validation="when_required",
+        ),
     ).upload_file(str(tar_path), bucket_name, blob_name)
     print("Done.")
 
