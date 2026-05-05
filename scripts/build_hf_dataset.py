@@ -10,6 +10,7 @@ import boto3
 import faiss
 import numpy as np
 from botocore.config import Config
+
 from datasets import load_dataset
 
 
