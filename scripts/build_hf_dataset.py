@@ -24,10 +24,14 @@ def main():
     args = p.parse_args()
 
     print(f"Loading {args.hf_dataset} (split={args.split})...")
-    ds = load_dataset(args.hf_dataset, split=args.split).with_format("numpy")
+    ds = (
+        load_dataset(args.hf_dataset, split=args.split)
+        .select_columns([args.vector_column])
+        .with_format("numpy")
+    )
 
     print(f"Extracting column '{args.vector_column}' from {len(ds)} rows...")
-    vectors = ds[args.vector_column].astype(np.float32, copy=False)
+    vectors = np.asarray(ds[:][args.vector_column], dtype=np.float32)
     n, d = vectors.shape
     print(f"Loaded {n} vectors of dimension {d}")
 
