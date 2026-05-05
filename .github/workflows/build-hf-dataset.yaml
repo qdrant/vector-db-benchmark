@@ -58,7 +58,8 @@ jobs:
           scp_with_retry -o StrictHostKeyChecking=no \
             scripts/build_hf_dataset.py "root@$IP:/root/"
 
-          ssh_with_retry -o StrictHostKeyChecking=no "root@$IP" \
+          ssh_with_retry -o StrictHostKeyChecking=no \
+            -o ServerAliveInterval=30 -o ServerAliveCountMax=20 "root@$IP" \
             GCS_KEY="$GCS_KEY" GCS_SECRET="$GCS_SECRET" bash -s <<EOF
           set -euxo pipefail
           export DEBIAN_FRONTEND=noninteractive
