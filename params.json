@@ -5,18 +5,22 @@
             "dbpedia-openai-100K-1536-angular",
             "laion-small-clip",
             "glove-100-angular",
-            "cohere-wiki-100k-no-filters"
+            "cohere-wiki-100k-no-filters",
+            "ads-gte-multilingual-1M-768-angular",
+            "dbpedia-gemini-100K-768-angular",
+            "dbpedia-openai3-large-100K-1536-angular",
+            "dbpedia-openai3-small-100K-1536-angular",
+            "arxiv-titles-instructorxl-768-angular"
         ],
         "engine_config": [
             "qdrant-no-quant-m-16-ef-128",
             "qdrant-sq-m-16-ef-128",
             "qdrant-tq4-m-16-ef-128",
-            "qdrant-tq4-plus-m-16-ef-128",
             "qdrant-bq2-m-16-ef-128",
             "qdrant-tq2-m-16-ef-128",
-            "qdrant-tq2-plus-m-16-ef-128",
+            "qdrant-tq15-m-16-ef-128",
+            "qdrant-bq15-m-16-ef-128",
             "qdrant-tq1-m-16-ef-128",
-            "qdrant-tq1-plus-m-16-ef-128",
             "qdrant-bq-asym-m-16-ef-128",
             "qdrant-bq-m-16-ef-128"
         ]

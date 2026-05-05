@@ -305,311 +305,632 @@
     ],
     "turbo_quant": [
       {
-        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-no-quant-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-sq-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-bq2-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "dbpedia-openai-100K-1536-angular",
+        "engine_config": "qdrant-bq15-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-bq-asym-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-bq-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-no-quant-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-sq-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-bq2-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "laion-small-clip",
+        "engine_config": "qdrant-bq15-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-bq-asym-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-bq-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-no-quant-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-sq-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-bq2-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "glove-100-angular",
+        "engine_config": "qdrant-bq15-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-bq-asym-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-bq-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-no-quant-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-sq-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-bq2-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "cohere-wiki-100k-no-filters",
+        "engine_config": "qdrant-bq15-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-bq-asym-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/dev-22cf04367be1c13b0dfb668fd20bf74fabb3e8de",
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-bq-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/apply-p-square",
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-tq4-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/apply-p-square",
-        "dataset": "cohere-wiki-100k-no-filters",
-        "engine_config": "qdrant-tq4-plus-m-16-ef-128",
-        "feature_flags_all": true,
-        "repeat": 9
-      },
-      {
-        "qdrant_version": "ghcr/apply-p-square",
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-tq2-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/apply-p-square",
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
         "dataset": "cohere-wiki-100k-no-filters",
-        "engine_config": "qdrant-tq2-plus-m-16-ef-128",
+        "engine_config": "qdrant-tq15-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/apply-p-square",
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
         "dataset": "cohere-wiki-100k-no-filters",
         "engine_config": "qdrant-tq1-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/apply-p-square",
-        "dataset": "cohere-wiki-100k-no-filters",
-        "engine_config": "qdrant-tq1-plus-m-16-ef-128",
-        "feature_flags_all": true,
-        "repeat": 9
-      },
-      {
-        "qdrant_version": "ghcr/apply-p-square",
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-tq4-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/apply-p-square",
-        "dataset": "glove-100-angular",
-        "engine_config": "qdrant-tq4-plus-m-16-ef-128",
-        "feature_flags_all": true,
-        "repeat": 9
-      },
-      {
-        "qdrant_version": "ghcr/apply-p-square",
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-tq2-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/apply-p-square",
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
         "dataset": "glove-100-angular",
-        "engine_config": "qdrant-tq2-plus-m-16-ef-128",
+        "engine_config": "qdrant-tq15-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/apply-p-square",
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
         "dataset": "glove-100-angular",
         "engine_config": "qdrant-tq1-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/apply-p-square",
-        "dataset": "glove-100-angular",
-        "engine_config": "qdrant-tq1-plus-m-16-ef-128",
-        "feature_flags_all": true,
-        "repeat": 9
-      },
-      {
-        "qdrant_version": "ghcr/apply-p-square",
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-tq4-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/apply-p-square",
-        "dataset": "laion-small-clip",
-        "engine_config": "qdrant-tq4-plus-m-16-ef-128",
-        "feature_flags_all": true,
-        "repeat": 9
-      },
-      {
-        "qdrant_version": "ghcr/apply-p-square",
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-tq2-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/apply-p-square",
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
         "dataset": "laion-small-clip",
-        "engine_config": "qdrant-tq2-plus-m-16-ef-128",
+        "engine_config": "qdrant-tq15-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/apply-p-square",
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
         "dataset": "laion-small-clip",
         "engine_config": "qdrant-tq1-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/apply-p-square",
-        "dataset": "laion-small-clip",
-        "engine_config": "qdrant-tq1-plus-m-16-ef-128",
-        "feature_flags_all": true,
-        "repeat": 9
-      },
-      {
-        "qdrant_version": "ghcr/apply-p-square",
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-tq4-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/apply-p-square",
-        "dataset": "dbpedia-openai-100K-1536-angular",
-        "engine_config": "qdrant-tq4-plus-m-16-ef-128",
-        "feature_flags_all": true,
-        "repeat": 9
-      },
-      {
-        "qdrant_version": "ghcr/apply-p-square",
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-tq2-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
-
       {
-        "qdrant_version": "ghcr/apply-p-square",
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
         "dataset": "dbpedia-openai-100K-1536-angular",
-        "engine_config": "qdrant-tq2-plus-m-16-ef-128",
+        "engine_config": "qdrant-tq15-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/apply-p-square",
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
         "dataset": "dbpedia-openai-100K-1536-angular",
         "engine_config": "qdrant-tq1-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       },
       {
-        "qdrant_version": "ghcr/apply-p-square",
-        "dataset": "dbpedia-openai-100K-1536-angular",
-        "engine_config": "qdrant-tq1-plus-m-16-ef-128",
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "ads-gte-multilingual-1M-768-angular",
+        "engine_config": "qdrant-no-quant-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "ads-gte-multilingual-1M-768-angular",
+        "engine_config": "qdrant-sq-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "ads-gte-multilingual-1M-768-angular",
+        "engine_config": "qdrant-bq2-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "ads-gte-multilingual-1M-768-angular",
+        "engine_config": "qdrant-bq15-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "ads-gte-multilingual-1M-768-angular",
+        "engine_config": "qdrant-bq-asym-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "ads-gte-multilingual-1M-768-angular",
+        "engine_config": "qdrant-bq-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
+        "dataset": "ads-gte-multilingual-1M-768-angular",
+        "engine_config": "qdrant-tq4-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
+        "dataset": "ads-gte-multilingual-1M-768-angular",
+        "engine_config": "qdrant-tq2-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
+        "dataset": "ads-gte-multilingual-1M-768-angular",
+        "engine_config": "qdrant-tq15-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
+        "dataset": "ads-gte-multilingual-1M-768-angular",
+        "engine_config": "qdrant-tq1-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "dbpedia-gemini-100K-768-angular",
+        "engine_config": "qdrant-no-quant-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "dbpedia-gemini-100K-768-angular",
+        "engine_config": "qdrant-sq-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "dbpedia-gemini-100K-768-angular",
+        "engine_config": "qdrant-bq2-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "dbpedia-gemini-100K-768-angular",
+        "engine_config": "qdrant-bq15-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "dbpedia-gemini-100K-768-angular",
+        "engine_config": "qdrant-bq-asym-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "dbpedia-gemini-100K-768-angular",
+        "engine_config": "qdrant-bq-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
+        "dataset": "dbpedia-gemini-100K-768-angular",
+        "engine_config": "qdrant-tq4-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
+        "dataset": "dbpedia-gemini-100K-768-angular",
+        "engine_config": "qdrant-tq2-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
+        "dataset": "dbpedia-gemini-100K-768-angular",
+        "engine_config": "qdrant-tq15-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
+        "dataset": "dbpedia-gemini-100K-768-angular",
+        "engine_config": "qdrant-tq1-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "dbpedia-openai3-large-100K-1536-angular",
+        "engine_config": "qdrant-no-quant-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "dbpedia-openai3-large-100K-1536-angular",
+        "engine_config": "qdrant-sq-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "dbpedia-openai3-large-100K-1536-angular",
+        "engine_config": "qdrant-bq2-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "dbpedia-openai3-large-100K-1536-angular",
+        "engine_config": "qdrant-bq15-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "dbpedia-openai3-large-100K-1536-angular",
+        "engine_config": "qdrant-bq-asym-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "dbpedia-openai3-large-100K-1536-angular",
+        "engine_config": "qdrant-bq-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
+        "dataset": "dbpedia-openai3-large-100K-1536-angular",
+        "engine_config": "qdrant-tq4-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
+        "dataset": "dbpedia-openai3-large-100K-1536-angular",
+        "engine_config": "qdrant-tq2-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
+        "dataset": "dbpedia-openai3-large-100K-1536-angular",
+        "engine_config": "qdrant-tq15-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
+        "dataset": "dbpedia-openai3-large-100K-1536-angular",
+        "engine_config": "qdrant-tq1-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "dbpedia-openai3-small-100K-1536-angular",
+        "engine_config": "qdrant-no-quant-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "dbpedia-openai3-small-100K-1536-angular",
+        "engine_config": "qdrant-sq-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "dbpedia-openai3-small-100K-1536-angular",
+        "engine_config": "qdrant-bq2-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "dbpedia-openai3-small-100K-1536-angular",
+        "engine_config": "qdrant-bq15-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "dbpedia-openai3-small-100K-1536-angular",
+        "engine_config": "qdrant-bq-asym-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "dbpedia-openai3-small-100K-1536-angular",
+        "engine_config": "qdrant-bq-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
+        "dataset": "dbpedia-openai3-small-100K-1536-angular",
+        "engine_config": "qdrant-tq4-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
+        "dataset": "dbpedia-openai3-small-100K-1536-angular",
+        "engine_config": "qdrant-tq2-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
+        "dataset": "dbpedia-openai3-small-100K-1536-angular",
+        "engine_config": "qdrant-tq15-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
+        "dataset": "dbpedia-openai3-small-100K-1536-angular",
+        "engine_config": "qdrant-tq1-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "arxiv-titles-instructorxl-768-angular",
+        "engine_config": "qdrant-no-quant-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "arxiv-titles-instructorxl-768-angular",
+        "engine_config": "qdrant-sq-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "arxiv-titles-instructorxl-768-angular",
+        "engine_config": "qdrant-bq2-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "arxiv-titles-instructorxl-768-angular",
+        "engine_config": "qdrant-bq15-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "arxiv-titles-instructorxl-768-angular",
+        "engine_config": "qdrant-bq-asym-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/dev-d3ad1ac988e270717a3108c2c1d4f1f0e2f8b495",
+        "dataset": "arxiv-titles-instructorxl-768-angular",
+        "engine_config": "qdrant-bq-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
+        "dataset": "arxiv-titles-instructorxl-768-angular",
+        "engine_config": "qdrant-tq4-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
+        "dataset": "arxiv-titles-instructorxl-768-angular",
+        "engine_config": "qdrant-tq2-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
+        "dataset": "arxiv-titles-instructorxl-768-angular",
+        "engine_config": "qdrant-tq15-m-16-ef-128",
+        "feature_flags_all": true,
+        "repeat": 9
+      },
+      {
+        "qdrant_version": "ghcr/apply-p-square-3e95c6a044e61351a420f86d7c1cb841206c0ce9",
+        "dataset": "arxiv-titles-instructorxl-768-angular",
+        "engine_config": "qdrant-tq1-m-16-ef-128",
         "feature_flags_all": true,
         "repeat": 9
       }
