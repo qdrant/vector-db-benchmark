@@ -418,5 +418,45 @@
     "type": "tar",
     "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/laion-1m.tgz",
     "path": "laion-1m/laion_1m"
+  },
+  {
+    "name": "ads-gte-multilingual-1M-768-angular",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "tar",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/ads-gte-multilingual-1M-768-angular.tgz",
+    "path": "ads-gte-multilingual-1M-768-angular/ads-gte-multilingual-1M-768-angular"
+  },
+  {
+    "name": "arxiv-titles-instructorxl-768-angular",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "tar",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/arxiv-titles-instructorxl-768-angular.tgz",
+    "path": "arxiv-titles-instructorxl-768-angular/arxiv-titles-instructorxl-768-angular"
+  },
+  {
+    "name": "dbpedia-gemini-100K-768-angular",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "tar",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/dbpedia-gemini-100K-768-angular.tgz",
+    "path": "dbpedia-gemini-100K-768-angular/dbpedia-gemini-100K-768-angular"
+  },
+  {
+    "name": "dbpedia-openai3-large-100K-1536-angular",
+    "vector_size": 1536,
+    "distance": "cosine",
+    "type": "tar",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/dbpedia-openai3-large-100K-1536-angular.tgz",
+    "path": "dbpedia-openai3-large-100K-1536-angular/dbpedia-openai3-large-100K-1536-angular"
+  },
+  {
+    "name": "dbpedia-openai3-small-100K-1536-angular",
+    "vector_size": 1536,
+    "distance": "cosine",
+    "type": "tar",
+    "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/dbpedia-openai3-small-100K-1536-angular.tgz",
+    "path": "dbpedia-openai3-small-100K-1536-angular/dbpedia-openai3-small-100K-1536-angular"
   }
 ]

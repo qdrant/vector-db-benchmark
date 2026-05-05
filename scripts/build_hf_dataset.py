@@ -2,13 +2,15 @@
 """Build an AnnCompoundReader-format dataset from a HuggingFace dataset and upload to GCS."""
 import argparse
 import json
+import os
 import tarfile
 from pathlib import Path
 
+import boto3
 import faiss
 import numpy as np
+from botocore.config import Config
 from datasets import load_dataset
-from google.cloud import storage
 
 
 def main():
@@ -24,10 +26,14 @@ def main():
     args = p.parse_args()
 
     print(f"Loading {args.hf_dataset} (split={args.split})...")
-    ds = load_dataset(args.hf_dataset, split=args.split).with_format("numpy")
+    ds = (
+        load_dataset(args.hf_dataset, split=args.split)
+        .select_columns([args.vector_column])
+        .with_format("numpy")
+    )
 
     print(f"Extracting column '{args.vector_column}' from {len(ds)} rows...")
-    vectors = ds[args.vector_column].astype(np.float32, copy=False)
+    vectors = np.asarray(ds[:][args.vector_column], dtype=np.float32)
     n, d = vectors.shape
     print(f"Loaded {n} vectors of dimension {d}")
 
@@ -76,9 +82,16 @@ def main():
     bucket_name, _, prefix = args.gcs_uri[len("gs://") :].partition("/")
     blob_name = f"{prefix.rstrip('/')}/{args.output_name}.tgz".lstrip("/")
     print(f"Uploading to gs://{bucket_name}/{blob_name}...")
-    storage.Client().bucket(bucket_name).blob(blob_name).upload_from_filename(
-        str(tar_path)
-    )
+    boto3.client(
+        "s3",
+        endpoint_url="https://storage.googleapis.com",
+        aws_access_key_id=os.environ["GCS_KEY"],
+        aws_secret_access_key=os.environ["GCS_SECRET"],
+        config=Config(
+            request_checksum_calculation="when_required",
+            response_checksum_validation="when_required",
+        ),
+    ).upload_file(str(tar_path), bucket_name, blob_name)
     print("Done.")
 
 
