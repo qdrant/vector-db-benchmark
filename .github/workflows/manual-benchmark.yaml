@@ -74,7 +74,6 @@ jobs:
           export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
           export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
           export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
-          export SERVER_NAME="benchmark-server-3"
           export QDRANT_VERSION=${{ inputs.qdrant_version }}
           export DATASETS=${{ inputs.dataset }}
           export ENGINE_NAME=${{ inputs.engine_config }}
