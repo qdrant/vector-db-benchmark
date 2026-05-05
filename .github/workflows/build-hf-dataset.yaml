@@ -14,7 +14,7 @@ on:
       output_name:
         description: "Output tarball basename"
         required: true
-        default: "ads-gte-multilingual-1M-1347-angular"
+        default: "ads-gte-multilingual-1M-768-angular"
       vector_column:
         description: "Embedding column name"
         default: "gte"
