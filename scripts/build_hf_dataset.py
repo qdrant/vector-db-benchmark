@@ -2,13 +2,14 @@
 """Build an AnnCompoundReader-format dataset from a HuggingFace dataset and upload to GCS."""
 import argparse
 import json
+import os
 import tarfile
 from pathlib import Path
 
+import boto3
 import faiss
 import numpy as np
 from datasets import load_dataset
-from google.cloud import storage
 
 
 def main():
@@ -80,9 +81,12 @@ def main():
     bucket_name, _, prefix = args.gcs_uri[len("gs://") :].partition("/")
     blob_name = f"{prefix.rstrip('/')}/{args.output_name}.tgz".lstrip("/")
     print(f"Uploading to gs://{bucket_name}/{blob_name}...")
-    storage.Client().bucket(bucket_name).blob(blob_name).upload_from_filename(
-        str(tar_path)
-    )
+    boto3.client(
+        "s3",
+        endpoint_url="https://storage.googleapis.com",
+        aws_access_key_id=os.environ["GCS_KEY"],
+        aws_secret_access_key=os.environ["GCS_SECRET"],
+    ).upload_file(str(tar_path), bucket_name, blob_name)
     print("Done.")
 
 

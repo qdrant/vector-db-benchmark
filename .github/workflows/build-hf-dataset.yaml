@@ -47,24 +47,26 @@ jobs:
           region: fsn1
 
       - name: Build dataset on remote
+        env:
+          GCS_KEY: ${{ secrets.GCS_KEY }}
+          GCS_SECRET: ${{ secrets.GCS_SECRET }}
         run: |
           set -euo pipefail
           source tools/ssh.sh
           IP=$(bash tools/hetzner/get_public_ip.sh "$SERVER_NAME")
 
-          echo "${{ secrets.GCS_SERVICE_ACCOUNT_KEY }}" > /tmp/gcs-key.json
           scp_with_retry -o StrictHostKeyChecking=no \
-            scripts/build_hf_dataset.py /tmp/gcs-key.json "root@$IP:/root/"
+            scripts/build_hf_dataset.py "root@$IP:/root/"
 
-          ssh_with_retry -o StrictHostKeyChecking=no "root@$IP" bash -s <<EOF
+          ssh_with_retry -o StrictHostKeyChecking=no "root@$IP" \
+            GCS_KEY="$GCS_KEY" GCS_SECRET="$GCS_SECRET" bash -s <<EOF
           set -euxo pipefail
           export DEBIAN_FRONTEND=noninteractive
           apt-get update
           apt-get install -y python3-pip
 
-          pip3 install --no-cache-dir datasets numpy faiss-cpu google-cloud-storage
+          pip3 install --no-cache-dir datasets numpy faiss-cpu boto3
 
-          GOOGLE_APPLICATION_CREDENTIALS=/root/gcs-key.json \
           python3 /root/build_hf_dataset.py \
             --hf-dataset "${{ inputs.hf_dataset }}" \
             --output-name "${{ inputs.output_name }}" \
