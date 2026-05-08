@@ -55,5 +55,43 @@
       { "parallel": 8, "with_payload": true }
     ],
     "upload_params": { "parallel": 4 }
+  },
+  {
+    "name": "qdrant-on-disk-bq-inline-on",
+    "engine": "qdrant",
+    "connection_params": { "timeout": 180 },
+    "collection_params": {
+      "vectors_config": { "on_disk": true },
+      "hnsw_config": { "on_disk": true, "inline_storage": true },
+      "quantization_config": { "binary": { "always_ram": false } },
+      "on_disk_payload": true,
+      "payload_index_params": {
+        "a": { "on_disk": true },
+        "d": { "on_disk": true }
+      }
+    },
+    "search_params": [
+      { "parallel": 8, "config": { "hnsw_ef": 128, "quantization": { "rescore": true } } }
+    ],
+    "upload_params": { "parallel": 4 }
+  },
+  {
+    "name": "qdrant-on-disk-bq-inline-off",
+    "engine": "qdrant",
+    "connection_params": { "timeout": 180 },
+    "collection_params": {
+      "vectors_config": { "on_disk": true },
+      "hnsw_config": { "on_disk": true, "inline_storage": false },
+      "quantization_config": { "binary": { "always_ram": false } },
+      "on_disk_payload": true,
+      "payload_index_params": {
+        "a": { "on_disk": true },
+        "d": { "on_disk": true }
+      }
+    },
+    "search_params": [
+      { "parallel": 8, "config": { "hnsw_ef": 128, "quantization": { "rescore": true } } }
+    ],
+    "upload_params": { "parallel": 4 }
   }
 ]

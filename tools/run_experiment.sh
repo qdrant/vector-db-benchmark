@@ -106,6 +106,7 @@ if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "search" ]]; t
     -v "$HOME/results:/code/results" \
     -v "ci-datasets:/code/datasets" \
     ${CONFIGURATIONS_MOUNT:+"-v" "$CONFIGURATIONS_MOUNT"} \
+    ${BENCHMARK_MAX_QUERIES:+-e "BENCHMARK_MAX_QUERIES=${BENCHMARK_MAX_QUERIES}"} \
     "${VECTOR_DB_BENCHMARK_IMAGE}" \
     python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-upload
 fi
@@ -148,15 +149,46 @@ fi
 
 if [[ "$EXPERIMENT_MODE" == "snapshot" ]]; then
   echo "EXPERIMENT_MODE=$EXPERIMENT_MODE"
-  echo "Recovering collection from snapshot"
-  curl  -X PUT \
-    "http://${PRIVATE_IP_OF_THE_SERVER}:6333/collections/benchmark/snapshots/recover" \
+  echo "Kicking off async snapshot recovery (wait=false)"
+  # wait=true (default) blocks the HTTP response for the full download+extract,
+  # which can exceed 90 min for a 76 GB inline-on snapshot and trips outer
+  # wall-clock kills. wait=false returns 202 immediately and the work runs as
+  # a background task on qdrant; we then poll the collection status below.
+  curl -X PUT \
+    "http://${PRIVATE_IP_OF_THE_SERVER}:6333/collections/benchmark/snapshots/recover?wait=false" \
     --data-raw "{\"location\": \"${SNAPSHOT_URL}\"}"
   echo ""
-  echo "Done recovering collection from snapshot"
+  echo "Recovery dispatched; polling for green status"
 
   collection_url="http://${PRIVATE_IP_OF_THE_SERVER}:6333/collections/benchmark"
   collection_status=$(curl -s "$collection_url" | jq -r '.result.status')
   echo "Experiment stage: collection status is ${collection_status} after recovery"
+
+  # Wait for the async recovery to land + indexing to finish.
+  # 90 min ceiling — at N=2M inline-on (~76 GB) the full recovery (download +
+  # extract + optimize) can run well past an hour on slow GCS↔Hetzner links.
+  WAIT_TIMEOUT_S=5400
+  WAIT_INTERVAL_S=5
+  # Only log on status transition OR every HEARTBEAT_S seconds, so a 45-min
+  # poll loop doesn't dump 540 lines of "status=null".
+  HEARTBEAT_S=60
+  elapsed=0
+  last_logged_status=""
+  last_log_at=0
+  while [[ "$collection_status" != "green" ]]; do
+    if (( elapsed >= WAIT_TIMEOUT_S )); then
+      echo "Timeout: collection still '${collection_status}' after ${WAIT_TIMEOUT_S}s"
+      exit 1
+    fi
+    sleep "$WAIT_INTERVAL_S"
+    elapsed=$((elapsed + WAIT_INTERVAL_S))
+    collection_status=$(curl -s "$collection_url" | jq -r '.result.status')
+    if [[ "$collection_status" != "$last_logged_status" ]] || (( elapsed - last_log_at >= HEARTBEAT_S )); then
+      echo "  ... status=${collection_status} (waited ${elapsed}s)"
+      last_logged_status=$collection_status
+      last_log_at=$elapsed
+    fi
+  done
+  echo "Collection is green after ${elapsed}s"
 
 fi

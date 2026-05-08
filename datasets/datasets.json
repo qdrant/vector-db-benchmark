@@ -142,7 +142,7 @@
       "id": "keyword"
     }
   },
-    {
+  {
     "name": "arxiv-titles-384-angular-no-filters",
     "vector_size": 384,
     "distance": "cosine",
@@ -162,7 +162,7 @@
       "b": "keyword"
     }
   },
-    {
+  {
     "name": "random-match-keyword-100-angular-no-filters",
     "vector_size": 100,
     "distance": "cosine",
@@ -222,7 +222,7 @@
       "b": "geo"
     }
   },
-    {
+  {
     "name": "random-geo-radius-100-angular-no-filters",
     "vector_size": 100,
     "distance": "cosine",
@@ -282,7 +282,7 @@
       "b": "float"
     }
   },
-    {
+  {
     "name": "random-range-2048-angular-no-filters",
     "vector_size": 2048,
     "distance": "cosine",
@@ -302,7 +302,7 @@
       "b": "geo"
     }
   },
-    {
+  {
     "name": "random-geo-radius-2048-angular-no-filters",
     "vector_size": 2048,
     "distance": "cosine",
@@ -418,5 +418,257 @@
     "type": "tar",
     "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/laion-1m.tgz",
     "path": "laion-1m/laion_1m"
+  },
+  {
+    "name": "random-768-500k-on-disk-bq-keyword-narrow-filter",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "random-768-500k-on-disk-bq/keyword-narrow-filter",
+    "link": "https://storage.googleapis.com/qdrant-benchmark-snapshots/on-disk-search/datasets/random-768-500k-on-disk-bq-keyword-narrow-filter.tgz",
+    "schema": {
+      "a": "keyword",
+      "b": "float",
+      "c": "int",
+      "d": "uuid",
+      "e": "bool",
+      "g": "geo",
+      "t": "text",
+      "timestamp": "datetime"
+    }
+  },
+  {
+    "name": "random-768-500k-on-disk-bq-keyword-wide-filter",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "random-768-500k-on-disk-bq/keyword-wide-filter",
+    "link": "https://storage.googleapis.com/qdrant-benchmark-snapshots/on-disk-search/datasets/random-768-500k-on-disk-bq-keyword-wide-filter.tgz",
+    "schema": {
+      "a": "keyword",
+      "b": "float",
+      "c": "int",
+      "d": "uuid",
+      "e": "bool",
+      "g": "geo",
+      "t": "text",
+      "timestamp": "datetime"
+    }
+  },
+  {
+    "name": "random-768-500k-on-disk-bq-int-narrow-filter",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "random-768-500k-on-disk-bq/int-narrow-filter",
+    "link": "https://storage.googleapis.com/qdrant-benchmark-snapshots/on-disk-search/datasets/random-768-500k-on-disk-bq-int-narrow-filter.tgz",
+    "schema": {
+      "a": "keyword",
+      "b": "float",
+      "c": "int",
+      "d": "uuid",
+      "e": "bool",
+      "g": "geo",
+      "t": "text",
+      "timestamp": "datetime"
+    }
+  },
+  {
+    "name": "random-768-500k-on-disk-bq-int-wide-filter",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "random-768-500k-on-disk-bq/int-wide-filter",
+    "link": "https://storage.googleapis.com/qdrant-benchmark-snapshots/on-disk-search/datasets/random-768-500k-on-disk-bq-int-wide-filter.tgz",
+    "schema": {
+      "a": "keyword",
+      "b": "float",
+      "c": "int",
+      "d": "uuid",
+      "e": "bool",
+      "g": "geo",
+      "t": "text",
+      "timestamp": "datetime"
+    }
+  },
+  {
+    "name": "random-768-500k-on-disk-bq-float-narrow-filter",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "random-768-500k-on-disk-bq/float-narrow-filter",
+    "link": "https://storage.googleapis.com/qdrant-benchmark-snapshots/on-disk-search/datasets/random-768-500k-on-disk-bq-float-narrow-filter.tgz",
+    "schema": {
+      "a": "keyword",
+      "b": "float",
+      "c": "int",
+      "d": "uuid",
+      "e": "bool",
+      "g": "geo",
+      "t": "text",
+      "timestamp": "datetime"
+    }
+  },
+  {
+    "name": "random-768-500k-on-disk-bq-float-wide-filter",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "random-768-500k-on-disk-bq/float-wide-filter",
+    "link": "https://storage.googleapis.com/qdrant-benchmark-snapshots/on-disk-search/datasets/random-768-500k-on-disk-bq-float-wide-filter.tgz",
+    "schema": {
+      "a": "keyword",
+      "b": "float",
+      "c": "int",
+      "d": "uuid",
+      "e": "bool",
+      "g": "geo",
+      "t": "text",
+      "timestamp": "datetime"
+    }
+  },
+  {
+    "name": "random-768-500k-on-disk-bq-bool-wide-filter",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "random-768-500k-on-disk-bq/bool-wide-filter",
+    "link": "https://storage.googleapis.com/qdrant-benchmark-snapshots/on-disk-search/datasets/random-768-500k-on-disk-bq-bool-wide-filter.tgz",
+    "schema": {
+      "a": "keyword",
+      "b": "float",
+      "c": "int",
+      "d": "uuid",
+      "e": "bool",
+      "g": "geo",
+      "t": "text",
+      "timestamp": "datetime"
+    }
+  },
+  {
+    "name": "random-768-500k-on-disk-bq-uuid-narrow-filter",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "random-768-500k-on-disk-bq/uuid-narrow-filter",
+    "link": "https://storage.googleapis.com/qdrant-benchmark-snapshots/on-disk-search/datasets/random-768-500k-on-disk-bq-uuid-narrow-filter.tgz",
+    "schema": {
+      "a": "keyword",
+      "b": "float",
+      "c": "int",
+      "d": "uuid",
+      "e": "bool",
+      "g": "geo",
+      "t": "text",
+      "timestamp": "datetime"
+    }
+  },
+  {
+    "name": "random-768-500k-on-disk-bq-geo-narrow-filter",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "random-768-500k-on-disk-bq/geo-narrow-filter",
+    "link": "https://storage.googleapis.com/qdrant-benchmark-snapshots/on-disk-search/datasets/random-768-500k-on-disk-bq-geo-narrow-filter.tgz",
+    "schema": {
+      "a": "keyword",
+      "b": "float",
+      "c": "int",
+      "d": "uuid",
+      "e": "bool",
+      "g": "geo",
+      "t": "text",
+      "timestamp": "datetime"
+    }
+  },
+  {
+    "name": "random-768-500k-on-disk-bq-geo-wide-filter",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "random-768-500k-on-disk-bq/geo-wide-filter",
+    "link": "https://storage.googleapis.com/qdrant-benchmark-snapshots/on-disk-search/datasets/random-768-500k-on-disk-bq-geo-wide-filter.tgz",
+    "schema": {
+      "a": "keyword",
+      "b": "float",
+      "c": "int",
+      "d": "uuid",
+      "e": "bool",
+      "g": "geo",
+      "t": "text",
+      "timestamp": "datetime"
+    }
+  },
+  {
+    "name": "random-768-500k-on-disk-bq-text-narrow-filter",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "random-768-500k-on-disk-bq/text-narrow-filter",
+    "link": "https://storage.googleapis.com/qdrant-benchmark-snapshots/on-disk-search/datasets/random-768-500k-on-disk-bq-text-narrow-filter.tgz",
+    "schema": {
+      "a": "keyword",
+      "b": "float",
+      "c": "int",
+      "d": "uuid",
+      "e": "bool",
+      "g": "geo",
+      "t": "text",
+      "timestamp": "datetime"
+    }
+  },
+  {
+    "name": "random-768-500k-on-disk-bq-text-wide-filter",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "random-768-500k-on-disk-bq/text-wide-filter",
+    "link": "https://storage.googleapis.com/qdrant-benchmark-snapshots/on-disk-search/datasets/random-768-500k-on-disk-bq-text-wide-filter.tgz",
+    "schema": {
+      "a": "keyword",
+      "b": "float",
+      "c": "int",
+      "d": "uuid",
+      "e": "bool",
+      "g": "geo",
+      "t": "text",
+      "timestamp": "datetime"
+    }
+  },
+  {
+    "name": "random-768-500k-on-disk-bq-datetime-narrow-filter",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "random-768-500k-on-disk-bq/datetime-narrow-filter",
+    "link": "https://storage.googleapis.com/qdrant-benchmark-snapshots/on-disk-search/datasets/random-768-500k-on-disk-bq-datetime-narrow-filter.tgz",
+    "schema": {
+      "a": "keyword",
+      "b": "float",
+      "c": "int",
+      "d": "uuid",
+      "e": "bool",
+      "g": "geo",
+      "t": "text",
+      "timestamp": "datetime"
+    }
+  },
+  {
+    "name": "random-768-500k-on-disk-bq-datetime-wide-filter",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "tar",
+    "path": "random-768-500k-on-disk-bq/datetime-wide-filter",
+    "link": "https://storage.googleapis.com/qdrant-benchmark-snapshots/on-disk-search/datasets/random-768-500k-on-disk-bq-datetime-wide-filter.tgz",
+    "schema": {
+      "a": "keyword",
+      "b": "float",
+      "c": "int",
+      "d": "uuid",
+      "e": "bool",
+      "g": "geo",
+      "t": "text",
+      "timestamp": "datetime"
+    }
   }
 ]

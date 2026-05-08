@@ -1,6 +1,4 @@
-name: Build HF Dataset
-
-# Stub on master.
+name: "Continuous Benchmark: Search on disk"
 
 on:
   workflow_dispatch:
@@ -29,6 +27,10 @@ on:
         required: false
         description: "Cap on queries per cell (empty = use all from tests.jsonl). Use to keep inline-on cells within GHA's 6h job limit without regenerating tarballs."
         default: ""
+  schedule:
+    # Daily at 04:00 UTC. inline-on at N=2M takes several hours per worker, so
+    # the prior 4-hour cadence wasn't feasible.
+    - cron: "0 4 * * *"
 
 concurrency:
   group: hetzner-machines-${{ github.run_id }}
@@ -302,3 +304,19 @@ jobs:
       - name: Teardown
         continue-on-error: true
         run: bash -x tools/tear_down.sh
+
+  slackOnFailure:
+    name: Slack on failure
+    needs: [prepareMatrix, setupMachines, runWorker, cleanupMachines]
+    if: ${{ always() && (failure() || cancelled()) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: ./.github/workflows/actions/send-slack-msg
+        with:
+          bench_name: "runSearchOnDiskBenchmark"
+          job_status: ${{ needs.runWorker.result }}
+          failed_outputs: "see workflow run for per-worker logs"
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.CI_ALERTS_CHANNEL_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
