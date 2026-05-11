@@ -458,5 +458,29 @@
     "type": "tar",
     "link": "https://storage.googleapis.com/ann-filtered-benchmark/datasets/dbpedia-openai3-small-100K-1536-angular.tgz",
     "path": "dbpedia-openai3-small-100K-1536-angular/dbpedia-openai3-small-100K-1536-angular"
+  },
+  {
+    "name": "sift-128-euclidean",
+    "vector_size": 128,
+    "distance": "l2",
+    "type": "h5",
+    "path": "sift-128-euclidean/sift-128-euclidean.hdf5",
+    "link": "http://ann-benchmarks.com/sift-128-euclidean.hdf5"
+  },
+  {
+    "name": "mnist-784-euclidean",
+    "vector_size": 784,
+    "distance": "l2",
+    "type": "h5",
+    "path": "mnist-784-euclidean/mnist-784-euclidean.hdf5",
+    "link": "http://ann-benchmarks.com/mnist-784-euclidean.hdf5"
+  },
+  {
+    "name": "fashion-mnist-784-euclidean",
+    "vector_size": 784,
+    "distance": "l2",
+    "type": "h5",
+    "path": "fashion-mnist-784-euclidean/fashion-mnist-784-euclidean.hdf5",
+    "link": "http://ann-benchmarks.com/fashion-mnist-784-euclidean.hdf5"
   }
 ]
