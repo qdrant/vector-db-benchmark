@@ -7,114 +7,21 @@ on:
     inputs:
       build_vector_db_image:
         required: false
-        description: "Build vector DB image from source branch and use it (false by default)"
+        description: "Build vector DB benchmark image from source branch and use it (false = use prebuilt ghcr image)"
         default: "false"
       container_mem_limit:
         required: false
-        description: "Memory limit for the Qdrant container during phase 2"
+        description: "Memory limit for the Qdrant container during search (force-eviction regime)"
         default: "384m"
-      region:
-        required: false
-        description: "Hetzner region"
-        default: "fsn1"
-      server_machine_type:
-        required: false
-        description: "Hetzner server machine type (must hold the inline-on snapshot + extract: ~150 GB for N=2M)"
-        default: "ccx33"
-      client_machine_type:
-        required: false
-        description: "Hetzner client machine type"
-        default: "ccx23"
-      max_queries:
-        required: false
-        description: "Cap on queries per cell (empty = use all from tests.jsonl). Use to keep inline-on cells within GHA's 6h job limit without regenerating tarballs."
-        default: ""
+      feature_flags_all:
+        type: boolean
+        description: "Enable all feature flags on the dev branch"
+        default: true
 
 concurrency:
-  group: hetzner-machines-${{ github.run_id }}
-
-env:
-  HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
-  POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-  POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+  group: continuous-benchmark
 
 jobs:
-  prepareMatrix:
-    name: Prepare matrix
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.prepare.outputs.matrix }}
-    steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-      - id: prepare
-        shell: bash
-        run: |
-          DATASETS=(
-            random-768-500k-on-disk-bq-keyword-narrow-filter random-768-500k-on-disk-bq-keyword-wide-filter
-            random-768-500k-on-disk-bq-int-narrow-filter random-768-500k-on-disk-bq-int-wide-filter
-            random-768-500k-on-disk-bq-float-narrow-filter random-768-500k-on-disk-bq-float-wide-filter
-            random-768-500k-on-disk-bq-bool-wide-filter
-            random-768-500k-on-disk-bq-uuid-narrow-filter
-            random-768-500k-on-disk-bq-geo-narrow-filter random-768-500k-on-disk-bq-geo-wide-filter
-            random-768-500k-on-disk-bq-text-narrow-filter random-768-500k-on-disk-bq-text-wide-filter
-            random-768-500k-on-disk-bq-datetime-narrow-filter random-768-500k-on-disk-bq-datetime-wide-filter
-          )
-          STORAGE_BASE="https://storage.googleapis.com/qdrant-benchmark-snapshots/on-disk-search/snapshots"
-
-          # Partition datasets by engine variant.
-          # - narrow filters bypass HNSW → only inline-off run is meaningful.
-          # - wide filters traverse HNSW → both inline-on and inline-off runs.
-          inline_on_datasets=()
-          inline_off_datasets=()
-          for dataset in "${DATASETS[@]}"; do
-            case "$dataset" in
-              *-narrow-filter)
-                inline_off_datasets+=("$dataset")
-                ;;
-              *)
-                inline_on_datasets+=("$dataset")
-                inline_off_datasets+=("$dataset")
-                ;;
-            esac
-          done
-
-          # Hardcoded per-variant worker counts. inline-on cells are ~10× more
-          # expensive than inline-off (cold-cache 76 GB working set vs 550 MB),
-          # so weight workers heavily toward inline-on to keep each session
-          # under GHA's 6h job ceiling.
-          # inline-on: 7 wide datasets / 4 workers → ≤2 datasets/worker.
-          # inline-off: 14 datasets / 2 workers → ≤7 datasets/worker (fast cells).
-          workers_on=4
-          workers_off=2
-
-          # Round-robin distribute each variant's datasets across its workers.
-          # One matrix entry per worker = one session = one snapshot restore.
-          build_sessions() {
-            local engine="$1" snap="$2" n_workers="$3" idx_base="$4"
-            shift 4
-            local datasets=("$@")
-            for ((w=0; w<n_workers; w++)); do
-              local picks=()
-              for ((i=w; i<${#datasets[@]}; i+=n_workers)); do
-                picks+=("\"${datasets[$i]}\"")
-              done
-              if (( ${#picks[@]} == 0 )); then continue; fi
-              local pj=$(IFS=,; echo "${picks[*]}")
-              echo "{\"worker_index\":$((idx_base + w)),\"engine\":\"$engine\",\"snapshot_url\":\"$snap\",\"datasets\":[$pj]}"
-            done
-          }
-
-          entries=()
-          while IFS= read -r e; do entries+=("$e"); done < <(
-            build_sessions "qdrant-on-disk-bq-inline-on"  "$STORAGE_BASE/ondisk_global-inline-on.snapshot"  "$workers_on"  0             "${inline_on_datasets[@]}"
-            build_sessions "qdrant-on-disk-bq-inline-off" "$STORAGE_BASE/ondisk_global-inline-off.snapshot" "$workers_off" "$workers_on" "${inline_off_datasets[@]}"
-          )
-
-          matrix="[$(IFS=,; echo "${entries[*]}")]"
-          echo "Built ${#entries[@]} sessions (workers_on=$workers_on, workers_off=$workers_off)"
-          echo "$matrix" | jq .
-          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
-
   buildImage:
     name: Build Vector DB Image
     runs-on: ubuntu-latest
@@ -146,71 +53,30 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  setupMachines:
-    name: setup pair ${{ matrix.worker.worker_index }} (${{ matrix.worker.engine }})
-    needs: [prepareMatrix, buildImage]
-    if: ${{ !cancelled() && needs.prepareMatrix.result == 'success' && (needs.buildImage.result == 'success' || needs.buildImage.result == 'skipped') }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        worker: ${{ fromJSON(needs.prepareMatrix.outputs.matrix) }}
-    env:
-      SERVER_NAME: search-on-disk-server-${{ matrix.worker.worker_index }}
-      CLIENT_NAME: search-on-disk-client-${{ matrix.worker.worker_index }}
-    steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-      - uses: webfactory/ssh-agent@d4b9b8ff72958532804b70bbe600ad43b36d5f2e # v0.8.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-      - name: Setup CI tools
-        run: bash -x tools/setup_ci.sh
-      - name: Create server
-        uses: ./.github/workflows/actions/create-server-with-retry
-        with:
-          server_name: ${{ env.SERVER_NAME }}
-          server_type: ${{ inputs.server_machine_type || 'ccx33' }}
-          region: ${{ inputs.region || 'fsn1' }}
-          max_retries: 5
-      - name: Create client
-        uses: ./.github/workflows/actions/create-server-with-retry
-        with:
-          server_name: ${{ env.CLIENT_NAME }}
-          server_type: ${{ inputs.client_machine_type || 'ccx23' }}
-          region: ${{ inputs.region || 'fsn1' }}
-          max_retries: 5
-
-  runWorker:
-    name: worker ${{ matrix.worker.worker_index }} (${{ matrix.worker.engine }})
-    needs: [prepareMatrix, setupMachines]
-    if: ${{ !cancelled() && needs.setupMachines.result == 'success' }}
+  runOnDiskSearchBenchmark:
+    needs: [buildImage]
+    if: ${{ !cancelled() && (needs.buildImage.result == 'success' || needs.buildImage.result == 'skipped') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: read
-    strategy:
-      fail-fast: false
-      matrix:
-        worker: ${{ fromJSON(needs.prepareMatrix.outputs.matrix) }}
-    env:
-      SERVER_NAME: search-on-disk-server-${{ matrix.worker.worker_index }}
-      CLIENT_NAME: search-on-disk-client-${{ matrix.worker.worker_index }}
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
       - uses: webfactory/ssh-agent@d4b9b8ff72958532804b70bbe600ad43b36d5f2e # v0.8.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-      - name: Setup CI tools
-        run: bash -x tools/setup_ci.sh
-      - name: Run session
+      - name: Benches
+        id: benches
         run: |
-          export ENGINE_NAME='${{ matrix.worker.engine }}'
-          export SNAPSHOT_URL='${{ matrix.worker.snapshot_url }}'
-          export CONTAINER_MEM_LIMIT="${{ inputs.container_mem_limit || '256m' }}"
-          # If unset, all queries in tests.jsonl run; otherwise truncate at N.
-          if [ -n "${{ inputs.max_queries }}" ]; then
-            export BENCHMARK_MAX_QUERIES="${{ inputs.max_queries }}"
-          fi
+          export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
+          export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+          export POSTGRES_TABLE="benchmark_on_disk"
+          export SERVER_NAME="benchmark-server-3"
+          export ENGINE_NAME="qdrant-on-disk-bq-inline-off"
+          export SNAPSHOT_URL="https://storage.googleapis.com/qdrant-benchmark-snapshots/on-disk-search/snapshots/ondisk_global-inline-off.snapshot"
+          export CONTAINER_MEM_LIMIT="${{ inputs.container_mem_limit || '384m' }}"
+          
           if [ "${{ inputs.build_vector_db_image }}" = "true" ]; then
             branch_tmp="${{ github.ref_name }}"
             branch=${branch_tmp//\//-}
@@ -218,87 +84,75 @@ jobs:
             export GHCR_USERNAME="${{ github.repository_owner }}"
             export GHCR_PASSWORD="${{ secrets.GITHUB_TOKEN }}"
           fi
-
-          # Don't abort the worker on individual failures; track them so the step
-          # still exits non-zero overall and slackOnFailure fires.
+          
+          bash -x tools/setup_ci.sh
+          
+          DATASETS_LIST=(
+            random-768-2M-on-disk-bq-keyword-narrow-filter random-768-2M-on-disk-bq-keyword-wide-filter
+            random-768-2M-on-disk-bq-int-narrow-filter     random-768-2M-on-disk-bq-int-wide-filter
+            random-768-2M-on-disk-bq-float-narrow-filter   random-768-2M-on-disk-bq-float-wide-filter
+            random-768-2M-on-disk-bq-bool-wide-filter
+            random-768-2M-on-disk-bq-uuid-narrow-filter
+            random-768-2M-on-disk-bq-geo-narrow-filter     random-768-2M-on-disk-bq-geo-wide-filter
+            random-768-2M-on-disk-bq-text-narrow-filter    random-768-2M-on-disk-bq-text-wide-filter
+            random-768-2M-on-disk-bq-datetime-narrow-filter random-768-2M-on-disk-bq-datetime-wide-filter
+          )
+          FF_DEV="${{ inputs.feature_flags_all }}"
+          FF_DEV="${FF_DEV:-true}"
+          VERSION_PAIRS=("ghcr/dev|${FF_DEV}" "docker/master|false")
+          SNAPSHOT_CONTAINER_NAME="qdrant-continuous-benchmarks-snapshot"
+          
           set +e
           FAILED=0
-
-          DATASETS_JSON='${{ toJSON(matrix.worker.datasets) }}'
-          VERSION_PAIRS=("ghcr/dev|true" "docker/master|false")
-          SNAPSHOT_CONTAINER_NAME="qdrant-continuous-benchmarks-snapshot"
-
-          # Restore once with the first version, swap qdrant images on the same
-          # volume per (dataset, version). Same-dataset dev/master pair collapses
-          # from hours to ~30 s; one full restore saved per session.
-          INITIAL_PAIR="${VERSION_PAIRS[0]}"
-          export QDRANT_VERSION="${INITIAL_PAIR%%|*}"
-          export QDRANT__FEATURE_FLAGS__ALL="${INITIAL_PAIR##*|}"
+          
+          # Restore the snapshot once with the first version, then swap qdrant
+          # images on the same volume per (dataset, version). Same-dataset
+          # dev/master pairs land ~30 s apart.
+          INITIAL="${VERSION_PAIRS[0]}"
+          export QDRANT_VERSION="${INITIAL%%|*}"
+          export QDRANT__FEATURE_FLAGS__ALL="${INITIAL##*|}"
           CURRENT_VERSION="$QDRANT_VERSION"
           CURRENT_FF="$QDRANT__FEATURE_FLAGS__ALL"
-
-          echo "===== worker ${{ matrix.worker.worker_index }}: prepare $ENGINE_NAME @ $QDRANT_VERSION ====="
+          
+          echo "===== prepare $ENGINE_NAME @ $QDRANT_VERSION ====="
           export BENCHMARK_STRATEGY="search-on-disk-prepare"
-          timeout 120m bash -x tools/run_remote_benchmark.sh
+          timeout 30m bash -x tools/run_remote_benchmark.sh
           prepare_rc=$?
           if [ "$prepare_rc" -ne 0 ]; then
-            n=$(echo "$DATASETS_JSON" | jq 'length')
-            echo "::warning::prepare failed (rc=$prepare_rc) for $ENGINE_NAME; aborting session ($n datasets × ${#VERSION_PAIRS[@]} versions skipped)"
+            echo "::error::prepare failed (rc=$prepare_rc); aborting"
             exit 1
           fi
-
+          
           export BENCHMARK_STRATEGY="search-on-disk-search"
-          SESSION_BROKEN=0
-          # Read datasets from FD 3 (not stdin) — `ssh -tt` inside run_ci.sh
-          # would otherwise drain the loop's stdin pipe after the first iteration.
-          while IFS= read -r DATASET <&3; do
-            if [ "$SESSION_BROKEN" -ne 0 ]; then break; fi
+          for DATASET in "${DATASETS_LIST[@]}"; do
             export DATASETS="$DATASET"
             for VERSION_PAIR in "${VERSION_PAIRS[@]}"; do
               export QDRANT_VERSION="${VERSION_PAIR%%|*}"
               export QDRANT__FEATURE_FLAGS__ALL="${VERSION_PAIR##*|}"
-
+          
               if [[ "$QDRANT_VERSION" != "$CURRENT_VERSION" || "$QDRANT__FEATURE_FLAGS__ALL" != "$CURRENT_FF" ]]; then
-                echo "===== worker ${{ matrix.worker.worker_index }}: swap qdrant image $CURRENT_VERSION -> $QDRANT_VERSION ====="
-                if ! timeout 15m bash -x tools/run_server_container_with_volume.sh "$SNAPSHOT_CONTAINER_NAME" "$CONTAINER_MEM_LIMIT" "continue"; then
-                  echo "::warning::image swap failed; aborting remaining cells in this session"
+                echo "===== swap qdrant image $CURRENT_VERSION -> $QDRANT_VERSION ====="
+                timeout 15m bash -x tools/run_server_container_with_volume.sh "$SNAPSHOT_CONTAINER_NAME" "$CONTAINER_MEM_LIMIT" "continue"
+                swap_rc=$?
+                if [ "$swap_rc" -ne 0 ]; then
+                  echo "::error::image swap failed (rc=$swap_rc); aborting remaining cells"
                   FAILED=$((FAILED + 1))
-                  SESSION_BROKEN=1
-                  break
+                  break 2
                 fi
                 CURRENT_VERSION="$QDRANT_VERSION"
                 CURRENT_FF="$QDRANT__FEATURE_FLAGS__ALL"
               fi
-
-              echo "===== worker ${{ matrix.worker.worker_index }}: search $DATASETS @ $QDRANT_VERSION ====="
-              timeout 120m bash -x tools/run_ci.sh || FAILED=$((FAILED + 1))
+          
+              echo "===== search $DATASETS @ $QDRANT_VERSION ====="
+              timeout 60m bash -x tools/run_ci.sh || FAILED=$((FAILED + 1))
             done
-          done 3< <(echo "$DATASETS_JSON" | jq -r '.[]')
-
+          done
+          
+          set -e
           if [ "$FAILED" -gt 0 ]; then
-            echo "::warning::worker ${{ matrix.worker.worker_index }}: $FAILED cell run(s) failed"
+            echo "::warning::$FAILED cell run(s) failed"
             exit 1
           fi
-
-  cleanupMachines:
-    name: teardown pair ${{ matrix.worker.worker_index }} (${{ matrix.worker.engine }})
-    needs: [prepareMatrix, setupMachines, runWorker]
-    if: ${{ always() && needs.prepareMatrix.result == 'success' }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        worker: ${{ fromJSON(needs.prepareMatrix.outputs.matrix) }}
-    env:
-      SERVER_NAME: search-on-disk-server-${{ matrix.worker.worker_index }}
-      CLIENT_NAME: search-on-disk-client-${{ matrix.worker.worker_index }}
-    steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-      - uses: webfactory/ssh-agent@d4b9b8ff72958532804b70bbe600ad43b36d5f2e # v0.8.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-      - name: Setup CI tools
-        run: bash -x tools/setup_ci.sh
-      - name: Teardown
-        continue-on-error: true
-        run: bash -x tools/tear_down.sh
+      - name: Fail job if any of the benches failed
+        if: steps.benches.outputs.failed == 'error' || steps.benches.outputs.failed == 'timeout'
+        run: exit 1

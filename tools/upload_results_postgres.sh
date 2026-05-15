@@ -214,10 +214,17 @@ if [[ "$BENCHMARK_STRATEGY" == "search-on-disk" || "$BENCHMARK_STRATEGY" == "sea
   esac
 fi
 
-docker run --name "vector-db" --rm jbergknoff/postgresql-client "postgresql://qdrant:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/postgres" -c "
-INSERT INTO ${POSTGRES_TABLE} (engine, branch, commit, dataset, measure_timestamp, upload_time, indexing_time, rps, mean_precisions, p95_time, p99_time, vm_rss_mem, rss_anon_mem, collection_load_time_ms, cpu_telemetry, cpu, storage_size_bytes, storage_size_apparent_bytes, minor_page_faults, major_page_faults, mem_disk_bytes, mem_expected_cache_bytes, mem_cached_bytes_before, mem_cached_bytes_after, cgroup_mem_current_before, cgroup_mem_current_after)
-VALUES ('qdrant-ci', '${QDRANT_VERSION}', '${QDRANT_COMMIT}', '${DATASET_LABEL}', '${MEASURE_TIMESTAMP}', ${UPLOAD_TIME}, ${INDEXING_TIME}, ${RPS}, ${MEAN_PRECISIONS}, ${P95_TIME}, ${P99_TIME}, ${VM_RSS_MEMORY_USAGE}, ${RSS_ANON_MEMORY_USAGE}, ${COLLECTION_LOAD_TIME}, ${CPU_TELEMETRY}, ${CPU}, ${STORAGE_SIZE_ALLOCATED}, ${STORAGE_SIZE_APPARENT}, ${MINOR_PAGE_FAULTS}, ${MAJOR_PAGE_FAULTS}, ${MEM_DISK_BYTES}, ${MEM_EXPECTED_CACHE_BYTES}, ${MEM_CACHED_BYTES_BEFORE}, ${MEM_CACHED_BYTES_AFTER}, ${CGROUP_MEM_CURRENT_BEFORE}, ${CGROUP_MEM_CURRENT_AFTER});
-"
+# search-on-disk strategies write the extra page-fault / memory columns to the
+# `benchmark_on_disk` table; other strategies stick to the legacy `benchmark` columns.
+if [[ "$BENCHMARK_STRATEGY" == "search-on-disk" || "$BENCHMARK_STRATEGY" == "search-on-disk-search" ]]; then
+  INSERT_SQL="INSERT INTO ${POSTGRES_TABLE} (engine, branch, commit, dataset, measure_timestamp, upload_time, indexing_time, rps, mean_precisions, p95_time, p99_time, vm_rss_mem, rss_anon_mem, collection_load_time_ms, cpu_telemetry, cpu, storage_size_bytes, storage_size_apparent_bytes, minor_page_faults, major_page_faults, mem_disk_bytes, mem_expected_cache_bytes, mem_cached_bytes_before, mem_cached_bytes_after, cgroup_mem_current_before, cgroup_mem_current_after)
+VALUES ('qdrant-ci', '${QDRANT_VERSION}', '${QDRANT_COMMIT}', '${DATASET_LABEL}', '${MEASURE_TIMESTAMP}', ${UPLOAD_TIME}, ${INDEXING_TIME}, ${RPS}, ${MEAN_PRECISIONS}, ${P95_TIME}, ${P99_TIME}, ${VM_RSS_MEMORY_USAGE}, ${RSS_ANON_MEMORY_USAGE}, ${COLLECTION_LOAD_TIME}, ${CPU_TELEMETRY}, ${CPU}, ${STORAGE_SIZE_ALLOCATED}, ${STORAGE_SIZE_APPARENT}, ${MINOR_PAGE_FAULTS}, ${MAJOR_PAGE_FAULTS}, ${MEM_DISK_BYTES}, ${MEM_EXPECTED_CACHE_BYTES}, ${MEM_CACHED_BYTES_BEFORE}, ${MEM_CACHED_BYTES_AFTER}, ${CGROUP_MEM_CURRENT_BEFORE}, ${CGROUP_MEM_CURRENT_AFTER});"
+else
+  INSERT_SQL="INSERT INTO ${POSTGRES_TABLE} (engine, branch, commit, dataset, measure_timestamp, upload_time, indexing_time, rps, mean_precisions, p95_time, p99_time, vm_rss_mem, rss_anon_mem, collection_load_time_ms, cpu_telemetry, cpu, storage_size_bytes, storage_size_apparent_bytes)
+VALUES ('qdrant-ci', '${QDRANT_VERSION}', '${QDRANT_COMMIT}', '${DATASET_LABEL}', '${MEASURE_TIMESTAMP}', ${UPLOAD_TIME}, ${INDEXING_TIME}, ${RPS}, ${MEAN_PRECISIONS}, ${P95_TIME}, ${P99_TIME}, ${VM_RSS_MEMORY_USAGE}, ${RSS_ANON_MEMORY_USAGE}, ${COLLECTION_LOAD_TIME}, ${CPU_TELEMETRY}, ${CPU}, ${STORAGE_SIZE_ALLOCATED}, ${STORAGE_SIZE_APPARENT});"
+fi
+
+docker run --name "vector-db" --rm jbergknoff/postgresql-client "postgresql://qdrant:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/postgres" -c "${INSERT_SQL}"
 
 if [[ "$IS_CI_RUN" == "true" ]]; then
   echo "collection_load_time=${COLLECTION_LOAD_TIME}" >> "$GITHUB_OUTPUT"
