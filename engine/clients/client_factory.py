@@ -34,6 +34,7 @@ from engine.clients.qdrant_native import (
     QdrantNativeSearcher,
     QdrantNativeUploader,
 )
+from engine.clients.logosdb import LogosDBConfigurator, LogosDBSearcher, LogosDBUploader
 from engine.clients.redis import RedisConfigurator, RedisSearcher, RedisUploader
 from engine.clients.weaviate import (
     WeaviateConfigurator,
@@ -42,6 +43,7 @@ from engine.clients.weaviate import (
 )
 
 ENGINE_CONFIGURATORS = {
+    "logosdb": LogosDBConfigurator,
     "qdrant": QdrantConfigurator,
     "qdrant_native": QdrantNativeConfigurator,
     "qdrant_hybrid": QdrantHybridConfigurator,
@@ -54,6 +56,7 @@ ENGINE_CONFIGURATORS = {
 }
 
 ENGINE_UPLOADERS = {
+    "logosdb": LogosDBUploader,
     "qdrant": QdrantUploader,
     "qdrant_native": QdrantNativeUploader,
     "qdrant_hybrid": QdrantHybridUploader,
@@ -66,6 +69,7 @@ ENGINE_UPLOADERS = {
 }
 
 ENGINE_SEARCHERS = {
+    "logosdb": LogosDBSearcher,
     "qdrant": QdrantSearcher,
     "qdrant_native": QdrantNativeSearcher,
     "qdrant_hybrid": QdrantHybridSearcher,
