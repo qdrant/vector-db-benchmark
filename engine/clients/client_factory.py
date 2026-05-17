@@ -12,6 +12,7 @@ from engine.clients.elasticsearch import (
     ElasticSearcher,
     ElasticUploader,
 )
+from engine.clients.logosdb import LogosDBConfigurator, LogosDBSearcher, LogosDBUploader
 from engine.clients.milvus import MilvusConfigurator, MilvusSearcher, MilvusUploader
 from engine.clients.opensearch import (
     OpenSearchConfigurator,
@@ -34,7 +35,6 @@ from engine.clients.qdrant_native import (
     QdrantNativeSearcher,
     QdrantNativeUploader,
 )
-from engine.clients.logosdb import LogosDBConfigurator, LogosDBSearcher, LogosDBUploader
 from engine.clients.redis import RedisConfigurator, RedisSearcher, RedisUploader
 from engine.clients.weaviate import (
     WeaviateConfigurator,

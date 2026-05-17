@@ -13,13 +13,20 @@ class LogosDBSearcher(BaseSearcher):
     client = None
 
     @classmethod
-    def init_client(cls, host: str, distance, connection_params: dict, search_params: dict):
+    def init_client(
+        cls, host: str, distance, connection_params: dict, search_params: dict
+    ):
         import logosdb
 
         path = connection_params.get("path", DEFAULT_PATH)
         with open(path + ".meta.json") as f:
             meta = json.load(f)
-        cls.client = logosdb.DB(path, dim=meta["dim"], distance=meta["distance"], max_elements=meta.get("max_elements", 2_000_000))
+        cls.client = logosdb.DB(
+            path,
+            dim=meta["dim"],
+            distance=meta["distance"],
+            max_elements=meta.get("max_elements", 2_000_000),
+        )
 
     @classmethod
     def search_one(cls, query: Query, top: int) -> List[Tuple[int, float]]:

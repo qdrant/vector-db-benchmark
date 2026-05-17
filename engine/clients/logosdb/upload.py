@@ -20,7 +20,12 @@ class LogosDBUploader(BaseUploader):
         path = connection_params.get("path", DEFAULT_PATH)
         with open(path + ".meta.json") as f:
             meta = json.load(f)
-        cls.client = logosdb.DB(path, dim=meta["dim"], distance=meta["distance"], max_elements=meta.get("max_elements", 2_000_000))
+        cls.client = logosdb.DB(
+            path,
+            dim=meta["dim"],
+            distance=meta["distance"],
+            max_elements=meta.get("max_elements", 2_000_000),
+        )
         cls.upload_params = upload_params
 
     @classmethod

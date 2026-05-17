@@ -8,8 +8,8 @@ from engine.base_client.distances import Distance
 
 DISTANCE_MAP = {
     Distance.COSINE: 1,  # logosdb.DIST_COSINE
-    Distance.DOT: 0,     # logosdb.DIST_IP
-    Distance.L2: 2,      # logosdb.DIST_L2
+    Distance.DOT: 0,  # logosdb.DIST_IP
+    Distance.L2: 2,  # logosdb.DIST_L2
 }
 
 DEFAULT_PATH = "/tmp/logosdb_vdb_bench"
@@ -38,6 +38,8 @@ class LogosDBConfigurator(BaseConfigurator):
         del db
 
         with open(self.path + ".meta.json", "w") as f:
-            json.dump({"dim": dim, "distance": int(dist), "max_elements": max_elements}, f)
+            json.dump(
+                {"dim": dim, "distance": int(dist), "max_elements": max_elements}, f
+            )
 
         return {}
