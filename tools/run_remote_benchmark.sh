@@ -76,43 +76,8 @@ case "$BENCHMARK_STRATEGY" in
   bash -x "${SCRIPT_PATH}/qdrant_collect_stats.sh" "$SERVER_CONTAINER_NAME"
   ;;
 
-  "search-on-disk")
-  # Legacy single-cell strategy: restore + search + upload all in one run_ci.sh.
-  # The cascade workflow now uses search-on-disk-prepare + search-on-disk-search
-  # to amortise restore across multiple datasets per session.
-  if [[ -z "${CONTAINER_MEM_LIMIT:-}" ]]; then
-    echo "search-on-disk benchmark, but CONTAINER_MEM_LIMIT is not set!"
-    exit 2
-  fi
-  if [[ -z "${SNAPSHOT_URL:-}" ]]; then
-    echo "search-on-disk benchmark, but SNAPSHOT_URL is not set!"
-    exit 2
-  fi
-
-  echo "search-on-disk: mem=${CONTAINER_MEM_LIMIT}, snapshot=${SNAPSHOT_URL}"
-
-  SERVER_CONTAINER_NAME=${SERVER_CONTAINER_NAME:-"qdrant-continuous-benchmarks-snapshot"}
-
-  # Phase 1: unconstrained memory, restore snapshot from GCS.
-  bash -x "${SCRIPT_PATH}/run_server_container_with_volume.sh" "$SERVER_CONTAINER_NAME" "25Gb"
-  bash -x "${SCRIPT_PATH}/run_client_script.sh" "snapshot"
-
-  # Phase 2: restart with the memory ceiling on the same volume, run search.
-  bash -x "${SCRIPT_PATH}/run_server_container_with_volume.sh" "$SERVER_CONTAINER_NAME" "$CONTAINER_MEM_LIMIT" "continue"
-  bash -x "${SCRIPT_PATH}/qdrant_drop_caches.sh"
-  bash -x "${SCRIPT_PATH}/qdrant_collect_metrics.sh" "before"
-  bash -x "${SCRIPT_PATH}/qdrant_collect_memory.sh"  "before"
-  bash -x "${SCRIPT_PATH}/run_client_script.sh" "search"
-  bash -x "${SCRIPT_PATH}/qdrant_collect_metrics.sh" "after"
-  bash -x "${SCRIPT_PATH}/qdrant_collect_memory.sh"  "after"
-
-  bash -x "${SCRIPT_PATH}/qdrant_collect_stats.sh" "$SERVER_CONTAINER_NAME"
-  ;;
-
   "search-on-disk-prepare")
-  # Session setup: restore snapshot, restart container at mem cap, wait ready.
-  # Run once per (engine_variant, qdrant_version); subsequent searches against
-  # this server use the search-on-disk-search strategy.
+  # Run once per (engine_variant, qdrant_version); pair with search-on-disk-search per dataset.
   if [[ -z "${CONTAINER_MEM_LIMIT:-}" ]]; then
     echo "search-on-disk-prepare, but CONTAINER_MEM_LIMIT is not set!"
     exit 2
@@ -126,7 +91,7 @@ case "$BENCHMARK_STRATEGY" in
 
   SERVER_CONTAINER_NAME=${SERVER_CONTAINER_NAME:-"qdrant-continuous-benchmarks-snapshot"}
 
-  # Phase 1: unconstrained memory, restore snapshot from GCS.
+  # Phase 1: unconstrained memory.
   bash -x "${SCRIPT_PATH}/run_server_container_with_volume.sh" "$SERVER_CONTAINER_NAME" "25Gb"
   bash -x "${SCRIPT_PATH}/run_client_script.sh" "snapshot"
 
@@ -136,7 +101,7 @@ case "$BENCHMARK_STRATEGY" in
   ;;
 
   "search-on-disk-search")
-  # Per-dataset search against an already-prepared server (see search-on-disk-prepare).
+  # Per-dataset search against an already-prepared server.
   SERVER_CONTAINER_NAME=${SERVER_CONTAINER_NAME:-"qdrant-continuous-benchmarks-snapshot"}
 
   bash -x "${SCRIPT_PATH}/qdrant_drop_caches.sh"

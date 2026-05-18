@@ -52,7 +52,7 @@ if [[ "$BENCHMARK_STRATEGY" == "collection-reload" ]]; then
     echo "TELEMETRY_API_RESPONSE_FILE is not set"
     exit 1
   fi
-elif [[ "$BENCHMARK_STRATEGY" == "search-on-disk" || "$BENCHMARK_STRATEGY" == "search-on-disk-search" ]]; then
+elif [[ "$BENCHMARK_STRATEGY" == "search-on-disk-search" ]]; then
   # snapshot-restore, no upload phase → only search results expected
   if [[ -z "$SEARCH_RESULTS_FILE" ]]; then
     echo "SEARCH_RESULTS_FILE is not set"
@@ -118,8 +118,8 @@ if [[ "$BENCHMARK_STRATEGY" == "collection-reload" ]]; then
   # this strategy does not produce search & upload results files
   echo "BENCHMARK_STRATEGY is $BENCHMARK_STRATEGY, upload telemetry"
   COLLECTION_LOAD_TIME=$(jq -r '.result.collections.collections[] | select(.id == "benchmark") | .init_time_ms' "$TELEMETRY_API_RESPONSE_FILE")
-elif [[ "$BENCHMARK_STRATEGY" == "search-on-disk" || "$BENCHMARK_STRATEGY" == "search-on-disk-search" ]]; then
-  # search-only — snapshot supplies the data, no upload metrics
+elif [[ "$BENCHMARK_STRATEGY" == "search-on-disk-search" ]]; then
+  # this strategy does not produce upload results files
   RPS=$(jq -r '.results.rps' "$SEARCH_RESULTS_FILE")
   MEAN_PRECISIONS=$(jq -r '.results.mean_precisions' "$SEARCH_RESULTS_FILE")
   P95_TIME=$(jq -r '.results.p95_time' "$SEARCH_RESULTS_FILE")
@@ -153,7 +153,7 @@ if [[ -n "$STORAGE_SIZE_APPARENT_FILE" && -f "$STORAGE_SIZE_APPARENT_FILE" ]]; t
   STORAGE_SIZE_APPARENT=${STORAGE_SIZE_APPARENT:-NULL}
 fi
 
-# Page-fault deltas across the search phase (search-on-disk strategy).
+# Page-fault deltas across the search phase (search-on-disk-search strategy).
 if [[ -n "$METRICS_BEFORE_FILE" && -f "$METRICS_BEFORE_FILE" && \
       -n "$METRICS_AFTER_FILE"  && -f "$METRICS_AFTER_FILE" ]]; then
   parse_metric() {
@@ -171,13 +171,9 @@ if [[ -n "$METRICS_BEFORE_FILE" && -f "$METRICS_BEFORE_FILE" && \
   fi
 fi
 
-# Per-collection memory report from Qdrant (search-on-disk strategy).
-# cached_bytes_after / disk_bytes is the proof signal for whether the
-# working set actually lives on disk (low ratio) vs RAM-resident (~1.0).
 if [[ -n "$MEMORY_BEFORE_FILE" && -f "$MEMORY_BEFORE_FILE" && \
       -n "$MEMORY_AFTER_FILE"  && -f "$MEMORY_AFTER_FILE" ]]; then
   parse_mem() {
-    # $1 = file, $2 = dotted path under .result.total (e.g. cached_bytes)
     jq -r ".result.total.$2 // empty" "$1" | tr -d '[:space:]'
   }
   MEM_DISK_BYTES=$(parse_mem               "$MEMORY_AFTER_FILE"  "disk_bytes")
@@ -203,20 +199,16 @@ QDRANT_COMMIT=$(jq -r '.commit' "$ROOT_API_RESPONSE_FILE")
 
 MEASURE_TIMESTAMP=${MEASURE_TIMESTAMP:-$(date -u +"%Y-%m-%dT%H:%M:%SZ")}
 
-# search-on-disk: encode the inline_storage variant in the dataset column so the two
-# engine configs (inline-on / inline-off) produce distinct rows. The `engine` column
-# stays 'qdrant-ci' for backward compatibility with existing dashboards.
+# Encode inline_storage variant in the dataset column so inline-on/off produce distinct rows.
 DATASET_LABEL="$DATASETS"
-if [[ "$BENCHMARK_STRATEGY" == "search-on-disk" || "$BENCHMARK_STRATEGY" == "search-on-disk-search" ]]; then
+if [[ "$BENCHMARK_STRATEGY" == "search-on-disk-search" ]]; then
   case "${ENGINE_NAME:-}" in
     *-inline-on)  DATASET_LABEL="${DATASETS}@inline-on"  ;;
     *-inline-off) DATASET_LABEL="${DATASETS}@inline-off" ;;
   esac
 fi
 
-# search-on-disk strategies write the extra page-fault / memory columns to the
-# `benchmark_on_disk` table; other strategies stick to the legacy `benchmark` columns.
-if [[ "$BENCHMARK_STRATEGY" == "search-on-disk" || "$BENCHMARK_STRATEGY" == "search-on-disk-search" ]]; then
+if [[ "$BENCHMARK_STRATEGY" == "search-on-disk-search" ]]; then
   INSERT_SQL="INSERT INTO ${POSTGRES_TABLE} (engine, branch, commit, dataset, measure_timestamp, upload_time, indexing_time, rps, mean_precisions, p95_time, p99_time, vm_rss_mem, rss_anon_mem, collection_load_time_ms, cpu_telemetry, cpu, storage_size_bytes, storage_size_apparent_bytes, minor_page_faults, major_page_faults, mem_disk_bytes, mem_expected_cache_bytes, mem_cached_bytes_before, mem_cached_bytes_after, cgroup_mem_current_before, cgroup_mem_current_after)
 VALUES ('qdrant-ci', '${QDRANT_VERSION}', '${QDRANT_COMMIT}', '${DATASET_LABEL}', '${MEASURE_TIMESTAMP}', ${UPLOAD_TIME}, ${INDEXING_TIME}, ${RPS}, ${MEAN_PRECISIONS}, ${P95_TIME}, ${P99_TIME}, ${VM_RSS_MEMORY_USAGE}, ${RSS_ANON_MEMORY_USAGE}, ${COLLECTION_LOAD_TIME}, ${CPU_TELEMETRY}, ${CPU}, ${STORAGE_SIZE_ALLOCATED}, ${STORAGE_SIZE_APPARENT}, ${MINOR_PAGE_FAULTS}, ${MAJOR_PAGE_FAULTS}, ${MEM_DISK_BYTES}, ${MEM_EXPECTED_CACHE_BYTES}, ${MEM_CACHED_BYTES_BEFORE}, ${MEM_CACHED_BYTES_AFTER}, ${CGROUP_MEM_CURRENT_BEFORE}, ${CGROUP_MEM_CURRENT_AFTER});"
 else

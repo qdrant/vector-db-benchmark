@@ -15,8 +15,6 @@ BENCH_SERVER_NAME=${SERVER_NAME:-"benchmark-server-1"}
 
 IP_OF_THE_SERVER=$(bash "${SCRIPT_PATH}/${CLOUD_NAME}/get_public_ip.sh" "$BENCH_SERVER_NAME")
 
-# Force a cold host page cache so each cell starts from the same I/O baseline.
-# Without this, residual cache from earlier cells skews late-cycle RPS.
 ssh_with_retry -tt -o ServerAliveInterval=10 -o ServerAliveCountMax=10 \
   "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" \
   "sudo bash -c 'sync; echo 3 > /proc/sys/vm/drop_caches'"

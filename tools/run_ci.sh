@@ -60,7 +60,7 @@ export VM_RSS_MEMORY_USAGE_FILE=$(ls -t results/vm-rss-memory-usage-*.txt | head
 export RSS_ANON_MEMORY_USAGE_FILE=$(ls -t results/rss-anon-memory-usage-*.txt | head -n 1)
 export ROOT_API_RESPONSE_FILE=$(ls -t results/root-api-*.json | head -n 1)
 
-if [[ "$BENCHMARK_STRATEGY" == "search-on-disk" || "$BENCHMARK_STRATEGY" == "search-on-disk-search" ]]; then
+if [[ "$BENCHMARK_STRATEGY" == "search-on-disk-search" ]]; then
   export METRICS_BEFORE_FILE=$(ls -t results/qdrant-metrics-before-*.txt 2>/dev/null | head -n 1)
   export METRICS_AFTER_FILE=$(ls -t results/qdrant-metrics-after-*.txt 2>/dev/null | head -n 1)
   export MEMORY_BEFORE_FILE=$(ls -t results/qdrant-memory-before-*.json 2>/dev/null | head -n 1)
@@ -76,9 +76,3 @@ if [[ "$BENCHMARK_STRATEGY" == "parallel" ]]; then
 else
   bash -x "${SCRIPT_PATH}/upload_results_postgres.sh"
 fi
-
-echo "ROW_INSERTED engine=${ENGINE_NAME:-?} dataset=${DATASETS:-?} version=${QDRANT_VERSION:-?}"
-if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
-  echo "- ROW_INSERTED \`${ENGINE_NAME:-?}\` / \`${DATASETS:-?}\` / \`${QDRANT_VERSION:-?}\`" >> "$GITHUB_STEP_SUMMARY"
-fi
-

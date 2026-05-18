@@ -3,9 +3,7 @@
 PS4='ts=$(date "+%Y-%m-%dT%H:%M:%SZ") level=DEBUG line=$LINENO file=$BASH_SOURCE '
 set -euo pipefail
 
-# Phase label ("before" / "after") — encoded in the output filename so the
-# upload step can pair the two snapshots and compute the cache delta.
-PHASE=$1
+PHASE=$1   # "before" | "after"
 
 CLOUD_NAME=${CLOUD_NAME:-"hetzner"}
 SERVER_USERNAME=${SERVER_USERNAME:-"root"}
@@ -21,14 +19,7 @@ BENCH_SERVER_NAME=${SERVER_NAME:-"benchmark-server-1"}
 
 IP_OF_THE_SERVER=$(bash "${SCRIPT_PATH}/${CLOUD_NAME}/get_public_ip.sh" "$BENCH_SERVER_NAME")
 
-# Qdrant per-collection memory/disk report. Captures total.disk_bytes,
-# total.ram_bytes, total.cached_bytes, total.expected_cache_bytes — the
-# "cached_bytes after search" is the direct proof of whether the working
-# set is RAM-resident or actually on disk.
-# Under a tight RAM cap, qdrant can return empty responses to this endpoint
-# right after a heavy search (observed: curl exit 52 on inline-on 256m cells).
-# Retry with backoff, and if it still fails write a stub JSON so the upload
-# step inserts NULLs for the mem_* columns rather than dropping the cell.
+# Qdrant per-collection memory/disk report. Retry with backoff (can cause issues under tight RAM cap).
 set +e
 REPORT=$(ssh_with_retry -tt -o ServerAliveInterval=10 -o ServerAliveCountMax=10 \
   "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" \

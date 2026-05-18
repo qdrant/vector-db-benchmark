@@ -32,9 +32,6 @@ PRIVATE_IP_OF_THE_SERVER=$(bash "${SCRIPT_PATH}/${CLOUD_NAME}/get_private_ip.sh"
 VECTOR_DB_BENCHMARK_IMAGE=${VECTOR_DB_BENCHMARK_IMAGE:-"qdrant/vector-db-benchmark:latest"}
 GHCR_PASSWORD=${GHCR_PASSWORD:-""}
 GHCR_USERNAME=${GHCR_USERNAME:-""}
-# Empty = use all queries from tests.jsonl; run_experiment.sh's docker `-e`
-# uses `${VAR:+...}` so an empty value is a no-op on the remote side.
-BENCHMARK_MAX_QUERIES=${BENCHMARK_MAX_QUERIES:-""}
 
 if [[ "$EXPERIMENT_MODE" == "snapshot" ]]; then
   ssh_with_retry -o ServerAliveInterval=10 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "rm -rf ~/configurations ~/datasets.json"
@@ -67,7 +64,6 @@ else
   VECTOR_DB_BENCHMARK_IMAGE=${VECTOR_DB_BENCHMARK_IMAGE} \
   GHCR_PASSWORD=${GHCR_PASSWORD} \
   GHCR_USERNAME=${GHCR_USERNAME} \
-  BENCHMARK_MAX_QUERIES=${BENCHMARK_MAX_QUERIES} \
   bash ~/run_experiment.sh"
 
   ssh_with_retry -tt -o ServerAliveInterval=60 -o ServerAliveCountMax=3 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "${RUN_EXPERIMENT}"

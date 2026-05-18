@@ -1,4 +1,3 @@
-import itertools
 import json
 import os
 from datetime import datetime
@@ -14,11 +13,6 @@ RESULTS_DIR = ROOT_DIR / "results"
 RESULTS_DIR.mkdir(exist_ok=True)
 
 DETAILED_RESULTS = bool(int(os.getenv("DETAILED_RESULTS", False)))
-
-# Cap the number of search queries actually run, regardless of how many the
-# dataset's tests.jsonl contains. Set BENCHMARK_MAX_QUERIES=N to truncate;
-# unset or 0 = use all. 
-MAX_QUERIES = int(os.getenv("BENCHMARK_MAX_QUERIES", "0") or 0)
 
 
 class BaseClient:
@@ -147,11 +141,8 @@ class BaseClient:
                         continue
 
                 search_params = {**searcher.search_params}
-                queries = reader.read_queries()
-                if MAX_QUERIES > 0:
-                    queries = itertools.islice(queries, MAX_QUERIES)
                 search_stats = searcher.search_all(
-                    dataset.config.distance, queries
+                    dataset.config.distance, reader.read_queries()
                 )
                 if not DETAILED_RESULTS:
                     # Remove verbose stats from search results

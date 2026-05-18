@@ -106,7 +106,6 @@ if [[ "$EXPERIMENT_MODE" == "full" ]] || [[ "$EXPERIMENT_MODE" == "search" ]]; t
     -v "$HOME/results:/code/results" \
     -v "ci-datasets:/code/datasets" \
     ${CONFIGURATIONS_MOUNT:+"-v" "$CONFIGURATIONS_MOUNT"} \
-    ${BENCHMARK_MAX_QUERIES:+-e "BENCHMARK_MAX_QUERIES=${BENCHMARK_MAX_QUERIES}"} \
     "${VECTOR_DB_BENCHMARK_IMAGE}" \
     python run.py --engines "${ENGINE_NAME}" --datasets "${DATASETS}" --host "${PRIVATE_IP_OF_THE_SERVER}" --no-skip-if-exists --skip-upload
 fi
@@ -149,11 +148,8 @@ fi
 
 if [[ "$EXPERIMENT_MODE" == "snapshot" ]]; then
   echo "EXPERIMENT_MODE=$EXPERIMENT_MODE"
+  # wait=false: outer wall-clock kills fire before huge snapshots finish syncing.
   echo "Kicking off async snapshot recovery (wait=false)"
-  # wait=true (default) blocks the HTTP response for the full download+extract,
-  # which can exceed 90 min for a 76 GB inline-on snapshot and trips outer
-  # wall-clock kills. wait=false returns 202 immediately and the work runs as
-  # a background task on qdrant; we then poll the collection status below.
   curl -X PUT \
     "http://${PRIVATE_IP_OF_THE_SERVER}:6333/collections/benchmark/snapshots/recover?wait=false" \
     --data-raw "{\"location\": \"${SNAPSHOT_URL}\"}"
@@ -164,13 +160,8 @@ if [[ "$EXPERIMENT_MODE" == "snapshot" ]]; then
   collection_status=$(curl -s "$collection_url" | jq -r '.result.status')
   echo "Experiment stage: collection status is ${collection_status} after recovery"
 
-  # Wait for the async recovery to land + indexing to finish.
-  # 90 min ceiling — at N=2M inline-on (~76 GB) the full recovery (download +
-  # extract + optimize) can run well past an hour on slow GCS↔Hetzner links.
   WAIT_TIMEOUT_S=5400
   WAIT_INTERVAL_S=5
-  # Only log on status transition OR every HEARTBEAT_S seconds, so a 45-min
-  # poll loop doesn't dump 540 lines of "status=null".
   HEARTBEAT_S=60
   elapsed=0
   last_logged_status=""
