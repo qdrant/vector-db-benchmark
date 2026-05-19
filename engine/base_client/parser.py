@@ -68,13 +68,9 @@ class BaseConditionParser:
                 field_name, value=criteria.get("value")
             )
         if FilterType.MATCH_ANY == filter_type:
-            return self.build_match_any_filter(
-                field_name, values=criteria.get("any")
-            )
+            return self.build_match_any_filter(field_name, values=criteria.get("any"))
         if FilterType.MATCH_TEXT == filter_type:
-            return self.build_match_text_filter(
-                field_name, text=criteria.get("text")
-            )
+            return self.build_match_text_filter(field_name, text=criteria.get("text"))
         if FilterType.RANGE == filter_type:
             return self.build_range_filter(
                 field_name,
