@@ -70,5 +70,8 @@ class QdrantSearcher(BaseSearcher):
             )
         except Exception as ex:
             print(f"Something went wrong during search: {ex}")
-            raise ex
+            # gRPC errors carry an _thread.RLock that breaks multiprocessing
+            # pickling — re-raise as a plain RuntimeError so the pool can
+            # surface the real reason instead of MaybeEncodingError.
+            raise RuntimeError(f"{type(ex).__name__}: {ex}") from None
         return [(hit.id, hit.score) for hit in res.points]

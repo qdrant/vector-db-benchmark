@@ -20,6 +20,18 @@ class QdrantConditionParser(BaseConditionParser):
             match=rest.MatchValue(value=value),
         )
 
+    def build_match_any_filter(self, field_name: str, values: List[FieldValue]) -> Any:
+        return rest.FieldCondition(
+            key=field_name,
+            match=rest.MatchAny(any=values),
+        )
+
+    def build_match_text_filter(self, field_name: str, text: str) -> Any:
+        return rest.FieldCondition(
+            key=field_name,
+            match=rest.MatchText(text=text),
+        )
+
     def build_range_filter(
         self,
         field_name: str,
@@ -28,14 +40,14 @@ class QdrantConditionParser(BaseConditionParser):
         lte: Optional[FieldValue],
         gte: Optional[FieldValue],
     ) -> Any:
+        # String bounds → ISO datetime range; numeric bounds → numeric range.
+        if any(isinstance(v, str) for v in (lt, gt, lte, gte) if v is not None):
+            range_obj = rest.DatetimeRange(lt=lt, gt=gt, gte=gte, lte=lte)
+        else:
+            range_obj = rest.Range(lt=lt, gt=gt, gte=gte, lte=lte)
         return rest.FieldCondition(
             key=field_name,
-            range=rest.Range(
-                lt=lt,
-                gt=gt,
-                gte=gte,
-                lte=lte,
-            ),
+            range=range_obj,
         )
 
     def build_geo_filter(
