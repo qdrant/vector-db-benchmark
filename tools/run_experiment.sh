@@ -12,7 +12,11 @@ if [[ -n "${GHCR_PASSWORD}" ]] || [[ "${VECTOR_DB_BENCHMARK_IMAGE}" == ghcr.io/*
     echo "GHCR_PASSWORD and GHCR_USERNAME is required to pull images from ghcr.io"
     exit 1
   fi
-  echo "${GHCR_PASSWORD}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
+  for i in 1 2 3; do
+    echo "${GHCR_PASSWORD}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin && break
+    echo "docker login attempt ${i} failed, retrying in $((i * 10))s..."
+    sleep $((i * 10))
+  done
 fi
 
 ENGINE_NAME=${ENGINE_NAME:-"qdrant-continuous-benchmark"}
