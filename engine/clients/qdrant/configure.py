@@ -20,6 +20,9 @@ class QdrantConfigurator(BaseConfigurator):
         "text": rest.PayloadSchemaType.TEXT,
         "float": rest.PayloadSchemaType.FLOAT,
         "geo": rest.PayloadSchemaType.GEO,
+        "uuid": rest.PayloadSchemaType.UUID,
+        "bool": rest.PayloadSchemaType.BOOL,
+        "datetime": rest.PayloadSchemaType.DATETIME,
     }
     INDEX_PARAMS_TYPE_MAPPING = {
         "int": rest.IntegerIndexParams,
@@ -27,6 +30,7 @@ class QdrantConfigurator(BaseConfigurator):
         "text": rest.TextIndexParams,
         "float": rest.FloatIndexParams,
         "geo": rest.GeoIndexParams,
+        "uuid": rest.UuidIndexParams,
     }
 
     def __init__(self, host, collection_params: dict, connection_params: dict):
