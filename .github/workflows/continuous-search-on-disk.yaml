@@ -15,6 +15,9 @@ on:
         type: boolean
         description: "Enable all feature flags on the dev branch"
         default: true
+  schedule:
+    # Run every day at 1am
+    - cron: "0 1 * * *"
 
 concurrency:
   group: continuous-benchmark
