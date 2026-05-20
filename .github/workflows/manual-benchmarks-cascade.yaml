@@ -76,7 +76,7 @@ jobs:
           CONFIG_FILE="benchmark_cascade/benchmark-configs.json"
           BENCHMARK_SET="${{ inputs.benchmark_set }}"
           CURRENT_BATCH=${{ inputs.current_batch || 0 }}
-          BATCH_SIZE=10
+          BATCH_SIZE=12
 
           echo "benchmark_set=$BENCHMARK_SET" >> $GITHUB_OUTPUT
 
@@ -202,7 +202,7 @@ jobs:
             MACHINES_FIRST=false
 
             SERVER_NAME="benchmark-cascade-server-${i}"
-            CLIENT_NAME="benchmark-cascade-client-${i}"
+            CLIENT_NAME="benchmark-cascade-server-${i}"
             MACHINES_INFO="${MACHINES_INFO}{\"server_name\":\"$SERVER_NAME\",\"client_name\":\"$CLIENT_NAME\"}"
           done
 
@@ -252,7 +252,7 @@ jobs:
     if: inputs.process_results == false
     runs-on: ubuntu-latest
     strategy:
-      max-parallel: 10
+      max-parallel: 12
       fail-fast: false
       matrix:
         config: ${{ fromJSON(needs.prepareBenchmarks.outputs.matrix) }}
@@ -291,7 +291,7 @@ jobs:
           max_retries: 5
 
       - name: Create Client
-        if: ${{ inputs.machines_per_bench == true || inputs.current_batch == 0 }}
+        if: ${{ (inputs.machines_per_bench == true || inputs.current_batch == 0) && steps.extract_names.outputs.client_name != steps.extract_names.outputs.server_name }}
         uses: ./.github/workflows/actions/create-server-with-retry
         with:
           server_name: ${{ steps.extract_names.outputs.client_name }}
@@ -307,7 +307,7 @@ jobs:
       contents: read
       packages: read
     strategy:
-      max-parallel: 10
+      max-parallel: 12
       fail-fast: false
       matrix:
         config: ${{ fromJSON(needs.prepareBenchmarks.outputs.matrix) }}

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recall@1@k Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        .chart-container { position: relative; height: 550px; width: 100%; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="max-w-7xl mx-auto p-6 bg-white min-h-screen">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Recall@1@k Visualization</h1>
+            <p class="text-gray-600">Upload benchmark JSON results containing <code>recall_at_1_at_k</code> data. Shows the probability of finding the true nearest neighbor in the top-k results.</p>
+        </div>
+
+        <!-- Data Input -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-semibold text-gray-800">Data Input</h2>
+                    <div class="flex items-center gap-2">
+                        <button id="addDatasetBtn" class="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700">+ Add Dataset</button>
+                        <button id="clearAllBtn" class="px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700">Clear All</button>
+                    </div>
+                </div>
+                <div id="datasetInputsContainer" class="space-y-4"></div>
+                <div id="errorMessage" class="hidden p-3 bg-red-50 border border-red-200 rounded-lg text-red-700"></div>
+                <div id="successMessage" class="hidden p-3 bg-green-50 border border-green-200 rounded-lg text-green-700"></div>
+            </div>
+
+            <div class="space-y-4">
+                <h2 class="text-xl font-semibold text-gray-800">Expected Data Format</h2>
+                <div class="p-4 bg-gray-50 rounded-lg text-sm border">
+                    <pre class="whitespace-pre-wrap text-gray-700 text-xs">[
+  {
+    "setup_name": "qdrant-tq4-m-16-ef-128",
+    "dataset_name": "glove-100-angular",
+    "parallel": 100,
+    "recall_at_1_at_k": {
+      "1": 0.86, "2": 0.95, "4": 0.98,
+      "8": 1.0, "16": 1.0, "32": 1.0, "64": 1.0
+    },
+    ...
+  }
+]</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div id="filtersSection" class="hidden mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+            <h3 class="font-semibold text-yellow-800 mb-3">Filters</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="filterControls"></div>
+        </div>
+
+        <!-- Charts -->
+        <div id="chartsSection" class="space-y-6"></div>
+    </div>
+
+    <script>
+        const COLORS = [
+            '#1E40AF', '#EA580C', '#059669', '#7C3AED', '#DC2626',
+            '#0891B2', '#D97706', '#DB2777', '#4B5563', '#84CC16',
+            '#6366F1', '#F59E0B', '#10B981', '#EF4444', '#8B5CF6'
+        ];
+        const LINE_STYLES = [[], [8, 4], [2, 3], [8, 4, 2, 4], [4, 4]];
+
+        let datasets = [];
+        let currentData = [];
+        let filteredData = [];
+        let filters = {};
+        let datasetIdCounter = 0;
+        let charts = [];
+
+        const datasetInputsContainer = document.getElementById('datasetInputsContainer');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const filtersSection = document.getElementById('filtersSection');
+        const filterControls = document.getElementById('filterControls');
+        const chartsSection = document.getElementById('chartsSection');
+
+        function getFilenameLabel(filename) {
+            if (!filename) return '';
+            let name = filename.replace(/\.json$/, '').replace(/^results-/, '').replace(/^ghcr-/, '');
+            return name.replace(/([0-9a-f]{4})[0-9a-f]{36,}$/, '$1');
+        }
+
+        function getShortSetupLabel(setupName) {
+            if (!setupName) return '';
+            return setupName.replace(/^qdrant-/, '').replace(/-m-\d+-ef-\d+$/, '').replace(/-rps$/, '') || setupName;
+        }
+
+        // Quantization groups
+        const quantGroups = {
+            group1: { label: '4-bit+: orig, SQ, TQ4, TQ4+', patterns: ['-no-quant-', '-sq-', '-tq4-', '-tq4-plus-', '-m-'] },
+            group2: { label: '2-bit: BQ2, TQ2, TQ2+', patterns: ['-bq2-', '-tq2-', '-tq2-plus-'] },
+            group3: { label: '1-bit: BQ, BQ-asym, TQ1, TQ1+', patterns: ['-bq-', '-bq-asym-', '-tq1-', '-tq1-plus-'] }
+        };
+
+        function getQuantGroup(setupName) {
+            const padded = '-' + setupName + '-';
+            // Check specific groups first (order matters: group3's -bq- could match group2's -bq2-)
+            for (const [key, group] of Object.entries(quantGroups)) {
+                if (key === 'group1') continue; // check last since it has -m- as catch-all
+                if (group.patterns.some(p => padded.includes(p))) return key;
+            }
+            return 'group1'; // default: no-quant, sq, tq4, etc.
+        }
+
+        function addDatasetInput() {
+            const id = datasetIdCounter++;
+            const color = COLORS[datasets.length % COLORS.length];
+            const dataset = { id, data: [], filename: '', label: '', color };
+            datasets.push(dataset);
+
+            const div = document.createElement('div');
+            div.id = `dataset-${id}`;
+            div.className = 'p-4 border rounded-lg';
+            div.style.borderColor = color;
+            div.style.backgroundColor = color + '10';
+            div.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-sm font-semibold" style="color: ${color}" id="dataset-title-${id}">Dataset ${datasets.length}</h3>
+                    <button onclick="removeDataset(${id})" class="text-red-600 hover:text-red-800 text-xs font-medium">Remove</button>
+                </div>
+                <div>
+                    <input type="file" id="file-${id}" accept=".json"
+                        class="block w-full text-xs text-gray-500 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
+                        onchange="handleFileUpload(${id}, this)" />
+                </div>
+                <span id="status-${id}" class="text-xs text-gray-600"></span>
+            `;
+            datasetInputsContainer.appendChild(div);
+            return id;
+        }
+
+        function removeDataset(id) {
+            datasets = datasets.filter(d => d.id !== id);
+            document.getElementById(`dataset-${id}`).remove();
+            combineAndRender();
+        }
+
+        async function handleFileUpload(id, input) {
+            const file = input.files[0];
+            if (!file) return;
+            try {
+                const parsed = JSON.parse(await file.text());
+                if (!Array.isArray(parsed)) throw new Error('Expected array');
+                const dataset = datasets.find(d => d.id === id);
+                dataset.filename = file.name;
+                dataset.label = getFilenameLabel(file.name);
+                dataset.data = parsed.filter(r => r.recall_at_1_at_k).map(r => ({ ...r, _datasetId: id, _datasetLabel: dataset.label, _datasetColor: dataset.color }));
+                document.getElementById(`dataset-title-${id}`).textContent = dataset.label;
+                document.getElementById(`status-${id}`).textContent = `${dataset.data.length} records with recall@1@k`;
+                showMessage(successMessage, `Loaded ${dataset.data.length} records from "${file.name}"`);
+                combineAndRender();
+            } catch (e) {
+                showMessage(errorMessage, 'Error: ' + e.message, true);
+            }
+        }
+
+        window.removeDataset = removeDataset;
+        window.handleFileUpload = handleFileUpload;
+
+        function showMessage(el, msg, isError = false) {
+            el.textContent = msg;
+            el.className = `p-3 border rounded-lg ${isError ? 'bg-red-50 border-red-200 text-red-700' : 'bg-green-50 border-green-200 text-green-700'}`;
+            el.classList.remove('hidden');
+            (isError ? successMessage : errorMessage).classList.add('hidden');
+            setTimeout(() => el.classList.add('hidden'), 5000);
+        }
+
+        function combineAndRender() {
+            currentData = datasets.flatMap(d => d.data);
+            createFilterControls();
+            applyFilters();
+        }
+
+        function createFilterControls() {
+            filterControls.innerHTML = '';
+            filters = {};
+            ['dataset_name', 'parallel'].forEach(field => {
+                const values = [...new Set(currentData.map(d => d[field]).filter(v => v !== undefined))].sort((a, b) => {
+                    if (field === 'parallel') return Number(a) - Number(b);
+                    return String(a).localeCompare(String(b));
+                });
+                if (values.length <= 1) return;
+
+                const defaultVal = field === 'parallel' && values.includes(100) ? '100' : '';
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <label class="block text-sm font-medium text-yellow-700 mb-2">${field === 'parallel' ? 'PARALLEL THREADS' : field.replace('_', ' ').toUpperCase()}</label>
+                    <select id="filter_${field}" class="w-full p-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-sm">
+                        <option value="">All</option>
+                        ${values.map(v => `<option value="${v}" ${String(v) === defaultVal ? 'selected' : ''}>${field === 'parallel' ? v + ' threads' : v}</option>`).join('')}
+                    </select>
+                `;
+                filterControls.appendChild(div);
+                if (defaultVal) filters[field] = defaultVal;
+                document.getElementById(`filter_${field}`).addEventListener('change', e => { filters[field] = e.target.value; applyFilters(); });
+            });
+            filtersSection.classList.toggle('hidden', filterControls.children.length === 0);
+        }
+
+        function applyFilters() {
+            filteredData = currentData.filter(row =>
+                Object.entries(filters).every(([field, value]) => {
+                    if (!value) return true;
+                    if (field === 'parallel') return Number(row[field]) === Number(value);
+                    return row[field] === value;
+                })
+            );
+            renderCharts();
+        }
+
+        function renderCharts() {
+            charts.forEach(c => c.destroy());
+            charts = [];
+            chartsSection.innerHTML = '';
+
+            if (filteredData.length === 0) return;
+
+            const datasetNames = [...new Set(filteredData.map(d => d.dataset_name))].sort();
+            const groupKeys = ['group1', 'group2', 'group3'];
+
+            datasetNames.forEach(dsName => {
+                const dsData = filteredData.filter(d => d.dataset_name === dsName);
+
+                groupKeys.forEach(groupKey => {
+                    const groupData = dsData.filter(d => getQuantGroup(d.setup_name || '') === groupKey);
+                    if (groupData.length === 0) return;
+
+                    const title = `${dsName} - ${quantGroups[groupKey].label}`;
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'bg-white border border-gray-200 rounded-lg p-6 shadow-sm';
+                    const container = document.createElement('div');
+                    container.className = 'chart-container';
+                    const canvas = document.createElement('canvas');
+                    container.appendChild(canvas);
+                    wrapper.appendChild(container);
+                    chartsSection.appendChild(wrapper);
+
+                    const config = buildChart(groupData, title);
+                    charts.push(new Chart(canvas.getContext('2d'), config));
+                });
+            });
+        }
+
+        function buildChart(data, title) {
+            // Group by (file label, setup_name)
+            const fileLabels = [...new Set(data.map(d => d._datasetLabel))].sort();
+            const multipleFiles = fileLabels.length > 1;
+            const allSetups = [...new Set(data.map(d => d.setup_name))].sort();
+
+            const chartDatasets = [];
+            let idx = 0;
+
+            fileLabels.forEach((fileLabel, fileIdx) => {
+                allSetups.forEach(setup => {
+                    // For same setup + file, there may be multiple search_idx entries.
+                    // Average their recall@1@k values.
+                    const points = data.filter(d => d._datasetLabel === fileLabel && d.setup_name === setup);
+                    if (points.length === 0) return;
+
+                    // Merge recall@1@k across all entries for this setup
+                    const kValues = {};
+                    points.forEach(p => {
+                        const r = p.recall_at_1_at_k;
+                        if (!r) return;
+                        Object.entries(r).forEach(([k, v]) => {
+                            const kNum = Number(k);
+                            if (!kValues[kNum]) kValues[kNum] = [];
+                            kValues[kNum].push(v);
+                        });
+                    });
+
+                    const sortedK = Object.keys(kValues).map(Number).sort((a, b) => a - b);
+                    if (sortedK.length === 0) return;
+
+                    const color = multipleFiles
+                        ? (datasets.find(d => d.label === fileLabel)?.color || COLORS[idx % COLORS.length])
+                        : COLORS[idx % COLORS.length];
+                    const shortName = getShortSetupLabel(setup);
+                    const label = multipleFiles ? `${fileLabel}: ${shortName}` : shortName;
+
+                    chartDatasets.push({
+                        label: label,
+                        data: sortedK.map(k => ({
+                            x: k,
+                            y: kValues[k].reduce((a, b) => a + b, 0) / kValues[k].length
+                        })),
+                        borderColor: color,
+                        backgroundColor: color + '20',
+                        borderWidth: 2.5,
+                        fill: false,
+                        tension: 0.3,
+                        pointRadius: 5,
+                        pointHoverRadius: 8,
+                        borderDash: multipleFiles ? LINE_STYLES[fileIdx % LINE_STYLES.length] : LINE_STYLES[idx % LINE_STYLES.length]
+                    });
+                    idx++;
+                });
+            });
+
+            return {
+                type: 'line',
+                data: { datasets: chartDatasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        zoom: {
+                            pan: { enabled: true, mode: 'xy', threshold: 10 },
+                            zoom: {
+                                wheel: { enabled: true, speed: 0.1 },
+                                pinch: { enabled: true },
+                                drag: { enabled: true, backgroundColor: 'rgba(59,130,246,0.1)', borderColor: 'rgba(59,130,246,0.5)', borderWidth: 1 },
+                                mode: 'xy'
+                            }
+                        },
+                        legend: { position: 'top', labels: { usePointStyle: true, padding: 15, font: { size: 12 } } },
+                        title: { display: true, text: title, font: { size: 16, weight: 'bold' }, padding: { bottom: 10 } },
+                        tooltip: {
+                            callbacks: {
+                                title: (items) => `Top-${items[0].parsed.x}`,
+                                label: (ctx) => `${ctx.dataset.label}: ${(ctx.parsed.y * 100).toFixed(2)}%`
+                            },
+                            displayColors: true,
+                            titleFont: { weight: 'bold', size: 13 },
+                            bodyFont: { size: 11 },
+                            padding: 10,
+                            cornerRadius: 6,
+                            backgroundColor: 'rgba(0,0,0,0.85)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'logarithmic',
+                            title: { display: true, text: 'Top-k', font: { size: 14, weight: 'bold' } },
+                            grid: { color: '#E5E7EB' },
+                            ticks: {
+                                callback: (val) => val,
+                                autoSkip: false
+                            }
+                        },
+                        y: {
+                            title: { display: true, text: 'Recall@1@k', font: { size: 14, weight: 'bold' } },
+                            grid: { color: '#E5E7EB' },
+                            min: 0,
+                            max: 1.05,
+                            ticks: { callback: (val) => val.toFixed(2) }
+                        }
+                    }
+                }
+            };
+        }
+
+        // Init
+        document.getElementById('addDatasetBtn').addEventListener('click', () => {
+            if (datasets.length < 10) addDatasetInput();
+            else showMessage(errorMessage, 'Max 10 datasets', true);
+        });
+        document.getElementById('clearAllBtn').addEventListener('click', () => {
+            datasets = [];
+            datasetInputsContainer.innerHTML = '';
+            datasetIdCounter = 0;
+            currentData = [];
+            filteredData = [];
+            charts.forEach(c => c.destroy());
+            charts = [];
+            chartsSection.innerHTML = '';
+            addDatasetInput();
+        });
+        addDatasetInput();
+    </script>
+</body>
+</html>
