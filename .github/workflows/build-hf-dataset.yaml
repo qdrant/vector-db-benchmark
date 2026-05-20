@@ -5,154 +5,20 @@ name: Build HF Dataset
 on:
   workflow_dispatch:
     inputs:
-      build_vector_db_image:
-        required: false
-        description: "Build vector DB benchmark image from source branch and use it (false = use prebuilt ghcr image)"
-        default: "false"
-      container_mem_limit:
-        required: false
-        description: "Memory limit for the Qdrant container during search (force-eviction regime)"
-        default: "384m"
-      feature_flags_all:
-        type: boolean
-        description: "Enable all feature flags on the dev branch"
-        default: true
-
-concurrency:
-  group: continuous-benchmark
+      hf_dataset:
+        description: "HF dataset id, e.g. Qdrant/dbpedia-entities-openai3-text-embedding-3-large-1536-100K"
+        required: true
+      output_name:
+        description: "Output tarball basename"
+        required: true
+      vector_column:
+        description: "Embedding column name"
+        default: "embedding"
 
 jobs:
-  buildImage:
-    name: Build Vector DB Image
+  stub:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    if: ${{ inputs.build_vector_db_image == 'true' }}
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-      - id: prepare-tag
-        shell: bash
-        run: |
-          branch_tmp="${{ github.ref_name }}"
-          branch=${branch_tmp//\//-}
-          tag="ghcr.io/${{ github.repository_owner }}/vector-db-benchmark:${branch}"
-          echo "tag=${tag}" >> $GITHUB_OUTPUT
-      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
-      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.prepare-tag.outputs.tag }}
-          provenance: false
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  runOnDiskSearchBenchmark:
-    needs: [buildImage]
-    if: ${{ !cancelled() && (needs.buildImage.result == 'success' || needs.buildImage.result == 'skipped') }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: read
-    steps:
-      - uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
-      - uses: webfactory/ssh-agent@d4b9b8ff72958532804b70bbe600ad43b36d5f2e # v0.8.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-      - name: Benches
-        id: benches
-        run: |
-          export HCLOUD_TOKEN=${{ secrets.HCLOUD_TOKEN }}
-          export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-          export POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
-          export POSTGRES_TABLE="benchmark_on_disk"
-          export SERVER_NAME="benchmark-server-3"
-          export ENGINE_NAME="qdrant-on-disk-bq-inline-off"
-          export SNAPSHOT_URL="https://storage.googleapis.com/qdrant-benchmark-snapshots/on-disk-search/snapshots/ondisk_global-inline-off.snapshot"
-          export CONTAINER_MEM_LIMIT="${{ inputs.container_mem_limit || '384m' }}"
-          
-          if [ "${{ inputs.build_vector_db_image }}" = "true" ]; then
-            branch_tmp="${{ github.ref_name }}"
-            branch=${branch_tmp//\//-}
-            export VECTOR_DB_BENCHMARK_IMAGE="ghcr.io/${{ github.repository_owner }}/vector-db-benchmark:${branch}"
-            export GHCR_USERNAME="${{ github.repository_owner }}"
-            export GHCR_PASSWORD="${{ secrets.GITHUB_TOKEN }}"
-          fi
-          
-          bash -x tools/setup_ci.sh
-          
-          DATASETS_LIST=(
-            random-768-2M-on-disk-bq-keyword-narrow-filter random-768-2M-on-disk-bq-keyword-wide-filter
-            random-768-2M-on-disk-bq-int-narrow-filter     random-768-2M-on-disk-bq-int-wide-filter
-            random-768-2M-on-disk-bq-float-narrow-filter   random-768-2M-on-disk-bq-float-wide-filter
-            random-768-2M-on-disk-bq-bool-wide-filter
-            random-768-2M-on-disk-bq-uuid-narrow-filter
-            random-768-2M-on-disk-bq-geo-narrow-filter     random-768-2M-on-disk-bq-geo-wide-filter
-            random-768-2M-on-disk-bq-text-narrow-filter    random-768-2M-on-disk-bq-text-wide-filter
-            random-768-2M-on-disk-bq-datetime-narrow-filter random-768-2M-on-disk-bq-datetime-wide-filter
-          )
-          FF_DEV="${{ inputs.feature_flags_all }}"
-          FF_DEV="${FF_DEV:-true}"
-          VERSION_PAIRS=("ghcr/dev|${FF_DEV}" "docker/master|false")
-          SNAPSHOT_CONTAINER_NAME="qdrant-continuous-benchmarks-snapshot"
-          
-          set +e
-          FAILED=0
-          
-          # Restore the snapshot once with the first version, then swap qdrant
-          # images on the same volume per (dataset, version). Same-dataset
-          # dev/master pairs land ~30 s apart.
-          INITIAL="${VERSION_PAIRS[0]}"
-          export QDRANT_VERSION="${INITIAL%%|*}"
-          export QDRANT__FEATURE_FLAGS__ALL="${INITIAL##*|}"
-          CURRENT_VERSION="$QDRANT_VERSION"
-          CURRENT_FF="$QDRANT__FEATURE_FLAGS__ALL"
-          
-          echo "===== prepare $ENGINE_NAME @ $QDRANT_VERSION ====="
-          export BENCHMARK_STRATEGY="search-on-disk-prepare"
-          timeout 30m bash -x tools/run_remote_benchmark.sh
-          prepare_rc=$?
-          if [ "$prepare_rc" -ne 0 ]; then
-            echo "::error::prepare failed (rc=$prepare_rc); aborting"
-            exit 1
-          fi
-          
-          export BENCHMARK_STRATEGY="search-on-disk-search"
-          for DATASET in "${DATASETS_LIST[@]}"; do
-            export DATASETS="$DATASET"
-            for VERSION_PAIR in "${VERSION_PAIRS[@]}"; do
-              export QDRANT_VERSION="${VERSION_PAIR%%|*}"
-              export QDRANT__FEATURE_FLAGS__ALL="${VERSION_PAIR##*|}"
-          
-              if [[ "$QDRANT_VERSION" != "$CURRENT_VERSION" || "$QDRANT__FEATURE_FLAGS__ALL" != "$CURRENT_FF" ]]; then
-                echo "===== swap qdrant image $CURRENT_VERSION -> $QDRANT_VERSION ====="
-                timeout 15m bash -x tools/run_server_container_with_volume.sh "$SNAPSHOT_CONTAINER_NAME" "$CONTAINER_MEM_LIMIT" "continue"
-                swap_rc=$?
-                if [ "$swap_rc" -ne 0 ]; then
-                  echo "::error::image swap failed (rc=$swap_rc); aborting remaining cells"
-                  FAILED=$((FAILED + 1))
-                  break 2
-                fi
-                CURRENT_VERSION="$QDRANT_VERSION"
-                CURRENT_FF="$QDRANT__FEATURE_FLAGS__ALL"
-              fi
-          
-              echo "===== search $DATASETS @ $QDRANT_VERSION ====="
-              timeout 60m bash -x tools/run_ci.sh || FAILED=$((FAILED + 1))
-            done
-          done
-          
-          set -e
-          if [ "$FAILED" -gt 0 ]; then
-            echo "::warning::$FAILED cell run(s) failed"
-            exit 1
-          fi
-      - name: Fail job if any of the benches failed
-        if: steps.benches.outputs.failed == 'error' || steps.benches.outputs.failed == 'timeout'
-        run: exit 1
+      - run: |
+          echo "This is the master stub for the Build HF Dataset workflow."
+          exit 0

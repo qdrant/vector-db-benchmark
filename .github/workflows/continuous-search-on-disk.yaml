@@ -154,16 +154,16 @@ jobs:
       - name: Fail job if any of the benches failed
         if: steps.benches.outputs.failed == 'error' || steps.benches.outputs.failed == 'timeout'
         run: exit 1
-#      - name: Send slack message
-#        uses: ./.github/workflows/actions/send-slack-msg
-#        if: failure() || cancelled()
-#        with:
-#          bench_name: "runOnDiskSearchBenchmark"
-#          job_status: ${{ job.status }}
-#          failed_outputs: ${{ steps.benches.outputs.failed }}
-#          qdrant_version: ${{ steps.benches.outputs.qdrant_version }}
-#          engine_name: ${{ steps.benches.outputs.engine_name }}
-#          dataset: ${{ steps.benches.outputs.dataset }}
-#        env:
-#          SLACK_WEBHOOK_URL: ${{ secrets.CI_ALERTS_CHANNEL_WEBHOOK_URL }}
-#          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+      - name: Send slack message
+        uses: ./.github/workflows/actions/send-slack-msg
+        if: failure() || cancelled()
+        with:
+          bench_name: "runOnDiskSearchBenchmark"
+          job_status: ${{ job.status }}
+          failed_outputs: ${{ steps.benches.outputs.failed }}
+          qdrant_version: ${{ steps.benches.outputs.qdrant_version }}
+          engine_name: ${{ steps.benches.outputs.engine_name }}
+          dataset: ${{ steps.benches.outputs.dataset }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.CI_ALERTS_CHANNEL_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
