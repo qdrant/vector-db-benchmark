@@ -11,7 +11,8 @@ cleanup() {
   #  bash -x "${SCRIPT_PATH}/tear_down.sh"
 }
 
-trap 'echo signal received!; kill $(jobs -p); wait; cleanup' SIGINT SIGTERM
+# Guarded kill/wait: no-op cleanly when there are no bg jobs (otherwise `set -e` trips on Ctrl-C). EXIT trap below calls cleanup once.
+trap 'echo signal received!; bg=$(jobs -p); [ -n "$bg" ] && kill $bg 2>/dev/null; wait 2>/dev/null || true' SIGINT SIGTERM
 
 CLOUD_NAME=${CLOUD_NAME:-"hetzner"}
 
