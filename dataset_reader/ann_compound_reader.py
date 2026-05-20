@@ -18,7 +18,7 @@ class AnnCompoundReader(JSONReader):
     QUERIES_FILE = "tests.jsonl"
 
     def read_vectors(self) -> Iterator[List[float]]:
-        vectors = np.load(self.path / self.VECTORS_FILE)
+        vectors = np.load(self.path / self.VECTORS_FILE, mmap_mode="r")
         for vector in vectors:
             if self.normalize:
                 vector = vector / np.linalg.norm(vector)
