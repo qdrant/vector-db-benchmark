@@ -107,6 +107,7 @@ STORAGE_SIZE_ALLOCATED=NULL
 STORAGE_SIZE_APPARENT=NULL
 MINOR_PAGE_FAULTS=NULL
 MAJOR_PAGE_FAULTS=NULL
+CPU_SECONDS_DELTA=NULL
 MEM_DISK_BYTES=NULL
 MEM_EXPECTED_CACHE_BYTES=NULL
 MEM_CACHED_BYTES_BEFORE=NULL
@@ -142,7 +143,9 @@ if [[ "$BENCHMARK_STRATEGY" == "default" ]]; then
   # Only this strategy produces cpu usage results files
   CPU=$(cat "$CPU_USAGE_FILE" | tr -d '[:space:]')
 fi
-CPU_TELEMETRY=$(jq -r '.result.hardware.collection_data.benchmark.cpu' "$TELEMETRY_API_RESPONSE_FILE")
+if [[ -n "$TELEMETRY_API_RESPONSE_FILE" && -f "$TELEMETRY_API_RESPONSE_FILE" ]]; then
+  CPU_TELEMETRY=$(jq -r '.result.hardware.collection_data.benchmark.cpu' "$TELEMETRY_API_RESPONSE_FILE")
+fi
 
 if [[ -n "$STORAGE_SIZE_ALLOCATED_FILE" && -f "$STORAGE_SIZE_ALLOCATED_FILE" ]]; then
   STORAGE_SIZE_ALLOCATED=$(cat "$STORAGE_SIZE_ALLOCATED_FILE" | tr -d '[:space:]')
@@ -168,6 +171,12 @@ if [[ -n "$METRICS_BEFORE_FILE" && -f "$METRICS_BEFORE_FILE" && \
   fi
   if [[ -n "$MAJOR_BEFORE" && -n "$MAJOR_AFTER" ]]; then
     MAJOR_PAGE_FAULTS=$((MAJOR_AFTER - MAJOR_BEFORE))
+  fi
+  # utime+stime ticks → seconds (USER_HZ=100).
+  CPU_BEFORE=$(parse_metric "$METRICS_BEFORE_FILE" "process_cpu_ticks_total")
+  CPU_AFTER=$(parse_metric "$METRICS_AFTER_FILE"  "process_cpu_ticks_total")
+  if [[ -n "$CPU_BEFORE" && -n "$CPU_AFTER" ]]; then
+    CPU_SECONDS_DELTA=$(awk -v a="$CPU_AFTER" -v b="$CPU_BEFORE" 'BEGIN{printf "%.3f", (a-b)/100}')
   fi
 fi
 
@@ -209,8 +218,8 @@ if [[ "$BENCHMARK_STRATEGY" == "search-on-disk-search" ]]; then
 fi
 
 if [[ "$BENCHMARK_STRATEGY" == "search-on-disk-search" ]]; then
-  INSERT_SQL="INSERT INTO ${POSTGRES_TABLE} (engine, branch, commit, dataset, measure_timestamp, upload_time, indexing_time, rps, mean_precisions, p95_time, p99_time, vm_rss_mem, rss_anon_mem, collection_load_time_ms, cpu_telemetry, cpu, storage_size_bytes, storage_size_apparent_bytes, minor_page_faults, major_page_faults, mem_disk_bytes, mem_expected_cache_bytes, mem_cached_bytes_before, mem_cached_bytes_after, cgroup_mem_current_before, cgroup_mem_current_after)
-VALUES ('qdrant-ci', '${QDRANT_VERSION}', '${QDRANT_COMMIT}', '${DATASET_LABEL}', '${MEASURE_TIMESTAMP}', ${UPLOAD_TIME}, ${INDEXING_TIME}, ${RPS}, ${MEAN_PRECISIONS}, ${P95_TIME}, ${P99_TIME}, ${VM_RSS_MEMORY_USAGE}, ${RSS_ANON_MEMORY_USAGE}, ${COLLECTION_LOAD_TIME}, ${CPU_TELEMETRY}, ${CPU}, ${STORAGE_SIZE_ALLOCATED}, ${STORAGE_SIZE_APPARENT}, ${MINOR_PAGE_FAULTS}, ${MAJOR_PAGE_FAULTS}, ${MEM_DISK_BYTES}, ${MEM_EXPECTED_CACHE_BYTES}, ${MEM_CACHED_BYTES_BEFORE}, ${MEM_CACHED_BYTES_AFTER}, ${CGROUP_MEM_CURRENT_BEFORE}, ${CGROUP_MEM_CURRENT_AFTER});"
+  INSERT_SQL="INSERT INTO ${POSTGRES_TABLE} (engine, branch, commit, dataset, measure_timestamp, rps, p95_time, p99_time, cpu_seconds_delta, minor_page_faults, major_page_faults, mem_disk_bytes, mem_expected_cache_bytes, mem_cached_bytes_before, mem_cached_bytes_after, cgroup_mem_current_before, cgroup_mem_current_after)
+VALUES ('qdrant-ci', '${QDRANT_VERSION}', '${QDRANT_COMMIT}', '${DATASET_LABEL}', '${MEASURE_TIMESTAMP}', ${RPS}, ${P95_TIME}, ${P99_TIME}, ${CPU_SECONDS_DELTA}, ${MINOR_PAGE_FAULTS}, ${MAJOR_PAGE_FAULTS}, ${MEM_DISK_BYTES}, ${MEM_EXPECTED_CACHE_BYTES}, ${MEM_CACHED_BYTES_BEFORE}, ${MEM_CACHED_BYTES_AFTER}, ${CGROUP_MEM_CURRENT_BEFORE}, ${CGROUP_MEM_CURRENT_AFTER});"
 else
   INSERT_SQL="INSERT INTO ${POSTGRES_TABLE} (engine, branch, commit, dataset, measure_timestamp, upload_time, indexing_time, rps, mean_precisions, p95_time, p99_time, vm_rss_mem, rss_anon_mem, collection_load_time_ms, cpu_telemetry, cpu, storage_size_bytes, storage_size_apparent_bytes)
 VALUES ('qdrant-ci', '${QDRANT_VERSION}', '${QDRANT_COMMIT}', '${DATASET_LABEL}', '${MEASURE_TIMESTAMP}', ${UPLOAD_TIME}, ${INDEXING_TIME}, ${RPS}, ${MEAN_PRECISIONS}, ${P95_TIME}, ${P99_TIME}, ${VM_RSS_MEMORY_USAGE}, ${RSS_ANON_MEMORY_USAGE}, ${COLLECTION_LOAD_TIME}, ${CPU_TELEMETRY}, ${CPU}, ${STORAGE_SIZE_ALLOCATED}, ${STORAGE_SIZE_APPARENT});"

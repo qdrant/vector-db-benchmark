@@ -33,3 +33,14 @@ if [[ $fetch_rc -ne 0 || -z "$RAW_METRICS" ]]; then
 else
   echo "$RAW_METRICS" | grep -E '^process_(minor|major)_page_faults_total ' > "$out_file" || true
 fi
+
+set +e
+CPU_TICKS=$(ssh_with_retry -tt -o ServerAliveInterval=10 -o ServerAliveCountMax=10 \
+  "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" \
+  "awk '{print \$14+\$15}' /proc/\$(pidof qdrant)/stat")
+cpu_rc=$?
+set -e
+CPU_TICKS=$(echo "$CPU_TICKS" | tr -d '[:space:]')
+if [[ $cpu_rc -eq 0 && -n "$CPU_TICKS" ]]; then
+  echo "process_cpu_ticks_total ${CPU_TICKS}" >> "$out_file"
+fi
