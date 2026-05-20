@@ -40,8 +40,11 @@ class QdrantConditionParser(BaseConditionParser):
         lte: Optional[FieldValue],
         gte: Optional[FieldValue],
     ) -> Any:
-        # String bounds → ISO datetime range; numeric bounds → numeric range.
+        # Any string bound → ISO datetime range; coerce mixed bounds to str.
         if any(isinstance(v, str) for v in (lt, gt, lte, gte) if v is not None):
+            lt, gt, lte, gte = (
+                None if v is None else str(v) for v in (lt, gt, lte, gte)
+            )
             range_obj = rest.DatetimeRange(lt=lt, gt=gt, gte=gte, lte=lte)
         else:
             range_obj = rest.Range(lt=lt, gt=gt, gte=gte, lte=lte)
