@@ -76,6 +76,44 @@ case "$BENCHMARK_STRATEGY" in
   bash -x "${SCRIPT_PATH}/qdrant_collect_stats.sh" "$SERVER_CONTAINER_NAME"
   ;;
 
+  "search-on-disk-prepare")
+  # Run once per (engine_variant, qdrant_version); pair with search-on-disk-search per dataset.
+  if [[ -z "${CONTAINER_MEM_LIMIT:-}" ]]; then
+    echo "search-on-disk-prepare, but CONTAINER_MEM_LIMIT is not set!"
+    exit 2
+  fi
+  if [[ -z "${SNAPSHOT_URL:-}" ]]; then
+    echo "search-on-disk-prepare, but SNAPSHOT_URL is not set!"
+    exit 2
+  fi
+
+  echo "search-on-disk-prepare: mem=${CONTAINER_MEM_LIMIT}, snapshot=${SNAPSHOT_URL}"
+
+  SERVER_CONTAINER_NAME=${SERVER_CONTAINER_NAME:-"qdrant-continuous-benchmarks-snapshot"}
+
+  # Phase 1: unconstrained memory.
+  bash -x "${SCRIPT_PATH}/run_server_container_with_volume.sh" "$SERVER_CONTAINER_NAME" "25Gb"
+  bash -x "${SCRIPT_PATH}/run_client_script.sh" "snapshot"
+
+  # Phase 2: restart with the memory ceiling on the same volume.
+  bash -x "${SCRIPT_PATH}/run_server_container_with_volume.sh" "$SERVER_CONTAINER_NAME" "$CONTAINER_MEM_LIMIT" "continue"
+  # readiness is enforced inside run_server_container_with_volume.sh
+  ;;
+
+  "search-on-disk-search")
+  # Per-dataset search against an already-prepared server.
+  SERVER_CONTAINER_NAME=${SERVER_CONTAINER_NAME:-"qdrant-continuous-benchmarks-snapshot"}
+
+  bash -x "${SCRIPT_PATH}/qdrant_drop_caches.sh"
+  bash -x "${SCRIPT_PATH}/qdrant_collect_metrics.sh" "before"
+  bash -x "${SCRIPT_PATH}/qdrant_collect_memory.sh"  "before"
+  bash -x "${SCRIPT_PATH}/run_client_script.sh" "search"
+  bash -x "${SCRIPT_PATH}/qdrant_collect_metrics.sh" "after"
+  bash -x "${SCRIPT_PATH}/qdrant_collect_memory.sh"  "after"
+
+  bash -x "${SCRIPT_PATH}/qdrant_collect_stats.sh" "$SERVER_CONTAINER_NAME"
+  ;;
+
   "collection-reload")
   echo "Collection load time benchmark"
 
