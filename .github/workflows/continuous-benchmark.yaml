@@ -74,7 +74,6 @@ jobs:
           dataset: ${{ steps.benches.outputs.dataset }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.CI_ALERTS_CHANNEL_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
   runTenantsBenchmark:
     runs-on: ubuntu-latest
     needs: runBenchmark
@@ -130,7 +129,6 @@ jobs:
           dataset: ${{ steps.benches.outputs.dataset }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.CI_ALERTS_CHANNEL_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
   runParallelBenchmark:
     runs-on: ubuntu-latest
     needs: runTenantsBenchmark
@@ -186,4 +184,3 @@ jobs:
           dataset: ${{ steps.benches.outputs.dataset }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.CI_ALERTS_CHANNEL_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

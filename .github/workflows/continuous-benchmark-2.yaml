@@ -88,4 +88,3 @@ jobs:
           dataset: ${{ steps.benches.outputs.dataset }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.CI_ALERTS_CHANNEL_WEBHOOK_URL }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
