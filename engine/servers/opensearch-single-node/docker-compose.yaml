@@ -2,14 +2,23 @@ version: '3.5'
 
 services:
   opensearch:
-    image: opensearchproject/opensearch:2.10.0
+    image: opensearchproject/opensearch:2.18.0
     environment:
       discovery.type: "single-node"
-      plugins.security.disabled: true
+      DISABLE_SECURITY_PLUGIN: true
+      DISABLE_INSTALL_DEMO_CONFIG: true
+      bootstrap.memory_lock: true
       OPENSEARCH_JAVA_OPTS: "-Xms4g -Xmx4g"
     ports:
       - "9200:9200"
       - "9300:9300"
+    ulimits:
+      memlock:
+        soft: -1 # Set memlock to unlimited (no soft or hard limit)
+        hard: -1
+      nofile:
+        soft: 65536 # Maximum number of open files for the opensearch user - set to at least 65536
+        hard: 65536
     logging:
       driver: "json-file"
       options:
