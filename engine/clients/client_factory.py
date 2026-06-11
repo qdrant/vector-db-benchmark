@@ -12,6 +12,7 @@ from engine.clients.elasticsearch import (
     ElasticSearcher,
     ElasticUploader,
 )
+from engine.clients.logosdb import LogosDBConfigurator, LogosDBSearcher, LogosDBUploader
 from engine.clients.milvus import MilvusConfigurator, MilvusSearcher, MilvusUploader
 from engine.clients.opensearch import (
     OpenSearchConfigurator,
@@ -42,6 +43,7 @@ from engine.clients.weaviate import (
 )
 
 ENGINE_CONFIGURATORS = {
+    "logosdb": LogosDBConfigurator,
     "qdrant": QdrantConfigurator,
     "qdrant_native": QdrantNativeConfigurator,
     "qdrant_hybrid": QdrantHybridConfigurator,
@@ -54,6 +56,7 @@ ENGINE_CONFIGURATORS = {
 }
 
 ENGINE_UPLOADERS = {
+    "logosdb": LogosDBUploader,
     "qdrant": QdrantUploader,
     "qdrant_native": QdrantNativeUploader,
     "qdrant_hybrid": QdrantHybridUploader,
@@ -66,6 +69,7 @@ ENGINE_UPLOADERS = {
 }
 
 ENGINE_SEARCHERS = {
+    "logosdb": LogosDBSearcher,
     "qdrant": QdrantSearcher,
     "qdrant_native": QdrantNativeSearcher,
     "qdrant_hybrid": QdrantHybridSearcher,

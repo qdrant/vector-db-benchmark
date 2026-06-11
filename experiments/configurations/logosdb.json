@@ -1,0 +1,22 @@
+[
+  {
+    "name": "logosdb-m16-ef200",
+    "engine": "logosdb",
+    "connection_params": {
+      "path": "/tmp/logosdb_vdb_bench"
+    },
+    "collection_params": {
+      "max_elements": 2000000
+    },
+    "upload_params": {
+      "parallel": 1,
+      "batch_size": 1000
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "top": 10
+      }
+    ]
+  }
+]
