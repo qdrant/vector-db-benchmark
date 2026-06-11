@@ -77,6 +77,18 @@ files = [
 cryptography = "*"
 
 [[package]]
+name = "cachetools"
+version = "7.1.4"
+description = "Extensible memoizing collections and decorators"
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "cachetools-7.1.4-py3-none-any.whl", hash = "sha256:323dc4127934744db5b54eb4924482d7edafbf9554e820d1531c2e08c0e4ef54"},
+    {file = "cachetools-7.1.4.tar.gz", hash = "sha256:437f55a4e0c1b01a4f3077cc470e6991d47430970e36fbcb77e2be0df4fc1cd6"},
+]
+
+[[package]]
 name = "certifi"
 version = "2026.1.4"
 description = "Python package for providing Mozilla's CA Bundle."
@@ -1987,27 +1999,28 @@ tests = ["coverage[toml] (==5.0.4)", "pytest (>=6.0.0,<7.0.0)"]
 
 [[package]]
 name = "pymilvus"
-version = "2.6.6"
+version = "3.0.0"
 description = "Python Sdk for Milvus"
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "pymilvus-2.6.6-py3-none-any.whl", hash = "sha256:0e61daa573b0025650f072493cb978a9ada9cdb1d450594707592174b1f297c0"},
-    {file = "pymilvus-2.6.6.tar.gz", hash = "sha256:2522617ea34dcc9adaad0128d230f0306962a122f08366a24dd0e84bdada1f60"},
+    {file = "pymilvus-3.0.0-1-py3-none-any.whl", hash = "sha256:57c8e7c87fbbf579f122b4df893949bc78e50bca2988527864891bd544817b05"},
 ]
 
 [package.dependencies]
+cachetools = ">=5.0.0"
 grpcio = ">=1.66.2,<1.68.0 || >1.68.0,<1.68.1 || >1.68.1,<1.69.0 || >1.69.0,<1.70.0 || >1.70.0,<1.70.1 || >1.70.1,<1.71.0 || >1.71.0,<1.72.1 || >1.72.1,<1.73.0 || >1.73.0"
 orjson = ">=3.10.15"
 pandas = ">=1.2.4"
 protobuf = ">=5.27.2"
 python-dotenv = ">=1.0.1,<2.0.0"
-setuptools = ">69"
+requests = ">=2.20.0"
+setuptools = {version = ">=78.1.1", markers = "python_version >= \"3.9\""}
 
 [package.extras]
 bulk-writer = ["azure-storage-blob", "minio (>=7.0.0)", "pyarrow (>=12.0.0)", "requests", "urllib3"]
-dev = ["Cython (>=3.0.0)", "azure-storage-blob", "black", "grpcio (==1.66.2)", "grpcio-testing (==1.66.2)", "grpcio-tools (==1.66.2)", "memray ; sys_platform != \"win32\"", "minio (>=7.0.0)", "ml_dtypes", "py-spy", "pyarrow (>=12.0.0)", "pytest (>=5.3.4)", "pytest-asyncio", "pytest-benchmark[histogram]", "pytest-cov (>=5.0.0)", "pytest-timeout (>=1.3.4)", "requests", "ruff (>=0.12.9,<1)", "scipy", "urllib3"]
+dev = ["Cython (>=3.0.0)", "azure-storage-blob", "black", "grpcio (==1.66.2) ; python_version < \"3.14\"", "grpcio-tools (==1.66.2) ; python_version < \"3.14\"", "memray ; sys_platform != \"win32\"", "minio (>=7.0.0)", "ml_dtypes", "py-spy", "pyarrow (>=12.0.0)", "pytest (>=5.3.4)", "pytest-asyncio", "pytest-benchmark[histogram]", "pytest-cov (>=5.0.0)", "pytest-timeout (>=1.3.4)", "requests", "ruff (>=0.12.9,<1)", "scipy", "urllib3"]
 milvus-lite = ["milvus-lite (>=2.4.0) ; sys_platform != \"win32\""]
 model = ["pymilvus.model (>=0.3.0)"]
 
@@ -2622,4 +2635,4 @@ validators = "0.33.0"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.13"
-content-hash = "756ced796916be0450d17fe3bc099519cd53c717233ae6a295446dc72fb2b9e1"
+content-hash = "9cc2785fb627147ceac2eba84995d0204d2ec466ae5b80cef510b26df251b32a"
