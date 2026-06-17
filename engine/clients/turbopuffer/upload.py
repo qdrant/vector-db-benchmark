@@ -58,9 +58,9 @@ class TurbopufferUploader(BaseUploader):
         return cls.namespaces[tenant_value]
 
     def upload(self, distance, records: Iterable[Record]) -> dict:
-        # For namespace-per-tenant mode: group all records by tenant first so
-        # each namespace receives large sequential batches instead of tiny
-        # scattered sub-batches (100x fewer API calls).
+        # For namespace-per-tenant mode: buffer per-tenant and flush each tenant
+        # when its buffer hits batch_size. Max memory = num_tenants * batch_size
+        # records, not all 1M at once.
         if not self.connection_params.get("namespace_field"):
             return super().upload(distance, records)
 
@@ -70,13 +70,16 @@ class TurbopufferUploader(BaseUploader):
         start = time.perf_counter()
 
         tenant_field = self.connection_params["namespace_field"]
-        buckets: dict = defaultdict(list)
-        for record in tqdm.tqdm(records, desc="Grouping by tenant"):
-            tenant = record.metadata.get(tenant_field) if record.metadata else None
-            buckets[tenant].append(record)
+        buffers: dict = defaultdict(list)
 
-        print(f"Grouped into {len(buckets)} tenants, uploading...")
-        for tenant_records in tqdm.tqdm(buckets.values(), desc="Tenants"):
+        for record in tqdm.tqdm(records, desc="Uploading"):
+            tenant = record.metadata.get(tenant_field) if record.metadata else None
+            buffers[tenant].append(record)
+            if len(buffers[tenant]) >= batch_size:
+                latencies.append(self._upload_batch(buffers.pop(tenant)))
+
+        # Flush remaining partial batches
+        for tenant_records in buffers.values():
             for batch in iter_batches(tenant_records, batch_size):
                 latencies.append(self._upload_batch(batch))
 
