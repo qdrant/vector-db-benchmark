@@ -34,6 +34,15 @@ class BaseSearcher:
         raise NotImplementedError()
 
     @classmethod
+    def server_latency(cls) -> Optional[float]:
+        """Return server-side processing time (seconds) for the last search_one call.
+
+        Override in engines that expose server-side timing (e.g. Qdrant REST).
+        Returns None by default (not supported).
+        """
+        return None
+
+    @classmethod
     def _search_one(cls, query: Query, top: Optional[int] = None):
         if top is None:
             top = (
@@ -45,13 +54,14 @@ class BaseSearcher:
         start = time.perf_counter()
         search_res = cls.search_one(query, top)
         end = time.perf_counter()
+        server_lat = cls.server_latency()
 
         precision = 1.0
         if query.expected_result:
             ids = set(x[0] for x in search_res)
             precision = len(ids.intersection(query.expected_result[:top])) / top
 
-        return precision, end - start
+        return precision, end - start, server_lat
 
     def search_all(
         self,
@@ -71,7 +81,7 @@ class BaseSearcher:
 
         if parallel == 1:
             start = time.perf_counter()
-            precisions, latencies = list(
+            precisions, latencies, server_latencies = list(
                 zip(*[search_one(query) for query in tqdm.tqdm(queries)])
             )
         else:
@@ -90,15 +100,16 @@ class BaseSearcher:
                 if parallel > 10:
                     time.sleep(15)  # Wait for all processes to start
                 start = time.perf_counter()
-                precisions, latencies = list(
+                precisions, latencies, server_latencies = list(
                     zip(*pool.imap_unordered(search_one, iterable=tqdm.tqdm(queries)))
                 )
 
         total_time = time.perf_counter() - start
 
+        self.post_search()
         self.__class__.delete_client()
 
-        return {
+        results = {
             "total_time": total_time,
             "mean_time": np.mean(latencies),
             "mean_precisions": np.mean(precisions),
@@ -106,11 +117,23 @@ class BaseSearcher:
             "min_time": np.min(latencies),
             "max_time": np.max(latencies),
             "rps": len(latencies) / total_time,
+            "p1_time": np.percentile(latencies, 1),
+            "p10_time": np.percentile(latencies, 10),
+            "p25_time": np.percentile(latencies, 25),
             "p95_time": np.percentile(latencies, 95),
             "p99_time": np.percentile(latencies, 99),
             "precisions": precisions,
             "latencies": latencies,
         }
+
+        actual_server_lats = [l for l in server_latencies if l is not None]
+        if actual_server_lats:
+            results["mean_server_time"] = np.mean(actual_server_lats)
+            results["p95_server_time"] = np.percentile(actual_server_lats, 95)
+            results["p99_server_time"] = np.percentile(actual_server_lats, 99)
+            results["server_latencies"] = server_latencies
+
+        return results
 
     def setup_search(self):
         pass

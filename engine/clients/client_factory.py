@@ -7,75 +7,84 @@ from engine.base_client.client import (
     BaseSearcher,
     BaseUploader,
 )
-from engine.clients.elasticsearch import (
-    ElasticConfigurator,
-    ElasticSearcher,
-    ElasticUploader,
-)
-from engine.clients.milvus import MilvusConfigurator, MilvusSearcher, MilvusUploader
-from engine.clients.opensearch import (
-    OpenSearchConfigurator,
-    OpenSearchSearcher,
-    OpenSearchUploader,
-)
-from engine.clients.pgvector import (
-    PgVectorConfigurator,
-    PgVectorSearcher,
-    PgVectorUploader,
-)
-from engine.clients.qdrant import QdrantConfigurator, QdrantSearcher, QdrantUploader
-from engine.clients.qdrant_hybrid import (
-    QdrantHybridConfigurator,
-    QdrantHybridSearcher,
-    QdrantHybridUploader,
-)
-from engine.clients.qdrant_native import (
-    QdrantNativeConfigurator,
-    QdrantNativeSearcher,
-    QdrantNativeUploader,
-)
-from engine.clients.redis import RedisConfigurator, RedisSearcher, RedisUploader
-from engine.clients.weaviate import (
-    WeaviateConfigurator,
-    WeaviateSearcher,
-    WeaviateUploader,
-)
 
-ENGINE_CONFIGURATORS = {
-    "qdrant": QdrantConfigurator,
-    "qdrant_native": QdrantNativeConfigurator,
-    "qdrant_hybrid": QdrantHybridConfigurator,
-    "weaviate": WeaviateConfigurator,
-    "milvus": MilvusConfigurator,
-    "elasticsearch": ElasticConfigurator,
-    "opensearch": OpenSearchConfigurator,
-    "redis": RedisConfigurator,
-    "pgvector": PgVectorConfigurator,
+# Maps engine name to (module_path, configurator, uploader, searcher) class names.
+# Imports are deferred so missing/broken engine dependencies don't block other engines.
+_ENGINE_MODULES = {
+    "turbopuffer": (
+        "engine.clients.turbopuffer",
+        "TurbopufferConfigurator",
+        "TurbopufferUploader",
+        "TurbopufferSearcher",
+    ),
+    "qdrant": (
+        "engine.clients.qdrant",
+        "QdrantConfigurator",
+        "QdrantUploader",
+        "QdrantSearcher",
+    ),
+    "qdrant_native": (
+        "engine.clients.qdrant_native",
+        "QdrantNativeConfigurator",
+        "QdrantNativeUploader",
+        "QdrantNativeSearcher",
+    ),
+    "qdrant_hybrid": (
+        "engine.clients.qdrant_hybrid",
+        "QdrantHybridConfigurator",
+        "QdrantHybridUploader",
+        "QdrantHybridSearcher",
+    ),
+    "weaviate": (
+        "engine.clients.weaviate",
+        "WeaviateConfigurator",
+        "WeaviateUploader",
+        "WeaviateSearcher",
+    ),
+    "milvus": (
+        "engine.clients.milvus",
+        "MilvusConfigurator",
+        "MilvusUploader",
+        "MilvusSearcher",
+    ),
+    "elasticsearch": (
+        "engine.clients.elasticsearch",
+        "ElasticConfigurator",
+        "ElasticUploader",
+        "ElasticSearcher",
+    ),
+    "opensearch": (
+        "engine.clients.opensearch",
+        "OpenSearchConfigurator",
+        "OpenSearchUploader",
+        "OpenSearchSearcher",
+    ),
+    "redis": (
+        "engine.clients.redis",
+        "RedisConfigurator",
+        "RedisUploader",
+        "RedisSearcher",
+    ),
+    "pgvector": (
+        "engine.clients.pgvector",
+        "PgVectorConfigurator",
+        "PgVectorUploader",
+        "PgVectorSearcher",
+    ),
 }
 
-ENGINE_UPLOADERS = {
-    "qdrant": QdrantUploader,
-    "qdrant_native": QdrantNativeUploader,
-    "qdrant_hybrid": QdrantHybridUploader,
-    "weaviate": WeaviateUploader,
-    "milvus": MilvusUploader,
-    "elasticsearch": ElasticUploader,
-    "opensearch": OpenSearchUploader,
-    "redis": RedisUploader,
-    "pgvector": PgVectorUploader,
-}
 
-ENGINE_SEARCHERS = {
-    "qdrant": QdrantSearcher,
-    "qdrant_native": QdrantNativeSearcher,
-    "qdrant_hybrid": QdrantHybridSearcher,
-    "weaviate": WeaviateSearcher,
-    "milvus": MilvusSearcher,
-    "elasticsearch": ElasticSearcher,
-    "opensearch": OpenSearchSearcher,
-    "redis": RedisSearcher,
-    "pgvector": PgVectorSearcher,
-}
+def _load_engine(engine: str):
+    if engine not in _ENGINE_MODULES:
+        raise ValueError(f"Unknown engine: {engine!r}. Available: {list(_ENGINE_MODULES)}")
+    import importlib
+    module_path, configurator_cls, uploader_cls, searcher_cls = _ENGINE_MODULES[engine]
+    module = importlib.import_module(module_path)
+    return (
+        getattr(module, configurator_cls),
+        getattr(module, uploader_cls),
+        getattr(module, searcher_cls),
+    )
 
 
 class ClientFactory(ABC):
@@ -85,38 +94,31 @@ class ClientFactory(ABC):
 
     def _create_configurator(self, experiment) -> BaseConfigurator:
         self.engine = experiment["engine"]
-        engine_configurator_class = ENGINE_CONFIGURATORS[experiment["engine"]]
-        engine_configurator = engine_configurator_class(
+        configurator_class, _, _ = _load_engine(experiment["engine"])
+        return configurator_class(
             self.host,
             collection_params={**experiment.get("collection_params", {})},
             connection_params={**experiment.get("connection_params", {})},
         )
-        return engine_configurator
 
     def _create_uploader(self, experiment) -> BaseUploader:
-        engine_uploader_class = ENGINE_UPLOADERS[experiment["engine"]]
-        engine_uploader = engine_uploader_class(
+        _, uploader_class, _ = _load_engine(experiment["engine"])
+        return uploader_class(
             self.host,
             connection_params={**experiment.get("connection_params", {})},
             upload_params={**experiment.get("upload_params", {})},
         )
-        return engine_uploader
 
     def _create_searchers(self, experiment) -> List[BaseSearcher]:
-        engine_searcher_class: Type[BaseSearcher] = ENGINE_SEARCHERS[
-            experiment["engine"]
-        ]
-
-        engine_searchers = [
-            engine_searcher_class(
+        _, _, searcher_class = _load_engine(experiment["engine"])
+        return [
+            searcher_class(
                 self.host,
                 connection_params={**experiment.get("connection_params", {})},
                 search_params=search_params,
             )
             for search_params in experiment.get("search_params", [{}])
         ]
-
-        return engine_searchers
 
     def build_client(self, experiment):
         return BaseClient(

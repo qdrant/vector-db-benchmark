@@ -1,0 +1,15 @@
+[
+  {
+    "name": "qdrant-cloud-default",
+    "engine": "qdrant",
+    "connection_params": { "timeout": 120 },
+    "collection_params": {
+      "hnsw_config": { "m": 16, "ef_construct": 128 },
+      "optimizers_config": { "memmap_threshold": 10000000 }
+    },
+    "search_params": [
+      { "parallel": 8, "config": { "hnsw_ef": 128 } }
+    ],
+    "upload_params": { "parallel": 1, "batch_size": 256 }
+  }
+]

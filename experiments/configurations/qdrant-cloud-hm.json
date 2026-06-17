@@ -1,0 +1,41 @@
+[
+  {
+    "name": "qdrant-cloud-hm",
+    "engine": "qdrant",
+    "connection_params": { "timeout": 300 },
+    "collection_params": {
+      "hnsw_config": { "m": 16, "ef_construct": 128 },
+      "optimizers_config": { "memmap_threshold": 10000000 },
+      "payload_index_params": {
+        "product_code": { "type": "integer" },
+        "prod_name": { "type": "keyword" },
+        "product_type_no": { "type": "integer" },
+        "product_type_name": { "type": "keyword" },
+        "product_group_name": { "type": "keyword" },
+        "graphical_appearance_no": { "type": "integer" },
+        "graphical_appearance_name": { "type": "keyword" },
+        "colour_group_code": { "type": "integer" },
+        "colour_group_name": { "type": "keyword" },
+        "perceived_colour_value_id": { "type": "integer" },
+        "perceived_colour_value_name": { "type": "keyword" },
+        "perceived_colour_master_id": { "type": "integer" },
+        "perceived_colour_master_name": { "type": "keyword" },
+        "department_no": { "type": "integer" },
+        "department_name": { "type": "keyword" },
+        "index_code": { "type": "keyword" },
+        "index_name": { "type": "keyword" },
+        "index_group_no": { "type": "integer" },
+        "index_group_name": { "type": "keyword" },
+        "section_no": { "type": "integer" },
+        "section_name": { "type": "keyword" },
+        "garment_group_no": { "type": "integer" },
+        "garment_group_name": { "type": "keyword" }
+      }
+    },
+    "search_params": [
+      { "parallel": 8, "config": { "hnsw_ef": 128 } },
+      { "parallel": 32, "config": { "hnsw_ef": 128 } }
+    ],
+    "upload_params": { "parallel": 1, "batch_size": 128 }
+  }
+]

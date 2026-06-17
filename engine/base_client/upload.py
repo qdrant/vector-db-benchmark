@@ -68,6 +68,7 @@ class BaseUploader:
 
         print("Upload time: {}".format(upload_time))
 
+        print("Experiment stage: Post-upload")
         post_upload_stats = self.post_upload(distance)
 
         total_time = time.perf_counter() - start

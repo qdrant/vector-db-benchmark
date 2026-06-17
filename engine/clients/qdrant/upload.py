@@ -1,4 +1,3 @@
-import os
 import time
 from typing import List
 
@@ -22,10 +21,8 @@ class QdrantUploader(BaseUploader):
 
     @classmethod
     def init_client(cls, host, distance, connection_params, upload_params):
-        os.environ["GRPC_ENABLE_FORK_SUPPORT"] = "true"
-        os.environ["GRPC_POLL_STRATEGY"] = "epoll,poll"
         cls.client = QdrantClient(
-            url=host, prefer_grpc=True, api_key=QDRANT_API_KEY, **connection_params
+            url=host, prefer_grpc=False, api_key=QDRANT_API_KEY, **connection_params
         )
         cls.upload_params = upload_params
 

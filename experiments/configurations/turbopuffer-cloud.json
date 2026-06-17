@@ -1,0 +1,107 @@
+[
+  {
+    "name": "turbopuffer-default",
+    "engine": "turbopuffer",
+    "connection_params": { "namespace": "dbpedia-openai-100K-1536-angular" },
+    "collection_params": {},
+    "search_params": [
+      { "parallel": 8 }
+    ],
+    "upload_params": { "parallel": 1, "batch_size": 1000 }
+  },
+  {
+    "name": "turbopuffer-bs256",
+    "engine": "turbopuffer",
+    "connection_params": { "namespace": "dbpedia-openai-100K-1536-angular" },
+    "collection_params": {},
+    "search_params": [
+      { "parallel": 8 }
+    ],
+    "upload_params": { "parallel": 1, "batch_size": 256 }
+  },
+  {
+    "name": "turbopuffer-hint-warm",
+    "engine": "turbopuffer",
+    "connection_params": { "namespace": "dbpedia-openai-100K-1536-angular" },
+    "collection_params": {},
+    "search_params": [
+      { "parallel": 8, "cache_strategy": "hint_warm" }
+    ],
+    "upload_params": { "parallel": 1, "batch_size": 1000 }
+  },
+  {
+    "name": "turbopuffer-pinned",
+    "engine": "turbopuffer",
+    "connection_params": { "namespace": "dbpedia-openai-100K-1536-angular" },
+    "collection_params": {},
+    "search_params": [
+      { "parallel": 8, "cache_strategy": "pinned" }
+    ],
+    "upload_params": { "parallel": 1, "batch_size": 1000 }
+  },
+  {
+    "name": "turbopuffer-pinned-4replicas",
+    "engine": "turbopuffer",
+    "connection_params": { "namespace": "dbpedia-openai-100K-1536-angular" },
+    "collection_params": {},
+    "search_params": [
+      { "parallel": 32, "cache_strategy": "pinned", "pinned_replicas": 4 }
+    ],
+    "upload_params": { "parallel": 1, "batch_size": 1000 }
+  },
+  {
+    "name": "turbopuffer-parallel-1",
+    "engine": "turbopuffer",
+    "connection_params": { "namespace": "dbpedia-openai-100K-1536-angular" },
+    "collection_params": {},
+    "search_params": [
+      { "parallel": 1 }
+    ],
+    "upload_params": { "parallel": 1, "batch_size": 1000 }
+  },
+  {
+    "name": "turbopuffer-parallel-32",
+    "engine": "turbopuffer",
+    "connection_params": { "namespace": "dbpedia-openai-100K-1536-angular" },
+    "collection_params": {},
+    "search_params": [
+      { "parallel": 32 }
+    ],
+    "upload_params": { "parallel": 1, "batch_size": 1000 }
+  },
+  {
+    "name": "turbopuffer-hm-pinned",
+    "engine": "turbopuffer",
+    "connection_params": { "namespace": "h-and-m-2048-angular" },
+    "collection_params": {},
+    "search_params": [
+      { "parallel": 32, "cache_strategy": "pinned", "pinned_replicas": 4 }
+    ],
+    "upload_params": { "parallel": 1, "batch_size": 500 }
+  },
+  {
+    "name": "turbopuffer-multitenant-ns-per-tenant",
+    "engine": "turbopuffer",
+    "connection_params": {
+      "namespace": "random-768-tenant",
+      "namespace_field": "a"
+    },
+    "collection_params": {},
+    "search_params": [
+      { "parallel": 32 }
+    ],
+    "upload_params": { "parallel": 1, "batch_size": 1000 }
+  },
+  {
+    "name": "turbopuffer-multitenant-single-ns",
+    "engine": "turbopuffer",
+    "connection_params": {
+      "namespace": "random-768-100-tenants-single"
+    },
+    "collection_params": {},
+    "search_params": [
+      { "parallel": 32 }
+    ],
+    "upload_params": { "parallel": 1, "batch_size": 1000 }
+  }
+]

@@ -1,0 +1,47 @@
+[
+  {
+    "name": "qdrant-bq-default",
+    "engine": "qdrant",
+    "connection_params": { "timeout": 120 },
+    "collection_params": {
+      "quantization_config": { "binary": { "always_ram": true } }
+    },
+    "search_params": [
+      { "parallel": 1, "config": { "hnsw_ef": 128, "quantization": { "ignore": false, "rescore": true, "oversampling": 1.0 } } },
+      { "parallel": 1, "config": { "hnsw_ef": 128, "quantization": { "ignore": false, "rescore": true, "oversampling": 2.0 } } },
+      { "parallel": 1, "config": { "hnsw_ef": 128, "quantization": { "ignore": false, "rescore": true, "oversampling": 4.0 } } },
+      { "parallel": 1, "config": { "hnsw_ef": 128, "quantization": { "ignore": true } } }
+    ],
+    "upload_params": { "parallel": 16, "batch_size": 1024 }
+  },
+  {
+    "name": "qdrant-bq-scalar8bits",
+    "engine": "qdrant",
+    "connection_params": { "timeout": 120 },
+    "collection_params": {
+      "quantization_config": { "binary": { "always_ram": true, "query_encoding": "scalar8bits" } }
+    },
+    "search_params": [
+      { "parallel": 1, "config": { "hnsw_ef": 128, "quantization": { "ignore": false, "rescore": true, "oversampling": 1.0 } } },
+      { "parallel": 1, "config": { "hnsw_ef": 128, "quantization": { "ignore": false, "rescore": true, "oversampling": 2.0 } } },
+      { "parallel": 1, "config": { "hnsw_ef": 128, "quantization": { "ignore": false, "rescore": true, "oversampling": 4.0 } } },
+      { "parallel": 1, "config": { "hnsw_ef": 128, "quantization": { "ignore": true } } }
+    ],
+    "upload_params": { "parallel": 16, "batch_size": 1024 }
+  },
+  {
+    "name": "qdrant-bq-unquantized",
+    "engine": "qdrant",
+    "connection_params": { "timeout": 120 },
+    "collection_params": {
+      "quantization_config": { "binary": { "always_ram": true, "query_encoding": "unquantized" } }
+    },
+    "search_params": [
+      { "parallel": 1, "config": { "hnsw_ef": 128, "quantization": { "ignore": false, "rescore": true, "oversampling": 1.0 } } },
+      { "parallel": 1, "config": { "hnsw_ef": 128, "quantization": { "ignore": false, "rescore": true, "oversampling": 2.0 } } },
+      { "parallel": 1, "config": { "hnsw_ef": 128, "quantization": { "ignore": false, "rescore": true, "oversampling": 4.0 } } },
+      { "parallel": 1, "config": { "hnsw_ef": 128, "quantization": { "ignore": true } } }
+    ],
+    "upload_params": { "parallel": 16, "batch_size": 1024 }
+  }
+]
