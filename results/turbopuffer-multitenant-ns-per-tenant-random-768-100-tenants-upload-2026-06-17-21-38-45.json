@@ -1,0 +1,14 @@
+{
+  "params": {
+    "experiment": "turbopuffer-multitenant-ns-per-tenant",
+    "engine": "turbopuffer",
+    "dataset": "random-768-100-tenants",
+    "parallel": 1,
+    "batch_size": 1000
+  },
+  "results": {
+    "post_upload": {},
+    "upload_time": 442.8600880459999,
+    "total_time": 442.86013047999995
+  }
+}

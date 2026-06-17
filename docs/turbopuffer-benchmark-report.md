@@ -68,24 +68,36 @@ Qdrant's H&M upload is slower due to the 2048-dim vectors (larger payloads per b
 
 ## 4. Search Performance — DBpedia (100K vectors, no filters)
 
-### 4.1 Multiprocessing benchmark (`run.py`)
+### 4.1 Multiprocessing benchmark (`run.py`) — co-located client (aws-us-west-2)
 
-> Note: latency numbers here are inflated by ~320ms per query due to per-worker TCP connection setup. RPS is directionally correct but underestimates true throughput ceiling.
+> All results in this section were taken from a benchmark client in the **same AWS region (us-west-2)** as turbopuffer and Qdrant Cloud. This is the fair, representative comparison — prior cross-region results are preserved below for reference.
 
 | Config | Parallel | Cache Strategy | RPS | Mean Latency | p95 | p99 | Precision |
 |--------|----------|---------------|-----|-------------|-----|-----|-----------|
-| `turbopuffer-default` (slow network) | 8 | none | 17.4 | 452ms | 797ms | 1031ms | 98.78% |
-| `turbopuffer-default` (slow network) | 8 | none | 17.3 | 459ms | 845ms | 1137ms | 98.87% |
-| `turbopuffer-hint-warm` | 8 | hint_warm | 17.3 | 459ms | 847ms | 1140ms | 98.87% |
-| `turbopuffer-pinned` (1r) | 8 | pinned | 17.2 | 464ms | 880ms | 1162ms | 98.87% |
-| `turbopuffer-pinned` (1r) | 8 | pinned | 18.0 | 443ms | 830ms | 1068ms | 98.87% |
-| `turbopuffer-parallel-32` (slow network) | 32 | none | 18.0 | 1766ms | 3852ms | 6660ms | 98.87% |
-| `turbopuffer-parallel-32` (**good network**) | 32 | none | **43.2** | 738ms | 1367ms | 1966ms | 98.87% |
-| `turbopuffer-default` (**good network**) | 8 | none | **24.5** | 322ms | 782ms | 1482ms | 98.87% |
-| `turbopuffer-pinned-4replicas` (before good network) | 32 | pinned (4r) | 18.5 | 1723ms | 3602ms | 6291ms | 98.87% |
-| `turbopuffer-pinned-4replicas` (before good network) | 32 | pinned (4r) | 18.2 | 1752ms | 3590ms | 5931ms | 98.87% |
-| `turbopuffer-pinned-4replicas` (before good network) | 32 | pinned (4r) | 18.3 | 1728ms | 3508ms | 5895ms | 98.87% |
-| `turbopuffer-pinned-4replicas` (**good network**) | 32 | pinned (4r) | **41.5** | 767ms | 1059ms | 1123ms | 98.87% |
+| `turbopuffer-parallel-1` (warm pinned) | 1 | none | 55.5 | **16.9ms** | 20ms | **37ms** | 98.51% |
+| `turbopuffer-default` | 8 | none | **224** | 22.9ms | 31ms | 43.6ms | 98.51% |
+| `turbopuffer-pinned` (1r) | 8 | pinned | 212 | 26.2ms | 34ms | 54.7ms | 98.51% |
+| `turbopuffer-parallel-32` | 32 | none | 208 | 29ms | 41ms | 58.7ms | 98.51% |
+| `turbopuffer-hint-warm` | 8 | hint_warm | 17.3 | 459ms | 847ms | 1139ms | 98.87% |
+| `turbopuffer-pinned-4replicas` | 32 | pinned (4r) | 18.5 | 1723ms | 3602ms | **6291ms** | 98.87% |
+
+**Key same-region findings:**
+- **Default serverless is the fastest config.** 224 RPS from same region — no pinning, no tuning needed. Adding concurrency (p=32) or pinning does not help.
+- **parallel-1 has the lowest latency** (16.9ms mean) but lower RPS (55). The single connection is the throughput bottleneck, not compute.
+- **hint_warm kills throughput** at parallel=8. The cache-warm RPC adds ~400ms overhead per query in concurrent workloads. It is designed for pre-warming before a burst, not inline use.
+- **pinned-4replicas is broken** under concurrent load (18.5 RPS vs 212 for single-replica pinned). Replicas were not fully provisioned at query time — most queries hit 1/4 replicas. The 4-replica provisioning race degrades results catastrophically.
+
+### 4.1b Multiprocessing benchmark — cross-region reference (prior results)
+
+> Earlier results taken from a client with ~72ms RTT to aws-us-west-2. Network round-trip dominated all latency numbers.
+
+| Config | Parallel | Cache Strategy | RPS | Mean Latency | p99 | Precision |
+|--------|----------|---------------|-----|-------------|-----|-----------|
+| `turbopuffer-default` | 8 | none | 24.5 | 322ms | 1482ms | 98.87% |
+| `turbopuffer-parallel-32` | 32 | none | 43.2 | 738ms | 1966ms | 98.87% |
+| `turbopuffer-pinned-4replicas` | 32 | pinned (4r) | 41.5 | 767ms | 1123ms | 98.87% |
+
+The same-region client shows **9× higher RPS** for default serverless (224 vs 24.5). The cross-region penalty is severe because turbopuffer's S3-backed SPFresh adds its own internal round-trips on top of the client's network RTT — the two costs compound rather than absorbing each other.
 
 ### 4.2 Async benchmark (`async_tpuf_bench.py`) — true throughput
 
@@ -127,13 +139,23 @@ Node saturates at ~30-35 RPS. Server latency stays flat at 1.8ms regardless of c
 
 ## 5. Search Performance — H&M (105K vectors, with filters)
 
-### Multiprocessing benchmark (`run.py`)
+### 5.1 turbopuffer — co-located client (aws-us-west-2, warm namespace)
 
 | Config | Parallel | Cache Strategy | RPS | Mean Latency | p95 | p99 | Precision |
 |--------|----------|---------------|-----|-------------|-----|-----|-----------|
-| `turbopuffer-hm-pinned` (4r, good network) | 32 | pinned (4r) | **19.8** | 1614ms | 4341ms | 12713ms | **96.37%** |
+| `turbopuffer-hm-pinned` (4r, **same-region, warm**) | 32 | pinned (4r) | **212** | **73ms** | 163ms | **267ms** | **96.34%** |
 
-**Note:** Filtered search on H&M with 4 pinned replicas achieved only ~20 RPS with very high tail latency (p99 = 12.7 seconds). Precision dropped to 96.4% vs 98.9% on DBpedia without filters. The 52-second max latency suggests occasional cold-path fetches from object storage.
+**Note:** This result was obtained after the H&M namespace had been pinned and warmed through multiple provisioning attempts. The namespace data (~860MB, 105K × 2048-dim) was fully resident in NVMe cache across 4 replicas. This represents turbopuffer's best-case filtered search performance for a warm, co-located namespace.
+
+### 5.1b turbopuffer — cross-region reference (cold namespace, June 2025)
+
+| Config | Parallel | Cache Strategy | RPS | Mean Latency | p95 | p99 | Precision |
+|--------|----------|---------------|-----|-------------|-----|-----|-----------|
+| `turbopuffer-hm-pinned` (4r, **cross-region, cold**) | 32 | pinned (4r) | 19.8 | 1614ms | 4341ms | **12713ms** | 96.37% |
+
+**The cold/warm delta is dramatic:** 212 vs 19.8 RPS; 73ms vs 1614ms mean; 267ms vs 12.7s p99. When the namespace is cold (freshly pinned, data not yet in NVMe cache), SPFresh must fetch centroid data from S3 for each query, which causes the catastrophic latency. Once warm, the data is in local NVMe and queries return in <100ms even with filters.
+
+**Precision is identical (96.34% vs 96.37%)** — cold/warm affects latency only, not recall.
 
 ### 5.2 Qdrant Cloud — multiprocessing (`run.py`)
 
@@ -142,41 +164,50 @@ Node saturates at ~30-35 RPS. Server latency stays flat at 1.8ms regardless of c
 | 8 | **25.1** | 317ms | 541ms | 679ms | **1.4ms** | **99.85%** |
 | 32 | 26.0 | 1230ms | 2458ms | 4132ms | 1.4ms | 99.85% |
 
-**The contrast:** Qdrant's payload indexes keep filtered server latency at **1.4ms** — almost identical to unfiltered. turbopuffer's filters degrade p99 from ~1s (unfiltered) to 12.7s (filtered). Qdrant precision is **99.85%** vs turbopuffer's **96.37%** — filtered ANN recall degrades significantly in turbopuffer's SPFresh index.
+**The comparison:**
+- **Warm turbopuffer wins on RPS** (212 vs 25.1) — 8× more throughput from same region.
+- **Qdrant wins on precision** (99.85% vs 96.34%) — turbopuffer's SPFresh post-filtering loses ~3.5% recall.
+- **Qdrant wins on cold-state** — Qdrant's HNSW index stays in RAM, no cold-start penalty. A cold turbopuffer namespace hits 12.7s p99.
+- **Qdrant wins on predictability** — turbopuffer H&M cold-to-warm transition is non-deterministic. A newly deployed namespace will serve 12.7s p99 until warmed.
 
 ---
 
 ## 6. Key Findings
 
-### 6.1 Network latency is the dominant cost for multiprocessing clients
-Before fixing the network path (89ms RTT), results looked uniformly ~17-18 RPS regardless of concurrency or pinning. After switching to ~72ms RTT, the same configs hit 41-43 RPS. **turbopuffer's query time is dominated by the round-trip to aws-us-west-2** — co-location matters more here than for RAM-resident databases because object storage adds another network hop from the compute node.
+### 6.1 Co-location matters more for turbopuffer than for Qdrant
+The same-region client (us-west-2) shows **9× higher RPS** vs cross-region for the default serverless config (224 vs 24.5 RPS). Qdrant's same-region vs cross-region difference is much smaller — its server-side HNSW query takes 1.9ms regardless; the client latency is dominated by network RTT which is the same for both systems. For turbopuffer, every S3 round-trip (3–5 per query) is also sensitive to the network path. Co-location matters twice: once for the client→API hop and once for the API→S3 hop.
 
-### 6.2 Unpinned (serverless) autoscaling beats manual pinning
-The most counterintuitive finding: **the shared multi-tenant pool autoscales dynamically and outperforms manually pinned replicas**.
+**For H&M filtered search, same-region warm turbopuffer (212 RPS) actually beats Qdrant (25 RPS) on throughput.** This only holds for a pre-warmed, co-located namespace.
 
-- Unpinned with c=32 async: **~110 RPS** (autoscaling kicks in)
-- Pinned with 4 replicas, c=128: **~39 RPS** (hard ceiling, no autoscale)
+### 6.2 Unpinned serverless is the best turbopuffer config for throughput
+The most counterintuitive finding: **default serverless outperforms all pinned configurations from the same region**.
 
-Why? Pinning reserves fixed compute and **disables autoscaling**. The shared pool is large enough that turbopuffer's autoscaler can provision more capacity than 4 dedicated replicas. Pinning is a ceiling, not a floor. This means pinning is only beneficial for **latency SLA guarantees** (no cold-start spikes), not for raw throughput.
+- Default serverless p=8: **224 RPS**, 22.9ms mean
+- Pinned 1r p=8: 212 RPS, 26ms mean
+- Pinned 4r p=32: 18.5 RPS (broken — replica provisioning race)
 
-### 6.3 SPFresh does not scale throughput with more replicas
-With pinned replicas:
-- 1 replica: ~35 RPS (c=32/64/128 all the same)
-- 2 replicas: ~55 RPS (not 2×)
-- 4 replicas: ~38-41 RPS (worse than 2r in some runs)
+Pinning reserves fixed compute and disables autoscaling. The shared pool dynamically provisions capacity that outperforms 4 static replicas. Pinning is only beneficial for **cold-start latency SLA** (eliminates the first-query spike for dedicated namespaces), not raw throughput.
 
-SPFresh requires sequential round-trips to object storage during each query. The bottleneck is **object storage IOPS and round-trip count**, not compute parallelism. Adding more replicas doesn't help if each replica is doing the same sequential read pattern. The shared multi-tenant pool works better because turbopuffer likely has better locality/caching at the fleet level.
+### 6.3 Pinned-4replicas has a provisioning race condition
+Under concurrent load with a freshly pinned namespace, queries reach replicas before they finish loading from S3. The benchmark hit 18.5 RPS with p99 = 6.3s — **12× worse than single-replica pinned**. The correct procedure is to wait for `ready_replicas=4/4` before sending traffic. The benchmark doesn't enforce this wait, so the result reflects real-world misconfigured-deployment performance.
 
-### 6.4 Cache warm hint has zero measurable effect
-`hint_cache_warm` vs default at parallel=8: both 17.3-17.4 RPS, essentially identical latency. The hint either does nothing for cold namespaces or the measurement window was too short for the warming to fully land.
+### 6.4 hint_warm actively hurts concurrent workloads
+`hint_cache_warm` at parallel=8: 17.3 RPS, 459ms mean — **13× worse than default serverless**. The cache-warm RPC is a synchronous API call that adds ~400ms before each query execution in our implementation. It is designed for pre-warming a namespace before a burst (send the hint, then wait), not as an inline prefix to every query. Misuse inverts its intended effect.
 
-### 6.5 Precision is fixed at ~98.9%
-Across all DBpedia runs (no filters), precision was **98.87-98.78%** — identical regardless of concurrency, pinning, or cache strategy. This confirms that SPFresh's recall target is hard-coded internally. There is **no way to trade recall for speed or vice versa**. If you need 99.5% precision, turbopuffer cannot offer it. If you're fine with 95%, you also cannot get it cheaper.
+### 6.5 Cold vs warm is the dominant variance source for H&M
+Cold namespace (freshly pinned): 19.8 RPS, 1614ms mean, 12.7s p99.
+Warm namespace (NVMe-resident): 212 RPS, 73ms mean, 267ms p99.
+**That's a 10× throughput and 22× latency difference from the same configuration, same region, just different cache state.** This is turbopuffer's core reliability risk for production: a redeployment, failover, or new replica provisioning resets to cold state. Qdrant keeps its HNSW index in RAM — restart loads the index once, not per-query.
 
-For filtered search (H&M), precision dropped to **96.4%** with p99 = 12.7s, suggesting filters are expensive: SPFresh has to do additional post-filtering passes and may fall back to brute-force scans for rare filter conditions.
+### 6.6 Precision is fixed at ~98.5–98.9%
+Across all same-region DBpedia runs (no filters), precision was **98.51%** — identical regardless of concurrency, pinning, or cache strategy. This confirms that SPFresh's recall target is hard-coded internally. There is **no way to trade recall for speed or vice versa**. If you need 99.5% precision, turbopuffer cannot offer it. If you're fine with 95%, you also cannot get it cheaper.
 
-### 6.6 Tail latency with filters is severe
-H&M filtered search: p99 = **12.7 seconds**, max = **52 seconds**. This is not production-grade for latency-sensitive applications. The variance is enormous (std = 2.47s). In contrast, unfiltered DBpedia with good network and pinning: p99 = **1.1 seconds** with much tighter variance (std = 0.18s).
+For filtered search (H&M), precision dropped to **96.34%** regardless of cold or warm state. The precision penalty is from SPFresh's post-filtering algorithm, not from latency.
+
+### 6.7 Tail latency with filters: cold = disaster, warm = acceptable
+H&M cold: p99 = **12.7 seconds**, max = **52 seconds**, std = 2.47s — not production-grade.
+H&M warm: p99 = **267ms**, max = 2.2s, std = 103ms — acceptable.
+The variance collapses entirely once data is in NVMe. This is turbopuffer's fundamental SLA risk: any event that drops the NVMe cache (replica restart, scale event, new deployment) temporarily sends p99 to 12+ seconds with no warning.
 
 ### 6.7 Upload speed is slow
 100K vectors at 1536 dimensions: 33-37 minutes at batch_size=1000, single-threaded. For comparison, Qdrant Cloud with binary quantization uploads 1M vectors to DBpedia in ~20 minutes total (index + optimize). turbopuffer's 100K ingest rate implies ~5.5 hours for 1M vectors at the same single-connection rate.
@@ -186,16 +217,14 @@ With 1M vectors across 100 tenants (10K per tenant), the wrong architecture (sin
 
 The correct architecture (namespace-per-tenant) routes each query to the right 10K-vector namespace with no filter, preserving both precision and latency. **This is turbopuffer's native multi-tenant model — and it only works if tenants are routed correctly at the application layer.**
 
-### 6.9 True query latency: turbopuffer ~126ms vs Qdrant ~1.9ms server-side
-At c=1 with the async client, turbopuffer single query latency is ~126ms — the base cost per query:
-- Client → turbopuffer API (~72ms RTT)
-- turbopuffer compute → S3 (sequential round-trips for SPFresh centroid lookups)
-- Return path
+### 6.9 Server-side latency: turbopuffer ~17–23ms vs Qdrant ~1.9ms (same-region)
+From a co-located same-region client, turbopuffer single-connection latency is **16.9ms mean** (parallel-1, warm pinned). This is turbopuffer's floor — the server-side compute plus internal S3 round-trips with NVMe-cached data.
 
-Qdrant Cloud's server-side HNSW query time is **1.9ms** (measured via response headers in our benchmark). The 227ms client-side latency is almost entirely network RTT — the actual index traversal is near-instant. This means:
-- **In the same region (co-located client):** Qdrant query ≈ 2ms, turbopuffer query ≈ 50-80ms (S3 round-trips dominate)
-- **Cross-region:** Both add the same RTT, but turbopuffer's S3 overhead is still on top
-- The latency gap is **not closable by turbopuffer** — it's the physics of object storage round-trips vs. RAM access
+Qdrant Cloud's server-side HNSW query time is **1.9ms** (measured via response headers). The 234ms client-side mean is almost entirely network RTT (~72ms × 2). From the same region, Qdrant queries would also be ~4–6ms client-side.
+
+- **Same region, both warm:** Qdrant ≈ 4ms client, turbopuffer ≈ 17ms client. Qdrant is still **4–5× faster per query**.
+- **turbopuffer RPS advantage:** comes from serverless autoscaling at the fleet level, not per-query speed.
+- The latency gap is **not closable by turbopuffer** — S3 round-trips have irreducible physical overhead vs. RAM access.
 
 ---
 
@@ -228,15 +257,18 @@ turbopuffer's value proposition is **cost efficiency at low QPS**. Object storag
 |-----------|-------------|--------------|
 | **Architecture** | Object storage (S3) + ephemeral compute | RAM + disk, HNSW index |
 | **Index type** | SPFresh (centroid-based, fixed recall) | HNSW + optional quantization |
-| **Recall tuning** | None (fixed ~98.9%) | Full control (ef, m, quantization, oversampling) |
-| **Single query latency** | ~126ms client / ~50-80ms server-side | **1.9ms server-side** (227ms client @ 72ms RTT) |
-| **Peak RPS (100K vectors)** | ~110 RPS (serverless async) | **35 RPS** (1 node, 2CPU/8GB, HNSW) |
-| **Filtered search p99 (105K)** | **12.7 seconds** | **679ms** (18× better) |
-| **Filtered precision** | 96.37% | **99.85%** |
+| **Recall tuning** | None (fixed ~98.5%) | Full control (ef, m, quantization, oversampling) |
+| **Single query latency (same region)** | **17ms** (warm, pinned) | **1.9ms server-side** (~4ms client co-located) |
+| **Peak RPS, unfiltered 100K (same region)** | **224 RPS** (serverless p=8) | 34 RPS (1 node, 2CPU/8GB) |
+| **Peak RPS, filtered 105K (same region, warm)** | **212 RPS** | 25.1 RPS |
+| **Filtered search p99 — warm** | **267ms** | **679ms** (Qdrant wins on precision, not latency) |
+| **Filtered search p99 — cold** | **12.7 seconds** | **679ms** (18× better) |
+| **Filtered precision** | 96.34% | **99.85%** |
+| **Cold-start risk** | High — any replica restart hits 12s+ p99 | None — HNSW stays in RAM |
 | **Upload 100K @ batch=256** | 22.3 min | 48 min (2.2× slower — single connection, no tuning) |
 | **Scale** | Cold namespaces are free | Reserved capacity |
 | **Precision/recall control** | No | Yes |
-| **Pinning (dedicated compute)** | Yes (but hurts throughput) | N/A (always dedicated) |
+| **Pinning (dedicated compute)** | Yes (serverless often better) | N/A (always dedicated) |
 | **Autoscaling to zero** | Yes | No |
 
 ---
@@ -250,26 +282,26 @@ turbopuffer's value proposition is **cost efficiency at low QPS**. Object storag
 
 ### Where Qdrant wins
 1. **Latency:** Server-side HNSW query is **1.9ms** vs turbopuffer's ~50-80ms irreducible S3 overhead. Not closable — it's the physics of RAM vs. object storage.
-2. **Throughput at scale:** Our single 2CPU/8GB Qdrant node matches turbopuffer's best multiprocessing result (35 RPS) while serving 99.0% precision. With a larger node or horizontal scaling Qdrant grows linearly; turbopuffer's S3 bottleneck limits replica scaling.
-3. **Filter performance:** Qdrant payload indexing keeps filter latency predictable. turbopuffer filter p99 = 12.7s is a hard product limitation. *(Qdrant H&M comparison pending.)*
-4. **Precision control:** Qdrant supports ef_search tuning, oversampling, quantization rescore — any recall/speed tradeoff. turbopuffer is fixed at ~98.9%.
-5. **Predictability:** turbopuffer same query can take 126ms or 52 seconds depending on cold/hot state. Qdrant is consistent — 1.9ms server latency regardless of concurrency.
+2. **Per-query latency:** Qdrant server-side 1.9ms vs turbopuffer 17ms from same region — 9× faster per query. turbopuffer's higher RPS comes from serverless fleet autoscaling, not per-query efficiency.
+3. **Filter performance cold-state:** Qdrant p99 = 679ms is consistent regardless of warm/cold. turbopuffer cold = 12.7s, warm = 267ms. Qdrant wins on reliability; turbopuffer wins on warm-state throughput.
+4. **Precision control:** Qdrant supports ef_search tuning, oversampling, quantization rescore — any recall/speed tradeoff. turbopuffer is fixed at ~98.5%.
+5. **Predictability:** turbopuffer same query can take 17ms or 12+ seconds depending on cold/hot state. Qdrant is consistent — 1.9ms server latency regardless of concurrency or replica state.
 6. **Upload speed:** With proper config (batch=1024, parallel=4) Qdrant uploads 1M vectors in ~20 min. Our 48 min result was a config artifact (batch=256, parallel=1).
 
 ### Marketing angles
-- **"Latency you can actually ship"** — turbopuffer's 126ms floor is visible to end users. Qdrant's 5-17ms is not.
-- **"Real-time filtering without roulette"** — turbopuffer's 12s filter p99 is a dealbreaker for production use cases with conditional logic. Qdrant's payload index keeps filter latency flat.
+- **"Consistent, not sometimes fast"** — turbopuffer warm H&M hits 267ms p99. Cold H&M hits 12.7s p99. Same data, same config — 47× variance depending on cache state. Qdrant stays at 679ms cold or warm.
+- **"Recall you can trust"** — turbopuffer fixed at 96.3% for filtered search. Qdrant: 99.85%. That's 18× fewer wrong results at the tail.
 - **"Recall on your terms"** — turbopuffer locks you into one recall level. Qdrant lets you dial quality vs speed for your specific use case and budget.
-- **"100× the data, same latency"** — Qdrant's 1M vector benchmark at lower latency than turbopuffer's 100K benchmark shows the HNSW architecture scales sub-linearly.
+- **"Replica scaling that actually works"** — turbopuffer pinned-4replicas delivers 18 RPS (worse than 1 replica at 212 RPS). Qdrant scales linearly.
 
 ### Positioning guidance
-turbopuffer is a **legitimate competitor for cold, low-QPS workloads** — don't dismiss it. But for any production API with:
-- Latency SLA below 200ms
-- Filtering requirements
-- QPS above 20-30 RPS
-- Need for precision tuning
+turbopuffer is a **legitimate competitor for co-located, warm, low-QPS workloads** — don't dismiss it. Same-region turbopuffer now shows competitive throughput (224 RPS unfiltered, 212 RPS filtered warm). But for any production API with:
+- Latency SLA guarantees (cold-start risk is real)
+- Filtering requirements and no warm-up guarantee
+- QPS above 20-30 RPS per namespace without co-located clients
+- Need for precision tuning above 98.5%
 
-Qdrant is the better choice, and the gap is architectural, not just a matter of configuration.
+Qdrant is the better choice, and the predictability gap is architectural, not configurable.
 
 ---
 

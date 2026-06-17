@@ -1,0 +1,22 @@
+{
+  "params": {
+    "dataset": "random-768-100-tenants",
+    "experiment": "turbopuffer-multitenant-single-ns",
+    "engine": "turbopuffer",
+    "parallel": 32
+  },
+  "results": {
+    "total_time": 15.371941442999969,
+    "mean_time": 0.1805388494000033,
+    "mean_precisions": 0.809,
+    "std_time": 0.1763326877412213,
+    "min_time": 0.08861538899986954,
+    "max_time": 1.1460497630000646,
+    "rps": 13.010718310475703,
+    "p1_time": 0.08978811387005407,
+    "p10_time": 0.0951254767999444,
+    "p25_time": 0.1005334534999065,
+    "p95_time": 0.43229016480003624,
+    "p99_time": 0.8814375093299849
+  }
+}
