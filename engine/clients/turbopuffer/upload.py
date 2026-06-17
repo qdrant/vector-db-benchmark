@@ -1,10 +1,14 @@
-from typing import List
+import time
+from collections import defaultdict
+from typing import Iterable, List
 
+import tqdm
 import turbopuffer as tpuf
 
 from dataset_reader.base_reader import Record
 from engine.base_client.distances import Distance
 from engine.base_client.upload import BaseUploader
+from engine.base_client.utils import iter_batches
 from engine.clients.turbopuffer.config import (
     TURBOPUFFER_API_KEY,
     TURBOPUFFER_REGION,
@@ -52,6 +56,43 @@ class TurbopufferUploader(BaseUploader):
                 f"{cls.base_namespace}-{tenant_value}"
             )
         return cls.namespaces[tenant_value]
+
+    def upload(self, distance, records: Iterable[Record]) -> dict:
+        # For namespace-per-tenant mode: group all records by tenant first so
+        # each namespace receives large sequential batches instead of tiny
+        # scattered sub-batches (100x fewer API calls).
+        if not self.connection_params.get("namespace_field"):
+            return super().upload(distance, records)
+
+        self.init_client(self.host, distance, self.connection_params, self.upload_params)
+        batch_size = self.upload_params.get("batch_size", 1000)
+        latencies = []
+        start = time.perf_counter()
+
+        tenant_field = self.connection_params["namespace_field"]
+        buckets: dict = defaultdict(list)
+        for record in tqdm.tqdm(records, desc="Grouping by tenant"):
+            tenant = record.metadata.get(tenant_field) if record.metadata else None
+            buckets[tenant].append(record)
+
+        print(f"Grouped into {len(buckets)} tenants, uploading...")
+        for tenant_records in tqdm.tqdm(buckets.values(), desc="Tenants"):
+            for batch in iter_batches(tenant_records, batch_size):
+                latencies.append(self._upload_batch(batch))
+
+        upload_time = time.perf_counter() - start
+        print(f"Upload time: {upload_time}")
+        print("Experiment stage: Post-upload")
+        post_upload_stats = self.post_upload(distance)
+        total_time = time.perf_counter() - start
+        print(f"Total import time: {total_time}")
+        self.delete_client()
+        return {
+            "post_upload": post_upload_stats,
+            "upload_time": upload_time,
+            "total_time": total_time,
+            "latencies": latencies,
+        }
 
     @classmethod
     def upload_batch(cls, batch: List[Record]):
