@@ -1,0 +1,14 @@
+{
+  "params": {
+    "experiment": "turbopuffer-default",
+    "engine": "turbopuffer",
+    "dataset": "dbpedia-openai-100K-1536-angular",
+    "parallel": 1,
+    "batch_size": 1000
+  },
+  "results": {
+    "post_upload": {},
+    "upload_time": 2237.2454781449997,
+    "total_time": 2237.245492484999
+  }
+}

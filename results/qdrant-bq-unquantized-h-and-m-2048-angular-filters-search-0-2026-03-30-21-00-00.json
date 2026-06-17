@@ -1,0 +1,27 @@
+{
+  "params": {
+    "dataset": "h-and-m-2048-angular-filters",
+    "experiment": "qdrant-bq-unquantized",
+    "engine": "qdrant",
+    "parallel": 1,
+    "config": {
+      "hnsw_ef": 128,
+      "quantization": {
+        "ignore": false,
+        "rescore": true,
+        "oversampling": 1.0
+      }
+    }
+  },
+  "results": {
+    "total_time": 811.0155836860004,
+    "mean_time": 0.07994736587060507,
+    "mean_precisions": 0.8420799999999999,
+    "std_time": 0.13826260963392298,
+    "min_time": 0.002176760000111244,
+    "max_time": 1.3803505690002567,
+    "rps": 12.330219296836205,
+    "p95_time": 0.3599015903001597,
+    "p99_time": 0.7532763401594912
+  }
+}

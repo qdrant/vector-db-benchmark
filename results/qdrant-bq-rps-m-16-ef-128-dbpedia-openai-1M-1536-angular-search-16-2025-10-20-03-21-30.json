@@ -1,0 +1,26 @@
+{
+  "params": {
+    "dataset": "dbpedia-openai-1M-1536-angular",
+    "experiment": "qdrant-bq-rps-m-16-ef-128",
+    "engine": "qdrant",
+    "parallel": 100,
+    "config": {
+      "hnsw_ef": 64,
+      "quantization": {
+        "rescore": true,
+        "oversampling": 1.0
+      }
+    }
+  },
+  "results": {
+    "total_time": 15.182338311999047,
+    "mean_time": 0.02522137566460224,
+    "mean_precisions": 0.9019799999999999,
+    "std_time": 0.03707127088845439,
+    "min_time": 0.009654166000473197,
+    "max_time": 0.2718221729992365,
+    "rps": 329.33003449464394,
+    "p95_time": 0.060048948949406634,
+    "p99_time": 0.24096022029907546
+  }
+}

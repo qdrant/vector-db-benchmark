@@ -5,6 +5,7 @@ __pycache__
 NOTES.md
 
 results/*
+!results/*.json
 tools/custom/data.json
 
 ansible/playbooks/inventory.ini

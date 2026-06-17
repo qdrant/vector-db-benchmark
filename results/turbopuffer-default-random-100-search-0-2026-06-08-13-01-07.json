@@ -1,0 +1,19 @@
+{
+  "params": {
+    "dataset": "random-100",
+    "experiment": "turbopuffer-default",
+    "engine": "turbopuffer",
+    "parallel": 8
+  },
+  "results": {
+    "total_time": 4.445726750998801,
+    "mean_time": 0.19083297259985557,
+    "mean_precisions": 1.0,
+    "std_time": 0.08796123882034552,
+    "min_time": 0.08126703899870336,
+    "max_time": 0.2715157500006171,
+    "rps": 2.249351019550031,
+    "p95_time": 0.2698230659998444,
+    "p99_time": 0.27117721320046256
+  }
+}

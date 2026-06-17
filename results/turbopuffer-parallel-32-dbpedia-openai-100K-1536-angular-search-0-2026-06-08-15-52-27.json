@@ -1,0 +1,19 @@
+{
+  "params": {
+    "dataset": "dbpedia-openai-100K-1536-angular",
+    "experiment": "turbopuffer-parallel-32",
+    "engine": "turbopuffer",
+    "parallel": 32
+  },
+  "results": {
+    "total_time": 277.5685938380011,
+    "mean_time": 1.766171386739232,
+    "mean_precisions": 0.98872,
+    "std_time": 1.7872042857229726,
+    "min_time": 0.2823964540002635,
+    "max_time": 62.416013130001375,
+    "rps": 18.013565334838198,
+    "p95_time": 3.851951894601007,
+    "p99_time": 6.6599872378174805
+  }
+}

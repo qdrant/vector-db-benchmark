@@ -1,0 +1,19 @@
+{
+  "params": {
+    "experiment": "qdrant-bq-default",
+    "engine": "qdrant",
+    "dataset": "dbpedia-openai-1M-1536-angular",
+    "parallel": 16,
+    "batch_size": 1024,
+    "quantization_config": {
+      "binary": {
+        "always_ram": true
+      }
+    }
+  },
+  "results": {
+    "post_upload": {},
+    "upload_time": 191.65283467500012,
+    "total_time": 1139.7358535370004
+  }
+}

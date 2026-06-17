@@ -1,0 +1,20 @@
+{
+  "params": {
+    "experiment": "qdrant-bq-unquantized",
+    "engine": "qdrant",
+    "dataset": "h-and-m-2048-angular-filters",
+    "parallel": 16,
+    "batch_size": 1024,
+    "quantization_config": {
+      "binary": {
+        "always_ram": true,
+        "query_encoding": "unquantized"
+      }
+    }
+  },
+  "results": {
+    "post_upload": {},
+    "upload_time": 108.74619200999996,
+    "total_time": 1618.6909147260003
+  }
+}

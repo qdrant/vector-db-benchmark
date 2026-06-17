@@ -1,0 +1,24 @@
+{
+  "params": {
+    "dataset": "h-and-m-2048-angular-filters",
+    "experiment": "turbopuffer-hm-pinned",
+    "engine": "turbopuffer",
+    "parallel": 32,
+    "cache_strategy": "pinned",
+    "pinned_replicas": 4
+  },
+  "results": {
+    "total_time": 504.8980210979971,
+    "mean_time": 1.6137124722811924,
+    "mean_precisions": 0.96369251676241,
+    "std_time": 2.4681086973416186,
+    "min_time": 0.15815680000014254,
+    "max_time": 52.26149977000023,
+    "rps": 19.805979786280588,
+    "p1_time": 0.27888111871237925,
+    "p10_time": 0.48245471439950055,
+    "p25_time": 0.7130805130000226,
+    "p95_time": 4.340663420101737,
+    "p99_time": 12.712778803580711
+  }
+}

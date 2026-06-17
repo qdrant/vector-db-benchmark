@@ -1,0 +1,23 @@
+{
+  "params": {
+    "dataset": "dbpedia-openai-100K-1536-angular",
+    "experiment": "turbopuffer-pinned",
+    "engine": "turbopuffer",
+    "parallel": 8,
+    "cache_strategy": "pinned"
+  },
+  "results": {
+    "total_time": 278.0911200549999,
+    "mean_time": 0.4431822634730241,
+    "mean_precisions": 0.98872,
+    "std_time": 0.18976106426385128,
+    "min_time": 0.1517472909981734,
+    "max_time": 1.8062162399983208,
+    "rps": 17.979718298847935,
+    "p1_time": 0.20058531974740618,
+    "p10_time": 0.25988672940147806,
+    "p25_time": 0.313813787500294,
+    "p95_time": 0.8295188418014735,
+    "p99_time": 1.068103302000091
+  }
+}

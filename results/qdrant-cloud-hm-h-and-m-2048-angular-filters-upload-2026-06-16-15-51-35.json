@@ -1,0 +1,22 @@
+{
+  "params": {
+    "experiment": "qdrant-cloud-hm",
+    "engine": "qdrant",
+    "dataset": "h-and-m-2048-angular-filters",
+    "parallel": 1,
+    "batch_size": 128,
+    "hnsw_config": {
+      "m": 16,
+      "ef_construct": 128
+    },
+    "optimizers_config": {
+      "memmap_threshold": 10000000,
+      "max_optimization_threads": 0
+    }
+  },
+  "results": {
+    "post_upload": {},
+    "upload_time": 4383.1769208869955,
+    "total_time": 4855.671157731995
+  }
+}

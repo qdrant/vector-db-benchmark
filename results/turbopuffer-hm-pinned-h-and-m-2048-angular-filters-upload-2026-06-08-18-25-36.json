@@ -1,0 +1,14 @@
+{
+  "params": {
+    "experiment": "turbopuffer-hm-pinned",
+    "engine": "turbopuffer",
+    "dataset": "h-and-m-2048-angular-filters",
+    "parallel": 1,
+    "batch_size": 500
+  },
+  "results": {
+    "post_upload": {},
+    "upload_time": 1028.5368957169994,
+    "total_time": 1028.5369815829981
+  }
+}

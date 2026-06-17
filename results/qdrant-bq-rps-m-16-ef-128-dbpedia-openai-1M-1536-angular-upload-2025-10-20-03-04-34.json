@@ -1,0 +1,28 @@
+{
+  "params": {
+    "experiment": "qdrant-bq-rps-m-16-ef-128",
+    "engine": "qdrant",
+    "dataset": "dbpedia-openai-1M-1536-angular",
+    "parallel": 16,
+    "batch_size": 1024,
+    "optimizers_config": {
+      "max_segment_size": 1000000,
+      "memmap_threshold": 10000000,
+      "default_segment_number": 2
+    },
+    "hnsw_config": {
+      "m": 16,
+      "ef_construct": 128
+    },
+    "quantization_config": {
+      "binary": {
+        "always_ram": true
+      }
+    }
+  },
+  "results": {
+    "post_upload": {},
+    "upload_time": 283.630660326,
+    "total_time": 1211.3577954079992
+  }
+}

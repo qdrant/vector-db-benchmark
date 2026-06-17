@@ -1,0 +1,14 @@
+{
+  "params": {
+    "experiment": "turbopuffer-default",
+    "engine": "turbopuffer",
+    "dataset": "random-100",
+    "parallel": 1,
+    "batch_size": 1000
+  },
+  "results": {
+    "post_upload": {},
+    "upload_time": 0.9900223450003978,
+    "total_time": 0.9900897080005961
+  }
+}
