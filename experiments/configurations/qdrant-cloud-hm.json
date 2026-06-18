@@ -33,6 +33,7 @@
       }
     },
     "search_params": [
+      { "parallel": 1, "config": { "hnsw_ef": 128 } },
       { "parallel": 8, "config": { "hnsw_ef": 128 } },
       { "parallel": 32, "config": { "hnsw_ef": 128 } }
     ],

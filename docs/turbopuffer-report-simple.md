@@ -10,7 +10,7 @@ From the same AWS region, Qdrant on a single 2CPU/8GB node delivers **365 RPS at
 
 turbopuffer's value proposition is different: **scale-to-zero cost** for inactive namespaces and multi-tenant SaaS patterns where most tenants are idle. It's not a better search engine — it's a cheaper storage tier for sporadic traffic. The tradeoff has two hard edges: cold-state collapse (12.7s p99 for filtered search after any restart) and fixed recall (~96–98.9%, not tunable).
 
-**For production APIs:** Qdrant wins on every performance axis (throughput, latency, p99, precision). **For multi-tenant SaaS with sparse query patterns:** turbopuffer's cost model is compelling if you can tolerate cold-start risk.
+**For production APIs:** Qdrant wins on every performance axis — unfiltered (365 vs 224 RPS) and filtered (318 vs 212 RPS warm, 318 vs 19.8 RPS cold), with better p99 and precision throughout. **For multi-tenant SaaS with sparse query patterns:** turbopuffer's cost model is compelling if you can tolerate cold-start risk and lower precision.
 
 ---
 
@@ -23,10 +23,10 @@ turbopuffer's value proposition is different: **scale-to-zero cost** for inactiv
 | Peak RPS — unfiltered 100K | 224 RPS (serverless p=8) | **365 RPS** (2CPU/8GB node, p=8) |
 | Single-connection RPS | 55.5 RPS | **134 RPS** |
 | Single-connection mean latency | 16.9ms | **6.3ms** |
-| Peak RPS — filtered 105K, **warm** | **212 RPS** | 25 RPS (same small node) |
-| Peak RPS — filtered 105K, **cold** | 19.8 RPS | 25 RPS |
-| Filtered search p99 — **warm** | **267ms** | **679ms** |
-| Filtered search p99 — **cold** | **12.7 seconds** | **679ms** (18× better) |
+| Peak RPS — filtered 105K, **warm** | 212 RPS | **318 RPS** |
+| Peak RPS — filtered 105K, **cold** | 19.8 RPS | **318 RPS** (no cold-start) |
+| Filtered search p99 — **warm** | 267ms | **76ms** (3.5× better) |
+| Filtered search p99 — **cold** | **12.7 seconds** | **76ms** (167× better) |
 | Filtered precision | 96.34% | **99.85%** |
 | Upload 100K @ batch=256 | 22.3 min | 48 min (2.2× slower — single connection) |
 | Recall/precision control | None (fixed ~98.5%) | Full (ef, quantization, oversampling) |
@@ -73,16 +73,21 @@ turbopuffer's value proposition is different: **scale-to-zero cost** for inactiv
 #### turbopuffer (pinned 4 replicas, p=32)
 | State | RPS | Mean | p95 | p99 | Precision |
 |-------|-----|------|-----|-----|-----------|
-| **Warm (NVMe-cached)** | **212 RPS** | **73ms** | 163ms | **267ms** | 96.34% |
+| **Warm (NVMe-cached)** | 212 RPS | 73ms | 163ms | 267ms | 96.34% |
 | Cold (fresh namespace) | 19.8 RPS | 1614ms | 4341ms | **12,713ms** | 96.37% |
 
-#### Qdrant Cloud (1 node 2CPU/8GB, HNSW ef=128)
+#### Qdrant Cloud (1 node 2CPU/8GB, HNSW ef=128) — same-region
 | Parallel | RPS | Mean | p95 | p99 | Server Latency | Precision |
 |----------|-----|------|-----|-----|----------------|-----------|
-| 8 | 25.1 | 317ms | 541ms | **679ms** | **1.4ms** | **99.85%** |
-| 32 | 26.0 | 1230ms | 2458ms | 4132ms | 1.4ms | 99.85% |
+| 1 | 20.7 | 46.7ms | 58.6ms | 62.4ms | 1.4ms | **99.85%** |
+| 8 | 160.5 | 49.0ms | 61.4ms | 69.5ms | 1.4ms | **99.85%** |
+| **32** | **318.7 RPS** | **48.1ms** | 69.7ms | **76.3ms** | 1.5ms | **99.85%** |
 
-**Qdrant is always 679ms p99 — warm or cold.** turbopuffer is 267ms warm but 12.7s cold. turbopuffer wins on warm-state throughput (212 vs 25 RPS) but loses on precision (96.3% vs 99.85%) and cold-state reliability.
+> **Note:** June 16 results (25 RPS, 317ms mean) were from hotel WiFi (~115ms RTT). Above are same-region numbers.
+
+**Qdrant wins on all three dimensions:** 318 RPS vs 212 RPS, 76ms p99 vs 267ms p99, and 99.85% vs 96.34% precision — on a single 2CPU/8GB node, warm or cold.
+
+The mean latency for filtered queries (~48ms) is 7× higher than unfiltered (~6ms) because Qdrant must scan payload indexes across 22 fields before the HNSW rescore step. Server-side time is still only 1.4ms in the response header, suggesting the payload scan time isn't included in that metric.
 
 ---
 

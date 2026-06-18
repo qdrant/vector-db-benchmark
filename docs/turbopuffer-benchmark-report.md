@@ -160,18 +160,23 @@ The same-region client shows **9× higher RPS** for default serverless (224 vs 2
 
 **Precision is identical (96.34% vs 96.37%)** — cold/warm affects latency only, not recall.
 
-### 5.2 Qdrant Cloud — multiprocessing (`run.py`)
+### 5.2 Qdrant Cloud — multiprocessing (`run.py`) — same-region (aws-us-west-2)
 
 | Parallel | RPS | Mean Latency | p95 | p99 | Server Latency | Precision |
 |----------|-----|-------------|-----|-----|----------------|-----------|
-| 8 | **25.1** | 317ms | 541ms | 679ms | **1.4ms** | **99.85%** |
-| 32 | 26.0 | 1230ms | 2458ms | 4132ms | 1.4ms | 99.85% |
+| 1 | 20.7 | 46.7ms | 58.6ms | 62.4ms | **1.4ms** | **99.85%** |
+| 8 | 160.5 | 49.0ms | 61.4ms | 69.5ms | **1.4ms** | **99.85%** |
+| **32** | **318.7 RPS** | **48.1ms** | 69.7ms | **76.3ms** | 1.5ms | **99.85%** |
 
-**The comparison:**
-- **Warm turbopuffer wins on RPS** (212 vs 25.1) — 8× more throughput from same region.
-- **Qdrant wins on precision** (99.85% vs 96.34%) — turbopuffer's SPFresh post-filtering loses ~3.5% recall.
-- **Qdrant wins on cold-state** — Qdrant's HNSW index stays in RAM, no cold-start penalty. A cold turbopuffer namespace hits 12.7s p99.
-- **Qdrant wins on predictability** — turbopuffer H&M cold-to-warm transition is non-deterministic. A newly deployed namespace will serve 12.7s p99 until warmed.
+> **Note:** June 16 results (25 RPS, 317ms mean) were from hotel WiFi (~115ms RTT). Above are same-region numbers from tpuf-bench.
+
+**The revised comparison:**
+- **Qdrant wins on RPS** (318 vs 212 for warm turbopuffer) — 1.5× more throughput.
+- **Qdrant wins on p99** (76ms vs 267ms warm turbopuffer) — 3.5× better tail latency.
+- **Qdrant wins on cold-state** (318 RPS vs 19.8 RPS cold turbopuffer) — 16× better throughput, and no cold-start risk.
+- **Qdrant wins on precision** (99.85% vs 96.34%) — SPFresh post-filtering loses ~3.5% recall.
+
+**The ~48ms mean latency** (vs 6ms for unfiltered) reflects Qdrant's payload index scan across 22 indexed fields before the HNSW rescore. The `server_time` header (1.4ms) likely captures only the HNSW portion; payload filtering overhead is real but client-measurable.
 
 ---
 
@@ -265,9 +270,9 @@ turbopuffer's value proposition is **cost efficiency at low QPS**. Object storag
 | **Recall tuning** | None (fixed ~98.5%) | Full control (ef, m, quantization, oversampling) |
 | **Single query latency (same region)** | 17ms (warm, pinned) | **6.3ms** (measured, same-region p=1) |
 | **Peak RPS, unfiltered 100K (same region)** | 224 RPS (serverless p=8) | **365 RPS** (1 node, 2CPU/8GB, p=8) |
-| **Peak RPS, filtered 105K (same region, warm)** | **212 RPS** | 25.1 RPS |
-| **Filtered search p99 — warm** | **267ms** | **679ms** (Qdrant wins on precision, not latency) |
-| **Filtered search p99 — cold** | **12.7 seconds** | **679ms** (18× better) |
+| **Peak RPS, filtered 105K (same region, warm)** | 212 RPS | **318 RPS** |
+| **Filtered search p99 — warm** | 267ms | **76ms** (3.5× better) |
+| **Filtered search p99 — cold** | **12.7 seconds** | **76ms** (167× better) |
 | **Filtered precision** | 96.34% | **99.85%** |
 | **Cold-start risk** | High — any replica restart hits 12s+ p99 | None — HNSW stays in RAM |
 | **Upload 100K @ batch=256** | 22.3 min | 48 min (2.2× slower — single connection, no tuning) |
