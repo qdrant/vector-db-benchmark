@@ -27,6 +27,16 @@ async def main():
         region=os.environ.get("TURBOPUFFER_REGION", "aws-us-west-2"),
     )
     ns = client.namespace("$COLD_NS")
+    # Delete if already exists so we get a guaranteed-cold fresh copy
+    try:
+        await ns.delete_all_indexes()
+        print(f"Deleted existing '$COLD_NS'")
+        await asyncio.sleep(2)  # brief pause before re-creating
+    except Exception as e:
+        if "404" in str(e) or "not found" in str(e).lower() or "does not exist" in str(e).lower():
+            pass  # namespace didn't exist, fine
+        else:
+            print(f"Note: delete returned: {e}")
     t0 = time.perf_counter()
     await ns.copy_from(source_namespace="$SOURCE_NS")
     print(f"copy_from done in {(time.perf_counter()-t0)*1000:.0f}ms")
