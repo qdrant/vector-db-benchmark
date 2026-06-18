@@ -72,18 +72,21 @@ Qdrant's H&M upload is slower due to the 2048-dim vectors (larger payloads per b
 
 > All results in this section were taken from a benchmark client in the **same AWS region (us-west-2)** as turbopuffer and Qdrant Cloud. This is the fair, representative comparison — prior cross-region results are preserved below for reference.
 
-| Config | Parallel | Cache Strategy | RPS | Mean Latency | p95 | p99 | Precision |
-|--------|----------|---------------|-----|-------------|-----|-----|-----------|
-| `turbopuffer-parallel-1` (warm pinned) | 1 | none | 55.5 | **16.9ms** | 20ms | **37ms** | 98.51% |
-| `turbopuffer-default` | 8 | none | **224** | 22.9ms | 31ms | 43.6ms | 98.51% |
-| `turbopuffer-pinned` (1r) | 8 | pinned | 212 | 26.2ms | 34ms | 54.7ms | 98.51% |
-| `turbopuffer-parallel-32` | 32 | none | 208 | 29ms | 41ms | 58.7ms | 98.51% |
-| `turbopuffer-hint-warm` | 8 | hint_warm | 17.3 | 459ms | 847ms | 1139ms | 98.87% |
-| `turbopuffer-pinned-4replicas` | 32 | pinned (4r) | 18.5 | 1723ms | 3602ms | **6291ms** | 98.87% |
+| Config | Parallel | Cache Strategy | RPS | Mean Latency | p95 | p99 | Max (cold spike) | Precision |
+|--------|----------|---------------|-----|-------------|-----|-----|-----------------|-----------|
+| `turbopuffer-parallel-1` (warm) | 1 | none | 55.5 | **16.9ms** | 20ms | **37ms** | — | 98.51% |
+| `turbopuffer-default` (warm) | 8 | none | **224** | 22.9ms | 31ms | 43.6ms | — | 98.51% |
+| `turbopuffer-pinned` (1r, warm) | 8 | pinned | 212 | 26.2ms | 34ms | 54.7ms | — | 98.51% |
+| `turbopuffer-parallel-32` (warm) | 32 | none | 208 | 29ms | 41ms | 58.7ms | — | 98.51% |
+| **`turbopuffer-cold` p=1 (cold start)** | 1 | none | **48** | 19.6ms | 26ms | 60.8ms | **6,292ms** | 98.51% |
+| **`turbopuffer-cold` p=8 (cold start)** | 8 | none | **222** | 22.8ms | 31ms | 51.8ms | **119ms** | 98.51% |
+| `turbopuffer-hint-warm` | 8 | hint_warm | 17.3 | 459ms | 847ms | 1139ms | — | 98.87% |
+| `turbopuffer-pinned-4replicas` | 32 | pinned (4r) | 18.5 | 1723ms | 3602ms | **6291ms** | — | 98.87% |
 
 **Key same-region findings:**
 - **Default serverless is the fastest config.** 224 RPS from same region — no pinning, no tuning needed. Adding concurrency (p=32) or pinning does not help.
 - **parallel-1 has the lowest latency** (16.9ms mean) but lower RPS (55). The single connection is the throughput bottleneck, not compute.
+- **Unfiltered cold start is a transient spike, not sustained.** Cold p=1 shows 6.3s max (first query), but aggregate mean is only 19.6ms — barely above warm (16.9ms). SPFresh loads ~14 centroid blocks for unfiltered DBpedia; once loaded, all subsequent queries hit NVMe cache. Cold p=8 (222 RPS) is nearly indistinguishable from warm (224 RPS). Contrast with H&M filtered cold (19.8 RPS, 12.7s p99) where each filtered query forces different centroid regions — there is no convergence to warm.
 - **hint_warm kills throughput** at parallel=8. The cache-warm RPC adds ~400ms overhead per query in concurrent workloads. It is designed for pre-warming before a burst, not inline use.
 - **pinned-4replicas is broken** under concurrent load (18.5 RPS vs 212 for single-replica pinned). Replicas were not fully provisioned at query time — most queries hit 1/4 replicas. The 4-replica provisioning race degrades results catastrophically.
 

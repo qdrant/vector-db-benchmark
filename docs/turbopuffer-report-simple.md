@@ -48,14 +48,16 @@ turbopuffer's value proposition is different: **scale-to-zero cost** for inactiv
 ### Search — DBpedia, no filters (same-region benchmark client)
 
 #### turbopuffer
-| Mode | RPS | Mean Latency | p99 | Precision |
-|------|-----|-------------|-----|-----------|
-| **Serverless p=8** | **224 RPS** | **22.9ms** | 43.6ms | 98.51% |
-| Pinned 1r p=8 | 212 RPS | 26ms | 54.7ms | 98.51% |
-| Serverless p=32 | 208 RPS | 29ms | 58.7ms | 98.51% |
-| Single conn p=1 (warm) | 55.5 RPS | 16.9ms | 37ms | 98.51% |
-| hint_warm p=8 | 17 RPS | 459ms | 1139ms | 98.87% |
-| Pinned 4r p=32 | 18.5 RPS | 1.7s | 6.3s | 98.87% |
+| Mode | RPS | Mean Latency | p99 | Max (cold spike) | Precision |
+|------|-----|-------------|-----|-----------------|-----------|
+| **Serverless p=8 (warm)** | **224 RPS** | **22.9ms** | 43.6ms | — | 98.51% |
+| Pinned 1r p=8 (warm) | 212 RPS | 26ms | 54.7ms | — | 98.51% |
+| Serverless p=32 (warm) | 208 RPS | 29ms | 58.7ms | — | 98.51% |
+| Single conn p=1 (warm) | 55.5 RPS | 16.9ms | 37ms | — | 98.51% |
+| **Serverless p=8 (cold start)** | **222 RPS** | 22.8ms | 51.8ms | **119ms** | 98.51% |
+| Serverless p=1 (cold start) | 48 RPS | 19.6ms | 60.8ms | **6,292ms** | 98.51% |
+| hint_warm p=8 | 17 RPS | 459ms | 1139ms | — | 98.87% |
+| Pinned 4r p=32 | 18.5 RPS | 1.7s | 6.3s | — | 98.87% |
 
 #### Qdrant Cloud (1 node, 2CPU/8GB, HNSW ef=128) — same-region (aws-us-west-2)
 | Mode | RPS | Mean Latency | p95 | p99 | Server Latency | Precision |
@@ -66,7 +68,9 @@ turbopuffer's value proposition is different: **scale-to-zero cost** for inactiv
 
 > **Note:** Earlier June 16 results (35 RPS, 227ms mean) were collected from a client in India (~230ms RTT to us-west-2). Above numbers are from the same-region benchmark server.
 
-**The key number:** Qdrant's 1.9ms server latency vs turbopuffer's ~50–80ms irreducible S3 overhead. Everything else in the client latency is network RTT, same for both.
+**Cold start behavior for unfiltered search:** The aggregate cold stats (222 RPS, 51ms p99) look nearly warm because SPFresh loads only ~14 centroid blocks to cover unfiltered DBpedia — after those load in the first ~20 queries, all subsequent queries hit NVMe cache. The max=6.3s (p=1) and max=119ms (p=8) reveal the cold spike on the very first queries. **Unfiltered cold = transient spike.** This is completely different from filtered (H&M), where each filter condition forces traversal of different centroid regions, keeping cold latency catastrophic throughout.
+
+**The key number:** Qdrant's 1.9ms server latency vs turbopuffer's ~17ms irreducible NVMe floor. Everything else in the client latency is network RTT, same for both.
 
 ### Search — H&M, with filters (105K vectors, same-region)
 

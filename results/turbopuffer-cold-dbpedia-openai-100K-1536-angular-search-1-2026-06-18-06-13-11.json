@@ -1,0 +1,22 @@
+{
+  "params": {
+    "dataset": "dbpedia-openai-100K-1536-angular",
+    "experiment": "turbopuffer-cold",
+    "engine": "turbopuffer",
+    "parallel": 8
+  },
+  "results": {
+    "total_time": 22.48497563499768,
+    "mean_time": 0.022847752228163154,
+    "mean_precisions": 0.98514,
+    "std_time": 0.006506699126271536,
+    "min_time": 0.012786797000444494,
+    "max_time": 0.11948743899847614,
+    "rps": 222.37071016512647,
+    "p1_time": 0.015244513600082428,
+    "p10_time": 0.01752363699997659,
+    "p25_time": 0.019264112001110334,
+    "p95_time": 0.031272814053227196,
+    "p99_time": 0.05178625226006265
+  }
+}
