@@ -174,6 +174,23 @@ From `update_metadata(pinning={"replicas": 1})` to serving warm queries:
 
 `ready_replicas=1` means compute is provisioned, **not** that NVMe is warm. A correct deployment must run a warmup pass after confirming replica readiness. This is the root cause of the pinned-4replicas failure (18 RPS): traffic arrived before replicas finished loading.
 
+### S3 access structure
+
+We probed S3 access patterns using the guaranteed-cold namespace from `copy_from`, logging per-query latency across 500 queries. The cold warmup curve reveals how SPFresh fetches centroid data:
+
+| Observation | Value | Interpretation |
+|-------------|-------|----------------|
+| First-query cold overhead | **876ms** (893ms − 17ms warm) | Root index + first centroid tier loaded from S3 |
+| High-latency spikes (>100ms) in first 50 queries | **14 distinct events** | Each = one uncached centroid block fetched from S3 |
+| Per-spike overhead | 100–900ms | Cost of fetching one centroid tree block cold |
+| Warm floor (NVMe-only) | **13–22ms** | No S3 — all centroid data in local NVMe cache |
+
+**What this means:** turbopuffer fetches ~14 centroid blocks from S3 during the first 50 queries to a cold namespace. Each block fetch is a separate high-latency event. Once a block is in NVMe, all future queries touching that region pay the warm NVMe cost (~1ms), not the S3 cost.
+
+**Why filtered H&M cold is 12.7s p99:** Filtered queries must walk more of the centroid tree (to satisfy the filter condition), touching far more distinct centroid regions. Each uncached region triggers an S3 fetch. Unfiltered cold = ~14 distinct S3 fetches across 50 queries; filtered cold = many more, stacked per query.
+
+**Round-trip count:** We cannot determine exact S3 round-trips per query without knowing turbopuffer's internal VPC-to-S3 latency. Their compute nodes use a VPC endpoint (~0.3–1ms), not the internet path (~5ms). The cold warmup curve is the correct instrument: it directly measures the real cost turbopuffer's infrastructure pays.
+
 ---
 
 ## Where Qdrant Wins (and Why It's Permanent)

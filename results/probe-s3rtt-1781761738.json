@@ -1,0 +1,12 @@
+{
+  "experiment": "s3_roundtrip_estimate",
+  "warm_query_mean_ms": 15.937367789993004,
+  "warm_query_p50_ms": 13.99654050146637,
+  "api_tcp_rtt_ms": 2.7004158999261563,
+  "s3_get_reuse_ms": 4.945577574653726,
+  "s3_get_fresh_ms": 4.352913899856503,
+  "tpuf_server_time_ms": 13.236951890066848,
+  "s3_time_budget_ms": 11.236951890066848,
+  "roundtrips_upper": 2.3,
+  "roundtrips_lower": 22.5
+}

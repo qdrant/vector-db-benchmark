@@ -306,15 +306,23 @@ Qdrant Cloud's single-connection same-region latency is **6.3ms mean, 9.1ms p99*
 ```
 Client → turbopuffer API Gateway → Compute Node → Object Storage (S3)
                                         ↑
-                               SPFresh: sequential
-                               centroid round-trips
-                               (~3-5 per query)
+                               SPFresh: per-centroid lazy
+                               caching from S3/NVMe
 ```
 
-Each SPFresh query requires multiple round-trips to S3 to walk the centroid index. Each round-trip adds ~10-30ms. This is the fundamental latency floor and the reason:
-- Queries can't get below ~80-100ms at best
-- Throughput doesn't scale linearly with replicas (same S3 bucket is the shared bottleneck)
-- Filters add disproportionate cost (extra passes over different S3 objects)
+Each SPFresh query walks a centroid index. **Warm (NVMe-cached):** all centroid blocks are in local NVMe cache → ~13–22ms floor. **Cold (first access):** each uncached centroid block must be fetched from S3 first → 893ms for query 0, noisy middle section as regions warm lazily.
+
+The cold warmup curve (from `copy_from` cold-copy experiment) reveals the access structure:
+- ~14 distinct S3 centroid-block fetches across the first 50 queries to a cold namespace
+- First query cold overhead: ~876ms (893ms cold − 17ms warm floor)
+- Stable warm state reached at ~q26 (~11 seconds), q75 for full warm floor
+
+Note: We cannot count exact S3 round-trips without knowing turbopuffer's internal VPC-to-S3 latency. The bench server's measurement of public S3 endpoints (~5ms internet path) is not a valid proxy for turbopuffer's VPC endpoint path (~0.3–1ms). The cold warmup curve is the correct instrument for observing S3 access structure.
+
+This is the fundamental latency floor and the reason:
+- Warm floor is ~13–22ms (NVMe read time for centroid tree traversal)
+- Cold-state queries 12s+ p99 for H&M filtered (many centroid regions touched per filtered query)
+- Filters add disproportionate cold cost: they require walking more centroid regions across more S3 objects
 - The system is optimized for low infrastructure cost, not low latency
 
 ### The cost model trade-off
