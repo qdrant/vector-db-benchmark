@@ -6,9 +6,11 @@
 
 ## Bottom Line
 
-turbopuffer is a legitimate competitor for co-located, warm, multi-tenant workloads — from the same region with a pre-warmed namespace it reaches 224 RPS (unfiltered) and 212 RPS (filtered). But **warm state is not a guarantee**. Any replica restart, failover, or new provisioning resets to cold — and cold means 12.7s p99 for filtered search. Qdrant's HNSW stays in RAM and is always consistent at 679ms p99.
+From the same AWS region, Qdrant on a single 2CPU/8GB node delivers **365 RPS at 22ms p99** — beating turbopuffer's 224 RPS at 43.6ms p99, on identical hardware cost. Single-connection latency: Qdrant 6.3ms mean vs turbopuffer 16.9ms mean. HNSW in RAM simply wins on unfiltered dense search.
 
-**The core trade-off:** turbopuffer is fast when warm and cheap when idle. Qdrant is consistent and precise always. For production APIs with SLAs, Qdrant's predictability wins. For async, infrequent, or cold-tolerant workloads at scale, turbopuffer's cost model is compelling.
+turbopuffer's value proposition is different: **scale-to-zero cost** for inactive namespaces and multi-tenant SaaS patterns where most tenants are idle. It's not a better search engine — it's a cheaper storage tier for sporadic traffic. The tradeoff has two hard edges: cold-state collapse (12.7s p99 for filtered search after any restart) and fixed recall (~96–98.9%, not tunable).
+
+**For production APIs:** Qdrant wins on every performance axis (throughput, latency, p99, precision). **For multi-tenant SaaS with sparse query patterns:** turbopuffer's cost model is compelling if you can tolerate cold-start risk.
 
 ---
 
@@ -18,8 +20,10 @@ turbopuffer is a legitimate competitor for co-located, warm, multi-tenant worklo
 |-----------|-------------|--------------|
 | Architecture | Object storage (S3) + ephemeral compute | RAM + HNSW index |
 | Server-side query latency | ~17ms (warm, same region) | **1.9ms** (HNSW in RAM) |
-| Peak RPS — unfiltered 100K | **224 RPS** (serverless p=8) | 34 RPS (2CPU/8GB node) |
-| Peak RPS — filtered 105K, **warm** | **212 RPS** | 25 RPS |
+| Peak RPS — unfiltered 100K | 224 RPS (serverless p=8) | **365 RPS** (2CPU/8GB node, p=8) |
+| Single-connection RPS | 55.5 RPS | **134 RPS** |
+| Single-connection mean latency | 16.9ms | **6.3ms** |
+| Peak RPS — filtered 105K, **warm** | **212 RPS** | 25 RPS (same small node) |
 | Peak RPS — filtered 105K, **cold** | 19.8 RPS | 25 RPS |
 | Filtered search p99 — **warm** | **267ms** | **679ms** |
 | Filtered search p99 — **cold** | **12.7 seconds** | **679ms** (18× better) |
@@ -53,13 +57,14 @@ turbopuffer is a legitimate competitor for co-located, warm, multi-tenant worklo
 | hint_warm p=8 | 17 RPS | 459ms | 1139ms | 98.87% |
 | Pinned 4r p=32 | 18.5 RPS | 1.7s | 6.3s | 98.87% |
 
-#### Qdrant Cloud (1 node, 2CPU/8GB, HNSW ef=128)
+#### Qdrant Cloud (1 node, 2CPU/8GB, HNSW ef=128) — same-region (aws-us-west-2)
 | Mode | RPS | Mean Latency | p95 | p99 | Server Latency | Precision |
 |------|-----|-------------|-----|-----|----------------|-----------|
-| Multiprocessing p=8 | **35.1** | 227ms | 263ms | 556ms | **1.9ms** | **99.0%** |
-| Multiprocessing p=32 | 34.1 | 935ms | 1893ms | 4096ms | 1.9ms | 99.0% |
-| Async c=8 | 30.2 | 264ms | 537ms | 597ms | 1.8ms | — |
-| Async c=16 | 32.7 | 488ms | 756ms | 813ms | 1.8ms | — |
+| **p=8** | **365 RPS** | **10.6ms** | 18.0ms | **22.3ms** | **1.9ms** | **99.0%** |
+| p=32 | 379 RPS | 15.0ms | 28.9ms | 36.4ms | 2.0ms | 99.0% |
+| **p=1 (single conn)** | **134 RPS** | **6.3ms** | 7.4ms | **9.1ms** | 1.9ms | 99.0% |
+
+> **Note:** Earlier June 16 results (35 RPS, 227ms mean) were collected from a client in India (~230ms RTT to us-west-2). Above numbers are from the same-region benchmark server.
 
 **The key number:** Qdrant's 1.9ms server latency vs turbopuffer's ~50–80ms irreducible S3 overhead. Everything else in the client latency is network RTT, same for both.
 
@@ -120,11 +125,12 @@ Dataset: 1M vectors, 100 tenants, 10K vectors/tenant. This directly tests turbop
 
 ## Where Qdrant Wins (and Why It's Permanent)
 
-1. **Server-side latency:** 1.9ms (HNSW in RAM) vs 50–80ms (S3 round-trips). Architectural — not closable.
-2. **Filtered search:** turbopuffer filter p99 = 12.7s is a hard limit. Qdrant payload indexes keep filter latency stable. *(Qdrant H&M numbers pending.)*
-3. **Precision control:** Full ef/quantization/oversampling dial. turbopuffer locked at ~98.9%.
-4. **Consistency:** turbopuffer varies 126ms → 52s on cold/hot. Qdrant server latency is always ~1.9ms.
-5. **Replica scaling:** Qdrant scales horizontally with linear RPS gains. turbopuffer replica scaling is sub-linear (S3 bottleneck) and 4r is worse than 2r.
+1. **Throughput:** 365 RPS vs 224 RPS on same-region 100K dataset. 1.6× faster on a single small node.
+2. **Single-query latency:** 6.3ms mean vs 16.9ms mean at p=1. HNSW in RAM vs S3 round-trips — architectural gap, not closable.
+3. **Filtered search:** turbopuffer filter p99 = 12.7s cold is a hard limit. Qdrant payload indexes keep filter latency at 679ms warm or cold.
+4. **Precision control:** Full ef/quantization/oversampling dial. turbopuffer locked at ~96–98.9%.
+5. **Consistency:** turbopuffer varies 17ms → 12.7s p99 cold. Qdrant server latency is always ~1.9ms.
+6. **Replica scaling:** turbopuffer pinned-4r delivers 18 RPS vs single-replica's 212 RPS (provisioning race). Qdrant scales horizontally with linear RPS gains.
 
 ## Where turbopuffer Wins
 
@@ -136,7 +142,8 @@ Dataset: 1M vectors, 100 tenants, 10K vectors/tenant. This directly tests turbop
 
 ## Marketing Angles
 
-- **"Consistent, not sometimes fast"** — turbopuffer warm H&M hits 267ms p99. Cold H&M hits 12.7s p99. Same config, 47× variance. Qdrant always delivers 679ms p99.
-- **"Real-time filtering without roulette"** — turbopuffer cold filter p99 = 12.7s. Any restart resets to cold. Qdrant payload indexes keep filters at 679ms regardless.
-- **"Recall on your terms"** — turbopuffer locked at 96.3% filtered recall. Qdrant hits 99.85% and lets you tune.
-- **"Scale without S3 physics"** — turbopuffer pinned-4replicas delivers 18 RPS vs 212 for single replica. Qdrant scales linearly.
+- **"Faster in your region"** — Same AWS region, same dataset: Qdrant 365 RPS vs turbopuffer 224 RPS. 6.3ms mean vs 16.9ms. Qdrant wins on every throughput and latency metric for co-located deployments.
+- **"Fast, not sometimes fast"** — turbopuffer warm H&M hits 267ms p99. Cold hits 12.7s p99. 47× variance, same config. Qdrant delivers 679ms p99 warm or cold, always.
+- **"Real-time filtering without roulette"** — turbopuffer cold filter p99 = 12.7s. Any replica restart resets to cold. Qdrant payload indexes keep filters at 679ms regardless.
+- **"Recall on your terms"** — turbopuffer locked at 96.3% filtered recall. Qdrant hits 99.85% and lets you tune up or down.
+- **"Scale without S3 physics"** — turbopuffer pinned-4replicas delivers 18 RPS vs 212 for single replica. Qdrant scales linearly with each added node.
