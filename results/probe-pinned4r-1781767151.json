@@ -1,0 +1,79 @@
+{
+  "experiment": "pinned_4r_correct_warmup",
+  "namespace": "dbpedia-openai-100K-1536-angular",
+  "replicas": 4,
+  "queries_per_level": 300,
+  "n_warmup_queries": 26,
+  "results": [
+    {
+      "concurrency": 1,
+      "n_queries": 300,
+      "total_time_s": 5.147,
+      "rps": 58.3,
+      "mean_ms": 17.1,
+      "p50_ms": 16.3,
+      "p95_ms": 21.0,
+      "p99_ms": 34.1
+    },
+    {
+      "concurrency": 4,
+      "n_queries": 300,
+      "total_time_s": 1.302,
+      "rps": 230.4,
+      "mean_ms": 17.2,
+      "p50_ms": 16.0,
+      "p95_ms": 25.2,
+      "p99_ms": 43.5
+    },
+    {
+      "concurrency": 8,
+      "n_queries": 300,
+      "total_time_s": 0.74,
+      "rps": 405.5,
+      "mean_ms": 18.8,
+      "p50_ms": 17.4,
+      "p95_ms": 28.4,
+      "p99_ms": 44.8
+    },
+    {
+      "concurrency": 16,
+      "n_queries": 300,
+      "total_time_s": 0.634,
+      "rps": 472.9,
+      "mean_ms": 30.1,
+      "p50_ms": 29.1,
+      "p95_ms": 46.8,
+      "p99_ms": 71.7
+    },
+    {
+      "concurrency": 32,
+      "n_queries": 300,
+      "total_time_s": 0.699,
+      "rps": 429.0,
+      "mean_ms": 63.1,
+      "p50_ms": 55.3,
+      "p95_ms": 129.8,
+      "p99_ms": 157.8
+    },
+    {
+      "concurrency": 64,
+      "n_queries": 300,
+      "total_time_s": 0.666,
+      "rps": 450.5,
+      "mean_ms": 110.3,
+      "p50_ms": 89.1,
+      "p95_ms": 299.6,
+      "p99_ms": 342.7
+    },
+    {
+      "concurrency": 128,
+      "n_queries": 300,
+      "total_time_s": 0.739,
+      "rps": 405.7,
+      "mean_ms": 226.2,
+      "p50_ms": 155.2,
+      "p95_ms": 568.8,
+      "p99_ms": 582.7
+    }
+  ]
+}

@@ -165,6 +165,24 @@ We swept concurrency p=1→64 on a warm pinned 1-replica namespace and serverles
 - **Serverless routes across multiple pool nodes** — at p=8, serverless (429 RPS) already outperforms pinned (348 RPS). Keeps scaling to ~500 RPS at p=16. You're not hitting one node.
 - **Single-connection is identical** — p=1 is 58 RPS for both; the difference only appears under concurrent load.
 
+### Pinned 4-replica sweep (correct warmup)
+
+The earlier 4r result (18.5 RPS) was broken — traffic hit replicas before NVMe warmed. We re-ran with a proper warmup pass after `ready_replicas=4/4`, then swept concurrency:
+
+| p | RPS | Mean | p99 | Scale vs p=1 |
+|---|-----|------|-----|-------------|
+| 1 | 58 RPS | 17ms | 34ms | 1.00× |
+| 4 | 230 RPS | 17ms | 44ms | 3.95× |
+| **8** | **405 RPS** | 19ms | **45ms** | **6.96×** |
+| 16 | **473 RPS** | 30ms | 72ms | **8.11×** — peak |
+| 32 | 429 RPS | 63ms | 158ms | 7.36× |
+| 64 | 451 RPS | 110ms | 343ms | 7.73× |
+
+- **Peak: 473 RPS at p=16** — 2.23× the broken single-replica baseline (212 RPS), not 4×.
+- **4 replicas ≠ 4× throughput.** Scaling is sub-linear because the bottleneck is NVMe read bandwidth across replicas, not CPU cores per se. Each replica still runs SPFresh sequentially; routing 4× more load gives ~2.2× gain until NVMe saturates.
+- **p99 degrades sharply at p=32+** — each replica's NVMe queue backs up. Queue depth, not CPU, is the ceiling.
+- **Correctly-deployed 4r still loses to Qdrant**: 473 RPS vs 365 RPS for Qdrant's single 2CPU/8GB node.
+
 ### Replica boot timing
 
 From `update_metadata(pinning={"replicas": 1})` to serving warm queries:
@@ -176,7 +194,7 @@ From `update_metadata(pinning={"replicas": 1})` to serving warm queries:
 | Rolling warm state (<20ms) | ~11 queries (~2 seconds) |
 | **Total: pin → warm serving** | **~90–100 seconds** |
 
-`ready_replicas=1` means compute is provisioned, **not** that NVMe is warm. A correct deployment must run a warmup pass after confirming replica readiness. This is the root cause of the pinned-4replicas failure (18 RPS): traffic arrived before replicas finished loading.
+`ready_replicas=1` means compute is provisioned, **not** that NVMe is warm. A correct deployment must run a warmup pass after confirming replica readiness. The original broken benchmark (18 RPS) skipped this step.
 
 ### S3 access structure
 

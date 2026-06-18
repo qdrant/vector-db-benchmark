@@ -208,12 +208,32 @@ The most counterintuitive finding: **default serverless outperforms all pinned c
 
 - Default serverless p=8: **224 RPS**, 22.9ms mean
 - Pinned 1r p=8: 212 RPS, 26ms mean
-- Pinned 4r p=32: 18.5 RPS (broken — replica provisioning race)
+- Pinned 4r p=32: 18.5 RPS (broken — replica provisioning race; see §6.3)
+- **Pinned 4r p=8 (correct warmup): 405 RPS; peak 473 RPS at p=16** (see §6.3b)
 
-Pinning reserves fixed compute and disables autoscaling. The shared pool dynamically provisions capacity that outperforms 4 static replicas. Pinning is only beneficial for **cold-start latency SLA** (eliminates the first-query spike for dedicated namespaces), not raw throughput.
+Pinning reserves fixed compute and disables autoscaling. A correctly-warmed 4r config reaches 473 RPS, beating both default serverless (224 RPS) and Qdrant p=8 (365 RPS). But it requires pinning cost + warmup management overhead.
 
 ### 6.3 Pinned-4replicas has a provisioning race condition
-Under concurrent load with a freshly pinned namespace, queries reach replicas before they finish loading from S3. The benchmark hit 18.5 RPS with p99 = 6.3s — **12× worse than single-replica pinned**. The correct procedure is to wait for `ready_replicas=4/4` before sending traffic. The benchmark doesn't enforce this wait, so the result reflects real-world misconfigured-deployment performance.
+Under concurrent load with a freshly pinned namespace, queries reach replicas before they finish loading from S3. The benchmark hit 18.5 RPS with p99 = 6.3s — **12× worse than single-replica pinned**. The correct procedure is to wait for `ready_replicas=4/4` before sending traffic, then run a warmup pass. The benchmark doesn't enforce this, so that result reflects real-world misconfigured-deployment performance.
+
+### 6.3b Pinned 4-replica sweep with correct warmup
+
+After implementing the correct sequence (pin → wait for all 4 replicas ready → warmup pass → benchmark):
+
+| p | RPS | Mean | p95 | p99 | Scale |
+|---|-----|------|-----|-----|-------|
+| 1 | 58.3 | 17.1ms | 21.0ms | 34.1ms | 1.00× |
+| 4 | 230.4 | 17.2ms | 25.2ms | 43.5ms | 3.95× |
+| **8** | **405.5** | **18.8ms** | **28.4ms** | 44.8ms | 6.96× |
+| 16 | **472.9** | 30.1ms | 46.8ms | 71.7ms | **8.11×** — peak |
+| 32 | 429.0 | 63.1ms | 129.8ms | 157.8ms | 7.36× |
+| 64 | 450.5 | 110.3ms | 299.6ms | 342.7ms | 7.73× |
+
+**Key findings:**
+- **Peak 473 RPS at p=16** — 2.23× the broken 1r baseline (212 RPS), not the 4× one might expect.
+- **Sub-linear replica scaling.** NVMe read bandwidth becomes the bottleneck before cores do. Each additional replica adds capacity but shares the same per-query centroid traversal pattern, and at high concurrency the NVMe queue saturates. p32+ sees p99 degrade sharply (158ms → 343ms).
+- **Correctly-deployed 4r vs Qdrant:** 473 RPS vs 365 RPS for Qdrant's single 2CPU/8GB node — turbopuffer wins here, but at the cost of 4 dedicated replicas (4× resource spend) vs Qdrant's single node.
+- **Warmup requirement is real:** 26 sequential queries needed to warm all 4 NVMe caches before stable performance. This must be encoded into any deployment runbook.
 
 ### 6.4 hint_warm actively hurts concurrent workloads
 `hint_cache_warm` at parallel=8: 17.3 RPS, 459ms mean — **13× worse than default serverless**. The cache-warm RPC is a synchronous API call that adds ~400ms before each query execution in our implementation. It is designed for pre-warming a namespace before a burst (send the hint, then wait), not as an inline prefix to every query. Misuse inverts its intended effect.
