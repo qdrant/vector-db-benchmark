@@ -230,7 +230,55 @@ H&M cold: p99 = **12.7 seconds**, max = **52 seconds**, std = 2.47s — not prod
 H&M warm: p99 = **267ms**, max = 2.2s, std = 103ms — acceptable.
 The variance collapses entirely once data is in NVMe. This is turbopuffer's fundamental SLA risk: any event that drops the NVMe cache (replica restart, scale event, new deployment) temporarily sends p99 to 12+ seconds with no warning.
 
-### 6.7 Upload speed is slow
+### 6.7b Cold warmup curve: per-centroid caching, ~75 queries to stable warm state
+
+Using `copy_from` to create a guaranteed-cold namespace (same 100K DBpedia vectors), then running 500 sequential queries:
+
+| Phase | Queries | Latency range | What's happening |
+|-------|---------|--------------|-----------------|
+| True cold | q0 | **893ms** | Root index + first centroid tier fetched from S3 |
+| Patchy | q1–q10 | 67–351ms | Per-query centroid caching — each query warms only the centroid regions it walks |
+| Mixed | q11–q74 | 18–251ms | High variance: cached centroids fast, uncached regions still slow |
+| Stable warm | q75+ | **13–22ms** | Full warm floor |
+
+**Warmup is per-centroid, not a global pre-fetch.** SPFresh does not bulk-load index data on first query — it caches only the centroid nodes actually traversed. This explains the noisy middle section: the same query vector region may be warm while an orthogonal region is still cold. After ~75 queries (~15 seconds), enough of the centroid tree is cached to yield consistently warm latency.
+
+**Cold first query for DBpedia (100K × 1536-dim): 893ms** — less severe than H&M (12.7s p99) because DBpedia is unfiltered and ~580MB vs H&M's ~860MB with additional filter passes.
+
+**`copy_from` duration: ~26 seconds.** This is the server-side time to copy the S3 objects into a new namespace, giving us a rough estimate of the cold namespace S3 data size (~580MB at typical S3 internal transfer speeds).
+
+### 6.7c Compute core count: ~6–8 cores per pinned replica; serverless uses a multi-node pool
+
+Sweeping concurrency p=1→64 on a warm pinned (1-replica) namespace vs warm serverless:
+
+| p | Pinned 1r RPS | RPS/p1 | Serverless RPS | RPS/p1 |
+|---|--------------|--------|----------------|--------|
+| 1 | 57.9 | 1.00x | 57.5 | 1.00x |
+| 2 | 120.3 | 2.08x | 116.7 | 2.03x |
+| 4 | 228.1 | 3.94x | 210.1 | 3.65x |
+| **8** | **348.3** | **6.02x** | **429.0** | **7.46x** |
+| 16 | 371.8 | 6.42x | **494.5** | **8.60x** |
+| 32 | 341.8 | 5.90x | 454.9 | 7.91x |
+| 64 | 379.3 | 6.55x | 506.8 | 8.81x |
+
+**Pinned 1-replica saturates at ~6–8 effective cores.** Scaling is nearly linear from p=1 to p=4, then flattens between p=8 and p=16 (only 1.07x gain). Peak is ~370 RPS regardless of concurrency above p=8 — the node is CPU-bound at that point.
+
+**Serverless outperforms a single pinned replica under concurrent load.** At p=8, serverless (429 RPS) beats pinned 1r (348 RPS) by 23%. Serverless keeps scaling to ~500 RPS at p=16 — it routes across multiple pool nodes dynamically rather than being bound to one fixed instance.
+
+**Single-connection throughput is identical** for both (57–58 RPS, ~17ms mean). The difference only appears at higher concurrency where the pinned node's core count becomes the ceiling.
+
+### 6.7d Replica boot time: ~80 seconds to `ready_replicas=1`, then still cold
+
+Measured by polling `ns.metadata()` every 5 seconds after `update_metadata(pinning={"replicas": 1})`:
+- **~80 seconds** (16 polls × 5s) to reach `ready_replicas=1`
+- First query after ready: **617ms** — replica is provisioned but NVMe cache is cold
+- ~11 sequential queries to reach stable warm latency (~18ms rolling mean)
+
+**Total time from pin command to serving warm queries: ~90–100 seconds.**
+
+This explains the pinned-4replicas benchmark failure (6.8): traffic arrived before replicas finished loading. `ready_replicas=N` indicates the compute node is available, but NOT that the NVMe cache is populated. A correct deployment must run a warmup pass after confirming ready status.
+
+### 6.8 Upload speed is slow
 100K vectors at 1536 dimensions: 33-37 minutes at batch_size=1000, single-threaded. For comparison, Qdrant Cloud with binary quantization uploads 1M vectors to DBpedia in ~20 minutes total (index + optimize). turbopuffer's 100K ingest rate implies ~5.5 hours for 1M vectors at the same single-connection rate.
 
 ### 6.8 Multi-tenant architecture choice has catastrophic precision impact
