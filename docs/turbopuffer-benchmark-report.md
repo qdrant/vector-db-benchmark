@@ -176,7 +176,20 @@ The same-region client shows **9× higher RPS** for default serverless (224 vs 2
 - **Qdrant wins on cold-state** (318 RPS vs 19.8 RPS cold turbopuffer) — 16× better throughput, and no cold-start risk.
 - **Qdrant wins on precision** (99.85% vs 96.34%) — SPFresh post-filtering loses ~3.5% recall.
 
-**The ~48ms mean latency** (vs 6ms for unfiltered) reflects Qdrant's payload index scan across 22 indexed fields before the HNSW rescore. The `server_time` header (1.4ms) likely captures only the HNSW portion; payload filtering overhead is real but client-measurable.
+**The ~48ms mean latency** (vs 6ms for unfiltered) reflects Qdrant's payload index scan across 22 indexed fields before the HNSW rescore. The latency distribution is bimodal:
+
+| Percentile | Latency |
+|------------|---------|
+| p1 | 4.5ms |
+| p10 | 47.7ms |
+| p25 | 48.3ms |
+| mean | 46.7ms |
+| p95 | 58.6ms |
+| p99 | 62.4ms |
+
+About 1–9% of queries return in ~4ms (the filter leaves very few candidates, making the HNSW step trivial). The remaining 90%+ take 47–62ms — the full payload-index-scan + HNSW path.
+
+**Note on `server_time`:** The 1.4ms value in Qdrant's response header reflects only the HNSW search step. The payload index scan that precedes it is not included in this metric. True end-to-end server processing time for filtered queries is closer to 44ms (46.7ms client − 4ms RTT overhead).
 
 ---
 

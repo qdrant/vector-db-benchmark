@@ -87,7 +87,7 @@ turbopuffer's value proposition is different: **scale-to-zero cost** for inactiv
 
 **Qdrant wins on all three dimensions:** 318 RPS vs 212 RPS, 76ms p99 vs 267ms p99, and 99.85% vs 96.34% precision — on a single 2CPU/8GB node, warm or cold.
 
-The mean latency for filtered queries (~48ms) is 7× higher than unfiltered (~6ms) because Qdrant must scan payload indexes across 22 fields before the HNSW rescore step. Server-side time is still only 1.4ms in the response header, suggesting the payload scan time isn't included in that metric.
+The mean latency for filtered queries (~48ms) is 7× higher than unfiltered (~6ms). The distribution is bimodal: ~1–9% of queries return in ~4ms (filter selects very few candidates → trivial HNSW), while 90%+ take 47–62ms (full payload index scan across 22 fields + HNSW rescore). The `server_time` response header (1.4ms) captures only the HNSW step — payload index scan time is not included in that metric. True server processing is ~44ms for the common path.
 
 ---
 
