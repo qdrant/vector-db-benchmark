@@ -128,14 +128,62 @@ Dataset: 1M vectors, 100 tenants, 10K vectors/tenant. This directly tests turbop
 
 ---
 
+## turbopuffer Internals (Probed)
+
+### Cold warmup curve
+
+We created a guaranteed-cold namespace via `copy_from` (copies S3 objects, no NVMe cache) and ran 500 sequential queries, recording each latency:
+
+| Phase | Queries | Latency | What's happening |
+|-------|---------|---------|-----------------|
+| True cold | q0 | **893ms** | Root index + first centroid tier fetched from S3 |
+| Patchy | q1–q10 | 67–351ms | Per-query centroid caching — each query warms only the regions it walks |
+| Mixed | q11–q74 | 18–251ms | Cached regions fast, uncached still slow |
+| Stable warm | q75+ | **13–22ms** | Full warm floor |
+
+**Key insight:** SPFresh does lazy per-centroid caching — no global pre-fetch on first query. Two queries to the same vector region benefit from each other's cache; two queries to different regions don't. This explains the noisy middle section and why H&M cold is 12.7s p99 (filters force multi-region centroid walks, touching far more uncached S3 objects).
+
+**~75 sequential queries / ~15 seconds to reach stable warm state.**
+
+### Compute core count
+
+We swept concurrency p=1→64 on a warm pinned 1-replica namespace and serverless:
+
+| p | Pinned 1r | Serverless |
+|---|-----------|-----------|
+| 1 | 58 RPS | 58 RPS |
+| 4 | 228 RPS | 210 RPS |
+| **8** | **348 RPS** | **429 RPS** |
+| 16 | 372 RPS | **495 RPS** |
+| 32 | 342 RPS | 455 RPS |
+
+- **Pinned 1-replica saturates at ~6–8 cores** — linear scaling until p=4–8, then flatlines at ~370 RPS ceiling.
+- **Serverless routes across multiple pool nodes** — at p=8, serverless (429 RPS) already outperforms pinned (348 RPS). Keeps scaling to ~500 RPS at p=16. You're not hitting one node.
+- **Single-connection is identical** — p=1 is 58 RPS for both; the difference only appears under concurrent load.
+
+### Replica boot timing
+
+From `update_metadata(pinning={"replicas": 1})` to serving warm queries:
+
+| Step | Duration |
+|------|---------|
+| `ready_replicas` = 0/1 → 1/1 | **~80 seconds** |
+| First query after ready | **617ms** (NVMe still cold) |
+| Rolling warm state (<20ms) | ~11 queries (~2 seconds) |
+| **Total: pin → warm serving** | **~90–100 seconds** |
+
+`ready_replicas=1` means compute is provisioned, **not** that NVMe is warm. A correct deployment must run a warmup pass after confirming replica readiness. This is the root cause of the pinned-4replicas failure (18 RPS): traffic arrived before replicas finished loading.
+
+---
+
 ## Where Qdrant Wins (and Why It's Permanent)
 
 1. **Throughput:** 365 RPS vs 224 RPS on same-region 100K dataset. 1.6× faster on a single small node.
 2. **Single-query latency:** 6.3ms mean vs 16.9ms mean at p=1. HNSW in RAM vs S3 round-trips — architectural gap, not closable.
-3. **Filtered search:** turbopuffer filter p99 = 12.7s cold is a hard limit. Qdrant payload indexes keep filter latency at 679ms warm or cold.
+3. **Filtered search:** turbopuffer filter p99 = 12.7s cold is a hard limit. Qdrant payload indexes keep filter latency at 76ms p99 warm or cold.
 4. **Precision control:** Full ef/quantization/oversampling dial. turbopuffer locked at ~96–98.9%.
 5. **Consistency:** turbopuffer varies 17ms → 12.7s p99 cold. Qdrant server latency is always ~1.9ms.
-6. **Replica scaling:** turbopuffer pinned-4r delivers 18 RPS vs single-replica's 212 RPS (provisioning race). Qdrant scales horizontally with linear RPS gains.
+6. **Replica scaling:** turbopuffer pinned-4r delivers 18 RPS vs single-replica's 212 RPS (provisioning race + core saturation at ~6–8 cores). Serverless pool outperforms pinned by routing across nodes. Qdrant scales horizontally with linear RPS gains.
 
 ## Where turbopuffer Wins
 
