@@ -29,7 +29,7 @@ async def main():
     ns = client.namespace("$COLD_NS")
     # Delete if already exists so we get a guaranteed-cold fresh copy
     try:
-        await ns.delete_all_indexes()
+        await ns.delete_all()
         print(f"Deleted existing '$COLD_NS'")
         await asyncio.sleep(2)  # brief pause before re-creating
     except Exception as e:
