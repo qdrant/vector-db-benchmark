@@ -109,9 +109,9 @@ The mean latency for filtered queries (~48ms) is 7× higher than unfiltered (~6m
 | High-throughput ingestion + search | Poor | 37 min to upload 100K vectors; not designed for concurrent writes + reads |
 | Hybrid sparse+dense (BM25+semantic) | Poor | No native sparse vector support |
 | Precision-sensitive (medical/legal/finance) | Poor | Fixed ~98.9% recall; cannot tune up or down |
-| Sustained high-QPS (>15 RPS/namespace) | Poor | Cost advantage disappears; latency gap remains |
+| Sustained high-QPS (>8 RPS/namespace) | Poor | Cost advantage disappears at ~8 QPS; latency gap remains |
 
-**Crossing point:** ~10–15 sustained RPS per namespace. Below → turbopuffer may save money. Above → Qdrant is cheaper and 10–30× faster.
+**Crossing point:** ~8–13 QPS sustained per namespace (dataset-dependent, see Cost Comparison below). Below → turbopuffer saves money. Above → Qdrant is cheaper and 10–30× faster.
 
 ---
 
@@ -258,6 +258,47 @@ We probed S3 access patterns using the guaranteed-cold namespace from `copy_from
 1. **Cold / idle namespaces:** Object storage backend costs near zero when not queried.
 2. **Zero-config simplicity:** No HNSW knobs — appeals to developers who want managed search without tuning.
 3. **Serverless scale-to-zero:** True pay-per-query for sporadic traffic.
+
+---
+
+## Cost Comparison: turbopuffer vs Qdrant Cloud
+
+### Pricing model
+
+| | turbopuffer (serverless) | Qdrant Cloud |
+|--|--------------------------|--------------|
+| Model | Pay-per-query + storage | Fixed monthly cluster |
+| Storage | $0.33/GB/month (f16 vectors) | Included |
+| Writes | $2/GB written (f32, batch discount) | Included |
+| Queries | $0.001/TB scanned (min 1.28 GB/namespace) + $0.05/GB returned | Unlimited |
+
+The **1.28 GB minimum namespace** means even a 308 MB namespace (100K × 1536-dim, f16) is billed as 1.28 GB for query scanning — a floor of $1.28 per million queries regardless of actual data size.
+
+### Break-even by dataset (AWS us-west-2, no quantization, top-k=10, IDs returned)
+
+| Dataset | tpuf storage/mo | tpuf $/1M queries | Qdrant cluster | Qdrant $/mo | Break-even |
+|---------|-----------------|-------------------|----------------|-------------|------------|
+| 100K × 1536-dim | $0.10 | $1.28 | 1 node, 2 GiB | $26.10 | **~20M/mo** (~7.8 QPS) |
+| 1M × 1024-dim | $0.68 | $2.05 | 1 node, 8 GiB | $68.34 | **~33M/mo** (~12.7 QPS) |
+| 1M × 1536-dim | $1.01 | $3.07 | 3 nodes, 12 GiB | $102.51 | **~33M/mo** (~12.7 QPS) |
+| 10M × 768-dim | $5.07 | $15.36 | 3 nodes, 48 GiB | $410.04 | **~26M/mo** (~10.2 QPS) |
+
+### Concrete costs — DBpedia benchmark (100K × 1536-dim)
+
+| Monthly queries | turbopuffer | Qdrant Cloud | Winner |
+|-----------------|-------------|--------------|--------|
+| 100K | $0.23 | $26.10 | tpuf **113× cheaper** |
+| 1M | $1.38 | $26.10 | tpuf **19× cheaper** |
+| 5M | $6.50 | $26.10 | tpuf **4× cheaper** |
+| **~20M (break-even)** | **~$26** | **$26.10** | **tie (~7.8 QPS sustained)** |
+| 50M | $64.10 | $26.10 | Qdrant **2.5× cheaper** |
+| 100M | $128.10 | $26.10 | Qdrant **5× cheaper** |
+
+> Query cost = scan cost only (returned IDs/distances, no attribute payload). If you return large text attributes per result, add $0.05/GB returned.
+
+### Key takeaway
+
+turbopuffer's cost advantage is real but narrow: it collapses at **~8–13 QPS sustained per namespace** (dataset-dependent). Below that — dev environments, infrequent batch jobs, most-tenants-idle SaaS — turbopuffer can be dramatically cheaper. Above that, a fixed Qdrant node is cheaper *and* 10–30× faster. There is no operating point where turbopuffer is simultaneously cheaper and faster than Qdrant for a hot namespace.
 
 ---
 
