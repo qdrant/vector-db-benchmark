@@ -44,6 +44,7 @@ turbopuffer's value proposition is different: **scale-to-zero cost** for inactiv
 | turbopuffer | DBpedia (1536-dim) | 100K | 1000 | 33–37 min |
 | turbopuffer | H&M (2048-dim) | 105K | 500 | ~17 min |
 | **Qdrant Cloud** | **DBpedia (1536-dim)** | **100K** | **256¹** | **48 min** |
+| **Qdrant Cloud** | **H&M (2048-dim)** | **105K** | **128¹** | **73 min** |
 
 ### Search — DBpedia, no filters (same-region benchmark client)
 
