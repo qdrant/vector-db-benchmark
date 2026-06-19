@@ -213,9 +213,17 @@ We ran a cross-namespace contention experiment to determine whether turbopuffer 
 All three trials show ~3× p50 degradation. Since UUID names eliminate name-hash coincidence, the co-location is explained by **per-API-key routing**: all namespaces under one API key land on the same physical machine.
 
 **Implications:**
-- You are your own noisy neighbor. Heavy load on one namespace degrades all others under the same account.
+- You are your own noisy neighbor in serverless mode. Heavy load on one namespace degrades all others under the same account.
 - The ~6–8 core estimate from pinned replica saturation is consistent: at p=32 aggressor throughput (~490 QPS) + victim (~20 QPS) ≈ 510 QPS total, approaching the ~67 QPS/core × 7 cores = ~470 QPS ceiling.
-- **Pinned replicas and isolated machines:** Unknown. Pinning guarantees NVMe residency — it does not necessarily mean an exclusive machine. Whether pinned namespaces are isolated from each other or from serverless traffic is an open question we have not tested.
+
+**Pinned replicas are isolated.** We ran the same contention test with both namespaces pinned to 1 replica each:
+
+| Mode | p50 baseline | p50 under p=32 cross-ns load | Delta |
+|------|-------------|------------------------------|-------|
+| Serverless | 14.9ms | 52.8ms | **+255%** |
+| Pinned 1r each | 16.3ms | 19.5ms | **+20%** |
+
+p50 barely moves under pinning. The aggressor also achieved only 1,548 queries (vs 4,957 serverless) — consistent with two independent machines each handling their own load. **Pinning buys machine isolation, not just NVMe residency.** When you pin, you leave the shared serverless pool and land on dedicated hardware with no noisy neighbors.
 
 ### S3 access structure
 

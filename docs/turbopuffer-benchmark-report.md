@@ -369,8 +369,14 @@ All three trials show ~3–3.5× p50 degradation. The UUID names eliminate any n
 - The ~6–8 core estimate from pinned replica saturation is consistent: aggressor at p=32 (~490 QPS) + victim (~20 QPS) ≈ 510 QPS total approaches the estimated ~67 QPS/core × 7 cores ceiling.
 - There is no per-tenant CPU quota visible in these results — if cgroups were enforced at the turbopuffer layer, victim degradation would be bounded by the quota, not by the aggressor's concurrency level.
 
-**What we don't know:**
-- Whether pinned replicas share machines with serverless traffic or other pinned replicas. Pinning guarantees NVMe residency — it does not necessarily imply machine exclusivity. This remains untested.
+**Pinned replicas get separate machines.** We ran the same contention test with both namespaces pinned to 1 replica each:
+
+| Mode | p50 baseline | p50 under p=32 cross-namespace load | Delta |
+|------|-------------|-------------------------------------|-------|
+| Serverless | 14.9ms | 52.8ms | **+255%** |
+| Pinned 1r each | 16.3ms | 19.5ms | **+20%** |
+
+p50 barely moves under pinning. The aggressor only achieved 1,548 queries vs 4,957 in the serverless test — consistent with two independent machines handling their own load rather than competing. Pinning buys machine isolation, not just NVMe residency. When pinned, you leave the shared per-user pool and land on dedicated hardware with no noisy neighbors.
 
 ### The cost model trade-off
 turbopuffer's value proposition is **cost efficiency at low QPS**. Object storage is ~10-100× cheaper per GB than NVMe. For a namespace that gets 1-5 queries/second with cold data, turbopuffer's model is economical. At higher QPS (100+), the autoscaled compute cost grows and the latency SLA becomes harder to meet.
@@ -394,7 +400,7 @@ turbopuffer's value proposition is **cost efficiency at low QPS**. Object storag
 | **Upload 100K @ batch=256** | 22.3 min | 48 min (2.2× slower — single connection, no tuning) |
 | **Scale** | Cold namespaces are free | Reserved capacity |
 | **Precision/recall control** | No | Yes |
-| **Pinning** | Yes — guarantees NVMe residency; machine exclusivity unknown | N/A (always dedicated) |
+| **Pinning** | Yes — dedicated machine + NVMe residency (serverless shares per API key) | N/A (always dedicated) |
 | **Autoscaling to zero** | Yes | No |
 
 ---
