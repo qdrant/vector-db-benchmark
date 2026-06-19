@@ -1,0 +1,41 @@
+{
+  "experiment": "pinned_contention",
+  "ns_a": "dbpedia-openai-100K-1536-angular",
+  "ns_b": "dbpedia-coldtest",
+  "replicas": 1,
+  "aggressor_concurrency": 32,
+  "n_baseline": 120,
+  "n_contention": 180,
+  "baseline_a": {
+    "n": 120,
+    "mean": 16.67,
+    "p50": 16.3,
+    "p95": 18.44,
+    "p99": 20.52,
+    "max": 57.98
+  },
+  "baseline_b": {
+    "n": 120,
+    "mean": 16.45,
+    "p50": 15.33,
+    "p95": 19.87,
+    "p99": 44.93,
+    "max": 48.42
+  },
+  "contention_a_victim": {
+    "n": 180,
+    "mean": 21.51,
+    "p50": 19.49,
+    "p95": 34.03,
+    "p99": 53.09,
+    "max": 67.02
+  },
+  "contention_b_victim": {
+    "n": 180,
+    "mean": 19.28,
+    "p50": 18.51,
+    "p95": 28.27,
+    "p99": 35.81,
+    "max": 42.13
+  }
+}
