@@ -348,6 +348,30 @@ This is the fundamental latency floor and the reason:
 - Filters add disproportionate cold cost: they require walking more centroid regions across more S3 objects
 - The system is optimized for low infrastructure cost, not low latency
 
+### Multi-tenancy model: per-API-key machine routing
+
+We probed whether turbopuffer co-locates namespaces using a cross-namespace contention experiment:
+
+**Method:** Run victim namespace at p=1 (sequential), measure latency baseline. Then hammer a second namespace at p=32 and re-measure victim latency. Repeat with freshly created UUID-named namespaces (random vectors) to rule out any name-hash coincidence.
+
+**Results:**
+
+| Trial | Probe namespace | Victim p50 baseline | Victim p50 under load | Delta |
+|-------|----------------|---------------------|-----------------------|-------|
+| dbpedia-coldtest | same account, same-named | 14.9ms | 52.8ms | **+255%** |
+| probe-routing-fb3df725… | UUID, 10K random vecs | 15.7ms | 47.6ms | **+203%** |
+| probe-routing-04dfa96b… | UUID, 10K random vecs | 15.7ms | 49.1ms | **+212%** |
+
+All three trials show ~3–3.5× p50 degradation. The UUID names eliminate any name-hash explanation: turbopuffer is routing all namespaces under one API key to the **same physical machine**.
+
+**What we know:**
+- Serverless namespaces are co-located per API key. You are your own noisy neighbor.
+- The ~6–8 core estimate from pinned replica saturation is consistent: aggressor at p=32 (~490 QPS) + victim (~20 QPS) ≈ 510 QPS total approaches the estimated ~67 QPS/core × 7 cores ceiling.
+- There is no per-tenant CPU quota visible in these results — if cgroups were enforced at the turbopuffer layer, victim degradation would be bounded by the quota, not by the aggressor's concurrency level.
+
+**What we don't know:**
+- Whether pinned replicas share machines with serverless traffic or other pinned replicas. Pinning guarantees NVMe residency — it does not necessarily imply machine exclusivity. This remains untested.
+
 ### The cost model trade-off
 turbopuffer's value proposition is **cost efficiency at low QPS**. Object storage is ~10-100× cheaper per GB than NVMe. For a namespace that gets 1-5 queries/second with cold data, turbopuffer's model is economical. At higher QPS (100+), the autoscaled compute cost grows and the latency SLA becomes harder to meet.
 
@@ -370,7 +394,7 @@ turbopuffer's value proposition is **cost efficiency at low QPS**. Object storag
 | **Upload 100K @ batch=256** | 22.3 min | 48 min (2.2× slower — single connection, no tuning) |
 | **Scale** | Cold namespaces are free | Reserved capacity |
 | **Precision/recall control** | No | Yes |
-| **Pinning (dedicated compute)** | Yes (serverless often better) | N/A (always dedicated) |
+| **Pinning** | Yes — guarantees NVMe residency; machine exclusivity unknown | N/A (always dedicated) |
 | **Autoscaling to zero** | Yes | No |
 
 ---
@@ -394,7 +418,7 @@ turbopuffer's value proposition is **cost efficiency at low QPS**. Object storag
 - **"Faster in your region"** — Same AWS region, same dataset: Qdrant 365 RPS vs turbopuffer 224 RPS. 6.3ms per query vs 16.9ms. Qdrant wins on throughput AND latency from co-located clients.
 - **"Consistent, not sometimes fast"** — turbopuffer warm H&M hits 267ms p99. Cold hits 12.7s p99. 47× variance, same config. Qdrant 679ms p99 warm or cold.
 - **"Recall you can trust"** — turbopuffer fixed at 96.3% for filtered search. Qdrant: 99.85%. That's 18× fewer wrong results at the tail.
-- **"Replica scaling that actually works"** — turbopuffer pinned-4replicas delivers 18 RPS (12× worse than single-replica). Qdrant scales linearly.
+- **"Replica scaling that actually works"** — turbopuffer pinned-4r peaks at 473 RPS (2.23× a single replica, not 4×; NVMe bandwidth is the ceiling). Qdrant scales linearly with each added node.
 
 ### Positioning guidance
 turbopuffer is a **cost-effective tier for sparse, cold, low-QPS workloads** — don't dismiss it for those. But the throughput narrative ("turbopuffer is faster") was based on cross-region Qdrant measurements where client RTT dominated. Same-region, Qdrant on a single small node beats turbopuffer on every performance metric. For any production API with:

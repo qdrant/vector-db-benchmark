@@ -1,0 +1,88 @@
+{
+  "experiment": "routing_probe",
+  "existing_ns": "dbpedia-openai-100K-1536-angular",
+  "dims": 1536,
+  "aggressor_concurrency": 32,
+  "n_baseline": 100,
+  "n_contention": 150,
+  "trials": [
+    {
+      "trial": 1,
+      "probe_namespace": "probe-routing-fb3df7251756",
+      "n_vectors": 10000,
+      "baseline_dbpedia": {
+        "n": 100,
+        "mean": 16.42,
+        "p50": 15.73,
+        "p95": 20.57,
+        "p99": 35.47,
+        "max": 43.84
+      },
+      "contention_dbpedia_victim": {
+        "n": 150,
+        "mean": 47.73,
+        "p50": 47.6,
+        "p95": 64.17,
+        "p99": 99.92,
+        "max": 105.84
+      },
+      "baseline_probe": {
+        "n": 100,
+        "mean": 24.93,
+        "p50": 21.74,
+        "p95": 44.59,
+        "p99": 55.08,
+        "max": 72.87
+      },
+      "contention_probe_victim": {
+        "n": 150,
+        "mean": 54.46,
+        "p50": 55.96,
+        "p95": 65.89,
+        "p99": 100.34,
+        "max": 104.24
+      },
+      "verdict_dbpedia_victim": "STRONG contention (+203% p50) \u2014 likely SAME machine \u2192 per-user routing",
+      "verdict_probe_victim": "STRONG contention (+157% p50) \u2014 likely SAME machine \u2192 per-user routing"
+    },
+    {
+      "trial": 2,
+      "probe_namespace": "probe-routing-04dfa96bc35f",
+      "n_vectors": 10000,
+      "baseline_dbpedia": {
+        "n": 100,
+        "mean": 16.42,
+        "p50": 15.73,
+        "p95": 20.57,
+        "p99": 35.47,
+        "max": 43.84
+      },
+      "contention_dbpedia_victim": {
+        "n": 150,
+        "mean": 48.6,
+        "p50": 49.13,
+        "p95": 62.24,
+        "p99": 83.85,
+        "max": 95.02
+      },
+      "baseline_probe": {
+        "n": 100,
+        "mean": 23.0,
+        "p50": 20.55,
+        "p95": 39.82,
+        "p99": 53.01,
+        "max": 54.02
+      },
+      "contention_probe_victim": {
+        "n": 150,
+        "mean": 53.89,
+        "p50": 55.54,
+        "p95": 77.43,
+        "p99": 107.22,
+        "max": 110.65
+      },
+      "verdict_dbpedia_victim": "STRONG contention (+212% p50) \u2014 likely SAME machine \u2192 per-user routing",
+      "verdict_probe_victim": "STRONG contention (+170% p50) \u2014 likely SAME machine \u2192 per-user routing"
+    }
+  ]
+}

@@ -196,6 +196,27 @@ From `update_metadata(pinning={"replicas": 1})` to serving warm queries:
 
 `ready_replicas=1` means compute is provisioned, **not** that NVMe is warm. A correct deployment must run a warmup pass after confirming replica readiness. The original broken benchmark (18 RPS) skipped this step.
 
+### Multi-tenancy: per-API-key routing
+
+We ran a cross-namespace contention experiment to determine whether turbopuffer co-locates namespaces on shared machines.
+
+**Method:** Measure victim namespace latency (p=1, sequential) with and without a second namespace hammering at p=32. Repeat with freshly created UUID-named namespaces (random vectors, no hash relationship to existing names) to rule out coincidental co-location by naming.
+
+**Results:**
+
+| Trial | Probe namespace | dbpedia p50 baseline | dbpedia p50 under load | Delta |
+|-------|----------------|----------------------|------------------------|-------|
+| dbpedia-coldtest | (same account) | 14.9ms | 52.8ms | **+255%** |
+| probe-routing-fb3df725… | UUID, fresh | 15.7ms | 47.6ms | **+203%** |
+| probe-routing-04dfa96b… | UUID, fresh | 15.7ms | 49.1ms | **+212%** |
+
+All three trials show ~3× p50 degradation. Since UUID names eliminate name-hash coincidence, the co-location is explained by **per-API-key routing**: all namespaces under one API key land on the same physical machine.
+
+**Implications:**
+- You are your own noisy neighbor. Heavy load on one namespace degrades all others under the same account.
+- The ~6–8 core estimate from pinned replica saturation is consistent: at p=32 aggressor throughput (~490 QPS) + victim (~20 QPS) ≈ 510 QPS total, approaching the ~67 QPS/core × 7 cores = ~470 QPS ceiling.
+- **Pinned replicas and isolated machines:** Unknown. Pinning guarantees NVMe residency — it does not necessarily mean an exclusive machine. Whether pinned namespaces are isolated from each other or from serverless traffic is an open question we have not tested.
+
 ### S3 access structure
 
 We probed S3 access patterns using the guaranteed-cold namespace from `copy_from`, logging per-query latency across 500 queries. The cold warmup curve reveals how SPFresh fetches centroid data:
@@ -222,7 +243,7 @@ We probed S3 access patterns using the guaranteed-cold namespace from `copy_from
 3. **Filtered search:** turbopuffer filter p99 = 12.7s cold is a hard limit. Qdrant payload indexes keep filter latency at 76ms p99 warm or cold.
 4. **Precision control:** Full ef/quantization/oversampling dial. turbopuffer locked at ~96–98.9%.
 5. **Consistency:** turbopuffer varies 17ms → 12.7s p99 cold. Qdrant server latency is always ~1.9ms.
-6. **Replica scaling:** turbopuffer pinned-4r delivers 18 RPS vs single-replica's 212 RPS (provisioning race + core saturation at ~6–8 cores). Serverless pool outperforms pinned by routing across nodes. Qdrant scales horizontally with linear RPS gains.
+6. **Replica scaling:** turbopuffer pinned-4r peaks at 473 RPS — 2.23× a single replica, not 4×, because NVMe bandwidth saturates before CPU. Serverless at p=16 reaches 495 RPS without pinning by distributing across pool nodes. Qdrant scales linearly with each added node.
 
 ## Where turbopuffer Wins
 
