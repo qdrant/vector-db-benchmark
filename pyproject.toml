@@ -11,19 +11,19 @@ qdrant-client = { git = "https://github.com/qdrant/qdrant-client.git", branch = 
 typer = "^0.26.0"
 jsons = "^1.6.3"
 h5py = "^3.7.0"
-weaviate-client = ">= 4.5, < 4.7"
+weaviate-client = ">=4.22.0,<4.23"
 elasticsearch = "^8.10.0"
 pymilvus = "^2.5.0"
 redis = "^5.0.1"
 ipdb = "^0.13.9"
 opensearch-py = "^2.3.2"
-tqdm = "^4.66.1"
+tqdm = "^4.68.3"
 psycopg = {extras = ["binary"], version = "^3.1.17"}
 pgvector = "^0.4.2"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^2.20.0"
-pytest = "^9.0"
+pytest = "^9.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
