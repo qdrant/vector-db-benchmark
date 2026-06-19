@@ -6,7 +6,7 @@
 
 ## Bottom Line
 
-From the same AWS region, Qdrant on a single 2CPU/8GB node delivers **365 RPS at 22ms p99** — beating turbopuffer's 224 RPS at 43.6ms p99, on identical hardware cost. Single-connection latency: Qdrant 6.3ms mean vs turbopuffer 16.9ms mean. HNSW in RAM simply wins on unfiltered dense search.
+From the same AWS region, on DBpedia 100K × 1536-dim: Qdrant on a single 2CPU/8GB node delivers **365 RPS at 22ms p99** for $68/month flat. The same $68/month on turbopuffer buys ~53M queries/month — enough for **~21 QPS at ~37ms p99**. Same cost, 17× the throughput. Single-connection latency: Qdrant 6.3ms mean vs turbopuffer 16.9ms mean. HNSW in RAM simply wins on unfiltered dense search.
 
 turbopuffer's value proposition is different: **scale-to-zero cost** for inactive namespaces and multi-tenant SaaS patterns where most tenants are idle. It's not a better search engine — it's a cheaper storage tier for sporadic traffic. The tradeoff has two hard edges: cold-state collapse (12.7s p99 for filtered search after any restart) and fixed recall (~96–98.9%, not tunable).
 

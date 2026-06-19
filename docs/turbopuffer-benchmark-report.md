@@ -413,7 +413,7 @@ turbopuffer's value proposition is **cost efficiency at low QPS**. Object storag
 3. **Serverless zero-cost idle:** Namespaces cost nothing when not queried.
 
 ### Where Qdrant wins
-1. **Throughput:** 365 RPS vs 224 RPS on 100K unfiltered search (same region, same node size). Qdrant wins outright.
+1. **Throughput per dollar:** On DBpedia 100K × 1536-dim, Qdrant delivers 365 RPS for a flat $68/month. The same $68/month on turbopuffer buys ~53M queries/month (~21 QPS at ~37ms p99) — 17× less throughput at the same spend. At higher QPS the gap widens further.
 2. **Per-query latency:** Qdrant 6.3ms mean vs turbopuffer 17ms — 2.7× faster from the same region. Not closable: HNSW in RAM (1.9ms) vs S3 round-trips (~15ms).
 3. **Filter performance cold-state:** Qdrant p99 = 679ms is consistent regardless of warm/cold. turbopuffer cold = 12.7s, warm = 267ms. Qdrant wins on reliability; turbopuffer wins only on warm-state throughput.
 4. **Precision control:** Qdrant supports ef_search tuning, oversampling, quantization rescore. turbopuffer is fixed at ~96–98.9%.
@@ -421,7 +421,7 @@ turbopuffer's value proposition is **cost efficiency at low QPS**. Object storag
 6. **Upload speed:** With proper config (batch=1024, parallel=4) Qdrant uploads 1M vectors in ~20 min. Our 48 min result was a config artifact (batch=256, parallel=1).
 
 ### Marketing angles
-- **"Faster in your region"** — Same AWS region, same dataset: Qdrant 365 RPS vs turbopuffer 224 RPS. 6.3ms per query vs 16.9ms. Qdrant wins on throughput AND latency from co-located clients.
+- **"More for your money"** — Same AWS region, DBpedia 100K × 1536-dim: Qdrant $68/month → 365 RPS. Same $68 on turbopuffer → ~21 QPS. 17× more throughput per dollar, 2.7× lower latency (6.3ms vs 16.9ms mean).
 - **"Consistent, not sometimes fast"** — turbopuffer warm H&M hits 267ms p99. Cold hits 12.7s p99. 47× variance, same config. Qdrant 679ms p99 warm or cold.
 - **"Recall you can trust"** — turbopuffer fixed at 96.3% for filtered search. Qdrant: 99.85%. That's 18× fewer wrong results at the tail.
 - **"Replica scaling that actually works"** — turbopuffer pinned-4r peaks at 473 RPS (2.23× a single replica, not 4×; NVMe bandwidth is the ceiling). Qdrant scales linearly with each added node.
