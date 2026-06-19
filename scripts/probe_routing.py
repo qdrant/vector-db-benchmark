@@ -81,7 +81,7 @@ async def create_probe_namespace(client, ns_name, n_vectors):
         ids = list(range(batch_start, batch_end))
         vecs = rng.standard_normal((batch_end - batch_start, DIMS)).astype(np.float32)
         vecs /= np.linalg.norm(vecs, axis=1, keepdims=True)
-        await ns.upsert_columns(
+        await ns.write(
             upsert_columns={"id": ids, "vector": vecs.tolist()},
             distance_metric="cosine_distance",
         )
