@@ -19,10 +19,9 @@ turbopuffer's value proposition is different: **scale-to-zero cost** for inactiv
 | Dimension | turbopuffer | Qdrant Cloud |
 |-----------|-------------|--------------|
 | Architecture | Object storage (S3) + ephemeral compute | RAM + HNSW index |
-| Server-side query latency | ~17ms (warm, same region) | **1.9ms** (HNSW in RAM) |
 | Peak RPS — unfiltered 100K | 224 RPS (serverless p=8) | **365 RPS** (2CPU/8GB node, p=8) |
 | Single-connection RPS | 55.5 RPS | **134 RPS** |
-| Single-connection mean latency | 16.9ms | **6.3ms** |
+| Single-connection mean latency (client-side, p=1) | 16.9ms | **6.3ms** (1.9ms server-side via `server_time` header) |
 | Peak RPS — filtered 105K, **warm** | 212 RPS | **318 RPS** |
 | Peak RPS — filtered 105K, **cold** | 19.8 RPS | **318 RPS** (no cold-start) |
 | Filtered search p99 — **warm** | 267ms | **76ms** (3.5× better) |

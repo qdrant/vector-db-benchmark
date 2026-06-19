@@ -390,7 +390,7 @@ turbopuffer's value proposition is **cost efficiency at low QPS**. Object storag
 | **Architecture** | Object storage (S3) + ephemeral compute | RAM + disk, HNSW index |
 | **Index type** | SPFresh (centroid-based, fixed recall) | HNSW + optional quantization |
 | **Recall tuning** | None (fixed ~98.5%) | Full control (ef, m, quantization, oversampling) |
-| **Single query latency (same region)** | 17ms (warm, pinned) | **6.3ms** (measured, same-region p=1) |
+| **Single query latency (client-side, p=1, same region)** | 16.9ms (warm, serverless) | **6.3ms** (1.9ms server-side via `server_time` header) |
 | **Peak RPS, unfiltered 100K (same region)** | 224 RPS (serverless p=8) | **365 RPS** (1 node, 2CPU/8GB, p=8) |
 | **Peak RPS, filtered 105K (same region, warm)** | 212 RPS | **318 RPS** |
 | **Filtered search p99 — warm** | 267ms | **76ms** (3.5× better) |
