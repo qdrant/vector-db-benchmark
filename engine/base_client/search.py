@@ -60,6 +60,7 @@ class BaseSearcher:
     ):
         parallel = self.search_params.get("parallel", 1)
         top = self.search_params.get("top", None)
+        queries = [q for q in queries]  # Preload query vectors into memory
 
         # setup_search may require initialized client
         self.init_client(
@@ -87,8 +88,7 @@ class BaseSearcher:
                     self.search_params,
                 ),
             ) as pool:
-                if parallel > 10:
-                    time.sleep(15)  # Wait for all processes to start
+                time.sleep(15)  # Wait for all processes to start
                 start = time.perf_counter()
                 precisions, latencies = list(
                     zip(*pool.imap_unordered(search_one, iterable=tqdm.tqdm(queries)))
