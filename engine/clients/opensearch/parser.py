@@ -7,12 +7,14 @@ class OpenSearchConditionParser(BaseConditionParser):
     def build_condition(
         self, and_subfilters: Optional[List[Any]], or_subfilters: Optional[List[Any]]
     ) -> Optional[Any]:
-        return {
-            "bool": {
-                "must": and_subfilters,
-                "should": or_subfilters,
-            }
-        }
+        bool_clause = {}
+        if and_subfilters:
+            bool_clause["must"] = and_subfilters
+        if or_subfilters:
+            bool_clause["should"] = or_subfilters
+        if not bool_clause:
+            return None
+        return {"bool": bool_clause}
 
     def build_exact_match_filter(self, field_name: str, value: FieldValue) -> Any:
         return {"match": {field_name: value}}
