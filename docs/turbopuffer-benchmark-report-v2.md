@@ -196,64 +196,128 @@ For sparse multi-tenant workloads (most tenants idle), turbopuffer costs near-ze
 
 ---
 
-## 7. Architecture Deep-Dives
+## 7. turbopuffer Internals
 
-### Why serverless beats pinned for turbopuffer unfiltered search
+> **Summary:** We ran a series of probing experiments to understand how turbopuffer works under the hood. Key findings: (1) SPFresh does lazy per-centroid NVMe caching — ~75 sequential queries to reach stable warm latency, no global pre-fetch. (2) A single pinned replica saturates at ~6–8 CPU cores; serverless outperforms it at p≥8 by distributing across pool nodes. (3) A correctly-warmed 4-replica pinned namespace peaks at 473 RPS — but NVMe bandwidth, not CPU, is the ceiling so scaling is 2.2× not 4×. (4) All namespaces under one API key share one physical machine in serverless mode — a bursty namespace degrades all others by ~3×; pinning buys machine isolation. (5) `hint_cache_warm` actively hurts concurrent workloads — adds ~400ms overhead when used inline. (6) A pinned replica takes ~80s to become `ready` and is still cold after that — first query hits ~600ms.
 
-Unpinned serverless routes concurrent queries across multiple pool nodes dynamically. A single pinned replica is bound to one machine and saturates at ~6–8 cores. Under p=8 concurrency:
-- Pinned 1r: ceiling ~370 RPS (CPU-bound on one node)  
-- Serverless: continues scaling because the autoscaler distributes across the pool
+---
 
-For unfiltered workloads, use serverless unless you need machine isolation (pinning buys isolation — no noisy neighbors from other namespaces under your API key — but not higher throughput).
+### 7.1 Cold warmup curve
 
-### Cold warmup curve
-
-Using `copy_from` to create a guaranteed-cold namespace and running sequential queries reveals SPFresh's caching behavior:
+**Method:** Used `copy_from` to create a guaranteed-cold namespace (copies S3 objects without NVMe cache). Ran 500 sequential queries, recording each latency individually.
 
 | Phase | Queries | Latency range | What's happening |
 |-------|---------|--------------|-----------------|
 | True cold | q0 | ~900ms | Root index + first centroid tier fetched from S3 |
-| Patchy | q1–q10 | 70–350ms | Per-query centroid caching — each query warms only the regions it walks |
+| Patchy | q1–q10 | 70–350ms | Per-query centroid caching — each query warms only the centroid regions it walks |
 | Mixed | q11–q74 | 18–250ms | Cached regions fast; uncached still slow |
 | Stable warm | q75+ | 13–22ms | All commonly accessed centroid blocks in NVMe |
 
-**~75 sequential queries / ~15 seconds to reach stable warm latency.** SPFresh does lazy per-centroid caching — no global pre-fetch on first query. Two queries to the same vector region share cache; two queries to different regions don't. This is why filtered H&M cold p99 is so high: filters force traversal of many distinct centroid regions in one query, each potentially uncached.
+**~75 sequential queries / ~15 seconds to reach stable warm latency.** SPFresh does lazy per-centroid caching — no global pre-fetch on first query. Two queries to the same vector region benefit from each other's cache; two queries to orthogonal regions don't. This explains:
+- Why unfiltered DBpedia cold start is transient: only ~14 distinct centroid regions are needed, all cached within the first 20 queries.
+- Why filtered H&M cold p99 is ~1.6s: filters force traversal of many distinct centroid regions per query, each potentially uncached throughout the warmup period.
 
-### Replica boot time
+The first query overhead (~880ms = 900ms cold − 17ms warm floor) reflects the cost of loading the root index and first centroid tier from S3. Each subsequent high-latency spike (100–900ms) during the patchy phase is one more uncached centroid block being fetched from S3.
 
-From `update_metadata(pinning={"replicas": N})` to stable warm serving:
-1. **~80 seconds** to reach `ready_replicas=N/N`
-2. **First query after ready: ~600ms** — compute is provisioned but NVMe is cold
-3. **~11 sequential queries** to reach stable warm latency
+---
 
-`ready_replicas=N` means the compute node is running — **not** that NVMe is populated. Any deployment automation that sends traffic immediately after `ready_replicas` confirmation will hit cold latency spikes.
+### 7.2 Compute core count — pinned 1r vs serverless
 
-### Per-API-key machine co-location (cross-namespace contention experiment)
+**Method:** Swept concurrency p=1→64 on a fully-warmed pinned 1-replica namespace and on serverless, measuring RPS at each level.
+
+| p | Pinned 1r RPS | Serverless RPS |
+|---|--------------|----------------|
+| 1 | 57.9 | 57.5 |
+| 2 | 120.3 | 116.7 |
+| 4 | 228.1 | 210.1 |
+| **8** | **348.3** | **429.0** |
+| 16 | 371.8 | **494.5** |
+| 32 | 341.8 | 454.9 |
+| 64 | 379.3 | 506.8 |
+
+**Pinned 1-replica saturates at ~6–8 effective cores.** Scaling is nearly linear from p=1 to p=4, then flattens between p=8 and p=16 (only 1.07× gain). Peak is ~370 RPS regardless of concurrency above p=8.
+
+**Serverless outperforms a single pinned replica at p≥8.** At p=8, serverless (429 RPS) beats pinned 1r (348 RPS) by 23%. Serverless routes across multiple pool nodes dynamically rather than being bound to one machine. It keeps scaling to ~500 RPS at p=16.
+
+**Single-connection throughput is identical** (57–58 RPS, ~17ms mean) — the difference only appears under concurrent load where pinned hits its core ceiling.
+
+---
+
+### 7.3 Pinned 4-replica sweep (correct warmup)
+
+A naive pinned-4r benchmark (sending traffic as soon as `ready_replicas=4/4`) yields catastrophic results (~18 RPS, p99=6.3s) because queries reach replicas before NVMe is warmed. The correct procedure: pin → wait for `ready_replicas=4/4` → run warmup pass → benchmark.
+
+**Method:** After confirming `ready_replicas=4/4` and running a warmup pass, swept concurrency p=1→64.
+
+| p | RPS | Mean | p95 | p99 | Scale vs p=1 |
+|---|-----|------|-----|-----|-------------|
+| 1 | 58.3 | 17.1ms | 21.0ms | 34.1ms | 1.00× |
+| 4 | 230.4 | 17.2ms | 25.2ms | 43.5ms | 3.95× |
+| **8** | **405.5** | **18.8ms** | **28.4ms** | 44.8ms | **6.96×** |
+| **16** | **472.9** | 30.1ms | 46.8ms | 71.7ms | **8.11×** — peak |
+| 32 | 429.0 | 63.1ms | 129.8ms | 157.8ms | 7.36× |
+| 64 | 450.5 | 110.3ms | 299.6ms | 342.7ms | 7.73× |
+
+**Peak: 473 RPS at p=16.** However, scaling is sub-linear: 4 replicas gives 8.1× gain over p=1, not 4×. NVMe read bandwidth becomes the bottleneck before CPU does — each replica runs SPFresh sequentially, and at high concurrency the per-replica NVMe queue saturates. p32+ sees p99 degrade sharply (158ms → 343ms).
+
+**Correctly-deployed 4r vs Qdrant:** 473 RPS vs 147 RPS for Qdrant's single 2CPU/8GB node at p=1. But this requires 4 dedicated replicas, a warmup runbook, and persistent pinning cost vs Qdrant's single-node flat fee.
+
+---
+
+### 7.4 Replica boot time
+
+**Method:** Called `update_metadata(pinning={"replicas": 1})` and polled `ns.metadata()` every 5 seconds.
+
+| Step | Duration |
+|------|---------|
+| `ready_replicas` 0/1 → 1/1 | **~80 seconds** (16 polls × 5s) |
+| First query after `ready_replicas=1` | **~617ms** — NVMe still cold |
+| Rolling warm state (<20ms mean) | ~11 sequential queries (~2 seconds) |
+| **Total: pin → warm serving** | **~90–100 seconds** |
+
+`ready_replicas=N` means the compute node is running — **not** that NVMe is populated. Any deployment runbook that sends traffic immediately after `ready_replicas` confirmation will hit cold latency spikes on the first 10–15 queries.
+
+---
+
+### 7.5 hint_cache_warm behavior
+
+**Method:** Used `hint_cache_warm` inline before each query (calling the hint, then querying) at p=8 concurrent on DBpedia.
+
+| Config | RPS | Mean latency |
+|--------|-----|-------------|
+| Default serverless p=8 | **224 RPS** | 22.9ms |
+| hint_cache_warm p=8 | **17 RPS** | 459ms |
+
+**hint_cache_warm at p=8 is 13× worse than default serverless.** The cache-warm RPC is a synchronous API call that adds ~400ms of overhead before each query when used inline. It is designed for pre-warming a namespace before a burst (send the hint, wait, then serve traffic) — not as an inline prefix per query. Using it inline inverts its intended effect entirely.
+
+---
+
+### 7.6 Per-API-key machine co-location (cross-namespace contention)
 
 **Question:** Does turbopuffer co-locate all namespaces under one API key on the same physical machine?
 
-**Method:** Measure a "victim" namespace (sequential p=1 queries) to establish a p50 baseline. Then hammer a second "aggressor" namespace at p=32 and re-measure the victim. Repeat with freshly-created UUID-named namespaces containing random vectors — ruling out any naming coincidence.
+**Method:** Measure a victim namespace at p=1 (sequential) to get a p50 baseline. Then hammer an aggressor namespace at p=32 and re-measure the victim. Repeated with freshly-created UUID-named namespaces containing random vectors — ruling out any name-based routing coincidence.
 
-**Results (serverless mode):**
+**Results — serverless:**
 
-| Trial | Aggressor namespace | Victim p50 baseline | Victim p50 under load | Degradation |
-|-------|--------------------|--------------------|----------------------|-------------|
-| dbpedia-coldtest | same account, named | 14.9ms | 52.8ms | **+255%** |
-| UUID random vecs A | fresh UUID | 15.7ms | 47.6ms | **+203%** |
-| UUID random vecs B | fresh UUID | 15.7ms | 49.1ms | **+212%** |
+| Trial | Aggressor | Victim p50 baseline | Victim p50 under load | Degradation |
+|-------|-----------|--------------------|-----------------------|-------------|
+| Trial 1 | named namespace | 14.9ms | 52.8ms | **+255%** |
+| Trial 2 | UUID, random vecs | 15.7ms | 47.6ms | **+203%** |
+| Trial 3 | UUID, random vecs | 15.7ms | 49.1ms | **+212%** |
 
-All three trials show ~3–3.5× p50 degradation. The UUID names rule out any name-based hash routing coincidence. **Conclusion: turbopuffer routes all namespaces under one API key to the same physical machine in serverless mode. You are your own noisy neighbor.**
+All three trials show ~3–3.5× p50 degradation. UUID names rule out name-hash coincidence. **Conclusion: turbopuffer co-locates all namespaces per API key on one physical machine in serverless mode. You are your own noisy neighbor.**
 
-**Results (pinned mode, both namespaces pinned to 1 replica each):**
+**Results — pinned (both namespaces pinned to 1 replica):**
 
 | Mode | Victim p50 baseline | Victim p50 under load | Degradation |
 |------|--------------------|-----------------------|-------------|
 | Serverless | 14.9ms | 52.8ms | **+255%** |
 | Both pinned (1r each) | 16.3ms | 19.5ms | **+20%** |
 
-Under pinning, p50 barely moves. The aggressor also achieved far fewer queries (1,548 vs 4,957 in serverless) — consistent with two independent machines rather than competing on one. **Pinning buys machine isolation, not just NVMe residency.** When pinned, you leave the shared per-API-key pool and land on dedicated hardware.
+The aggressor also achieved far fewer total queries under pinning (1,548 vs 4,957 serverless) — consistent with two independent machines. **Pinning buys machine isolation, not just NVMe residency.** You leave the shared per-API-key pool and land on dedicated hardware with no noisy neighbors.
 
-**Implication for multi-tenant architectures:** In serverless mode, a bursty tenant can degrade all other tenants on the same account. Pinning each namespace isolates them but costs money and removes autoscaling. There is no serverless configuration that prevents cross-namespace interference from tenants under the same API key.
+**Implication:** In serverless mode, one heavy tenant degrades all others on the same account. There is no serverless configuration that prevents this. Pinning isolates tenants but removes autoscaling and adds per-replica cost.
 
 ---
 
