@@ -11,7 +11,7 @@ turbopuffer is a serverless vector database that stores all data in **object sto
 
 Key architecture properties:
 
-- **No recall knobs.** No ef_search, no HNSW M, no quantization tier. SPFresh targets ~98.5% recall for unfiltered search; filtered search drops to ~96% due to post-filtering.
+- **No recall knobs.** No ef_search, no HNSW M, no quantization tier. SPFresh targets ~98.5% recall for unfiltered search; filtered search measured at **90.9%** (post-filtering on centroid results — discarded candidates are not replaced).
 - **Serverless by default.** Compute is shared and autoscales on demand. All namespaces under one API key share a physical machine — you are your own noisy neighbor.
 - **Pinned mode.** Reserves dedicated NVMe-backed instances with a fixed replica count. Provides machine isolation and disables autoscaling. Pinned namespaces leave the shared pool and land on dedicated hardware.
 - **Cold-start is real.** Any replica restart or new provisioning resets the NVMe cache. The first queries after reset pay S3 fetch costs.
@@ -42,7 +42,7 @@ All results use a single async client (`reproduce_comparison.py`) with persisten
 
 The `stats()` function computes `rps = n / sum(individual_latencies) = 1 / mean_latency`. This equals actual throughput at **p=1** (sequential). At **p>1**, wall-clock throughput ≈ `p × stated_rps` — the stated figure is not wall-clock RPS. For all throughput comparisons, this report uses **p=1 runs** or the **fixed-QPS experiment** where actual QPS is controlled directly.
 
-Recall at p>1 is also unreliable — concurrent queries cycle through test vectors and return in completion order, corrupting the ground-truth mapping. Only p=1 recall figures are used.
+Recall at p>1 is now measured correctly — results are stored at their dispatch index (not appended in completion order), so ground-truth pairing is preserved regardless of concurrency. The H&M benchmark was an exception: it ran tpuf only at p=32, so recall was measured in a separate p=1 probe.
 
 ---
 
@@ -132,7 +132,7 @@ Replicas were pinned and waited for `ready_replicas=4/4` before sending traffic.
 
 **When does cold activate?** Any replica restart, scale event, or new provisioning resets the NVMe cache. For a SaaS product that autoscales or redeploys, this risk is live. There is no configuration that prevents it — the first queries after a reset will pay S3 costs.
 
-**Recall note:** These runs used p=32 concurrent queries, so recall figures are unreliable (see §2 measurement note). Separate p=1 probing shows ~96% recall for filtered H&M — consistent with SPFresh's post-filtering algorithm.
+**Recall:** The p=32 warm run showed 1.58% recall — an artifact of the H&M benchmark running tpuf-only at p=32 before the dispatch-index fix was applied. A separate p=1 probe (500 queries, post-warmup) measured **90.9% recall** for tpuf filtered H&M. This is architecturally expected: SPFresh applies the filter as a post-processing step on centroid ANN results rather than constraining the graph traversal. When the filter is selective, discarded candidates are not replaced — the effective top-k shrinks and recall drops. Qdrant's payload index integrates the filter into the HNSW traversal, avoiding this problem.
 
 ### 5.2 Qdrant Cloud — always warm
 
@@ -148,13 +148,25 @@ The `server_time` header (1.4ms for filtered queries) captures only the HNSW ste
 
 | Engine | Mean | p50 | p99 | Recall | Cold risk |
 |--------|------|-----|-----|--------|-----------|
-| turbopuffer warm | ~90ms† | ~70ms† | ~350ms† | ~96% | Yes — any restart |
-| **turbopuffer cold** | — | — | **~1,574ms** | ~96% | — |
+| turbopuffer warm | 93ms† | 69ms† | 236ms† | **90.9%** | Yes — any restart |
+| **turbopuffer cold** | — | — | **~1,574ms** | 90.9% | — |
 | Qdrant | **6.0ms** | **5.9ms** | **8.8ms** | **95.9%** | **None** |
 
-†turbopuffer warm latency from p=32 run; p=1 equivalent would be similar mean with lower p99 variance.
+†Latency from p=32 run on tpuf-bench (us-west-2). Recall measured separately at p=1 (server-side result — client location doesn't affect which IDs are returned).
 
-**Qdrant wins on every dimension for filtered search:** lower latency, no cold-state risk, and marginally better recall (95.9% vs ~96%).
+**Qdrant wins on every dimension for filtered search:** lower latency, no cold-state risk, and higher recall (95.9% vs 90.9%). The recall gap is structural — not a configuration issue.
+
+### 5.4 Pinned cost analysis (64 GB billing floor)
+
+The ~10 QPS serverless cost crossover does **not** apply to filtered search. Filtered search requires pinning; pinned mode bills at **$0.01325/GB-hr × max(actual_gb, 64) × replicas × 730 hr/month**.
+
+| Config | Actual GB | Billed GB | Monthly cost | RPS | p99 | Recall |
+|--------|-----------|-----------|--------------|-----|-----|--------|
+| tpuf pinned 1r | 0.43 | **64 (floor)** | **$619** | ~3 | 351ms | 90.9% |
+| tpuf pinned 4r | 0.43 | **64 (floor)** | **$2,476** | 10.9 | 351ms | 90.9% |
+| Qdrant Cloud 1 node | 0.43 | — | **$26.10** | 158 | 8.8ms | 95.9% |
+
+The H&M benchmark dataset (0.43 GB actual) triggers the 64 GB floor, making pinned 4-replica **95× more expensive** than Qdrant with 14× worse throughput. Break-even for pinned **1 replica** requires ~2.7 GB actual data (~900K vectors at 1536-dim). For pinned **4 replicas**, there is no break-even with $26.10 Qdrant — the minimum possible 4r cost ($2,476) always exceeds it regardless of dataset size (4r adds no extra data capacity, it's 4× replicated compute on the same index).
 
 ---
 
@@ -332,7 +344,7 @@ The aggressor also achieved far fewer total queries under pinning (1,548 vs 4,95
 | **Filtered search cold p99** | **~1.6s** | **8.8ms** (no cold-start) |
 | **Multi-tenant throughput (p=1)** | 38.6 RPS | **199.5 RPS** |
 | **Multi-tenant latency (p=1)** | 19.7ms p50 | **4.9ms p50** |
-| **Recall** | ~96–98.4% (fixed) | **Full control** (ef, quantization) |
+| **Recall** | 90.9% filtered / 98.4% unfiltered (fixed) | **Full control** (ef, quantization) |
 | **Cost above ~10 QPS/namespace** | More expensive | **Cheaper** |
 | **Cost below ~8 QPS/namespace** | **Cheaper** | More expensive |
 | **Scales to zero** | **Yes** | No |
@@ -354,14 +366,18 @@ The aggressor also achieved far fewer total queries under pinning (1,548 vs 4,95
 
 1. **Every performance metric.** 2.3× lower single-query latency, 5.2× lower multi-tenant latency, 2× lower cost above 10 QPS — simultaneously.
 2. **Filtered search reliability.** Qdrant p99 is 8.8ms warm or cold. turbopuffer cold p99 is ~1.6s. Any production SLA below 500ms cannot tolerate turbopuffer's cold-state risk.
-3. **Recall control.** ef_search, quantization, oversampling — full dial. turbopuffer is locked at ~96–98.4%.
+3. **Recall control.** ef_search, quantization, oversampling — full dial. turbopuffer is locked at 90.9% filtered / 98.4% unfiltered with no tuning path.
 4. **Multi-tenant at scale.** Above ~8 QPS/tenant, Qdrant is both cheaper and 5× faster.
+5. **Filtered search cost.** Pinning required for filtered search → 64 GB billing floor → $2,476/month for a 0.43 GB dataset vs Qdrant's $26.10. The serverless ~10 QPS cost crossover does not apply to filtered workloads.
 
 ### Positioning guidance
 
 turbopuffer is a **legitimate choice for sparse, cold, low-QPS workloads and multi-tenant SaaS where most tenants are idle**. The "turbopuffer is faster" narrative was based on benchmarks with high-RTT clients or cross-region configurations that inflated Qdrant's latency. From the same region on equal footing, Qdrant wins across the board.
 
-The question to ask: at what sustained QPS does this workload operate? Below 8: turbopuffer might be cheaper. Above 10: Qdrant is both cheaper and faster. The crossover happens at exactly the point where latency SLAs also start to matter — turbopuffer's cost advantage and its performance disadvantage are inseparable.
+The question to ask: at what sustained QPS does this workload operate, and does it use filtered search?
+- **Filtered search (any scale):** Qdrant. Pinned tpuf costs 95× more for sub-5 GB datasets. No cost crossover exists.
+- **Unfiltered, below ~8 QPS/namespace:** turbopuffer serverless may be cheaper (scale-to-zero).
+- **Unfiltered, above 10 QPS:** Qdrant is both cheaper and faster. No exception.
 
 ---
 
@@ -399,11 +415,14 @@ Results: `results/reproduce-2026-06-22T03-48-14/state.json`
 
 ### H&M search
 
-| Config | n | mean | p50 | p95 | p99 |
-|--------|---|------|-----|-----|-----|
-| tpuf pinned-4r p=32 warm | 1000 | 93.3ms | 69.4ms | 236ms | 351ms |
-| tpuf pinned-4r p=32 cold | 500 | 210ms | 79.6ms | 1510ms | 1574ms |
-| qdrant p=1 warm | 1000 | 6.0ms | 5.9ms | 7.4ms | 8.8ms |
+| Config | n | mean | p50 | p95 | p99 | recall |
+|--------|---|------|-----|-----|-----|--------|
+| tpuf pinned-4r p=32 warm | 1000 | 93.3ms | 69.4ms | 236ms | 351ms | 90.9%† |
+| tpuf pinned-4r p=32 cold | 500 | 210ms | 79.6ms | 1510ms | 1574ms | 90.9%† |
+| tpuf p=1 warm (recall probe) | 500 | 95.1ms | 92.6ms | 108.6ms | 136ms | **90.9%** |
+| qdrant p=1 warm | 1000 | 6.0ms | 5.9ms | 7.4ms | 8.8ms | **95.9%** |
+
+†Recall from separate p=1 probe; p=32 run recall figures (1.58%) are invalid due to ground-truth alignment issue.
 
 ### Multi-tenant (p=1)
 

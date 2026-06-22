@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>turbopuffer pricing calculator</title>
+<style>
+:root {
+  --ground:       #F1F5F9;
+  --surface:      #FFFFFF;
+  --border:       #CBD5E1;
+  --border-light: #E2E8F0;
+  --text:         #0F172A;
+  --muted:        #64748B;
+  --subtle:       #94A3B8;
+  --accent:       #6366F1;
+  --accent-bg:    #EEF2FF;
+  --accent-dim:   #C7D2FE;
+  --green:        #16A34A;
+  --green-bg:     #F0FDF4;
+  --green-dim:    #BBF7D0;
+  --mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+  --sans: -apple-system, 'Segoe UI', system-ui, sans-serif;
+  --radius: 8px;
+  --shadow: 0 1px 3px rgba(15,23,42,.07), 0 1px 2px rgba(15,23,42,.04);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--ground);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── Header ─────────────────────────────────── */
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 18px 32px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.wordmark {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wordmark-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: inline-block;
+}
+
+.header-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--border);
+}
+
+.header-sub {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ── Layout ──────────────────────────────────── */
+main {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 28px 20px 48px;
+  display: grid;
+  grid-template-columns: 1fr 348px;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ── Panel ───────────────────────────────────── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.panel-head {
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--subtle);
+}
+
+/* ── Plan buttons ────────────────────────────── */
+.plan-row {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  gap: 8px;
+}
+
+.plan-btn {
+  flex: 1;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color .12s, color .12s, background .12s;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.plan-btn:hover { border-color: var(--accent); color: var(--accent); }
+.plan-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.plan-btn.active {
+  background: var(--accent-bg);
+  border-color: var(--accent-dim);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.plan-min {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 400;
+  opacity: .7;
+  margin-top: 1px;
+}
+
+/* ── Controls body ───────────────────────────── */
+.controls-body {
+  padding: 0 18px 18px;
+}
+
+.section-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--subtle);
+  padding: 16px 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-eyebrow::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-light);
+}
+
+/* ── Two-column selects ──────────────────────── */
+.select-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.field-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+
+select {
+  width: 100%;
+  padding: 7px 28px 7px 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%2394A3B8' d='M5 7 0 2h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  -webkit-appearance: none;
+  appearance: none;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color .12s;
+}
+
+select:hover  { border-color: var(--accent-dim); }
+select:focus  { outline: none; border-color: var(--accent); }
+
+/* ── Slider control ──────────────────────────── */
+.ctrl { margin-bottom: 14px; }
+
+.ctrl-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.ctrl-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.ctrl-hint {
+  font-size: 11px;
+  color: var(--subtle);
+  font-weight: 400;
+  margin-left: 5px;
+}
+
+.ctrl-badge {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-bg);
+  padding: 2px 9px;
+  border-radius: 4px;
+  min-width: 68px;
+  text-align: right;
+}
+
+/* Slider + ruler */
+.ruler-wrap {
+  position: relative;
+  padding-bottom: 22px;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  margin: 2px 0;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    var(--accent) var(--fill, 0%),
+    var(--border) var(--fill, 0%)
+  );
+}
+
+input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+}
+
+input[type="range"]::-moz-range-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid var(--surface);
+  box-shadow: 0 0 0 1.5px var(--accent), 0 2px 5px rgba(99,102,241,.28);
+  margin-top: -6px;
+  transition: box-shadow .12s;
+}
+
+input[type="range"]:focus { outline: none; }
+input[type="range"]:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px rgba(99,102,241,.22), 0 0 0 1.5px var(--accent);
+}
+
+/* Log-scale ruler ticks */
+.ruler {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.tick {
+  position: absolute;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.tick-line {
+  width: 1px;
+  height: 4px;
+  background: var(--border);
+}
+
+.tick-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--subtle);
+  white-space: nowrap;
+  letter-spacing: -0.02em;
+}
+
+/* ── Results panel ───────────────────────────── */
+.cost-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border-light);
+  gap: 12px;
+}
+
+.cost-label-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cost-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.cost-sub {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cost-val {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.cost-val.muted { color: var(--subtle); font-weight: 500; font-style: italic; }
+
+/* Discount badge */
+.disc-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--green);
+  background: var(--green-bg);
+  border: 1px solid var(--green-dim);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+/* ── Summary section ─────────────────────────── */
+.summary {
+  padding: 16px 18px;
+}
+
+.sum-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 7px;
+}
+
+.sum-label {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.sum-val {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.sum-val.struck {
+  text-decoration: line-through;
+  opacity: .5;
+}
+
+.sum-divider {
+  height: 1px;
+  background: var(--border-light);
+  margin: 12px 0;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.total-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.total-val {
+  font-family: var(--mono);
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.03em;
+}
+
+.total-note {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+/* ── Methodology ─────────────────────────────── */
+.methodology {
+  margin-top: 14px;
+  padding: 11px 14px;
+  background: var(--ground);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.methodology strong { color: var(--text); }
+
+code {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  background: rgba(15,23,42,.06);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+/* ── Responsive ──────────────────────────────── */
+@media (max-width: 700px) {
+  main { grid-template-columns: 1fr; padding: 16px 12px 40px; }
+  header { padding: 14px 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wordmark">
+    turbopuffer<span class="wordmark-dot"></span>
+  </div>
+  <div class="header-sep"></div>
+  <div class="header-sub">pricing calculator — estimated monthly cost</div>
+</header>
+
+<main>
+
+  <!-- ── Controls ─────────────────────────── -->
+  <div class="panel">
+    <div class="panel-head">workload parameters</div>
+
+    <!-- Plan selector -->
+    <div class="plan-row">
+      <button class="plan-btn active" data-plan="launch" onclick="setPlan('launch')">
+        launch
+        <span class="plan-min">$16 / mo min</span>
+      </button>
+      <button class="plan-btn" data-plan="scale" onclick="setPlan('scale')">
+        scale
+        <span class="plan-min">$256 / mo min</span>
+      </button>
+      <button class="plan-btn" data-plan="enterprise" onclick="setPlan('enterprise')">
+        enterprise
+        <span class="plan-min">$4,096 / mo min</span>
+      </button>
+    </div>
+
+    <div class="controls-body">
+
+      <div class="section-eyebrow">vector configuration</div>
+
+      <!-- Dims + Attrs -->
+      <div class="select-row">
+        <div>
+          <div class="field-label">Dimensions</div>
+          <select id="dims" onchange="update()">
+            <option value="0">none</option>
+            <option value="256">256</option>
+            <option value="384">384</option>
+            <option value="512">512</option>
+            <option value="768">768</option>
+            <option value="1024" selected>1024</option>
+            <option value="1536">1536</option>
+            <option value="3072">3072</option>
+            <option value="4096">4096</option>
+            <option value="10752">10752</option>
+          </select>
+        </div>
+        <div>
+          <div class="field-label">Attributes per doc</div>
+          <select id="attrs" onchange="update()">
+            <option value="0">none</option>
+            <option value="128">128 B</option>
+            <option value="256">256 B</option>
+            <option value="512" selected>512 B</option>
+            <option value="1024">1 KB</option>
+            <option value="2048">2 KB</option>
+            <option value="3072">3 KB</option>
+            <option value="4096">4 KB</option>
+            <option value="8192">8 KB</option>
+            <option value="16384">16 KB</option>
+            <option value="32768">32 KB</option>
+            <option value="1048576">1 MB</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="section-eyebrow">data volume</div>
+
+      <!-- Stored vectors -->
+      <div class="ctrl">
+        <div class="ctrl-head">
+          <span class="ctrl-name">Stored vectors</span>
+          <span class="ctrl-badge" id="docs-badge">1M</span>
+        </div>
+        <div class="ruler-wrap">
+          <input type="range" id="docs" min="0" max="11" step="1" value="2" oninput="update()">
+          <div class="ruler" id="docs-ruler"></div>
+        </div>
+      </div>
+
+      <!-- Namespaces -->
+      <div class="ctrl">
+        <div class="ctrl-head">
+          <span class="ctrl-name">Namespaces</span>
+          <span class="ctrl-badge" id="ns-badge">10</span>
+        </div>
+        <div class="ruler-wrap">
+          <input type="range" id="ns" min="0" max="9" step="1" value="1" oninput="update()">
+          <div class="ruler" id="ns-ruler"></div>
+        </div>
+      </div>
+
+      <div class="section-eyebrow">monthly traffic</div>
+
+      <!-- Writes -->
+      <div class="ctrl">
+        <div class="ctrl-head">
+          <span class="ctrl-name">Writes <span class="ctrl-hint">docs upserted</span></span>
+          <span class="ctrl-badge" id="writes-badge">1M</span>
+        </div>
+        <div class="ruler-wrap">
+          <input type="range" id="writes" min="0" max="13" step="1" value="3" oninput="update()">
+          <div class="ruler" id="writes-ruler"></div>
+        </div>
+      </div>
+
+      <!-- Batch size -->
+      <div class="ctrl">
+        <div class="ctrl-head">
+          <span class="ctrl-name">Batch size <span class="ctrl-hint">write discount</span></span>
+          <span class="ctrl-badge" id="batch-badge">500 KB</span>
+        </div>
+        <div class="ruler-wrap">
+          <input type="range" id="batch" min="0" max="9" step="1" value="6" oninput="update()">
+          <div class="ruler" id="batch-ruler"></div>
+        </div>
+      </div>
+
+      <!-- Queries -->
+      <div class="ctrl">
+        <div class="ctrl-head">
+          <span class="ctrl-name">Queries <span class="ctrl-hint">ANN searches</span></span>
+          <span class="ctrl-badge" id="queries-badge">1M</span>
+        </div>
+        <div class="ruler-wrap">
+          <input type="range" id="queries" min="0" max="13" step="1" value="3" oninput="update()">
+          <div class="ruler" id="queries-ruler"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Results ───────────────────────────── -->
+  <div>
+    <div class="panel">
+      <div class="panel-head">cost breakdown</div>
+
+      <div class="cost-row">
+        <div class="cost-label-col">
+          <span class="cost-name">Storage</span>
+          <span class="cost-sub" id="storage-sub">—</span>
+        </div>
+        <span class="cost-val" id="storage-val">—</span>
+      </div>
+
+      <div class="cost-row">
+        <div class="cost-label-col">
+          <span class="cost-name">
+            Writes
+            <span id="disc-badge-wrap"></span>
+          </span>
+          <span class="cost-sub" id="writes-sub">—</span>
+        </div>
+        <span class="cost-val" id="writes-val">—</span>
+      </div>
+
+      <div class="cost-row">
+        <div class="cost-label-col">
+          <span class="cost-name">Queries</span>
+          <span class="cost-sub" id="queries-sub">—</span>
+        </div>
+        <span class="cost-val" id="queries-val">—</span>
+      </div>
+
+      <div class="cost-row">
+        <div class="cost-label-col">
+          <span class="cost-name">Namespaces</span>
+        </div>
+        <span class="cost-val muted">included</span>
+      </div>
+
+      <div class="summary">
+        <div class="sum-row">
+          <span class="sum-label">Usage subtotal</span>
+          <span class="sum-val" id="subtotal-val">—</span>
+        </div>
+        <div class="sum-row">
+          <span class="sum-label">Plan minimum</span>
+          <span class="sum-val" id="min-val">$16</span>
+        </div>
+        <div class="sum-divider"></div>
+        <div class="total-row">
+          <span class="total-label">Monthly estimate</span>
+          <span class="total-val" id="total-val">—</span>
+        </div>
+        <div class="total-note" id="total-note"></div>
+      </div>
+    </div>
+
+    <!-- Pinned mode comparison -->
+    <div class="panel" style="margin-top:16px">
+      <div class="panel-head">pinned mode estimate</div>
+      <div style="margin-bottom:12px;font-size:13px;color:var(--subtle)">
+        Pinned reserves dedicated NVMe compute. Billed by GB-hours: <code>max(actual_gb, 64) × replicas × 730 hr × $0.01325/GB-hr</code>.<br>
+        Floor: 64 GB regardless of actual namespace size. Queries included (no per-query TB charge).
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <label style="font-size:13px;font-weight:600">Replicas</label>
+        <input type="number" id="pinned-replicas" min="1" max="16" value="1"
+          oninput="updatePinned()"
+          style="width:64px;padding:4px 8px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;color:var(--fg);font-size:14px">
+      </div>
+      <div class="cost-row">
+        <div class="cost-label-col">
+          <span class="cost-name">Pinned compute</span>
+          <span class="cost-sub" id="pinned-compute-sub">—</span>
+        </div>
+        <span class="cost-val" id="pinned-compute-val">—</span>
+      </div>
+      <div class="cost-row">
+        <div class="cost-label-col">
+          <span class="cost-name">Storage (standard)</span>
+          <span class="cost-sub" id="pinned-storage-sub">—</span>
+        </div>
+        <span class="cost-val" id="pinned-storage-val">—</span>
+      </div>
+      <div class="summary">
+        <div class="total-row">
+          <span class="total-label">Pinned monthly total</span>
+          <span class="total-val" id="pinned-total-val">—</span>
+        </div>
+        <div class="total-note" id="pinned-note"></div>
+      </div>
+    </div>
+
+    <div class="methodology">
+      <strong>Pricing model (extracted from turbopuffer.com/docs/pinning):</strong><br>
+      Storage: f16 (2 B/dim) + 1.2× attr overhead at $0.33/GB.<br>
+      Writes: f32 (4 B/dim) at $2/GB; batch discount: <code>min(50%, max(0, (log₁₀(KB)−1)×20%))</code>.<br>
+      Queries (serverless): billed per GB scanned; 1.28 GB minimum per namespace; 80% discount above 32 GB, 96% above 128 GB; $0.001/TB. Returned attrs at $0.05/GB.<br>
+      Pinned: $0.01325/GB-hour × max(actual_gb, 64 GB) × replicas × 730 hr/mo. Queries included. Rate reverse-engineered from docs example (256 GB × 1r × 730 hr = $2,476).<br>
+      Enterprise: 35% usage premium on writes and queries.
+    </div>
+  </div>
+
+</main>
+
+<script>
+'use strict';
+
+/* ── Pinned pricing constants ───────────── */
+const PINNED_RATE_PER_GB_HR = 0.01325; // reverse-engineered: $2,476 / (256 GB × 730 hr)
+const PINNED_FLOOR_GB       = 64;
+const HOURS_PER_MONTH       = 730;
+
+function calcPinned(docs, dims, attrBytes, replicas) {
+  const p = PLANS[plan];
+  const actualGB  = docs * (1.2 * attrBytes + 2 * dims) / 1e9;
+  const billedGB  = Math.max(actualGB, PINNED_FLOOR_GB);
+  const computeCost = billedGB * replicas * HOURS_PER_MONTH * PINNED_RATE_PER_GB_HR;
+  const storageCost = actualGB * p.storage;
+  return { actualGB, billedGB, computeCost, storageCost, total: computeCost + storageCost };
+}
+
+function updatePinned() {
+  const docsI  = +document.getElementById('docs').value;
+  const dims   = +document.getElementById('dims').value;
+  const attrs  = +document.getElementById('attrs').value;
+  const reps   = Math.max(1, +document.getElementById('pinned-replicas').value || 1);
+  const docs   = S_DOCS[docsI];
+
+  if (docs === 0) {
+    ['pinned-compute-val','pinned-storage-val','pinned-total-val'].forEach(id =>
+      document.getElementById(id).textContent = '—');
+    document.getElementById('pinned-compute-sub').textContent = 'set doc count above';
+    document.getElementById('pinned-storage-sub').textContent = '';
+    document.getElementById('pinned-note').textContent = '';
+    return;
+  }
+
+  const r = calcPinned(docs, dims, attrs, reps);
+  const floored = r.billedGB > r.actualGB;
+
+  document.getElementById('pinned-compute-val').textContent = fmtUSD(r.computeCost);
+  document.getElementById('pinned-compute-sub').textContent =
+    `${fmtGB(r.billedGB)} × ${reps}r × 730 hr × $${PINNED_RATE_PER_GB_HR}/GB-hr` +
+    (floored ? ` (floor: actual ${fmtGB(r.actualGB)})` : '');
+
+  document.getElementById('pinned-storage-val').textContent = fmtUSD(r.storageCost);
+  document.getElementById('pinned-storage-sub').textContent =
+    `${fmtGB(r.actualGB)} × $${PLANS[plan].storage}/GB`;
+
+  document.getElementById('pinned-total-val').textContent = fmtUSD(r.total) + '/mo';
+
+  // Compare to serverless
+  const qr = calcQueries(S_RWQR[+document.getElementById('queries').value], docs,
+                          S_NS[+document.getElementById('ns').value], dims, attrs);
+  const stor = calcStorage(docs, dims, attrs);
+  const serverlessTotal = Math.max(stor.cost + qr.cost, PLANS[plan].commitment);
+  const ratio = r.total / serverlessTotal;
+  document.getElementById('pinned-note').textContent =
+    qr.cost > 0
+      ? `${ratio < 1 ? ratio.toFixed(2)+'× cheaper' : ratio.toFixed(1)+'× more expensive'} than serverless at current query volume`
+      : 'set query count to compare vs serverless';
+}
+
+/* ── Pricing tables ─────────────────────── */
+const PLANS = {
+  launch:     { storage: 0.33, writes: 2,   queried: 0.001,   returned: 0.05,   commitment: 16,   minNsGB: 1.28, largeGB: 32, vLargeGB: 128, largeD: 0.8, vLargeD: 0.96 },
+  scale:      { storage: 0.33, writes: 2,   queried: 0.001,   returned: 0.05,   commitment: 256,  minNsGB: 1.28, largeGB: 32, vLargeGB: 128, largeD: 0.8, vLargeD: 0.96 },
+  enterprise: { storage: 0.33, writes: 2.7, queried: 0.00135, returned: 0.0675, commitment: 4096, minNsGB: 1.28, largeGB: 32, vLargeGB: 128, largeD: 0.8, vLargeD: 0.96 },
+};
+
+/* ── Slider scales ──────────────────────── */
+const S_DOCS  = [0, 500e3, 1e6, 10e6, 50e6, 100e6, 500e6, 1e9, 5e9, 10e9, 50e9, 100e9];
+const S_RWQR  = [0, 10e3, 100e3, 1e6, 2.5e6, 10e6, 50e6, 100e6, 250e6, 500e6, 1e9, 10e9, 50e9, 100e9];
+const S_NS    = [1, 10, 100, 1e3, 10e3, 100e3, 1e6, 10e6, 100e6, 1e9];
+const S_BATCH = [1, 5, 10, 50, 100, 250, 500, 1000, 5000, 10000]; // KB
+
+let plan = 'launch';
+
+/* ── Format helpers ─────────────────────── */
+function fmtN(n) {
+  if (n === 0)   return '0';
+  if (n >= 1e12) return fmtF(n / 1e12) + 'T';
+  if (n >= 1e9)  return fmtF(n / 1e9)  + 'B';
+  if (n >= 1e6)  return fmtF(n / 1e6)  + 'M';
+  if (n >= 1e3)  return fmtF(n / 1e3)  + 'K';
+  return n.toString();
+}
+
+function fmtF(x) {
+  return (x % 1 === 0) ? x.toFixed(0) : x.toFixed(1);
+}
+
+function fmtKB(kb) {
+  if (kb >= 1000) return fmtF(kb / 1000) + ' MB';
+  return kb + ' KB';
+}
+
+function fmtUSD(n) {
+  if (n === 0) return '$0.00';
+  if (n < 0.005) return '<$0.01';
+  if (n >= 10000) return '$' + Math.round(n).toLocaleString('en-US');
+  if (n >= 1000)  return '$' + n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return '$' + n.toFixed(2);
+}
+
+function fmtGB(gb) {
+  if (gb >= 1e6)  return fmtF(gb / 1e6) + ' PB';
+  if (gb >= 1e3)  return fmtF(gb / 1e3) + ' TB';
+  if (gb >= 1)    return gb.toFixed(2)   + ' GB';
+  return (gb * 1024).toFixed(1) + ' MB';
+}
+
+/* ── Pricing formulas ───────────────────── */
+function batchDiscount(batchKB) {
+  return Math.min(0.5, Math.max((Math.log10(batchKB) - 1) * 0.2, 0));
+}
+
+function effectiveNsGB(nsGB, p) {
+  let l = Math.max(nsGB, p.minNsGB);
+  if (l > p.vLargeGB) {
+    l = l - p.vLargeD * (l - p.vLargeGB) - p.largeD * (p.vLargeGB - p.largeGB);
+  } else if (l > p.largeGB) {
+    l = l - p.largeD * (l - p.largeGB);
+  }
+  return l;
+}
+
+function calcStorage(docs, dims, attrBytes) {
+  const p = PLANS[plan];
+  // f16 (2 B/dim) + 1.2× attribute indexing overhead
+  const docSize = 1.2 * attrBytes + 2 * dims;
+  const gb = docs * docSize / 1e9;
+  const cost = gb * p.storage;
+  return { gb, cost };
+}
+
+function calcWrites(writes, dims, attrBytes, batchKB) {
+  if (writes === 0) return { gb: 0, cost: 0, disc: 0 };
+  const p = PLANS[plan];
+  // f32 (4 B/dim) for write billing
+  const gb = writes * (attrBytes + 4 * dims) / 1e9;
+  const disc = batchDiscount(batchKB);
+  return { gb, cost: gb * p.writes * (1 - disc), disc };
+}
+
+function calcQueries(queries, docs, ns, dims, attrBytes) {
+  if (queries === 0 || docs === 0) return { processedGB: 0, queriedCost: 0, returnedCost: 0, cost: 0, effGB: 0 };
+  const p = PLANS[plan];
+  const docsPerNs = docs / Math.max(ns, 1);
+  // Namespace size uses storage format (f16)
+  const nsGB = docsPerNs * (attrBytes + 2 * dims) / 1e9;
+  const effGB = effectiveNsGB(nsGB, p);
+  const processedGB = queries * effGB;
+  // $0.001 / TB = $0.001 / 1000 GB
+  const queriedCost = processedGB / 1000 * p.queried;
+  // returned: topK=10 results, attrBytes each
+  const returnedGB = queries * 10 * attrBytes / 1e9;
+  const returnedCost = returnedGB * p.returned;
+  return { processedGB, queriedCost, returnedCost, cost: queriedCost + returnedCost, effGB };
+}
+
+/* ── Slider fill update ─────────────────── */
+function setFill(el) {
+  const pct = ((+el.value - +el.min) / (+el.max - +el.min) * 100).toFixed(2) + '%';
+  el.style.setProperty('--fill', pct);
+}
+
+/* ── Tick ruler generation ──────────────── */
+function buildRuler(containerId, scale, fmtFn) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const n = scale.length - 1;
+  // Show ~5 evenly-spaced tick indices
+  const indices = [...new Set([0, Math.round(n * 0.25), Math.round(n * 0.5), Math.round(n * 0.75), n])];
+  el.innerHTML = indices.map(i => {
+    const pct = (i / n * 100).toFixed(2);
+    return `<div class="tick" style="left:${pct}%">` +
+      `<div class="tick-line"></div>` +
+      `<div class="tick-label">${fmtFn(scale[i])}</div>` +
+    `</div>`;
+  }).join('');
+}
+
+/* ── Main update ────────────────────────── */
+function update() {
+  const docsI   = +document.getElementById('docs').value;
+  const writesI = +document.getElementById('writes').value;
+  const queriesI= +document.getElementById('queries').value;
+  const nsI     = +document.getElementById('ns').value;
+  const batchI  = +document.getElementById('batch').value;
+  const dims    = +document.getElementById('dims').value;
+  const attrs   = +document.getElementById('attrs').value;
+
+  const docs    = S_DOCS[docsI];
+  const writes  = S_RWQR[writesI];
+  const queries = S_RWQR[queriesI];
+  const ns      = S_NS[nsI];
+  const batchKB = S_BATCH[batchI];
+  const p       = PLANS[plan];
+
+  // Update badges
+  document.getElementById('docs-badge').textContent    = fmtN(docs);
+  document.getElementById('writes-badge').textContent  = fmtN(writes);
+  document.getElementById('queries-badge').textContent = fmtN(queries);
+  document.getElementById('ns-badge').textContent      = fmtN(ns);
+  document.getElementById('batch-badge').textContent   = fmtKB(batchKB);
+
+  // Update track fills
+  ['docs','writes','queries','ns','batch'].forEach(id => setFill(document.getElementById(id)));
+
+  // Calculate
+  const stor = calcStorage(docs, dims, attrs);
+  const wr   = calcWrites(writes, dims, attrs, batchKB);
+  const qr   = calcQueries(queries, docs, ns, dims, attrs);
+
+  const subtotal = stor.cost + wr.cost + qr.cost;
+  const total    = Math.max(subtotal, p.commitment);
+
+  // Storage
+  document.getElementById('storage-val').textContent = fmtUSD(stor.cost);
+  document.getElementById('storage-sub').textContent =
+    stor.gb > 0 ? `${fmtGB(stor.gb)} × $${p.storage}/GB (f16 + attr overhead)` : 'no data';
+
+  // Writes
+  document.getElementById('writes-val').textContent = fmtUSD(wr.cost);
+  const discWrap = document.getElementById('disc-badge-wrap');
+  if (writes > 0 && wr.disc > 0.005) {
+    discWrap.innerHTML = `<span class="disc-badge">−${Math.round(wr.disc * 100)}%</span>`;
+  } else {
+    discWrap.innerHTML = '';
+  }
+  document.getElementById('writes-sub').textContent = writes > 0
+    ? `${fmtGB(wr.gb)} f32 × $${p.writes}/GB`
+    : 'no writes';
+
+  // Queries
+  document.getElementById('queries-val').textContent = fmtUSD(qr.cost);
+  if (queries > 0 && docs > 0) {
+    const perQ = fmtGB(qr.effGB);
+    document.getElementById('queries-sub').textContent =
+      `${fmtN(queries)} queries × ${perQ}/ns scanned`;
+  } else {
+    document.getElementById('queries-sub').textContent = 'no queries';
+  }
+
+  // Summary
+  const subEl = document.getElementById('subtotal-val');
+  subEl.textContent = fmtUSD(subtotal);
+  subEl.classList.toggle('struck', total > subtotal);
+
+  document.getElementById('min-val').textContent = fmtUSD(p.commitment) + '/mo';
+  document.getElementById('total-val').textContent = fmtUSD(total) + '/mo';
+
+  const noteEl = document.getElementById('total-note');
+  if (total > subtotal) {
+    noteEl.textContent = `Usage is ${fmtUSD(subtotal)}/mo — ${plan} plan minimum applies.`;
+  } else {
+    const over = fmtUSD(subtotal - p.commitment);
+    noteEl.textContent = `Usage exceeds the ${plan} minimum by ${over}.`;
+  }
+
+  updatePinned();
+}
+
+function setPlan(p) {
+  plan = p;
+  document.querySelectorAll('.plan-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.plan === p)
+  );
+  update();
+}
+
+/* ── Boot ───────────────────────────────── */
+buildRuler('docs-ruler',    S_DOCS,  fmtN);
+buildRuler('writes-ruler',  S_RWQR,  fmtN);
+buildRuler('queries-ruler', S_RWQR,  fmtN);
+buildRuler('ns-ruler',      S_NS,    fmtN);
+buildRuler('batch-ruler',   S_BATCH, fmtKB);
+update();
+</script>
+</body>
+</html>

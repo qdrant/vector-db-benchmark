@@ -191,9 +191,22 @@ def make_qdrant():
 
 # ── Upload helpers ─────────────────────────────────────────────────────────────
 
+def _upload_stats(total, batch_lats, t_total):
+    batch_lats_arr = np.array(batch_lats)
+    wps = round(total / t_total, 1)
+    return {
+        "total_s":    round(t_total, 1),
+        "wps":        wps,
+        "batch_p50_ms": round(float(np.percentile(batch_lats_arr, 50)) * 1000, 1),
+        "batch_p99_ms": round(float(np.percentile(batch_lats_arr, 99)) * 1000, 1),
+    }
+
 async def tpuf_upload(ns, ids, vectors, extra_cols=None):
     total = len(ids)
     t0 = time.perf_counter()
+    batch_lats = []
+    server_ms_list = []
+    billable_bytes = 0
     for start in range(0, total, BATCH_SIZE):
         end = min(start + BATCH_SIZE, total)
         cols = {"id": ids[start:end], "vector": vectors[start:end].tolist()}
@@ -201,14 +214,28 @@ async def tpuf_upload(ns, ids, vectors, extra_cols=None):
             for k, v in extra_cols.items():
                 cols[k] = v[start:end]
         kwargs = {"upsert_columns": cols, "distance_metric": "cosine_distance"}
-        await ns.write(**kwargs)
+        bt = time.perf_counter()
+        resp = await ns.write(**kwargs)
+        batch_lats.append(time.perf_counter() - bt)
+        if resp.performance:
+            server_ms_list.append(resp.performance.server_total_ms)
+        if resp.billing:
+            billable_bytes += resp.billing.billable_logical_bytes_written
         if (start // BATCH_SIZE) % 20 == 0:
             print(f"    tpuf {end}/{total}", flush=True)
-    return time.perf_counter() - t0
+    s = _upload_stats(total, batch_lats, time.perf_counter() - t0)
+    if server_ms_list:
+        arr = np.array(server_ms_list)
+        s["server_p50_ms"] = round(float(np.percentile(arr, 50)), 1)
+        s["server_p99_ms"] = round(float(np.percentile(arr, 99)), 1)
+    if billable_bytes:
+        s["billable_gb"] = round(billable_bytes / 1e9, 4)
+    return s
 
 async def qdrant_upload(qc, collection, vectors, ids, payloads=None):
     total = len(ids)
     t0 = time.perf_counter()
+    batch_lats = []
     for start in range(0, total, BATCH_SIZE):
         end = min(start + BATCH_SIZE, total)
         points = [
@@ -219,9 +246,12 @@ async def qdrant_upload(qc, collection, vectors, ids, payloads=None):
             )
             for i, vec in enumerate(vectors[start:end])
         ]
+        bt = time.perf_counter()
         await qc.upsert(collection_name=collection, points=points)
+        batch_lats.append(time.perf_counter() - bt)
         if (start // BATCH_SIZE) % 20 == 0:
             print(f"    qdrant {end}/{total}", flush=True)
+    t_upsert = time.perf_counter() - t0
     print("  Waiting for Qdrant indexing...", flush=True)
     while True:
         info = await qc.get_collection(collection)
@@ -229,12 +259,19 @@ async def qdrant_upload(qc, collection, vectors, ids, payloads=None):
             break
         print(f"    status={info.status}", flush=True)
         await asyncio.sleep(5)
-    return time.perf_counter() - t0
+    t_total = time.perf_counter() - t0
+    s = _upload_stats(total, batch_lats, t_upsert)
+    s["index_s"]  = round(t_total - t_upsert, 1)
+    s["total_s"]  = round(t_total, 1)
+    return s
 
 def report_upload(label, r):
-    print(f"\n  ┌─ Upload: {label}")
-    print(f"  │  turbopuffer  batch={r['batch']}  {r['tpuf_s']/60:6.1f} min")
-    print(f"  └─ Qdrant       batch={r['batch']}  {r['qdrant_s']/60:6.1f} min")
+    tpuf = r["tpuf"]
+    qt   = r["qdrant"]
+    print(f"\n  ┌─ Upload: {label}  batch={r['batch']}")
+    print(f"  │  turbopuffer  total={tpuf['total_s']/60:.1f}min  wps={tpuf['wps']}  batch p50={tpuf['batch_p50_ms']}ms  p99={tpuf['batch_p99_ms']}ms")
+    print(f"  │  Qdrant       total={qt['total_s']/60:.1f}min  wps={qt['wps']}  batch p50={qt['batch_p50_ms']}ms  p99={qt['batch_p99_ms']}ms")
+    print(f"  └─    Qdrant upsert={qt['total_s']/60 - qt['index_s']/60:.1f}min  index={qt['index_s']/60:.1f}min")
 
 
 # ── Pinning helpers ────────────────────────────────────────────────────────────
@@ -266,27 +303,77 @@ async def unpin(ns):
 
 # ── Benchmark primitives ───────────────────────────────────────────────────────
 
-async def run_search(query_fn, tests, concurrency, n=N_SEARCH):
-    """Fire n queries at given concurrency. query_fn(vec, cond) → list[id]."""
-    sem = asyncio.Semaphore(concurrency)
-    latencies, returned = [], []
+def _tpuf_perf(r):
+    """Extract perf+billing dict from a tpuf NamespaceQueryResponse."""
+    return {
+        "server_total_ms":    r.performance.server_total_ms,
+        "query_execution_ms": r.performance.query_execution_ms,
+        "cache_hit_ratio":    r.performance.cache_hit_ratio,
+        "cache_temperature":  r.performance.cache_temperature,
+        "billable_bytes":     r.billing.billable_logical_bytes_queried,
+    }
 
-    async def one(t):
+async def run_search(query_fn, tests, concurrency, n=N_SEARCH, collect_perf=False):
+    """Fire n queries at given concurrency.
+
+    query_fn(vec, cond) should return either:
+      - list[id]                    (plain mode)
+      - (list[id], perf_dict|None)  (when collect_perf=True, tpuf paths)
+      - (list[id], qdrant_server_ms|None)  (qdrant paths always return server_ms)
+    """
+    sem = asyncio.Semaphore(concurrency)
+    latencies = []
+    returned  = [None] * n  # pre-allocated so index == dispatch order
+    tpuf_perf_rows  = []
+    qdrant_server_ms = []
+
+    async def one(i, t):
         async with sem:
             t0 = time.perf_counter()
-            ids = await query_fn(t["query"], t.get("conditions") or {})
+            result = await query_fn(t["query"], t.get("conditions") or {})
             latencies.append(time.perf_counter() - t0)
-            returned.append(ids)
+            if isinstance(result, tuple):
+                ids, meta = result
+                returned[i] = ids
+                if collect_perf and meta and isinstance(meta, dict):
+                    tpuf_perf_rows.append(meta)
+                elif meta is not None and isinstance(meta, (int, float)):
+                    qdrant_server_ms.append(meta)
+            else:
+                returned[i] = result
 
-    await asyncio.gather(*[one(tests[i % len(tests)]) for i in range(n)])
+    await asyncio.gather(*[one(i, tests[i % len(tests)]) for i in range(n)])
 
     s = stats(latencies)
-    recalls = [recall_at_k(ret, tests[i % len(tests)]["closest_ids"]) for i, ret in enumerate(returned)]
+    recalls = [recall_at_k(returned[i], tests[i % len(tests)]["closest_ids"]) for i in range(n)]
     s["recall_pct"] = round(float(np.mean(recalls)) * 100, 2)
+
+    if tpuf_perf_rows:
+        srv    = np.array([p["server_total_ms"]    for p in tpuf_perf_rows])
+        exe    = np.array([p["query_execution_ms"] for p in tpuf_perf_rows])
+        hit    = np.array([p["cache_hit_ratio"]    for p in tpuf_perf_rows])
+        billed = np.array([p["billable_bytes"]     for p in tpuf_perf_rows])
+        s["tpuf_server_p50_ms"] = round(float(np.percentile(srv, 50)), 1)
+        s["tpuf_server_p99_ms"] = round(float(np.percentile(srv, 99)), 1)
+        s["tpuf_exec_p50_ms"]   = round(float(np.percentile(exe, 50)), 1)
+        s["tpuf_exec_p99_ms"]   = round(float(np.percentile(exe, 99)), 1)
+        s["tpuf_cache_hit_avg"] = round(float(np.mean(hit)), 3)
+        s["tpuf_billed_gb_avg"] = round(float(np.mean(billed)) / 1e9, 6)
+        temps = [p["cache_temperature"] for p in tpuf_perf_rows]
+        s["tpuf_cache_temp"]    = max(set(temps), key=temps.count)  # mode
+
+    if qdrant_server_ms:
+        arr = np.array(qdrant_server_ms)
+        s["qdrant_server_p50_ms"] = round(float(np.percentile(arr, 50)), 3)
+        s["qdrant_server_p99_ms"] = round(float(np.percentile(arr, 99)), 3)
+
     return s
 
-async def fixed_qps_run(query_fn, qps: float, duration_s: int) -> list:
-    """Dispatch queries at target QPS for duration_s seconds."""
+async def fixed_qps_run(query_fn, qps: float, duration_s: int, server_ms_sink=None) -> list:
+    """Dispatch queries at target QPS for duration_s seconds.
+
+    query_fn() may return a server_ms float; if server_ms_sink list is provided it is appended.
+    """
     interval = 1.0 / qps
     deadline = time.monotonic() + duration_s
     latencies = []
@@ -295,7 +382,9 @@ async def fixed_qps_run(query_fn, qps: float, duration_s: int) -> list:
     async def one():
         t0 = time.perf_counter()
         try:
-            await query_fn()
+            result = await query_fn()
+            if server_ms_sink is not None and isinstance(result, (int, float)):
+                server_ms_sink.append(result)
         except Exception:
             pass
         latencies.append(time.perf_counter() - t0)
@@ -363,8 +452,8 @@ async def phase_upload_dbpedia(run_dir, state, args):
     print(f"  {vecs.shape[0]} × {vecs.shape[1]}, batch={BATCH_SIZE}")
 
     tc = make_tpuf()
-    t_tpuf = await tpuf_upload(tc.namespace(TPUF_DBPEDIA), ids, vecs)
-    print(f"  tpuf: {t_tpuf/60:.1f} min")
+    tpuf = await tpuf_upload(tc.namespace(TPUF_DBPEDIA), ids, vecs)
+    print(f"  tpuf: {tpuf['total_s']/60:.1f} min  wps={tpuf['wps']}")
 
     qc = make_qdrant()
     await qc.create_collection(
@@ -373,11 +462,11 @@ async def phase_upload_dbpedia(run_dir, state, args):
         hnsw_config=models.HnswConfigDiff(m=16, ef_construct=128),
         optimizers_config=models.OptimizersConfigDiff(memmap_threshold=10_000_000),
     )
-    t_qdrant = await qdrant_upload(qc, QDRANT_DBPEDIA, vecs, ids)
-    print(f"  qdrant: {t_qdrant/60:.1f} min")
+    qt = await qdrant_upload(qc, QDRANT_DBPEDIA, vecs, ids)
+    print(f"  qdrant: upsert {(qt['total_s']-qt['index_s'])/60:.1f} min  index {qt['index_s']/60:.1f} min  total {qt['total_s']/60:.1f} min  wps={qt['wps']}")
     await qc.close()
 
-    r = {"tpuf_s": round(t_tpuf, 1), "qdrant_s": round(t_qdrant, 1), "batch": BATCH_SIZE}
+    r = {"tpuf": tpuf, "qdrant": qt, "batch": BATCH_SIZE}
     mark_done(run_dir, state, "upload_dbpedia", r)
     report_upload("DBpedia 100K×1536", r)
 
@@ -397,8 +486,8 @@ async def phase_upload_hm(run_dir, state, args):
 
     tc = make_tpuf()
     extra = {f: [p.get(f) for p in payloads] for f in fields}
-    t_tpuf = await tpuf_upload(tc.namespace(TPUF_HM), ids, vecs, extra_cols=extra)
-    print(f"  tpuf: {t_tpuf/60:.1f} min")
+    tpuf = await tpuf_upload(tc.namespace(TPUF_HM), ids, vecs, extra_cols=extra)
+    print(f"  tpuf: {tpuf['total_s']/60:.1f} min  wps={tpuf['wps']}")
 
     qc = make_qdrant()
     await qc.create_collection(
@@ -413,11 +502,11 @@ async def phase_upload_hm(run_dir, state, args):
             field_name=field,
             field_schema=models.PayloadSchemaType.KEYWORD,
         )
-    t_qdrant = await qdrant_upload(qc, QDRANT_HM, vecs, ids, payloads=payloads)
-    print(f"  qdrant: {t_qdrant/60:.1f} min")
+    qt = await qdrant_upload(qc, QDRANT_HM, vecs, ids, payloads=payloads)
+    print(f"  qdrant: upsert {(qt['total_s']-qt['index_s'])/60:.1f} min  index {qt['index_s']/60:.1f} min  total {qt['total_s']/60:.1f} min  wps={qt['wps']}")
     await qc.close()
 
-    r = {"tpuf_s": round(t_tpuf, 1), "qdrant_s": round(t_qdrant, 1), "batch": BATCH_SIZE}
+    r = {"tpuf": tpuf, "qdrant": qt, "batch": BATCH_SIZE}
     mark_done(run_dir, state, "upload_hm", r)
     report_upload("H&M 105K×2048", r)
 
@@ -436,22 +525,31 @@ async def phase_upload_multitenant(run_dir, state, args):
     print(f"  {vecs.shape[0]} × {vecs.shape[1]}, {len(tenants)} tenants × {len(groups[tenants[0]])} vecs")
 
     # tpuf: 100 namespaces in parallel (max 10 concurrent)
+    # wall-clock is the right measure here (parallel writes); wps = total vectors / wall time
     tc = make_tpuf()
     sem = asyncio.Semaphore(10)
     t0 = time.perf_counter()
+    all_batch_lats = []
 
     async def upload_tenant(tenant_val):
         async with sem:
             idxs = groups[tenant_val]
-            await tpuf_upload(
+            s = await tpuf_upload(
                 tc.namespace(f"{TPUF_MT_PFX}{tenant_val}"),
                 [ids[i] for i in idxs],
                 vecs[idxs],
             )
+            all_batch_lats.extend([s["batch_p50_ms"], s["batch_p99_ms"]])  # approximate aggregate
 
     await asyncio.gather(*[upload_tenant(t) for t in tenants])
-    t_tpuf = time.perf_counter() - t0
-    print(f"  tpuf: {t_tpuf/60:.1f} min ({len(tenants)} namespaces)")
+    wall_s = time.perf_counter() - t0
+    tpuf = {
+        "total_s": round(wall_s, 1),
+        "wps": round(len(ids) / wall_s, 1),
+        "batch_p50_ms": round(float(np.percentile(all_batch_lats, 50)), 1),
+        "batch_p99_ms": round(float(np.percentile(all_batch_lats, 99)), 1),
+    }
+    print(f"  tpuf: {tpuf['total_s']/60:.1f} min ({len(tenants)} namespaces)  wps={tpuf['wps']}")
 
     # Qdrant: single collection, m=0, payload_m=16, is_tenant on field "a"
     qc = make_qdrant()
@@ -471,11 +569,11 @@ async def phase_upload_multitenant(run_dir, state, args):
         field_name="a",
         field_schema=models.KeywordIndexParams(type="keyword", is_tenant=True),
     )
-    t_qdrant = await qdrant_upload(qc, QDRANT_MT, vecs, ids, payloads=payloads)
-    print(f"  qdrant: {t_qdrant/60:.1f} min")
+    qt = await qdrant_upload(qc, QDRANT_MT, vecs, ids, payloads=payloads)
+    print(f"  qdrant: upsert {(qt['total_s']-qt['index_s'])/60:.1f} min  index {qt['index_s']/60:.1f} min  total {qt['total_s']/60:.1f} min  wps={qt['wps']}")
     await qc.close()
 
-    r = {"tpuf_s": round(t_tpuf, 1), "qdrant_s": round(t_qdrant, 1), "batch": BATCH_SIZE, "tenants": len(tenants)}
+    r = {"tpuf": tpuf, "qdrant": qt, "batch": BATCH_SIZE, "tenants": len(tenants)}
     mark_done(run_dir, state, "upload_multitenant", r)
     report_upload(f"multi-tenant ({len(tenants)} ns vs 1 collection)", r)
 
@@ -495,11 +593,11 @@ async def phase_search_dbpedia_warm(run_dir, state, args):
     for p in [1, 8]:
         async def tpuf_q(vec, cond, _ns=ns):
             r = await _ns.query(rank_by=("vector", "ANN", vec), top_k=10, include_attributes=False)
-            return [x.id for x in r.rows]
+            return ([x.id for x in r.rows], _tpuf_perf(r))
 
-        s = await run_search(tpuf_q, tests, concurrency=p)
+        s = await run_search(tpuf_q, tests, concurrency=p, collect_perf=True)
         results[f"tpuf_p{p}"] = s
-        pstats(f"tpuf serverless p={p}", s, f"recall={s['recall_pct']}%")
+        pstats(f"tpuf serverless p={p}", s, f"recall={s['recall_pct']}%  cache={s.get('tpuf_cache_temp','?')}  hit={s.get('tpuf_cache_hit_avg','?')}")
 
         async def qdrant_q(vec, cond, _qc=qc):
             raw = await _qc.http.search_api.query_points(
@@ -509,11 +607,11 @@ async def phase_search_dbpedia_warm(run_dir, state, args):
                     limit=10, with_vector=False, with_payload=False,
                 ),
             )
-            return [pt.id for pt in raw.result.points]
+            return ([pt.id for pt in raw.result.points], raw.time * 1000)
 
         s = await run_search(qdrant_q, tests, concurrency=p)
         results[f"qdrant_p{p}"] = s
-        pstats(f"qdrant p={p}", s, f"recall={s['recall_pct']}%  server_time=measured_separately")
+        pstats(f"qdrant p={p}", s, f"recall={s['recall_pct']}%")
 
     await qc.close()
     mark_done(run_dir, state, "search_dbpedia_warm", results)
@@ -537,33 +635,45 @@ async def phase_search_dbpedia_fixedqps(run_dir, state, args):
         print(f"\n  ── QPS={qps} ({FIXED_QPS_SECS}s each) ──")
 
         idx_t = [0]
+        tpuf_srv_ms = []
         async def tpuf_qfn(_ns=ns, _vecs=vecs, _idx=idx_t):
             vec = _vecs[_idx[0] % len(_vecs)]
             _idx[0] += 1
-            await _ns.query(rank_by=("vector", "ANN", vec), top_k=10, include_attributes=False)
+            r = await _ns.query(rank_by=("vector", "ANN", vec), top_k=10, include_attributes=False)
+            return r.performance.server_total_ms
 
-        lats = await fixed_qps_run(tpuf_qfn, qps, FIXED_QPS_SECS)
+        lats = await fixed_qps_run(tpuf_qfn, qps, FIXED_QPS_SECS, server_ms_sink=tpuf_srv_ms)
         s = stats(lats)
         monthly_cost = TPUF_STORAGE_MONTHLY + qps * SECS_PER_MONTH * TPUF_COST_PER_QUERY
         s["monthly_usd"] = round(monthly_cost, 2)
+        if tpuf_srv_ms:
+            arr = np.array(tpuf_srv_ms)
+            s["tpuf_server_p50_ms"] = round(float(np.percentile(arr, 50)), 1)
+            s["tpuf_server_p99_ms"] = round(float(np.percentile(arr, 99)), 1)
         results[f"tpuf_qps{qps}"] = s
         pstats(f"  tpuf @ {qps} QPS", s, f"→ ${monthly_cost:.2f}/mo")
 
         idx_q = [0]
+        qdrant_srv_ms = []
         async def qdrant_qfn(_qc=qc, _vecs=vecs, _idx=idx_q):
             vec = _vecs[_idx[0] % len(_vecs)]
             _idx[0] += 1
-            await _qc.http.search_api.query_points(
+            raw = await _qc.http.search_api.query_points(
                 collection_name=QDRANT_DBPEDIA,
                 query_request=models.QueryRequest(
                     query=vec, params=models.SearchParams(hnsw_ef=128),
                     limit=10, with_vector=False, with_payload=False,
                 ),
             )
+            return raw.time * 1000
 
-        lats = await fixed_qps_run(qdrant_qfn, qps, FIXED_QPS_SECS)
+        lats = await fixed_qps_run(qdrant_qfn, qps, FIXED_QPS_SECS, server_ms_sink=qdrant_srv_ms)
         s = stats(lats)
         s["monthly_usd"] = QDRANT_DBPEDIA_MONTHLY
+        if qdrant_srv_ms:
+            arr = np.array(qdrant_srv_ms)
+            s["qdrant_server_p50_ms"] = round(float(np.percentile(arr, 50)), 3)
+            s["qdrant_server_p99_ms"] = round(float(np.percentile(arr, 99)), 3)
         results[f"qdrant_qps{qps}"] = s
         pstats(f"  qdrant @ {qps} QPS", s, f"→ ${QDRANT_DBPEDIA_MONTHLY:.2f}/mo (fixed)")
 
@@ -603,11 +713,16 @@ async def phase_search_hm_warm(run_dir, state, args):
                     filters=to_tpuf_filter(cond),
                     include_attributes=False,
                 )
-                return [x.id for x in r.rows]
+                perf = {"server_total_ms": r.performance.server_total_ms,
+                        "query_execution_ms": r.performance.query_execution_ms,
+                        "cache_hit_ratio": r.performance.cache_hit_ratio,
+                        "cache_temperature": r.performance.cache_temperature,
+                        "billable_bytes": r.billing.billable_logical_bytes_queried}
+                return ([x.id for x in r.rows], perf)
 
-            s = await run_search(tpuf_q, tests, concurrency=32)
+            s = await run_search(tpuf_q, tests, concurrency=32, collect_perf=True)
             results["tpuf_pinned4r_p32_warm"] = s
-            pstats("tpuf pinned-4r p=32 warm", s, f"recall={s['recall_pct']}%")
+            pstats("tpuf pinned-4r p=32 warm", s, f"recall={s['recall_pct']}%  cache={s.get('tpuf_cache_temp','?')}  hit={s.get('tpuf_cache_hit_avg','?')}")
         finally:
             await unpin(ns)
     else:
@@ -625,7 +740,7 @@ async def phase_search_hm_warm(run_dir, state, args):
                     limit=10, with_vector=False, with_payload=False,
                 ),
             )
-            return [pt.id for pt in raw.result.points]
+            return ([pt.id for pt in raw.result.points], raw.time * 1000)
 
         s = await run_search(qdrant_q, tests, concurrency=p)
         results[f"qdrant_p{p}_warm"] = s
@@ -663,11 +778,16 @@ async def phase_search_hm_cold(run_dir, state, args):
                     filters=to_tpuf_filter(cond),
                     include_attributes=False,
                 )
-                return [x.id for x in r.rows]
+                perf = {"server_total_ms": r.performance.server_total_ms,
+                        "query_execution_ms": r.performance.query_execution_ms,
+                        "cache_hit_ratio": r.performance.cache_hit_ratio,
+                        "cache_temperature": r.performance.cache_temperature,
+                        "billable_bytes": r.billing.billable_logical_bytes_queried}
+                return ([x.id for x in r.rows], perf)
 
-            s = await run_search(tpuf_q_cold, tests, concurrency=32, n=500)
+            s = await run_search(tpuf_q_cold, tests, concurrency=32, n=500, collect_perf=True)
             results["tpuf_pinned4r_p32_cold"] = s
-            pstats("tpuf pinned-4r p=32 cold", s, f"recall={s['recall_pct']}%")
+            pstats("tpuf pinned-4r p=32 cold", s, f"recall={s['recall_pct']}%  cache={s.get('tpuf_cache_temp','?')}")
         finally:
             await unpin(cold_ns)
             try:
@@ -720,12 +840,17 @@ async def phase_search_multitenant(run_dir, state, args):
         r = await ns_cache[tenant_val].query(
             rank_by=("vector", "ANN", vec), top_k=10, include_attributes=False,
         )
-        return [x.id for x in r.rows]
+        perf = {"server_total_ms": r.performance.server_total_ms,
+                "query_execution_ms": r.performance.query_execution_ms,
+                "cache_hit_ratio": r.performance.cache_hit_ratio,
+                "cache_temperature": r.performance.cache_temperature,
+                "billable_bytes": r.billing.billable_logical_bytes_queried}
+        return ([x.id for x in r.rows], perf)
 
     for p in [1, 8, 32]:
-        s = await run_search(tpuf_q, tests, concurrency=p)
+        s = await run_search(tpuf_q, tests, concurrency=p, collect_perf=True)
         results[f"tpuf_ns_per_tenant_p{p}"] = s
-        pstats(f"tpuf ns-per-tenant p={p}", s, f"recall={s['recall_pct']}%")
+        pstats(f"tpuf ns-per-tenant p={p}", s, f"recall={s['recall_pct']}%  cache={s.get('tpuf_cache_temp','?')}")
 
     # Qdrant: single collection with payload_m=16, is_tenant filter
     async def qdrant_q(vec, cond, _qc=qc):

@@ -29,7 +29,7 @@ turbopuffer is not a better search engine. It is a cheaper storage tier for spor
 | Filtered search — cold p99 | **~1.6s** | **8.8ms** (no cold-start) |
 | Recall — unfiltered (100% of queries) | 98.4% | 98.4% |
 | Recall — multi-tenant | 100% | **100%** |
-| Recall — filtered (H&M) | ~96% | **95.9%** |
+| Recall — filtered (H&M) | 90.9% | **95.9%** |
 | Recall tuning | None (fixed) | Full (ef, quantization, oversampling) |
 | Cold-start risk | Yes — S3 fetch on first queries after restart | None — HNSW stays in RAM |
 | Upload 100K vectors, batch=128 (DBpedia) | 2.4 min | 3.8 min |
@@ -93,10 +93,12 @@ Queries fired at exact rates for 120 seconds each. Latency figures are real meas
 
 #### turbopuffer (pinned, 4 replicas, p=32 concurrent)
 
-| State | Mean | p50 | p95 | p99 |
-|-------|------|-----|-----|-----|
-| Warm (NVMe-cached) | 93ms | 69ms | 236ms | 351ms |
-| **Cold** (fresh namespace, no warmup) | 210ms | 80ms | 1,510ms | **1,574ms** |
+| State | Mean | p50 | p95 | p99 | Recall |
+|-------|------|-----|-----|-----|--------|
+| Warm (NVMe-cached) | 93ms | 69ms | 236ms | 351ms | **90.9%** |
+| **Cold** (fresh namespace, no warmup) | 210ms | 80ms | 1,510ms | **1,574ms** | **90.9%** |
+
+Recall measured separately at p=1 (500 queries) after warmup. The drop from ~98% unfiltered to **90.9% filtered** is architectural: SPFresh runs ANN on the full dataset first, then applies the filter as a post-processing step. When the filter is selective, discarded candidates are not replaced — the returned set can be smaller than top-10, directly hurting recall.
 
 Cold-state means the namespace was freshly created via `copy_from` (no NVMe cache). After any replica restart or provisioning event, turbopuffer resets to cold — the first queries must fetch centroid data from S3. Warm p99 is 351ms; cold p99 is 1,574ms (**4.5× worse, same config**).
 
@@ -147,6 +149,23 @@ The 1.28 GB minimum namespace billing means even a 308 MB dataset (100K × 1536-
 
 At 100K queries/month (3 queries/hour): turbopuffer costs $0.23, Qdrant costs $26. At 50M queries/month (19 QPS): turbopuffer costs $64, Qdrant costs $26.
 
+### ⚠ Pinned mode: the cost picture for filtered search
+
+The ~10 QPS serverless crossover only applies to **unfiltered search**. Filtered search requires pinning to get stable latency. Pinned billing: **$0.01325/GB-hr × max(actual_gb, 64) × replicas × 730 hr/month**.
+
+The 64 GB billing floor eliminates any serverless cost advantage for small datasets:
+
+| Config | Cost/mo | RPS | p99 (warm) | Recall |
+|--------|---------|-----|------------|--------|
+| tpuf pinned 4r (0.43 GB → 64 GB billed) | **$2,476** | 10.9 | 351ms | 90.9% |
+| Qdrant Cloud 1 node | **$26.10** | 158 | 8.8ms | 95.9% |
+
+**The 64 GB floor means:**
+- H&M benchmark dataset (0.43 GB): tpuf pinned is **95× more expensive** with no performance benefit
+- Break-even for pinned 1r: ~2.7 GB actual (~900K vectors at 1536-dim)
+- Break-even for pinned 4r: **none** — 4 replicas is the same data replicated, not 4× more data. Minimum 4r cost ($2,476) always exceeds $26.10 regardless of dataset size.
+- Below those thresholds, Qdrant is cheaper at **every** QPS level for filtered search
+
 ---
 
 ## Workload Fit
@@ -157,7 +176,7 @@ At 100K queries/month (3 queries/hour): turbopuffer costs $0.23, Qdrant costs $2
 | Internal / async semantic search | ✓ | — | Latency tolerance high, cost matters more |
 | Dev / staging environments | ✓ | — | Real data, rarely queried, zero idle cost |
 | **Sustained multi-tenant (>8 QPS/tenant)** | — | ✓ | **Qdrant cheaper AND 5× faster** |
-| Filtered / faceted search (e-commerce) | Risky | ✓ | Cold p99 ~1.6s. Qdrant always 8.8ms. Recall: tpuf 96% vs Qdrant 96%. |
+| Filtered / faceted search (e-commerce) | Risky | ✓ | Cold p99 ~1.6s. Qdrant always 8.8ms. Recall: tpuf 90.9% vs Qdrant 95.9%. |
 | Real-time recommendations / consumer apps | — | ✓ | 15ms tpuf floor vs 6.8ms Qdrant. 2.3× gap is user-visible. |
 | Precision-sensitive (medical/legal/finance) | — | ✓ | Fixed 96–98.4% recall, not tunable. |
 | High-write + concurrent read | — | ✓ | tpuf writes to S3; not designed for concurrent write+read. |
@@ -182,7 +201,7 @@ For unfiltered search, serverless is faster than pinned at equivalent cost becau
 1. **Latency floor:** 6.8ms mean vs 15.6ms. HNSW in RAM (1.9ms server) vs NVMe/S3 centroid traversal (~13–15ms floor). Not configurable.
 2. **Filtered search consistency:** Qdrant payload indexes keep filter latency at ~8ms p99 warm or cold. turbopuffer cold p99 for filtered search is ~1.6s.
 3. **Multi-tenant throughput:** Qdrant's `payload_m=16` sub-graph approach delivers 5.2× more throughput at 5.2× lower latency vs ns-per-tenant, both at 100% recall.
-4. **Recall control:** Full ef, quantization, oversampling dial. turbopuffer locked at ~96–98.4%.
+4. **Recall control:** Full ef, quantization, oversampling dial. turbopuffer locked at 90.9% filtered / 98.4% unfiltered — no tuning knobs.
 5. **Cost above ~10 QPS:** Qdrant is cheaper and faster simultaneously. There is no operating point above this threshold where turbopuffer wins.
 
 ## Cross-Namespace Contention (Noisy Neighbor Test)
