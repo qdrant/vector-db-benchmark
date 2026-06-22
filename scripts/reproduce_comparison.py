@@ -132,18 +132,32 @@ def pstats(label: str, s: dict, extra: str = ""):
 # ── Filter converters ──────────────────────────────────────────────────────────
 
 def to_tpuf_filter(cond: dict):
+    """Translate Qdrant-style conditions to tpuf tuple filter format."""
     if not cond:
         return None
-    if "and" in cond:
-        parts = [_tpuf_leaf(c) for c in cond["and"]]
-        return parts[0] if len(parts) == 1 else {"$and": parts}
-    return _tpuf_leaf(cond)
+    return _tpuf_clause(cond)
 
-def _tpuf_leaf(cond: dict) -> dict:
-    for field, op in cond.items():
-        if "match" in op:
-            return {field: {"$eq": op["match"]["value"]}}
-    raise ValueError(f"Unknown leaf: {cond}")
+def _tpuf_clause(clause: dict):
+    for field, val in clause.items():
+        if field in ("and", "or", "must", "should"):
+            op = "And" if field in ("and", "must") else "Or"
+            return (op, [_tpuf_clause(c) for c in val])
+        if field == "must_not":
+            return ("Not", ("Or", [_tpuf_clause(c) for c in val]))
+        match = val.get("match")
+        if match is not None:
+            if "value" in match:
+                return (field, "Eq", match["value"])
+            if "any" in match:
+                return (field, "In", match["any"])
+        rng = val.get("range")
+        if rng is not None:
+            parts = []
+            for op_key, tpuf_op in [("gt","Gt"),("gte","Gte"),("lt","Lt"),("lte","Lte")]:
+                if op_key in rng:
+                    parts.append((field, tpuf_op, rng[op_key]))
+            return ("And", parts) if len(parts) > 1 else parts[0]
+    raise ValueError(f"Unknown filter clause: {clause}")
 
 def to_qdrant_filter(cond: dict):
     if not cond:
@@ -278,23 +292,20 @@ async def fixed_qps_run(query_fn, qps: float, duration_s: int) -> list:
     latencies = []
     in_flight = set()
 
-    async def one(vec):
+    async def one():
         t0 = time.perf_counter()
         try:
-            await query_fn(vec)
+            await query_fn()
         except Exception:
             pass
         latencies.append(time.perf_counter() - t0)
 
     next_fire = time.monotonic()
-    queries_cycle = None  # set per-call
-    i = 0
 
-    # We'll receive queries via closure; caller sets query_fn which captures its own idx
     while time.monotonic() < deadline:
         now = time.monotonic()
         if now >= next_fire:
-            t = asyncio.create_task(query_fn())
+            t = asyncio.create_task(one())
             in_flight.add(t)
             t.add_done_callback(in_flight.discard)
             next_fire += interval
@@ -444,6 +455,11 @@ async def phase_upload_multitenant(run_dir, state, args):
 
     # Qdrant: single collection, m=0, payload_m=16, is_tenant on field "a"
     qc = make_qdrant()
+    # Delete if exists from a partial prior run (phase not yet marked done)
+    try:
+        await qc.delete_collection(QDRANT_MT)
+    except Exception:
+        pass
     await qc.create_collection(
         collection_name=QDRANT_MT,
         vectors_config=models.VectorParams(size=vecs.shape[1], distance=models.Distance.COSINE),
@@ -453,8 +469,7 @@ async def phase_upload_multitenant(run_dir, state, args):
     await qc.create_payload_index(
         collection_name=QDRANT_MT,
         field_name="a",
-        field_schema=models.PayloadSchemaType.KEYWORD,
-        field_index_params=models.KeywordIndexParams(is_tenant=True),
+        field_schema=models.KeywordIndexParams(type="keyword", is_tenant=True),
     )
     t_qdrant = await qdrant_upload(qc, QDRANT_MT, vecs, ids, payloads=payloads)
     print(f"  qdrant: {t_qdrant/60:.1f} min")
@@ -480,7 +495,7 @@ async def phase_search_dbpedia_warm(run_dir, state, args):
     for p in [1, 8]:
         async def tpuf_q(vec, cond, _ns=ns):
             r = await _ns.query(rank_by=("vector", "ANN", vec), top_k=10, include_attributes=False)
-            return [x.id for x in r]
+            return [x.id for x in r.rows]
 
         s = await run_search(tpuf_q, tests, concurrency=p)
         results[f"tpuf_p{p}"] = s
@@ -494,7 +509,7 @@ async def phase_search_dbpedia_warm(run_dir, state, args):
                     limit=10, with_vector=False, with_payload=False,
                 ),
             )
-            return [pt.id for pt in raw.points]
+            return [pt.id for pt in raw.result.points]
 
         s = await run_search(qdrant_q, tests, concurrency=p)
         results[f"qdrant_p{p}"] = s
@@ -588,7 +603,7 @@ async def phase_search_hm_warm(run_dir, state, args):
                     filters=to_tpuf_filter(cond),
                     include_attributes=False,
                 )
-                return [x.id for x in r]
+                return [x.id for x in r.rows]
 
             s = await run_search(tpuf_q, tests, concurrency=32)
             results["tpuf_pinned4r_p32_warm"] = s
@@ -610,7 +625,7 @@ async def phase_search_hm_warm(run_dir, state, args):
                     limit=10, with_vector=False, with_payload=False,
                 ),
             )
-            return [pt.id for pt in raw.points]
+            return [pt.id for pt in raw.result.points]
 
         s = await run_search(qdrant_q, tests, concurrency=p)
         results[f"qdrant_p{p}_warm"] = s
@@ -648,7 +663,7 @@ async def phase_search_hm_cold(run_dir, state, args):
                     filters=to_tpuf_filter(cond),
                     include_attributes=False,
                 )
-                return [x.id for x in r]
+                return [x.id for x in r.rows]
 
             s = await run_search(tpuf_q_cold, tests, concurrency=32, n=500)
             results["tpuf_pinned4r_p32_cold"] = s
@@ -674,7 +689,7 @@ async def phase_search_hm_cold(run_dir, state, args):
                 limit=10, with_vector=False, with_payload=False,
             ),
         )
-        return [pt.id for pt in raw.points]
+        return [pt.id for pt in raw.result.points]
 
     s = await run_search(qdrant_q, tests, concurrency=32)
     results["qdrant_p32_always_warm"] = s
@@ -705,7 +720,7 @@ async def phase_search_multitenant(run_dir, state, args):
         r = await ns_cache[tenant_val].query(
             rank_by=("vector", "ANN", vec), top_k=10, include_attributes=False,
         )
-        return [x.id for x in r]
+        return [x.id for x in r.rows]
 
     for p in [1, 8, 32]:
         s = await run_search(tpuf_q, tests, concurrency=p)
@@ -723,7 +738,7 @@ async def phase_search_multitenant(run_dir, state, args):
                 limit=10, with_vector=False, with_payload=False,
             ),
         )
-        return [pt.id for pt in raw.points]
+        return [pt.id for pt in raw.result.points]
 
     for p in [1, 8, 32]:
         s = await run_search(qdrant_q, tests, concurrency=p)
@@ -755,8 +770,10 @@ def _report_fixedqps(r):
         ts, qs = r[tk], r[qk]
         qmo = qps * SECS_PER_MONTH
         winner = "tpuf" if ts["monthly_usd"] < qs["monthly_usd"] else "Qdrant"
+        tp99 = f"{ts['p99_ms']:>8.1f}ms" if "p99_ms" in ts else "       N/A"
+        qp99 = f"{qs['p99_ms']:>9.1f}ms" if "p99_ms" in qs else "        N/A"
         print(f"  │  {qps:>5}  {qmo:>12,.0f}  ${ts['monthly_usd']:>9.2f}  "
-              f"{ts['p99_ms']:>8.1f}ms  ${qs['monthly_usd']:>11.2f}  {qs['p99_ms']:>9.1f}ms  {winner}")
+              f"{tp99}  ${qs['monthly_usd']:>11.2f}  {qp99}  {winner}")
     print(f"  └─")
 
 
