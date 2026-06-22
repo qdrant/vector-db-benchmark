@@ -228,9 +228,32 @@ From `update_metadata(pinning={"replicas": N})` to stable warm serving:
 
 `ready_replicas=N` means the compute node is running — **not** that NVMe is populated. Any deployment automation that sends traffic immediately after `ready_replicas` confirmation will hit cold latency spikes.
 
-### Per-API-key machine co-location
+### Per-API-key machine co-location (cross-namespace contention experiment)
 
-Probing experiments (not re-run in v2, from prior work) showed turbopuffer routes all namespaces under one API key to the **same physical machine** in serverless mode. A namespace hammered at high concurrency degrades all other namespaces on the same account by ~3×. Pinning both namespaces gives ~20% degradation instead of 255% — pinning buys machine isolation.
+**Question:** Does turbopuffer co-locate all namespaces under one API key on the same physical machine?
+
+**Method:** Measure a "victim" namespace (sequential p=1 queries) to establish a p50 baseline. Then hammer a second "aggressor" namespace at p=32 and re-measure the victim. Repeat with freshly-created UUID-named namespaces containing random vectors — ruling out any naming coincidence.
+
+**Results (serverless mode):**
+
+| Trial | Aggressor namespace | Victim p50 baseline | Victim p50 under load | Degradation |
+|-------|--------------------|--------------------|----------------------|-------------|
+| dbpedia-coldtest | same account, named | 14.9ms | 52.8ms | **+255%** |
+| UUID random vecs A | fresh UUID | 15.7ms | 47.6ms | **+203%** |
+| UUID random vecs B | fresh UUID | 15.7ms | 49.1ms | **+212%** |
+
+All three trials show ~3–3.5× p50 degradation. The UUID names rule out any name-based hash routing coincidence. **Conclusion: turbopuffer routes all namespaces under one API key to the same physical machine in serverless mode. You are your own noisy neighbor.**
+
+**Results (pinned mode, both namespaces pinned to 1 replica each):**
+
+| Mode | Victim p50 baseline | Victim p50 under load | Degradation |
+|------|--------------------|-----------------------|-------------|
+| Serverless | 14.9ms | 52.8ms | **+255%** |
+| Both pinned (1r each) | 16.3ms | 19.5ms | **+20%** |
+
+Under pinning, p50 barely moves. The aggressor also achieved far fewer queries (1,548 vs 4,957 in serverless) — consistent with two independent machines rather than competing on one. **Pinning buys machine isolation, not just NVMe residency.** When pinned, you leave the shared per-API-key pool and land on dedicated hardware.
+
+**Implication for multi-tenant architectures:** In serverless mode, a bursty tenant can degrade all other tenants on the same account. Pinning each namespace isolates them but costs money and removes autoscaling. There is no serverless configuration that prevents cross-namespace interference from tenants under the same API key.
 
 ---
 

@@ -185,6 +185,25 @@ For unfiltered search, serverless is faster than pinned at equivalent cost becau
 4. **Recall control:** Full ef, quantization, oversampling dial. turbopuffer locked at ~96–98.4%.
 5. **Cost above ~10 QPS:** Qdrant is cheaper and faster simultaneously. There is no operating point above this threshold where turbopuffer wins.
 
+## Cross-Namespace Contention (Noisy Neighbor Test)
+
+**Question:** Does turbopuffer co-locate all namespaces under one API key on the same machine?
+
+**Method:** Measure a victim namespace at p=1 (sequential) to get a latency baseline. Then hammer a second aggressor namespace at p=32 and re-measure the victim. Repeated with freshly-created UUID-named namespaces to rule out name-based routing coincidence.
+
+| Mode | Victim p50 baseline | Victim p50 under aggressor load | Degradation |
+|------|--------------------|---------------------------------|-------------|
+| Serverless (all 3 trials) | ~15ms | ~48–53ms | **+200–255%** |
+| Both pinned (1r each) | 16.3ms | 19.5ms | **+20%** |
+
+**Yes — serverless co-locates all namespaces per API key on one machine.** A bursty tenant degrades all others on the same account by 3×. UUID namespace names ruled out any coincidence. The aggressor in the pinned test also achieved far fewer total queries (1,548 vs 4,957) — consistent with two separate machines.
+
+**Pinning buys machine isolation.** When pinned, you leave the shared pool and land on dedicated hardware. The +20% under pinning is normal load variation, not machine sharing.
+
+**What this means for multi-tenant products:** In serverless mode, one heavy tenant will degrade all others under the same API key. Pinning each tenant namespace isolates them but removes autoscaling and adds cost. There's no serverless escape from this.
+
+---
+
 ## Where turbopuffer Wins
 
 1. **Idle cost:** Object storage costs near-zero when not queried. Genuine advantage for sparse multi-tenant workloads.
