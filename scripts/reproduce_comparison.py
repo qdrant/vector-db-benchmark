@@ -1182,16 +1182,17 @@ async def phase_concurrent_write_read(run_dir, state, args):
 
     # ── Qdrant collection info poller ────────────────────────────────────────
     async def poller_qdrant():
-        while not upload_done["qdrant"] or (time.perf_counter() - t0) < _upload_end_t.get("qdrant", 1e9) + RW_POST_UPLOAD_S:
+        while True:
             try:
                 info = await qc.get_collection(QDRANT_DBPEDIA_RW)
                 qdrant_info_events.append({
-                    "wall_t":               round(time.perf_counter() - t0, 3),
-                    "vectors_count":        info.vectors_count,
+                    "wall_t":                round(time.perf_counter() - t0, 3),
+                    "points_count":          info.points_count,
                     "indexed_vectors_count": info.indexed_vectors_count,
+                    "segments_count":        info.segments_count,
                 })
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"  [poller] get_collection error: {e}", flush=True)
             await asyncio.sleep(5.0)
             if upload_done["qdrant"] and (time.perf_counter() - t0) > _upload_end_t.get("qdrant", 0) + RW_POST_UPLOAD_S:
                 break
