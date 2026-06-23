@@ -530,6 +530,7 @@ async def phase_upload_multitenant(run_dir, state, args):
     sem = asyncio.Semaphore(10)
     t0 = time.perf_counter()
     all_batch_lats = []
+    all_billable_gb = []
 
     async def upload_tenant(tenant_val):
         async with sem:
@@ -540,6 +541,8 @@ async def phase_upload_multitenant(run_dir, state, args):
                 vecs[idxs],
             )
             all_batch_lats.extend([s["batch_p50_ms"], s["batch_p99_ms"]])  # approximate aggregate
+            if "billable_gb" in s:
+                all_billable_gb.append(s["billable_gb"])
 
     await asyncio.gather(*[upload_tenant(t) for t in tenants])
     wall_s = time.perf_counter() - t0
@@ -549,6 +552,8 @@ async def phase_upload_multitenant(run_dir, state, args):
         "batch_p50_ms": round(float(np.percentile(all_batch_lats, 50)), 1),
         "batch_p99_ms": round(float(np.percentile(all_batch_lats, 99)), 1),
     }
+    if all_billable_gb:
+        tpuf["billable_gb"] = round(sum(all_billable_gb), 4)  # total across all namespaces
     print(f"  tpuf: {tpuf['total_s']/60:.1f} min ({len(tenants)} namespaces)  wps={tpuf['wps']}")
 
     # Qdrant: single collection, m=0, payload_m=16, is_tenant on field "a"
