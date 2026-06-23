@@ -6,9 +6,9 @@
 
 ## Bottom Line
 
-From the same AWS region (us-west-2), Qdrant on a single 2CPU/8GB node beats turbopuffer on every performance dimension: 2.3× lower single-query latency, 2.3× more throughput per connection, 5.2× more throughput on multi-tenant workloads, and better recall everywhere. turbopuffer's genuine advantage is **cost-to-zero for idle namespaces** — object storage costs nothing when not queried.
+From the same AWS region (us-west-2), Qdrant on a single 2CPU/8GB node beats turbopuffer on every performance dimension: 2.5× lower single-query latency, 2.5× more throughput per connection, 5.5× more throughput on multi-tenant workloads, and better recall everywhere. turbopuffer's genuine advantage is **cost-to-zero for idle namespaces** — object storage costs nothing when not queried.
 
-turbopuffer is not a better search engine. It is a cheaper storage tier for sporadic traffic. That tradeoff has hard edges: cold-start latency spikes (up to 1.6s p99 for filtered search after any replica restart) and fixed recall (~96–98.4%) with no tuning knobs.
+turbopuffer is not a better search engine. It is a cheaper storage tier for sporadic traffic. That tradeoff has hard edges: cold-start latency spikes (up to 1.9s p99 for filtered search after any replica restart) and fixed recall (~89–98.5%) with no tuning knobs.
 
 **For production APIs with sustained traffic:** Qdrant wins on performance and on cost above ~10 QPS/namespace.  
 **For multi-tenant SaaS where most tenants are idle most of the time:** turbopuffer's cost model is compelling — but you pay a 5× performance penalty on the tenants that are active.
@@ -20,20 +20,21 @@ turbopuffer is not a better search engine. It is a cheaper storage tier for spor
 | Dimension | turbopuffer | Qdrant Cloud |
 |-----------|-------------|--------------|
 | Architecture | Object storage (S3) + ephemeral compute | HNSW index in RAM |
-| Single-query latency (p=1, same region) | 15.6ms mean | **6.8ms mean** |
-| Single-query RPS (p=1) | 64 RPS | **147 RPS** |
-| Single-query p99 | 39.9ms | **11.8ms** |
-| Multi-tenant RPS (p=1, ns-per-tenant vs payload_m=16) | 38.6 RPS | **199.5 RPS** |
-| Multi-tenant p99 (p=1) | 106.7ms | **6.9ms** |
-| Filtered search — warm (H&M 105K×2048) | 93ms mean | **6.0ms mean** |
-| Filtered search — cold p99 | **~1.6s** | **8.8ms** (no cold-start) |
-| Recall — unfiltered (100% of queries) | 98.4% | 98.4% |
+| Server-side latency floor | ~10–19ms (NVMe centroid traversal) | **~1.9ms** (HNSW RAM lookup) |
+| Single-query latency (p=1, same region) | 15.9ms p50 | **6.9ms p50** |
+| Single-query RPS (p=1) | 57.1 RPS | **143.2 RPS** |
+| Single-query p99 | 47.1ms | **8.4ms** |
+| Multi-tenant RPS (p=1, ns-per-tenant vs payload_m=16) | 33.5 RPS | **184.6 RPS** |
+| Multi-tenant p99 (p=1) | 119.6ms | **9.7ms** |
+| Filtered search — warm (H&M 105K×2048) | 139ms mean / server_p50 119ms | **6.1ms mean** |
+| Filtered search — cold p99 | **~1.9s** | **10.1ms** (no cold-start) |
+| Recall — unfiltered (100% of queries) | 98.51% | 98.36% |
 | Recall — multi-tenant | 100% | **100%** |
-| Recall — filtered (H&M) | 90.9% | **95.9%** |
+| Recall — filtered (H&M) | 88.94% | **95.71%** |
 | Recall tuning | None (fixed) | Full (ef, quantization, oversampling) |
 | Cold-start risk | Yes — S3 fetch on first queries after restart | None — HNSW stays in RAM |
-| Upload 100K vectors, batch=128 (DBpedia) | 2.4 min | 3.8 min |
-| Upload 100K vectors, batch=128 (H&M, 2048-dim) | 3.0 min | 9.0 min |
+| Upload 100K vectors, batch=128 (DBpedia) | 2.7 min (624 wps) | 3.9 min (428 wps) |
+| Upload 100K vectors, batch=128 (H&M, 2048-dim) | 3.1 min (574 wps) | 9.0 min (304 wps) |
 | Scales to zero (idle cost) | **Yes** | No |
 | Cost above ~10 QPS/namespace | More expensive | **Cheaper** |
 | Cost below ~8 QPS/namespace | **Cheaper** | More expensive |
@@ -44,14 +45,14 @@ turbopuffer is not a better search engine. It is a cheaper storage tier for spor
 
 ### Upload (batch=128, async client, aws-us-west-2)
 
-| Engine | Dataset | Vectors | Time |
-|--------|---------|---------|------|
-| turbopuffer | DBpedia (1536-dim) | 100K | 2.4 min |
-| Qdrant Cloud | DBpedia (1536-dim) | 100K | 3.8 min |
-| turbopuffer | H&M (2048-dim) | 105K | 3.0 min |
-| Qdrant Cloud | H&M (2048-dim) | 105K | 9.0 min |
-| turbopuffer | Multi-tenant 768-dim (100 namespaces) | 100K | 2.3 min |
-| Qdrant Cloud | Multi-tenant 768-dim (1 collection + index) | 100K | 20.6 min |
+| Engine | Dataset | Vectors | Time | Throughput |
+|--------|---------|---------|------|------------|
+| turbopuffer | DBpedia (1536-dim) | 100K | 2.7 min | 624 wps |
+| Qdrant Cloud | DBpedia (1536-dim) | 100K | 3.9 min (upsert 3.9 min + index ~0 min) | 428 wps |
+| turbopuffer | H&M (2048-dim) | 105K | 3.1 min | 574 wps |
+| Qdrant Cloud | H&M (2048-dim) | 105K | 9.0 min (upsert 5.8 min + HNSW index 3.3 min) | 304 wps |
+| turbopuffer | Multi-tenant 768-dim (100 namespaces parallel) | 100K | 2.4 min | 6847 wps |
+| Qdrant Cloud | Multi-tenant 768-dim (1 collection + index) | 100K | 20.5 min (upsert 20.4 min + index 0.1 min) | 816 wps |
 
 Qdrant is slower to upload for H&M (larger vectors, more HTTP payload per batch) and significantly slower for the multi-tenant collection — building per-tenant HNSW sub-graphs (`payload_m=16`) is expensive at write time. turbopuffer writes directly to object storage with no server-side index construction.
 
@@ -61,12 +62,21 @@ Qdrant is slower to upload for H&M (larger vectors, more HTTP payload per batch)
 
 #### Single-connection baseline (p=1) — most reliable measurement
 
-| Engine | RPS | Mean | p50 | p95 | p99 | Recall |
-|--------|-----|------|-----|-----|-----|--------|
-| turbopuffer (serverless) | 64 RPS | 15.6ms | 14.8ms | 19.4ms | 39.9ms | 98.4% |
-| Qdrant Cloud | **147 RPS** | **6.8ms** | **6.5ms** | **7.5ms** | **11.8ms** | 98.4% |
+| Engine | RPS | p50 | p99 | Server latency | Recall |
+|--------|-----|-----|-----|----------------|--------|
+| turbopuffer (serverless) | 57.1 RPS | 15.9ms | 47.1ms | ~10ms | 98.51% |
+| Qdrant Cloud | **143.2 RPS** | **6.9ms** | **8.4ms** | **1.9ms** | 98.36% |
 
-**Same recall, 2.3× lower latency and throughput for Qdrant.** This gap is architectural: Qdrant's HNSW index lives in RAM (1.9ms server-side, confirmed via `server_time` response header). turbopuffer traverses a centroid tree backed by NVMe/S3 — the ~13–15ms floor is irreducible regardless of configuration.
+**Same recall, 2.5× lower latency and throughput for Qdrant.** This gap is architectural: Qdrant's HNSW index lives in RAM (**1.9ms server-side**, confirmed via `server_time` response header; remaining ~5ms is network RTT). turbopuffer traverses a centroid tree backed by NVMe/S3 — the **~10ms server-side floor** is irreducible regardless of configuration. This 5× server-latency gap (10ms vs 1.9ms) is independent of network distance.
+
+#### Parallel connections (p=8)
+
+| Engine | RPS |
+|--------|-----|
+| turbopuffer (serverless) | 51.4 RPS |
+| Qdrant Cloud | **48.1 RPS** |
+
+At p=8, throughput converges — turbopuffer's serverless autoscaling partially offsets the latency gap under concurrency.
 
 ---
 
@@ -76,11 +86,11 @@ Queries fired at exact rates for 120 seconds each. Latency figures are real meas
 
 | QPS sustained | tpuf p50 | tpuf p99 | **tpuf $/mo** | qdrant p50 | qdrant p99 | **qdrant $/mo** | Cheaper |
 |--------------|----------|----------|--------------|------------|------------|----------------|---------|
-| 1 | 18.8ms | 63.6ms | **$3.42** | 7.7ms | 16.4ms | **$26.10** | tpuf (7.6×) |
-| 5 | 15.3ms | 36.1ms | **$16.69** | 7.3ms | 13.0ms | **$26.10** | tpuf (1.6×) |
-| 10 | 14.2ms | 36.0ms | **$33.28** | 7.4ms | 11.0ms | **$26.10** | Qdrant (1.3×) |
-| 20 | 15.5ms | 43.0ms | **$66.46** | 7.1ms | 11.0ms | **$26.10** | Qdrant (2.5×) |
-| 50 | 15.0ms | 37.1ms | **$165.99** | 7.1ms | 15.0ms | **$26.10** | Qdrant (6.4×) |
+| 1 | 21.4ms | 56.3ms | **$3.42** | 7.9ms | 22.2ms | **$26.10** | tpuf (7.6×) |
+| 5 | 15.5ms | 33.8ms | **$16.69** | 7.7ms | 14.6ms | **$26.10** | tpuf (1.6×) |
+| 10 | 15.9ms | 41.3ms | **$33.28** | 7.4ms | 12.2ms | **$26.10** | Qdrant (1.3×) |
+| 20 | 15.7ms | 44.7ms | **$66.46** | 7.6ms | 13.0ms | **$26.10** | Qdrant (2.5×) |
+| 50 | 15.2ms | 42.7ms | **$165.99** | 7.3ms | 10.7ms | **$26.10** | Qdrant (6.4×) |
 
 **Observations:**
 - turbopuffer latency is flat at ~15ms across all QPS levels — serverless autoscaling handles the load without queueing at these rates.
@@ -93,24 +103,24 @@ Queries fired at exact rates for 120 seconds each. Latency figures are real meas
 
 #### turbopuffer (pinned, 4 replicas, p=32 concurrent)
 
-| State | Mean | p50 | p95 | p99 | Recall |
-|-------|------|-----|-----|-----|--------|
-| Warm (NVMe-cached) | 93ms | 69ms | 236ms | 351ms | **90.9%** |
-| **Cold** (fresh namespace, no warmup) | 210ms | 80ms | 1,510ms | **1,574ms** | **90.9%** |
+| State | RPS | Mean | p99 | Server p50 | Recall |
+|-------|-----|------|-----|------------|--------|
+| Warm (NVMe-cached) | 6.0 RPS | 139ms | 538ms | 119ms | **88.94%** |
+| **Cold** (fresh namespace, no warmup) | 3.5 RPS | — | **1,891ms** | — | **88.94%** |
 
-Recall measured separately at p=1 (500 queries) after warmup. The drop from ~98% unfiltered to **90.9% filtered** is architectural: SPFresh runs ANN on the full dataset first, then applies the filter as a post-processing step. When the filter is selective, discarded candidates are not replaced — the returned set can be smaller than top-10, directly hurting recall.
+Recall measured separately at p=1 (500 queries) after warmup. The drop from ~98.5% unfiltered to **88.94% filtered** is architectural: SPFresh runs ANN on the full dataset first, then applies the filter as a post-processing step. When the filter is selective, discarded candidates are not replaced — the returned set can be smaller than top-10, directly hurting recall. Server p50 of 119ms for filtered warm queries confirms the floor is on-server centroid traversal, not network.
 
-Cold-state means the namespace was freshly created via `copy_from` (no NVMe cache). After any replica restart or provisioning event, turbopuffer resets to cold — the first queries must fetch centroid data from S3. Warm p99 is 351ms; cold p99 is 1,574ms (**4.5× worse, same config**).
+Cold-state means the namespace was freshly created via `copy_from` (no NVMe cache). After any replica restart or provisioning event, turbopuffer resets to cold — the first queries must fetch centroid data from S3. Warm p99 is 538ms; cold p99 is 1,891ms (**3.5× worse, same config**).
 
 #### Qdrant Cloud (1 node 2CPU/8GB, p=1)
 
-| State | RPS | Mean | p50 | p95 | p99 | Recall |
-|-------|-----|------|-----|-----|-----|--------|
-| Always warm | **166 RPS** | **6.0ms** | **5.9ms** | **7.4ms** | **8.8ms** | **95.9%** |
+| State | RPS | p50 | p99 | Server latency | Recall |
+|-------|-----|-----|-----|----------------|--------|
+| Always warm | **159.4 RPS** | **6.1ms** | **10.1ms** | **1.0ms** | **95.71%** |
 
-Qdrant's HNSW graph is in RAM — there is no cold-start state. Latency and recall are identical regardless of whether the cluster just restarted. The payload index scan for categorical filters adds ~4ms to the ~2ms HNSW cost; the total is still under 10ms p99.
+Qdrant's HNSW graph is in RAM — there is no cold-start state. Latency and recall are identical regardless of whether the cluster just restarted. Server latency of 1.0ms for filtered queries confirms that Qdrant's payload index adds minimal overhead. The total is still under 11ms p99.
 
-**The key risk for filtered search:** turbopuffer's cold p99 (~1.6s) activates whenever a pinned replica restarts or is newly provisioned. For a SaaS that autoscales or redeploys, this risk is live. Qdrant has no equivalent.
+**The key risk for filtered search:** turbopuffer's cold p99 (~1.9s) activates whenever a pinned replica restarts or is newly provisioned. For a SaaS that autoscales or redeploys, this risk is live. Qdrant has no equivalent.
 
 ---
 
@@ -120,16 +130,29 @@ Dataset: 100K vectors across 100 tenants (~1K per tenant). turbopuffer routes ea
 
 #### Single-connection (p=1) — reliable measurement
 
-| Engine | Config | RPS | Mean | p50 | p99 | Recall |
-|--------|--------|-----|------|-----|-----|--------|
-| turbopuffer | ns-per-tenant | 38.6 RPS | 25.9ms | 19.7ms | 106.7ms | **100%** |
-| Qdrant Cloud | payload_m=16 | **199.5 RPS** | **5.0ms** | **4.9ms** | **6.9ms** | **100%** |
+| Engine | Config | RPS | p50 | p99 | Recall |
+|--------|--------|-----|-----|-----|--------|
+| turbopuffer | ns-per-tenant | 33.5 RPS | 24.0ms | 119.6ms | **100%** |
+| Qdrant Cloud | payload_m=16 | **184.6 RPS** | **5.3ms** | **9.7ms** | **100%** |
 
-**Qdrant delivers 5.2× more throughput at 5.2× lower latency — both engines at 100% recall.**
+**Qdrant delivers 5.5× more throughput at 4.5× lower p50 — both engines at 100% recall.**
 
-turbopuffer's p99 (106ms vs Qdrant's 6.9ms) is wide because each query requires a separate HTTP connection to a different namespace endpoint. Qdrant's sub-graph routing is in-process. The 25.9ms mean vs 5.0ms reflects the same architectural gap as unfiltered search, with additional namespace routing overhead.
+turbopuffer's p99 (119.6ms vs Qdrant's 9.7ms) is wide because each query requires a separate HTTP connection to a different namespace endpoint. Qdrant's sub-graph routing is in-process. The 24ms p50 vs 5.3ms reflects the same architectural gap as unfiltered search, with additional namespace routing overhead.
 
-**The cost question for multi-tenant:** turbopuffer's 100 namespaces cost near-zero when idle. A SaaS with 100 customers and only 5 active at any moment pays for 5 active namespaces' compute. Qdrant's cluster costs $26/month regardless of how many tenants are active. Below ~8 QPS per tenant on average, turbopuffer is cheaper. Above that, Qdrant is cheaper and 5× faster.
+#### Concurrency sweep
+
+| Engine | Config | p | RPS | p50 | p99 | Recall |
+|--------|--------|---|-----|-----|-----|--------|
+| turbopuffer | ns-per-tenant | 1 | 33.5 RPS | 24.0ms | 119.6ms | 100% |
+| Qdrant Cloud | payload_m=16 | 1 | **184.6 RPS** | **5.3ms** | **9.7ms** | 100% |
+| turbopuffer | ns-per-tenant | 8 | 43.7 RPS | 21.7ms | 54.9ms | 100% |
+| Qdrant Cloud | payload_m=16 | 8 | **46.9 RPS** | **17.3ms** | **96.8ms** | 100% |
+| turbopuffer | ns-per-tenant | 32 | **16.8 RPS** | 55.3ms | 207ms | 100% |
+| Qdrant Cloud | payload_m=16 | 32 | 9.5 RPS | 74.5ms | 444.8ms | 100% |
+
+At high concurrency (p=32), both engines saturate — Qdrant's single-node CPU becomes the bottleneck, and turbopuffer's serverless pool handles the parallel namespace requests slightly better. The single-connection (p=1) measurement is the fair comparison for per-query latency.
+
+**The cost question for multi-tenant:** turbopuffer's 100 namespaces cost near-zero when idle. A SaaS with 100 customers and only 5 active at any moment pays for 5 active namespaces' compute. Qdrant's cluster costs $26/month regardless of how many tenants are active. Below ~8 QPS per tenant on average, turbopuffer is cheaper. Above that, Qdrant is cheaper and 5.5× faster.
 
 ---
 
@@ -157,8 +180,8 @@ The 64 GB billing floor eliminates any serverless cost advantage for small datas
 
 | Config | Cost/mo | RPS | p99 (warm) | Recall |
 |--------|---------|-----|------------|--------|
-| tpuf pinned 4r (0.43 GB → 64 GB billed) | **$2,476** | 10.9 | 351ms | 90.9% |
-| Qdrant Cloud 1 node | **$26.10** | 158 | 8.8ms | 95.9% |
+| tpuf pinned 4r (0.43 GB → 64 GB billed) | **$2,476** | 6.0 | 538ms | 88.94% |
+| Qdrant Cloud 1 node | **$26.10** | 159.4 | 10.1ms | 95.71% |
 
 **The 64 GB floor means:**
 - H&M benchmark dataset (0.43 GB): tpuf pinned is **95× more expensive** with no performance benefit
@@ -176,9 +199,9 @@ The 64 GB billing floor eliminates any serverless cost advantage for small datas
 | Internal / async semantic search | ✓ | — | Latency tolerance high, cost matters more |
 | Dev / staging environments | ✓ | — | Real data, rarely queried, zero idle cost |
 | **Sustained multi-tenant (>8 QPS/tenant)** | — | ✓ | **Qdrant cheaper AND 5× faster** |
-| Filtered / faceted search (e-commerce) | Risky | ✓ | Cold p99 ~1.6s. Qdrant always 8.8ms. Recall: tpuf 90.9% vs Qdrant 95.9%. |
-| Real-time recommendations / consumer apps | — | ✓ | 15ms tpuf floor vs 6.8ms Qdrant. 2.3× gap is user-visible. |
-| Precision-sensitive (medical/legal/finance) | — | ✓ | Fixed 96–98.4% recall, not tunable. |
+| Filtered / faceted search (e-commerce) | Risky | ✓ | Cold p99 ~1.9s. Qdrant always 10.1ms. Recall: tpuf 88.94% vs Qdrant 95.71%. |
+| Real-time recommendations / consumer apps | — | ✓ | 15.9ms tpuf p50 vs 6.9ms Qdrant. 2.3× gap is user-visible. |
+| Precision-sensitive (medical/legal/finance) | — | ✓ | Fixed 88.94–98.51% recall, not tunable. |
 | High-write + concurrent read | — | ✓ | tpuf writes to S3; not designed for concurrent write+read. |
 | Hybrid sparse+dense search | — | ✓ | No native sparse vector support in tpuf. |
 
@@ -198,10 +221,10 @@ For unfiltered search, serverless is faster than pinned at equivalent cost becau
 
 ## Where Qdrant Wins (and Why It's Permanent)
 
-1. **Latency floor:** 6.8ms mean vs 15.6ms. HNSW in RAM (1.9ms server) vs NVMe/S3 centroid traversal (~13–15ms floor). Not configurable.
-2. **Filtered search consistency:** Qdrant payload indexes keep filter latency at ~8ms p99 warm or cold. turbopuffer cold p99 for filtered search is ~1.6s.
-3. **Multi-tenant throughput:** Qdrant's `payload_m=16` sub-graph approach delivers 5.2× more throughput at 5.2× lower latency vs ns-per-tenant, both at 100% recall.
-4. **Recall control:** Full ef, quantization, oversampling dial. turbopuffer locked at 90.9% filtered / 98.4% unfiltered — no tuning knobs.
+1. **Latency floor:** 6.9ms p50 vs 15.9ms. HNSW in RAM (**1.9ms server-side**) vs NVMe/S3 centroid traversal (**~10ms server-side floor**). This 5× server-latency gap is independent of network distance and not configurable. Remaining ~5ms in Qdrant's total is network RTT.
+2. **Filtered search consistency:** Qdrant payload indexes keep filter latency at ~10ms p99 warm or cold. turbopuffer cold p99 for filtered search is ~1.9s.
+3. **Multi-tenant throughput:** Qdrant's `payload_m=16` sub-graph approach delivers 5.5× more throughput at 4.5× lower p50 vs ns-per-tenant, both at 100% recall.
+4. **Recall control:** Full ef, quantization, oversampling dial. turbopuffer locked at 88.94% filtered / 98.51% unfiltered — no tuning knobs.
 5. **Cost above ~10 QPS:** Qdrant is cheaper and faster simultaneously. There is no operating point above this threshold where turbopuffer wins.
 
 ## Cross-Namespace Contention (Noisy Neighbor Test)
@@ -228,3 +251,9 @@ For unfiltered search, serverless is faster than pinned at equivalent cost becau
 1. **Idle cost:** Object storage costs near-zero when not queried. Genuine advantage for sparse multi-tenant workloads.
 2. **Zero-config:** No HNSW tuning. Works out of the box for teams that don't want to manage index parameters.
 3. **Serverless scale-to-zero:** True pay-per-query billing for infrequent traffic.
+
+---
+
+## Raw Results
+
+Full benchmark state: `results/reproduce-2026-06-22T22-25-07/state.json`

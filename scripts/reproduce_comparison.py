@@ -425,7 +425,7 @@ async def phase_delete(run_dir, state, args):
 
     for name in to_del_tpuf:
         try:
-            await tc.namespace(name).delete_all_documents()
+            await tc.namespace(name).delete_all()
             print(f"  tpuf ✓ {name}")
         except Exception as e:
             print(f"  tpuf skip {name}: {e}")
@@ -766,6 +766,12 @@ async def phase_search_hm_cold(run_dir, state, args):
     if not args.skip_pinned:
         cold_ns = tc.namespace(cold_name)
         try:
+            # Delete any leftover from a prior interrupted run
+            try:
+                await cold_ns.delete_all()
+                print(f"  Cleared stale {cold_name}")
+            except Exception:
+                pass
             print(f"  Copying {TPUF_HM} → {cold_name} (guaranteed cold)...")
             await cold_ns.copy_from(source_namespace=TPUF_HM)
             await asyncio.sleep(3)
@@ -791,7 +797,7 @@ async def phase_search_hm_cold(run_dir, state, args):
         finally:
             await unpin(cold_ns)
             try:
-                await cold_ns.delete_all_documents()
+                await cold_ns.delete_all()
                 print(f"  Cleaned up {cold_name}")
             except Exception:
                 pass

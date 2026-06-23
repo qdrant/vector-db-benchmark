@@ -590,7 +590,7 @@ canvas {
         <p>turbopuffer is an S3-backed vector database built around SPFresh centroid-based ANN search. It stores the vector index on object storage and uses a local NVMe cache to accelerate repeated queries. It offers two deployment modes &mdash; serverless and pinned &mdash; and deliberately exposes no recall tuning knobs.</p>
       </div>
       <ul class="prop-list">
-        <li><strong>No recall tuning.</strong> Locked at 90.9% recall on filtered search and 98.4% on unfiltered. You cannot trade latency for recall.</li>
+        <li><strong>No recall tuning.</strong> Locked at 88.94% recall on filtered search and 98.51% on unfiltered. You cannot trade latency for recall.</li>
         <li><strong>Serverless mode.</strong> Shared compute, scales to zero between queries, inherent noisy-neighbor risk when multiple namespaces share a host.</li>
         <li><strong>Pinned mode.</strong> Dedicated NVMe, fixed replicas, full machine isolation. Eliminates noisy-neighbor contention but removes scale-to-zero savings.</li>
         <li><strong>Cold-start penalty.</strong> After any restart, the first queries must fetch index data from S3 before NVMe is warm. Penalty: 100&ndash;1500ms on first queries, converging to steady-state after ~30 requests.</li>
@@ -639,22 +639,22 @@ canvas {
             <tr><th>Dataset</th><th>Engine</th><th>Time (min)</th></tr>
           </thead>
           <tbody>
-            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-tpuf"></span>turbopuffer</td><td class="win">2.4</td></tr>
-            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-qdrant"></span>Qdrant</td><td>3.8</td></tr>
-            <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-tpuf"></span>turbopuffer</td><td class="win">3.0</td></tr>
+            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-tpuf"></span>turbopuffer</td><td class="win">2.7</td></tr>
+            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-qdrant"></span>Qdrant</td><td>3.9</td></tr>
+            <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-tpuf"></span>turbopuffer</td><td class="win">3.1</td></tr>
             <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-qdrant"></span>Qdrant</td><td>9.0</td></tr>
-            <tr><td>Multi-tenant 100K&times;768</td><td><span class="chip-tpuf"></span>turbopuffer</td><td class="win">2.3</td></tr>
-            <tr><td>Multi-tenant 100K&times;768</td><td><span class="chip-qdrant"></span>Qdrant</td><td>20.6</td></tr>
+            <tr><td>Multi-tenant 100K&times;768</td><td><span class="chip-tpuf"></span>turbopuffer</td><td class="win">2.4</td></tr>
+            <tr><td>Multi-tenant 100K&times;768</td><td><span class="chip-qdrant"></span>Qdrant</td><td>20.5</td></tr>
           </tbody>
         </table>
       </div>
       <div class="chart-block">
         <div class="chart-title">Upload Time Comparison</div>
         <div class="chart-sub">Minutes to fully index. Lower is better.</div>
-        <canvas id="c-upload" width="560" height="220" aria-label="Horizontal bar chart: turbopuffer uploads 2.4, 3.0, 2.3 min; Qdrant 3.8, 9.0, 20.6 min"></canvas>
+        <canvas id="c-upload" width="560" height="220" aria-label="Horizontal bar chart: turbopuffer uploads 2.7, 3.1, 2.4 min; Qdrant 3.9, 9.0, 20.5 min"></canvas>
       </div>
       <div class="callout">
-        Qdrant's multi-tenant index time (20.6 min) reflects 100 separate HNSW graph constructions &mdash; one per tenant namespace. turbopuffer writes all to S3 without graph building, taking only 2.3 min &mdash; a <strong>9&times; speed advantage here</strong>, though it trades query-time graph traversal quality for it.
+        Qdrant's multi-tenant index time (20.5 min) reflects 100 separate HNSW graph constructions &mdash; one per tenant namespace. turbopuffer writes all to S3 without graph building, taking only 2.4 min &mdash; a <strong>~8.5&times; speed advantage here</strong>, though it trades query-time graph traversal quality for it.
       </div>
     </section>
 
@@ -663,31 +663,31 @@ canvas {
       <div class="section-header">
         <div class="section-eyebrow">&sect;4</div>
         <h2>DBpedia &mdash; Unfiltered Search</h2>
-        <p>The cleanest apples-to-apples comparison: large-scale unfiltered ANN on OpenAI-style 1536-dim embeddings. Both engines achieve comparable recall (~98.4%); the difference is latency and cost structure.</p>
+        <p>The cleanest apples-to-apples comparison: large-scale unfiltered ANN on OpenAI-style 1536-dim embeddings. Both engines achieve comparable recall (tpuf 98.51% / Qdrant 98.36%); the difference is latency and cost structure.</p>
       </div>
 
       <h3>4.1 &mdash; Single-Concurrency Baseline (p=1)</h3>
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>Engine</th><th>RPS</th><th>Mean</th><th>p50</th><th>p95</th><th>p99</th><th>Recall</th></tr>
+            <tr><th>Engine</th><th>RPS</th><th>Mean</th><th>p99</th><th>Server p50</th><th>Recall</th></tr>
           </thead>
           <tbody>
             <tr>
               <td><span class="chip-tpuf"></span>tpuf serverless</td>
-              <td>64.2</td><td>15.6ms</td><td>14.8ms</td><td>19.4ms</td><td>39.9ms</td><td>98.42%</td>
+              <td>57.1</td><td>15.9ms</td><td>47.1ms</td><td>10ms</td><td>98.51%</td>
             </tr>
             <tr>
               <td><span class="chip-qdrant"></span>Qdrant</td>
-              <td class="win">147.4</td><td class="win">6.8ms</td><td class="win">6.5ms</td><td class="win">7.5ms</td><td class="win">11.8ms</td><td class="win">98.36%</td>
+              <td class="win">143.2</td><td class="win">6.9ms</td><td class="win">8.4ms</td><td class="win">1.9ms</td><td class="win">98.36%</td>
             </tr>
           </tbody>
         </table>
       </div>
       <div class="chart-block">
         <div class="chart-title">DBpedia Latency Distribution &mdash; p=1</div>
-        <div class="chart-sub">Mean / p50 / p95 / p99 in milliseconds. Lower is better.</div>
-        <canvas id="c-dbpedia-lat" width="560" height="260" aria-label="Grouped bar chart showing turbopuffer latencies versus Qdrant"></canvas>
+        <div class="chart-sub">Mean / p99 in milliseconds. Lower is better.</div>
+        <canvas id="c-dbpedia-lat" width="560" height="260" aria-label="Grouped bar chart showing turbopuffer latencies versus Qdrant: tpuf mean 15.9ms p99 47.1ms; Qdrant mean 6.9ms p99 8.4ms"></canvas>
       </div>
 
       <h3>4.2 &mdash; Fixed-QPS Sweep</h3>
@@ -696,22 +696,22 @@ canvas {
           <thead>
             <tr>
               <th>QPS</th>
-              <th>tpuf mean</th><th>tpuf p99</th><th>tpuf $/mo</th>
-              <th>qdrant mean</th><th>qdrant p99</th><th>qdrant $/mo</th>
+              <th>tpuf p50</th><th>tpuf p99</th><th>tpuf $/mo</th>
+              <th>qdrant p50</th><th>qdrant p99</th><th>qdrant $/mo</th>
             </tr>
           </thead>
           <tbody>
-            <tr><td>1</td><td>20.5ms</td><td>63.6ms</td><td class="win">$3.42</td><td>8.1ms</td><td>16.4ms</td><td>$26.10</td></tr>
-            <tr><td>5</td><td>16.6ms</td><td>36.1ms</td><td class="win">$16.69</td><td>7.6ms</td><td>13.0ms</td><td>$26.10</td></tr>
-            <tr><td>10</td><td>15.3ms</td><td>36.0ms</td><td>$33.28</td><td>7.6ms</td><td>11.0ms</td><td class="win">$26.10</td></tr>
-            <tr><td>20</td><td>16.7ms</td><td>43.0ms</td><td>$66.46</td><td>7.3ms</td><td>11.0ms</td><td class="win">$26.10</td></tr>
-            <tr><td>50</td><td>16.0ms</td><td>37.1ms</td><td>$165.99</td><td>7.3ms</td><td>15.0ms</td><td class="win">$26.10</td></tr>
+            <tr><td>1</td><td>21.4ms</td><td>56.3ms</td><td class="win">$3.42</td><td class="win">7.9ms</td><td>22.2ms</td><td>$26.10</td></tr>
+            <tr><td>5</td><td>15.5ms</td><td>33.8ms</td><td class="win">$16.69</td><td class="win">7.7ms</td><td>14.6ms</td><td>$26.10</td></tr>
+            <tr><td>10</td><td>15.9ms</td><td>41.3ms</td><td>$33.28</td><td class="win">7.4ms</td><td class="win">12.2ms</td><td class="win">$26.10</td></tr>
+            <tr><td>20</td><td>15.7ms</td><td>44.7ms</td><td>$66.46</td><td class="win">7.6ms</td><td class="win">13.0ms</td><td class="win">$26.10</td></tr>
+            <tr><td>50</td><td>15.2ms</td><td>42.7ms</td><td>$165.99</td><td class="win">7.3ms</td><td class="win">10.7ms</td><td class="win">$26.10</td></tr>
           </tbody>
         </table>
       </div>
       <div class="chart-block">
         <div class="chart-title">Fixed-QPS Latency &mdash; Mean &amp; p99</div>
-        <div class="chart-sub">Milliseconds vs. target QPS. turbopuffer latency is roughly QPS-independent.</div>
+        <div class="chart-sub">p50 &amp; p99 milliseconds vs. target QPS. turbopuffer latency is roughly QPS-independent.</div>
         <canvas id="c-qps-lat" width="560" height="240" aria-label="Line chart: turbopuffer and Qdrant mean and p99 latency across 1, 5, 10, 20, 50 QPS"></canvas>
       </div>
       <div class="chart-block">
@@ -746,27 +746,29 @@ canvas {
         <p>Filtered vector search is where architecture choices have the sharpest consequences. SPFresh (turbopuffer) post-filters: it traverses centroids first, then discards non-matching vectors. Qdrant integrates the filter directly into HNSW traversal, preserving effective graph structure.</p>
       </div>
 
-      <h3>5.1 &mdash; turbopuffer Pinned 4-Replica, p=32</h3>
+      <h3>5.1 &mdash; turbopuffer (serverless, p=1 warm / cold)</h3>
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>State</th><th>Mean</th><th>p50</th><th>p95</th><th>p99</th><th>Recall</th></tr>
+            <tr><th>State</th><th>RPS</th><th>Mean</th><th>p50 (server)</th><th>p99</th><th>Recall</th></tr>
           </thead>
           <tbody>
-            <tr><td>Warm cache</td><td>93ms</td><td>69ms</td><td>236ms</td><td>351ms</td><td>90.9%</td></tr>
-            <tr><td>Cold cache</td><td>210ms</td><td>80ms</td><td>1,510ms</td><td style="background:#FEF2F2;color:#991B1B;">1,574ms</td><td>90.9%</td></tr>
+            <tr><td>Warm cache</td><td>6.0</td><td>139ms</td><td>119ms server p50</td><td>538ms</td><td>88.94%</td></tr>
+            <tr><td>Cold cache</td><td>3.5</td><td>—</td><td>—</td><td style="background:#FEF2F2;color:#991B1B;">1,891ms</td><td>88.94%</td></tr>
           </tbody>
         </table>
       </div>
 
-      <h3>5.2 &mdash; Qdrant p=1 (always warm &mdash; HNSW in RAM)</h3>
+      <h3>5.2 &mdash; Qdrant (always warm &mdash; HNSW in RAM)</h3>
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>RPS</th><th>Mean</th><th>p50</th><th>p99</th><th>Recall</th></tr>
+            <tr><th>Concurrency</th><th>RPS</th><th>Mean</th><th>p50</th><th>p99</th><th>Recall</th></tr>
           </thead>
           <tbody>
-            <tr><td class="win">166</td><td class="win">6.0ms</td><td class="win">5.9ms</td><td class="win">8.8ms</td><td class="win">95.9%</td></tr>
+            <tr><td>p=1</td><td class="win">159.4</td><td class="win">6.1ms</td><td class="win">—</td><td class="win">10.1ms</td><td class="win">95.71%</td></tr>
+            <tr><td>p=8</td><td>42.4</td><td>—</td><td>20.4ms</td><td>61.2ms</td><td>95.71%</td></tr>
+            <tr><td>p=32</td><td>6.7</td><td>—</td><td>109.7ms</td><td>605ms</td><td>95.71%</td></tr>
           </tbody>
         </table>
       </div>
@@ -774,10 +776,10 @@ canvas {
       <div class="chart-block">
         <div class="chart-title">H&amp;M p99 Latency &mdash; Warm vs Cold vs Qdrant</div>
         <div class="chart-sub">Milliseconds. The 100ms line marks a practical interactive-latency threshold.</div>
-        <canvas id="c-hm-p99" width="400" height="260" aria-label="Bar chart: tpuf warm p99=351ms, tpuf cold p99=1574ms, Qdrant p99=8.8ms"></canvas>
+        <canvas id="c-hm-p99" width="400" height="260" aria-label="Bar chart: tpuf warm p99=538ms, tpuf cold p99=1891ms, Qdrant p=1 p99=10.1ms"></canvas>
       </div>
       <div class="callout tpuf">
-        <strong>Why recall drops under filtering:</strong> SPFresh post-filters after centroid traversal &mdash; vectors matching the filter may not be in the traversed centroid regions at all. Qdrant's filter-aware HNSW traversal constrains the graph walk to matching nodes, preserving recall. The 5% gap (90.9% vs 95.9%) is not tunable on turbopuffer.
+        <strong>Why recall drops under filtering:</strong> SPFresh post-filters after centroid traversal &mdash; vectors matching the filter may not be in the traversed centroid regions at all. Qdrant's filter-aware HNSW traversal constrains the graph walk to matching nodes, preserving recall. The ~7% gap (88.94% vs 95.71%) is not tunable on turbopuffer.
       </div>
     </section>
 
@@ -791,22 +793,22 @@ canvas {
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>Config</th><th>p</th><th>RPS</th><th>Mean</th><th>p50</th><th>p99</th><th>Recall</th></tr>
+            <tr><th>Config</th><th>p</th><th>RPS</th><th>p50</th><th>p99</th><th>Recall</th></tr>
           </thead>
           <tbody>
-            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>1</td><td>38.6</td><td>25.9ms</td><td>19.7ms</td><td>106.7ms</td><td>100%</td></tr>
-            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>1</td><td class="win">199.5</td><td class="win">5.0ms</td><td class="win">4.9ms</td><td class="win">6.9ms</td><td>100%</td></tr>
-            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>8</td><td class="win">46.6</td><td class="win">21.5ms</td><td class="win">20.2ms</td><td class="win">44.8ms</td><td>100%</td></tr>
-            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>8</td><td>45.1</td><td>22.2ms</td><td>18.9ms</td><td>71.5ms</td><td>100%</td></tr>
-            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>32</td><td>17.5</td><td>57.2ms</td><td>53.4ms</td><td>136.2ms</td><td>100%</td></tr>
-            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>32</td><td>10.6</td><td>94.0ms</td><td>65.6ms</td><td>382.1ms</td><td>100%</td></tr>
+            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>1</td><td>33.5</td><td>24.0ms</td><td>119.6ms</td><td>100%</td></tr>
+            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>1</td><td class="win">184.6</td><td class="win">5.3ms</td><td class="win">9.7ms</td><td>100%</td></tr>
+            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>8</td><td class="win">43.7</td><td class="win">21.7ms</td><td class="win">54.9ms</td><td>100%</td></tr>
+            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>8</td><td>46.9</td><td>17.3ms</td><td>96.8ms</td><td>100%</td></tr>
+            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>32</td><td>16.8</td><td>55.3ms</td><td>207ms</td><td>100%</td></tr>
+            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>32</td><td>9.5</td><td>74.5ms</td><td>444.8ms</td><td>100%</td></tr>
           </tbody>
         </table>
       </div>
       <div class="chart-block">
         <div class="chart-title">Multi-Tenant RPS vs Concurrency</div>
         <div class="chart-sub">Requests per second at p=1, p=8, p=32. Qdrant leads at low concurrency; turbopuffer leads at high concurrency.</div>
-        <canvas id="c-mt-rps" width="560" height="260" aria-label="Grouped bar chart showing multi-tenant RPS at different concurrency levels"></canvas>
+        <canvas id="c-mt-rps" width="560" height="260" aria-label="Grouped bar chart: tpuf 33.5/43.7/16.8 RPS vs Qdrant 184.6/46.9/9.5 RPS at p=1/8/32"></canvas>
       </div>
       <div class="callout neutral">
         <strong>Why 100% recall?</strong> With ~1,000 vectors per tenant, both HNSW and SPFresh centroid structures have zero approximation error &mdash; the entire per-tenant index fits in a single graph/centroid traversal. The multi-tenant comparison is purely a throughput and cost question, not a recall question.
@@ -823,10 +825,10 @@ canvas {
       <div class="chart-block">
         <div class="chart-title">Recall by Scenario</div>
         <div class="chart-sub">Higher is better. Dashed line at 95% marks a common quality threshold.</div>
-        <canvas id="c-recall" width="560" height="200" aria-label="Grouped horizontal bars: unfiltered both ~98.4%, filtered tpuf 90.9% vs Qdrant 95.9%, multi-tenant both 100%"></canvas>
+        <canvas id="c-recall" width="560" height="200" aria-label="Grouped horizontal bars: unfiltered tpuf 98.51% vs Qdrant 98.36%, filtered tpuf 88.94% vs Qdrant 95.71%, multi-tenant both 100%"></canvas>
       </div>
       <div class="callout tpuf">
-        <strong>The 5% recall gap on filtered search is structural, not tunable.</strong> SPFresh's post-filter architecture cannot be configured to match Qdrant's filter-integrated HNSW. If your workload involves selective attribute filtering, this gap is permanent.
+        <strong>The ~7% recall gap on filtered search is structural, not tunable.</strong> SPFresh's post-filter architecture cannot be configured to match Qdrant's filter-integrated HNSW. If your workload involves selective attribute filtering, this gap is permanent.
       </div>
     </section>
 
@@ -862,7 +864,13 @@ canvas {
         <canvas id="c-4r" width="560" height="240" aria-label="Line chart: peaks at 473 RPS at p=16, then plateaus/declines at higher concurrency"></canvas>
       </div>
 
-      <h3>8.4 &mdash; Cross-Namespace Contention</h3>
+      <h3>8.4 &mdash; Server-Side Latency Gap</h3>
+      <p>Measuring server-reported latency (excluding network round-trip) reveals an architectural floor difference. At steady state on DBpedia (unfiltered), turbopuffer server latency is consistently <strong>~10ms</strong> while Qdrant server latency is <strong>~1.9ms</strong>.</p>
+      <div class="callout tpuf">
+        <strong>Qdrant server latency is 1.9ms (HNSW index in RAM); tpuf server latency floor is 10ms (NVMe centroid traversal). This 5&times; gap is architectural and irreducible regardless of network.</strong> The gap reflects the fundamental storage medium: HNSW traversal on RAM vs. SPFresh centroid reads from NVMe. No configuration on either side can close it.
+      </div>
+
+      <h3>8.5 &mdash; Cross-Namespace Contention (Serverless)</h3>
       <p>A high-throughput "aggressor" namespace and a "victim" namespace both sharing the same API key on serverless. The aggressor runs at full blast; we measure what happens to victim latency.</p>
       <div class="chart-block">
         <div class="chart-title">Victim p50 Latency &mdash; Baseline vs Under Aggressor Load</div>
@@ -900,7 +908,7 @@ canvas {
       </div>
 
       <div class="callout tpuf">
-        <strong>The 64 GB billing floor dominates everything below ~5 GB.</strong> For the H&amp;M benchmark dataset (0.43 GB actual), pinned 4-replica costs <strong>$2,476/month</strong> &mdash; 95&times; more than Qdrant's $26.10 &mdash; while delivering 14&times; worse throughput (10.9 RPS vs 158 RPS) and lower recall (90.9% vs 95.9%). For datasets under ~5 GB, pinning is strictly worse on every dimension: cost, throughput, and recall.
+        <strong>The 64 GB billing floor dominates everything below ~5 GB.</strong> For the H&amp;M benchmark dataset (0.43 GB actual), pinned 4-replica costs <strong>$2,476/month</strong> &mdash; 95&times; more than Qdrant's $26.10 &mdash; while delivering worse throughput (6.0 RPS warm vs 159.4 RPS), worse p99 (538ms warm vs 10.1ms), and lower recall (88.94% vs 95.71%). For datasets under ~5 GB, pinning is strictly worse on every dimension: cost, throughput, and recall.
       </div>
 
       <h3>9.2 &mdash; Break-Even Analysis</h3>
@@ -929,10 +937,10 @@ canvas {
             <tr><th>Dimension</th><th>turbopuffer</th><th>Qdrant Cloud</th></tr>
           </thead>
           <tbody>
-            <tr><td>Latency floor</td><td>~15ms (NVMe/S3)</td><td class="win">~7ms (RAM)</td></tr>
-            <tr><td>Filtered recall</td><td>90.9% (fixed)</td><td class="win">95.9% (tunable)</td></tr>
-            <tr><td>Cold-start p99</td><td style="color:#991B1B;background:#FEF2F2;">1,574ms</td><td class="win">None</td></tr>
-            <tr><td>Multi-tenant throughput (p=1)</td><td>38.6 RPS</td><td class="win">199.5 RPS</td></tr>
+            <tr><td>Latency floor</td><td>~10ms server (NVMe centroid)</td><td class="win">~2ms server (HNSW in RAM)</td></tr>
+            <tr><td>Filtered recall</td><td>88.94% (fixed)</td><td class="win">95.71% (tunable)</td></tr>
+            <tr><td>Cold-start p99</td><td style="color:#991B1B;background:#FEF2F2;">1,891ms</td><td class="win">None</td></tr>
+            <tr><td>Multi-tenant throughput (p=1)</td><td>33.5 RPS</td><td class="win">184.6 RPS</td></tr>
             <tr><td>Idle cost</td><td class="win">~$0</td><td>~$26/mo</td></tr>
             <tr><td>Break-even QPS</td><td></td><td class="win">~10 QPS</td></tr>
             <tr><td>Upload speed</td><td class="win">2&ndash;9&times; faster</td><td>Slower (HNSW build)</td></tr>
@@ -944,17 +952,17 @@ canvas {
 
       <div class="summary-grid">
         <div class="sum-card">
-          <div class="sum-card-label">Latency Floor</div>
+          <div class="sum-card-label">Server Latency Floor</div>
           <div class="sum-card-vals">
-            <div class="sum-val"><span class="dot" style="background:var(--tpuf)"></span>tpuf: ~15ms</div>
-            <div class="sum-val win-val"><span class="dot" style="background:var(--qdrant)"></span>Qdrant: ~7ms &#10003;</div>
+            <div class="sum-val"><span class="dot" style="background:var(--tpuf)"></span>tpuf: ~10ms (NVMe)</div>
+            <div class="sum-val win-val"><span class="dot" style="background:var(--qdrant)"></span>Qdrant: ~2ms (RAM) &#10003;</div>
           </div>
         </div>
         <div class="sum-card">
           <div class="sum-card-label">Filtered Recall</div>
           <div class="sum-card-vals">
-            <div class="sum-val"><span class="dot" style="background:var(--tpuf)"></span>tpuf: 90.9%</div>
-            <div class="sum-val win-val"><span class="dot" style="background:var(--qdrant)"></span>Qdrant: 95.9% &#10003;</div>
+            <div class="sum-val"><span class="dot" style="background:var(--tpuf)"></span>tpuf: 88.94%</div>
+            <div class="sum-val win-val"><span class="dot" style="background:var(--qdrant)"></span>Qdrant: 95.71% &#10003;</div>
           </div>
         </div>
         <div class="sum-card">
@@ -967,7 +975,7 @@ canvas {
         <div class="sum-card">
           <div class="sum-card-label">Cold-Start p99</div>
           <div class="sum-card-vals">
-            <div class="sum-val" style="color:#991B1B"><span class="dot" style="background:var(--tpuf)"></span>tpuf: 1,574ms</div>
+            <div class="sum-val" style="color:#991B1B"><span class="dot" style="background:var(--tpuf)"></span>tpuf: 1,891ms</div>
             <div class="sum-val win-val"><span class="dot" style="background:var(--qdrant)"></span>Qdrant: None &#10003;</div>
           </div>
         </div>
@@ -999,9 +1007,9 @@ canvas {
         <li><strong>Below ~10 QPS/namespace, serverless turbopuffer saves money.</strong> Above it, Qdrant is both cheaper and faster. The break-even is stable across dataset scales &mdash; plan around it. <em>This only applies to serverless mode.</em></li>
         <li><strong>Filtered search requires pinning, and pinning has a 64 GB billing floor.</strong> For any dataset under ~10 GB, pinned turbopuffer costs 10&ndash;95&times; more than Qdrant Cloud with no performance benefit. The serverless cost crossover does not apply to filtered search workloads.</li>
         <li><strong>Serverless noisy-neighbor is a real operational risk.</strong> A single bursty tenant in serverless mode triples all other tenants' p50 latency. Pinning eliminates this but removes scale-to-zero. Design your tenancy model before choosing serverless.</li>
-        <li><strong>Filtered search recall is not tunable on turbopuffer.</strong> If your workload uses selective attribute filters and 90.9% recall is insufficient, Qdrant is the only option. This constraint is architectural, not a configuration gap.</li>
-        <li><strong>Multi-tenant idle SaaS is turbopuffer's strongest case.</strong> If most tenants are mostly idle, scale-to-zero is worth real money. At active-tenant load, Qdrant is 5.2&times; faster (199.5 vs 38.6 RPS) &mdash; the advantage flips completely when tenants are active.</li>
-        <li><strong>Cold-start latency must be part of your SLA calculation.</strong> The 1,574ms p99 cold-start is not a fringe edge case &mdash; it occurs after any restart, any scale-to-zero event in serverless mode. Plan pre-warm queries or accept the SLA window.</li>
+        <li><strong>Filtered search recall is not tunable on turbopuffer.</strong> If your workload uses selective attribute filters and 88.94% recall is insufficient, Qdrant is the only option. This constraint is architectural, not a configuration gap.</li>
+        <li><strong>Multi-tenant idle SaaS is turbopuffer's strongest case.</strong> If most tenants are mostly idle, scale-to-zero is worth real money. At active-tenant load, Qdrant is 5.5&times; faster (184.6 vs 33.5 RPS) &mdash; the advantage flips completely when tenants are active.</li>
+        <li><strong>Cold-start latency must be part of your SLA calculation.</strong> The 1,891ms p99 cold-start is not a fringe edge case &mdash; it occurs after any restart, any scale-to-zero event in serverless mode. Plan pre-warm queries or accept the SLA window.</li>
       </ol>
     </section>
 
@@ -1262,8 +1270,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var ctx = res[0], W = res[1], H = res[2];
 
     var datasets = ['DBpedia 100K×1536', 'H&M 105K×2048', 'Multi-tenant 100K×768'];
-    var tpuf   = [2.4, 3.0, 2.3];
-    var qdrant = [3.8, 9.0, 20.6];
+    var tpuf   = [2.7, 3.1, 2.4];
+    var qdrant = [3.9, 9.0, 20.5];
     var maxV   = 22;
     var pad    = { t: 16, r: 80, b: 28, l: 155 };
     var pW     = W - pad.l - pad.r;
@@ -1304,9 +1312,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!res) return;
     var ctx = res[0], W = res[1], H = res[2];
 
-    var metrics = ['Mean', 'p50', 'p95', 'p99'];
-    var tpuf    = [15.6, 14.8, 19.4, 39.9];
-    var qdrant  = [6.8,  6.5,  7.5,  11.8];
+    var metrics = ['Mean', 'p99'];
+    var tpuf    = [15.9, 47.1];
+    var qdrant  = [6.9,  8.4];
     var maxV    = 50;
     var pad     = { t: 20, r: 20, b: 50, l: 42 };
     var pW      = W - pad.l - pad.r;
@@ -1342,10 +1350,10 @@ document.addEventListener('DOMContentLoaded', function() {
     var ctx = res[0], W = res[1], H = res[2];
 
     var qpsVals  = [1, 5, 10, 20, 50];
-    var tpufMean = [20.5, 16.6, 15.3, 16.7, 16.0];
-    var tpufP99  = [63.6, 36.1, 36.0, 43.0, 37.1];
-    var qdMean   = [8.1,  7.6,  7.6,  7.3,  7.3];
-    var qdP99    = [16.4, 13.0, 11.0, 11.0, 15.0];
+    var tpufP50  = [21.4, 15.5, 15.9, 15.7, 15.2];
+    var tpufP99  = [56.3, 33.8, 41.3, 44.7, 42.7];
+    var qdP50    = [7.9,  7.7,  7.4,  7.6,  7.3];
+    var qdP99    = [22.2, 14.6, 12.2, 13.0, 10.7];
     var maxV     = 75;
     var pad      = { t: 20, r: 20, b: 50, l: 44 };
     var pW       = W - pad.l - pad.r;
@@ -1374,18 +1382,18 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
 
-    drawLine(tpufP99,  C.tpuf,   true);
-    drawLine(tpufMean, C.tpuf,   false);
-    drawLine(qdP99,    C.qdrant, true);
-    drawLine(qdMean,   C.qdrant, false);
+    drawLine(tpufP99, C.tpuf,   true);
+    drawLine(tpufP50, C.tpuf,   false);
+    drawLine(qdP99,   C.qdrant, true);
+    drawLine(qdP50,   C.qdrant, false);
 
     for (var i = 0; i < qpsVals.length; i++) {
       ctx.fillStyle = C.text2; ctx.font = '10px monospace'; ctx.textAlign = 'center';
       ctx.fillText(qpsVals[i] + ' QPS', xp(i), H - pad.b + 14);
     }
     drawLegend(ctx, pad.l, H - 6, [
-      [C.tpuf, 'tpuf mean'], [C.tpuf, 'tpuf p99', true],
-      [C.qdrant, 'qdrant mean'], [C.qdrant, 'qdrant p99', true]
+      [C.tpuf, 'tpuf p50'], [C.tpuf, 'tpuf p99', true],
+      [C.qdrant, 'qdrant p50'], [C.qdrant, 'qdrant p99', true]
     ]);
   })();
 
@@ -1452,18 +1460,18 @@ document.addEventListener('DOMContentLoaded', function() {
     var ctx = res[0], W = res[1], H = res[2];
 
     var bars = [
-      { label: 'tpuf warm', v: 351,  color: C.tpuf    },
-      { label: 'tpuf cold', v: 1574, color: '#DC2626'  },
-      { label: 'Qdrant',    v: 8.8,  color: C.qdrant   }
+      { label: 'tpuf warm', v: 538,  color: C.tpuf    },
+      { label: 'tpuf cold', v: 1891, color: '#DC2626'  },
+      { label: 'Qdrant p=1', v: 10.1, color: C.qdrant  }
     ];
-    var maxV = 1700;
+    var maxV = 2000;
     var pad  = { t: 20, r: 20, b: 40, l: 52 };
     var pW   = W - pad.l - pad.r;
     var pH   = H - pad.t - pad.b;
     var barW = pW / bars.length * 0.55;
 
     // Y grid
-    var ySteps = [0, 400, 800, 1200, 1600];
+    var ySteps = [0, 500, 1000, 1500, 2000];
     for (var i = 0; i < ySteps.length; i++) {
       var v = ySteps[i];
       var y = pad.t + pH - (v / maxV) * pH;
@@ -1503,8 +1511,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var ctx = res[0], W = res[1], H = res[2];
 
     var groups = ['p=1', 'p=8', 'p=32'];
-    var tpuf   = [38.6, 46.6, 17.5];
-    var qdrant = [199.5, 45.1, 10.6];
+    var tpuf   = [33.5, 43.7, 16.8];
+    var qdrant = [184.6, 46.9, 9.5];
     var maxV   = 220;
     var pad    = { t: 20, r: 20, b: 50, l: 44 };
     var pW     = W - pad.l - pad.r;
@@ -1540,8 +1548,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var ctx = res[0], W = res[1], H = res[2];
 
     var scenarios = ['Unfiltered (DBpedia)', 'Filtered (H&M)', 'Multi-tenant'];
-    var tpuf    = [98.42, 90.9, 100];
-    var qdrant  = [98.36, 95.9, 100];
+    var tpuf    = [98.51, 88.94, 100];
+    var qdrant  = [98.36, 95.71, 100];
     var minV    = 85, maxV = 102, range = maxV - minV;
     var pad     = { t: 16, r: 75, b: 24, l: 140 };
     var pW      = W - pad.l - pad.r;

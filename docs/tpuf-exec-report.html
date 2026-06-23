@@ -503,17 +503,17 @@
   <div class="hero-inner">
     <div class="hero-eyebrow">Benchmark Report · DBpedia 100K · H&amp;M Filtered · Multi-tenant</div>
     <h1>
-      <span class="hl-qdrant">Qdrant</span> is 2.5× faster,<br>
-      5.6× more multi-tenant throughput —<br>
+      <span class="hl-qdrant">Qdrant</span> is 2.3× faster,<br>
+      5.5× more multi-tenant throughput —<br>
       cheaper above 10&nbsp;QPS
     </h1>
     <div class="stat-row">
       <div class="stat-card">
-        <div class="stat-number">2.5×</div>
+        <div class="stat-number">2.3×</div>
         <div class="stat-label">lower latency<br>DBpedia, same region</div>
       </div>
       <div class="stat-card">
-        <div class="stat-number">5.6×</div>
+        <div class="stat-number">5.5×</div>
         <div class="stat-label">more multi-tenant<br>throughput at p=1</div>
       </div>
       <div class="stat-card">
@@ -541,48 +541,53 @@
         <tbody>
           <tr>
             <td>Single-query latency (p=1) — mean</td>
-            <td class="win-tie">15.6 ms</td>
-            <td class="win-qdrant">6.8 ms</td>
-          </tr>
-          <tr>
-            <td>Single-query RPS (p=1)</td>
-            <td class="win-tie">64 RPS</td>
-            <td class="win-qdrant">147 RPS</td>
-          </tr>
-          <tr>
-            <td>Single-query p99 latency</td>
-            <td class="win-tie">39.9 ms</td>
-            <td class="win-qdrant">11.8 ms</td>
-          </tr>
-          <tr>
-            <td>Multi-tenant RPS (p=1)</td>
-            <td class="win-tie">38.6 RPS</td>
-            <td class="win-qdrant">199.5 RPS</td>
-          </tr>
-          <tr>
-            <td>Multi-tenant p99 latency (p=1)</td>
-            <td class="win-tie">106.7 ms</td>
+            <td class="win-tie">15.9 ms</td>
             <td class="win-qdrant">6.9 ms</td>
           </tr>
           <tr>
+            <td>Single-query RPS (p=1)</td>
+            <td class="win-tie">57.1 RPS</td>
+            <td class="win-qdrant">143.2 RPS</td>
+          </tr>
+          <tr>
+            <td>Single-query p99 latency</td>
+            <td class="win-tie">47.1 ms</td>
+            <td class="win-qdrant">8.4 ms</td>
+          </tr>
+          <tr>
+            <td>Server-side latency (architectural floor)</td>
+            <td class="win-tie">10 ms (NVMe centroid scan)</td>
+            <td class="win-qdrant">1.9 ms (HNSW in RAM)</td>
+          </tr>
+          <tr>
+            <td>Multi-tenant RPS (p=1)</td>
+            <td class="win-tie">33.5 RPS</td>
+            <td class="win-qdrant">184.6 RPS</td>
+          </tr>
+          <tr>
+            <td>Multi-tenant p99 latency (p=1)</td>
+            <td class="win-tie">119.6 ms</td>
+            <td class="win-qdrant">9.7 ms</td>
+          </tr>
+          <tr>
             <td>Filtered search p99 — warm cache</td>
-            <td class="win-tie">351 ms</td>
-            <td class="win-qdrant">8.8 ms</td>
+            <td class="win-tie">538 ms</td>
+            <td class="win-qdrant">10.1 ms</td>
           </tr>
           <tr>
             <td>Filtered search p99 — cold start</td>
-            <td class="win-tie">1,574 ms</td>
-            <td class="win-qdrant">8.8 ms</td>
+            <td class="win-tie">1,891 ms</td>
+            <td class="win-qdrant">10.1 ms</td>
           </tr>
           <tr>
             <td>Recall — unfiltered search</td>
-            <td class="win-tie">98.4%</td>
-            <td class="win-tie">98.4%</td>
+            <td class="win-tie">98.51%</td>
+            <td class="win-tie">98.36%</td>
           </tr>
           <tr>
             <td>Recall — filtered (H&amp;M dataset)</td>
-            <td class="win-tie">90.9%</td>
-            <td class="win-qdrant">95.9%</td>
+            <td class="win-tie">88.94%</td>
+            <td class="win-qdrant">95.71%</td>
           </tr>
           <tr>
             <td>Recall — multi-tenant</td>
@@ -591,8 +596,18 @@
           </tr>
           <tr>
             <td>Upload speed (DBpedia 100K)</td>
-            <td class="win-tpuf">2.4 min</td>
-            <td class="win-tie">3.8 min</td>
+            <td class="win-tpuf">2.7 min (624 wps)</td>
+            <td class="win-tie">3.9 min (428 wps)</td>
+          </tr>
+          <tr>
+            <td>Upload speed (H&amp;M 105K, 2048-dim)</td>
+            <td class="win-tpuf">3.1 min (574 wps)</td>
+            <td class="win-tie">9.0 min (304 wps incl. HNSW build)</td>
+          </tr>
+          <tr>
+            <td>Upload speed (multi-tenant 100K)</td>
+            <td class="win-tpuf">2.4 min (6,847 wps)</td>
+            <td class="win-tie">20.5 min (816 wps)</td>
           </tr>
           <tr>
             <td>Scales to zero (idle cost)</td>
@@ -622,7 +637,7 @@
         <div class="chart-title">Mean Query Latency — Lower is Better</div>
         <div class="chart-scroll">
           <canvas id="chart-latency" width="540" height="280"
-            aria-label="Horizontal bar chart comparing mean query latency. turbopuffer: 15.6ms, 93ms, 25.9ms. Qdrant: 6.8ms, 6.0ms, 5.0ms.">
+            aria-label="Horizontal bar chart comparing mean query latency. turbopuffer: 15.9ms, 139ms, 24.0ms. Qdrant: 6.9ms, 6.1ms, 5.3ms.">
           </canvas>
         </div>
         <div class="chart-legend">
@@ -660,7 +675,7 @@
         <div class="chart-title">Filtered Search p99 — Cold-Start Risk</div>
         <div class="chart-scroll" style="display:flex; justify-content:center;">
           <canvas id="chart-cold" width="400" height="280"
-            aria-label="Vertical bar chart: turbopuffer warm 351ms, turbopuffer cold 1574ms, Qdrant 8.8ms.">
+            aria-label="Vertical bar chart: turbopuffer warm 538ms, turbopuffer cold 1891ms, Qdrant 10.1ms.">
           </canvas>
         </div>
         <div class="chart-legend" style="justify-content:center;">
@@ -725,6 +740,31 @@
         </table>
       </div>
     </div>
+
+    <h3 style="margin-top:2rem;margin-bottom:1rem;font-size:1rem;font-weight:700;letter-spacing:0.04em;color:var(--text-dim);text-transform:uppercase;">Fixed-QPS Latency — Same Traffic, Different Architecture</h3>
+    <div class="cost-table-wrap">
+      <table class="cost-table" style="max-width:860px;">
+        <thead>
+          <tr>
+            <th>Sustained QPS</th>
+            <th style="color:var(--accent-2);">tpuf p50</th>
+            <th style="color:var(--accent-2);">tpuf p99</th>
+            <th style="color:var(--accent);">Qdrant p50</th>
+            <th style="color:var(--accent);">Qdrant p99</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>1 QPS</td><td>21.4ms</td><td>56.3ms</td><td>7.9ms</td><td>22.2ms</td></tr>
+          <tr><td>5 QPS</td><td>15.5ms</td><td>33.8ms</td><td>7.7ms</td><td>14.6ms</td></tr>
+          <tr><td>10 QPS</td><td>15.9ms</td><td>41.3ms</td><td>7.4ms</td><td>12.2ms</td></tr>
+          <tr><td>20 QPS</td><td>15.7ms</td><td>44.7ms</td><td>7.6ms</td><td>13.0ms</td></tr>
+          <tr><td>50 QPS</td><td>15.2ms</td><td>42.7ms</td><td>7.3ms</td><td>10.7ms</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:0.9rem;font-size:13px;color:var(--text-dim);max-width:820px;line-height:1.7;">
+      Qdrant's p50 stays flat at ~7–8ms across all load levels. turbopuffer's latency plateaus around 15–16ms — a floor set by NVMe centroid traversal (10ms server-side) rather than network. At every QPS level, Qdrant delivers roughly 2× lower median latency and 2–4× lower p99.
+    </p>
   </div>
 </section>
 
@@ -745,22 +785,22 @@
           <tr>
             <td><strong style="color:var(--accent-2);">tpuf pinned 4r</strong> (0.43 GB actual → 64 GB billed)</td>
             <td style="color:#DC2626;font-weight:700;">$2,476</td>
-            <td>10.9</td>
-            <td>351ms</td>
-            <td>90.9%</td>
+            <td>6.0</td>
+            <td>538ms</td>
+            <td>88.94%</td>
           </tr>
           <tr>
             <td><strong style="color:var(--accent);">Qdrant Cloud</strong> (1 node, same region)</td>
             <td class="win" style="font-weight:700;">$26.10</td>
-            <td class="win">158</td>
-            <td class="win">8.8ms</td>
-            <td class="win">95.9%</td>
+            <td class="win">159.4</td>
+            <td class="win">10.1ms</td>
+            <td class="win">95.71%</td>
           </tr>
         </tbody>
       </table>
     </div>
     <p style="margin-top:1.25rem;line-height:1.8;color:var(--text-2);max-width:820px;">
-      For the H&amp;M benchmark dataset (105K vectors, 2048-dim), tpuf pinned 4-replica is <strong style="color:#DC2626;">95× more expensive</strong> than Qdrant while delivering 14× worse throughput and lower recall. Break-even requires exceeding the 64 GB floor, which means ~900K&ndash;1.8M vectors depending on dimensionality. Below that scale, Qdrant is cheaper at <em>every</em> QPS level.
+      For the H&amp;M benchmark dataset (105K vectors, 2048-dim), tpuf pinned 4-replica is <strong style="color:#DC2626;">95× more expensive</strong> than Qdrant while delivering 26× worse throughput (6.0 vs 159.4 RPS), 53× worse p99 latency (538ms vs 10.1ms), and lower recall (88.94% vs 95.71%). Break-even requires exceeding the 64 GB floor, which means ~900K&ndash;1.8M vectors depending on dimensionality. Below that scale, Qdrant is cheaper at <em>every</em> QPS level.
     </p>
   </div>
 </section>
@@ -785,9 +825,9 @@
         <div class="fit-card-title">Qdrant wins when…</div>
         <ul class="fit-list">
           <li>Sustained traffic above 10 QPS — cost advantage compounds quickly</li>
-          <li>Filtered or faceted search in production — 40× lower p99</li>
-          <li>User-facing APIs where a 1.5-second cold-start breaks the experience</li>
-          <li>Recall precision matters — 95.9% vs 90.9% on filtered H&amp;M</li>
+          <li>Filtered or faceted search in production — 53× lower p99 (10ms vs 538ms warm)</li>
+          <li>User-facing APIs where a 1.9-second cold-start breaks the experience</li>
+          <li>Recall precision matters — 95.71% vs 88.94% on filtered H&amp;M</li>
           <li>Predictable infrastructure costs for budgeting and procurement</li>
         </ul>
       </div>
@@ -802,7 +842,7 @@
     <h2 class="section-title">The call</h2>
     <div class="verdict">
       <p class="verdict-text">
-        <strong>turbopuffer</strong> is a cost-efficient storage tier for sporadic, unfiltered workloads — it earns its place in dev environments and idle multi-tenant SaaS where queries arrive rarely. <em>Qdrant</em> is the choice for filtered search, production APIs, and any sustained traffic above 10 QPS. For filtered search specifically: pinning is required, and the 64 GB billing floor makes tpuf 95× more expensive than Qdrant on sub-5 GB datasets with no performance benefit. The cost crossover does not apply to filtered workloads.
+        <strong>turbopuffer</strong> is a cost-efficient storage tier for sporadic, unfiltered workloads — it earns its place in dev environments and idle multi-tenant SaaS where queries arrive rarely. <em>Qdrant</em> is the choice for filtered search, production APIs, and any sustained traffic above 10 QPS. The architectural gap is fundamental: Qdrant's HNSW index in RAM delivers 1.9ms server-side latency, while tpuf's NVMe centroid traversal has a 10ms floor — a 5× gap that exists regardless of network distance. For filtered search specifically: pinning is required, and the 64 GB billing floor makes tpuf 95× more expensive than Qdrant on sub-5 GB datasets with no performance benefit. The cost crossover does not apply to filtered workloads.
       </p>
       <p class="verdict-sub">Benchmark: DBpedia 100K (unfiltered), H&amp;M (filtered), multi-tenant isolation. Both systems deployed in the same region. Recall measured at identical HNSW ef parameters.</p>
     </div>
@@ -864,12 +904,12 @@
     var ctx = s.ctx, w = s.w, h = s.h;
 
     var groups = [
-      { label: 'DBpedia unfiltered (p=1)', tpuf: 15.6, qdrant: 6.8 },
-      { label: 'H&M filtered warm (p=32)', tpuf: 93,   qdrant: 6.0 },
-      { label: 'Multi-tenant (p=1)',        tpuf: 25.9, qdrant: 5.0 }
+      { label: 'DBpedia unfiltered (p=1)', tpuf: 15.9, qdrant: 6.9 },
+      { label: 'H&M filtered warm (p=32)', tpuf: 139,  qdrant: 6.1 },
+      { label: 'Multi-tenant (p=1)',        tpuf: 24.0, qdrant: 5.3 }
     ];
 
-    var maxVal = 100;
+    var maxVal = 150;
     var padL = 210, padR = 72, padT = 20, padB = 28;
     var chartW = w - padL - padR;
     var barH   = 18;
@@ -882,7 +922,7 @@
     ctx.fillRect(0, 0, w, h);
 
     /* Grid lines + X axis labels */
-    [0, 25, 50, 75, 100].forEach(function (v) {
+    [0, 50, 100, 150].forEach(function (v) {
       var x = padL + (v / maxVal) * chartW;
       ctx.beginPath();
       ctx.strokeStyle = C_GRID;
@@ -1039,11 +1079,11 @@
     var ctx = s.ctx, w = s.w, h = s.h;
 
     var bars = [
-      { label: 'tpuf warm',             value: 351,  color: C_TPUF_DIM },
-      { label: 'tpuf cold',             value: 1574, color: C_TPUF },
-      { label: 'Qdrant\n(always warm)', value: 8.8,  color: C_QDRANT }
+      { label: 'tpuf warm',             value: 538,  color: C_TPUF_DIM },
+      { label: 'tpuf cold',             value: 1891, color: C_TPUF },
+      { label: 'Qdrant\n(always warm)', value: 10.1, color: C_QDRANT }
     ];
-    var maxVal = 1700;
+    var maxVal = 2100;
     var threshold = 100;
 
     var padL = 36, padR = 20, padT = 36, padB = 60;
@@ -1056,7 +1096,7 @@
     function toY(v) { return padT + (1 - v / maxVal) * chartH; }
 
     /* Y grid */
-    [0, 500, 1000, 1574].forEach(function (v) {
+    [0, 500, 1000, 1891].forEach(function (v) {
       var y = toY(v);
       ctx.beginPath();
       ctx.strokeStyle = C_GRID;
