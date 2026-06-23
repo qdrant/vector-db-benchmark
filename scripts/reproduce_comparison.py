@@ -1031,12 +1031,22 @@ async def phase_concurrent_write_read(run_dir, state, args):
     qdrant_info_events = []  # {wall_t, vectors_count, indexed_vectors_count}
     upload_done   = {"tpuf": False, "qdrant": False}
 
-    # ── tpuf setup ──────────────────────────────────────────────────────────
+    # ── tpuf setup: delete any leftover namespace from a previous run ────────
     tc = make_tpuf()
     tpuf_ns = tc.namespace(TPUF_DBPEDIA_RW)
+    try:
+        await tpuf_ns.delete_all()
+        print(f"  tpuf: deleted existing namespace {TPUF_DBPEDIA_RW}")
+    except Exception:
+        pass  # namespace didn't exist
 
-    # ── Qdrant setup ────────────────────────────────────────────────────────
+    # ── Qdrant setup: delete and recreate to start fresh ─────────────────────
     qc = make_qdrant()
+    try:
+        await qc.delete_collection(QDRANT_DBPEDIA_RW)
+        print(f"  qdrant: deleted existing collection {QDRANT_DBPEDIA_RW}")
+    except Exception:
+        pass
     await qc.create_collection(
         collection_name=QDRANT_DBPEDIA_RW,
         vectors_config=models.VectorParams(size=vecs.shape[1], distance=models.Distance.COSINE),
