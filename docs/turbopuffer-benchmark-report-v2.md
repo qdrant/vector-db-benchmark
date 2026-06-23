@@ -53,15 +53,17 @@ All uploads use batch=128 and the async client.
 | Dataset | Engine | Total time† | WPS | Batch p50 | Batch p99 | Server p50 | Extra index wait‡ | Stored GB |
 |---------|--------|------|-----|-----------|-----------|------------|------------|-----------|
 | DBpedia 100K×1536 | turbopuffer | 2.7 min (160s) | 624 | 192ms | 352ms | 180ms | — | 0.615 GB |
-| DBpedia 100K×1536 | Qdrant Cloud | 3.9 min (234s) | 428 | 285ms | 323ms | — | 0s (concurrent) | — |
+| DBpedia 100K×1536 | Qdrant Cloud | 3.9 min (234s) | 428 | 285ms | 323ms | — | 0s (concurrent) | 0.614 GB |
 | H&M 105K×2048 | turbopuffer | 3.1 min (183s) | 574 | 208ms | 335ms | 192ms | — | 0.873 GB |
-| H&M 105K×2048 | Qdrant Cloud | 9.0 min (542s) | 304 | 401ms | 459ms | — | 195.8s | — |
+| H&M 105K×2048 | Qdrant Cloud | 9.0 min (542s) | 304 | 401ms | 459ms | — | 195.8s | 0.926 GB |
 | Multi-tenant 1M×768 | turbopuffer | 2.4 min (146s) | 6847 (parallel) | 207ms | 338ms | — | — | — |
-| Multi-tenant 1M×768 | Qdrant Cloud | 20.5 min (1231s) | 816 | 148ms | 175ms | — | 5.1s | — |
+| Multi-tenant 1M×768 | Qdrant Cloud | 20.5 min (1231s) | 816 | 148ms | 175ms | — | 5.1s | 3.200 GB |
 
 †Total time = upsert + extra index wait (end-to-end until fully indexed and GREEN). For Qdrant H&M: 346s upsert + 196s extra = 542s total (9.0 min). For DBpedia: 234s upsert, HNSW finished concurrently so extra = 0s, total = 234s.
 
 ‡Extra index wait = additional time after the last upsert batch until GREEN status. DBpedia shows 0s because HNSW (1536-dim, 100K vectors) finished within the upsert window; H&M shows 195.8s because 2048-dim builds slower and spilled past upsert. Same benchmarking code for all datasets.
+
+§Stored GB: turbopuffer = `billable_logical_bytes_written` (upsert response); Qdrant = `vectors_size_bytes + payloads_size_bytes` from `/telemetry?details_level=10`. Qdrant stores f32 (4B/float); tpuf stores f16 (2B/float) but centroid-tree overhead brings tpuf's footprint close to Qdrant's f32 size. MT tpuf billable_gb not captured in this run (script fix applied for next run).
 
 **Write-time vs query-time tradeoff:** turbopuffer stores vectors directly to S3 with no server-side index construction (stored footprint ≈ raw vector data: 0.615 GB for 100K×1536-dim). Qdrant builds HNSW at write time for all datasets — 195.8s additional wait for H&M (2048-dim spills past upsert), embedded within the 234s window for DBpedia (1536-dim builds fast enough to finish concurrently), 5.1s for multi-tenant sub-graphs. This one-time write cost is what enables Qdrant's 1.9ms server-side query latency — turbopuffer defers the equivalent work to every query (scanning ~0.615 GB of data per DBpedia query).
 

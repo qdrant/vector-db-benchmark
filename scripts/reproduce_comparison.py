@@ -31,6 +31,7 @@ import sys
 import time
 from pathlib import Path
 
+import httpx
 import numpy as np
 
 try:
@@ -232,6 +233,27 @@ async def tpuf_upload(ns, ids, vectors, extra_cols=None):
         s["billable_gb"] = round(billable_bytes / 1e9, 4)
     return s
 
+async def qdrant_stored_gb(collection_name):
+    """Query /telemetry?details_level=10 and return vectors+payload bytes for a collection."""
+    url = os.environ["QDRANT_CLUSTER_URL"].rstrip("/") + "/telemetry?details_level=10"
+    api_key = os.environ.get("QDRANT_API_KEY")
+    headers = {"api-key": api_key} if api_key else {}
+    async with httpx.AsyncClient(timeout=30) as client:
+        resp = await client.get(url, headers=headers)
+        resp.raise_for_status()
+    data = resp.json()
+    for col in data.get("result", {}).get("collections", {}).get("collections", []):
+        if col["id"] != collection_name:
+            continue
+        total_bytes = 0
+        for shard in col.get("shards", []):
+            local = shard.get("local", {})
+            total_bytes += local.get("vectors_size_bytes", 0)
+            total_bytes += local.get("payloads_size_bytes", 0)
+        return round(total_bytes / 1e9, 4) if total_bytes else None
+    return None
+
+
 async def qdrant_upload(qc, collection, vectors, ids, payloads=None):
     total = len(ids)
     t0 = time.perf_counter()
@@ -263,6 +285,9 @@ async def qdrant_upload(qc, collection, vectors, ids, payloads=None):
     s = _upload_stats(total, batch_lats, t_upsert)
     s["index_s"]  = round(t_total - t_upsert, 1)
     s["total_s"]  = round(t_total, 1)
+    stored_gb = await qdrant_stored_gb(collection)
+    if stored_gb is not None:
+        s["stored_gb"] = stored_gb
     return s
 
 def report_upload(label, r):
