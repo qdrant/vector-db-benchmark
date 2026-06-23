@@ -52,7 +52,8 @@ All uploads use batch=128 and the async client.
 
 | Dataset | Engine | Total time† | WPS | Batch p50 | Batch p99 | Server p50 | Extra index wait‡ | Stored GB |
 |---------|--------|------|-----|-----------|-----------|------------|------------|-----------|
-| DBpedia 100K×1536 | turbopuffer | 2.7 min (160s) | 624 | 192ms | 352ms | 180ms | — | 0.615 GB |
+| DBpedia 100K×1536 | turbopuffer (serverless) | 2.7 min (160s) | 624 | 192ms | 352ms | 180ms | — | 0.615 GB |
+| DBpedia 100K×1536 | turbopuffer (pinned-1r) | 2.6 min (156s) | 633 | 188ms | 295ms | 176ms | — | 0.615 GB |
 | DBpedia 100K×1536 | Qdrant Cloud | 3.9 min (234s) | 428 | 285ms | 323ms | — | 0s (concurrent) | 0.614 GB |
 | H&M 105K×2048 | turbopuffer | 3.1 min (183s) | 574 | 208ms | 335ms | 192ms | — | 0.873 GB |
 | H&M 105K×2048 | Qdrant Cloud | 9.0 min (542s) | 304 | 401ms | 459ms | — | 195.8s | 0.926 GB |
@@ -66,6 +67,8 @@ All uploads use batch=128 and the async client.
 §Stored GB: turbopuffer = `billable_logical_bytes_written` (upsert response); Qdrant = `vectors_size_bytes + payloads_size_bytes` from `/telemetry?details_level=10`. Qdrant stores f32 (4B/float); tpuf stores f16 (2B/float) but centroid-tree overhead brings tpuf's footprint close to Qdrant's f32 size. MT tpuf billable_gb not captured in this run (script fix applied for next run).
 
 **turbopuffer write pipeline:** Writes are group-committed in 100–250ms windows, then flushed as an append-only WAL entry to S3 (durable on success). Indexing (SPFresh centroid tree) is **asynchronous and decoupled** — a background job picks up the WAL and builds/updates the index. Crucially, data is **immediately visible to reads** even before indexing: queries fall back to exhaustive WAL scanning for unindexed data. This is why tpuf reports no "extra index wait" — there is no write-blocking indexing phase. The trade-off surfaces at query time: every query must scan the centroid tree (and any unindexed WAL entries), which is why tpuf has a 10ms server-side latency floor even for warm data. With **strong consistency** (default), every query checks S3 for the latest WAL version (~10ms overhead) — this is architecturally what explains the 10ms NVMe floor. With **eventual consistency** (opt-in), this S3 check is skipped, enabling sub-10ms latency at the cost of up to ~1h staleness.
+
+**Pinning does not affect write throughput.** We measured uploads to the same DBpedia dataset in both serverless and pinned-1r modes: 624 vs 633 WPS (within noise), batch_p99 actually slightly better pinned (295ms vs 352ms, likely less noisy-neighbor contention). This confirms the architecture: writes go directly to S3 WAL regardless of pinning mode. The pinned replica only serves reads from its NVMe cache — it adds zero overhead to the write path.
 
 **Write-time vs query-time tradeoff:** turbopuffer stores vectors directly to S3 with no server-side index construction (stored footprint ≈ raw vector data: 0.615 GB for 100K×1536-dim). Qdrant builds HNSW at write time for all datasets — 195.8s additional wait for H&M (2048-dim spills past upsert), embedded within the 234s window for DBpedia (1536-dim builds fast enough to finish concurrently), 5.1s for multi-tenant sub-graphs. This one-time write cost is what enables Qdrant's 1.9ms server-side query latency — turbopuffer defers the equivalent work to every query (scanning ~0.615 GB of data per DBpedia query).
 

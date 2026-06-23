@@ -640,7 +640,8 @@ canvas {
             <tr><th>Dataset</th><th>Engine</th><th>Total time (min)‡</th><th>Extra index wait†</th><th>Stored GB</th></tr>
           </thead>
           <tbody>
-            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-tpuf"></span>turbopuffer</td><td class="win">2.7</td><td>—</td><td>0.615 GB</td></tr>
+            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-tpuf"></span>turbopuffer (serverless)</td><td class="win">2.7</td><td>—</td><td>0.615 GB</td></tr>
+            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-tpuf"></span>turbopuffer (pinned-1r)</td><td class="win">2.6</td><td>—</td><td>0.615 GB</td></tr>
             <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-qdrant"></span>Qdrant</td><td>3.9</td><td>0s (concurrent)</td><td>0.614 GB</td></tr>
             <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-tpuf"></span>turbopuffer</td><td class="win">3.1</td><td>—</td><td>0.873 GB</td></tr>
             <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-qdrant"></span>Qdrant</td><td>9.0</td><td>195.8s</td><td>0.926 GB</td></tr>
@@ -665,6 +666,9 @@ canvas {
       </div>
       <div class="callout neutral">
         <strong>Write-time vs query-time:</strong> turbopuffer stores 0.615 GB for DBpedia (&asymp; raw vector size: 100K &times; 1536-dim &times; 4B). Qdrant builds HNSW at write time &mdash; 195.8s for H&amp;M, ~0s for DBpedia (concurrent), 5.1s for MT sub-graphs. This one-time write cost is the source of Qdrant&rsquo;s 1.9ms query server latency: the index is in RAM, already built. turbopuffer&rsquo;s SPFresh index is built <em>asynchronously</em> after writes commit to the S3 WAL &mdash; writes return immediately (no blocking index phase), but every query pays the centroid-scan cost at read time.
+      </div>
+      <div class="callout neutral">
+        <strong>Pinning does not affect write throughput.</strong> Measured on DBpedia 100K&times;1536: serverless 624 WPS vs pinned-1r 633 WPS &mdash; statistically identical. batch_p99 is slightly lower pinned (295ms vs 352ms), likely from reduced noisy-neighbor contention on a dedicated machine. Writes go directly to S3 WAL in both modes; the pinned replica only serves reads from its NVMe cache. Single-replica tpuf write capacity: <strong>~625 WPS</strong> at batch=128 for 1536-dim vectors.
       </div>
     </section>
 
@@ -862,7 +866,7 @@ canvas {
       <div class="section-header">
         <div class="section-eyebrow tpuf-eye">&sect;8</div>
         <h2>turbopuffer Internals</h2>
-        <p>Four experiments that reveal how turbopuffer behaves under the hood: NVMe cache warmup dynamics, concurrency scaling behavior, replica scaling, and cross-namespace contention in serverless mode.</p>
+        <p>Five experiments that reveal how turbopuffer behaves under the hood: NVMe cache warmup dynamics, concurrency scaling behavior, replica scaling, cross-namespace contention in serverless mode, and write throughput under pinning.</p>
       </div>
 
       <h3>8.1 &mdash; Cold Warmup Curve</h3>
@@ -904,6 +908,21 @@ canvas {
       </div>
       <div class="callout tpuf">
         <strong>Serverless noisy-neighbor:</strong> a bursty tenant triples victim latency (14.9ms &#8594; 52.8ms, +255%). Pinning reduces this to a 20% variance (16.3ms &#8594; 19.5ms). If your workload includes any bursty tenants in serverless mode, all other tenants under the same API key are affected.
+      </div>
+
+      <h3>8.5 &mdash; Write Throughput: Serverless vs Pinned</h3>
+      <p>Does pinning a namespace affect write performance? We uploaded DBpedia 100K&times;1536 twice &mdash; once serverless, once to a pinned-1r namespace &mdash; using identical batch size and client configuration.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Mode</th><th>WPS</th><th>batch_p50</th><th>batch_p99</th><th>server_p50</th><th>server_p99</th></tr></thead>
+          <tbody>
+            <tr><td>Serverless</td><td>624</td><td>192ms</td><td>352ms</td><td>180ms</td><td>341ms</td></tr>
+            <tr><td>Pinned-1r</td><td>633</td><td>188ms</td><td>295ms</td><td>176ms</td><td>282ms</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout neutral">
+        <strong>Pinning has zero effect on write throughput.</strong> 624 vs 633 WPS is within noise. The slight p99 improvement on pinned (295ms vs 352ms) is consistent with lower noisy-neighbor contention on a dedicated machine &mdash; not a write-path difference. This confirms that turbopuffer writes go directly to the S3 WAL in both modes; the pinned replica only maintains an NVMe read cache and is not involved in the write path at all. Single-replica tpuf write capacity: <strong>~625 WPS</strong> at batch=128 for 1536-dim vectors, independent of deployment mode.
       </div>
     </section>
 
