@@ -1111,6 +1111,11 @@ async def phase_concurrent_write_read(run_dir, state, args):
                 if liwa is not None:
                     import datetime
                     now_utc = datetime.datetime.now(datetime.timezone.utc)
+                    # liwa may be a string like "2026-06-22T22:27:52.000000000Z"
+                    # truncate nanoseconds to microseconds for fromisoformat()
+                    if isinstance(liwa, str):
+                        liwa = liwa.rstrip("Z").split(".")[0]
+                        liwa = datetime.datetime.fromisoformat(liwa).replace(tzinfo=datetime.timezone.utc)
                     staleness_ms = round((now_utc - liwa).total_seconds() * 1000, 1)
                 read_events.append({
                     "wall_t":                round(time.perf_counter() - t0, 3),
@@ -1228,14 +1233,19 @@ async def phase_concurrent_write_read(run_dir, state, args):
     print(f"\n  ┌─ Concurrent write+read summary")
     print(f"  │  tpuf upload done:   t={_upload_end_t.get('tpuf','?'):.1f}s")
     print(f"  │  qdrant upload done: t={_upload_end_t.get('qdrant','?'):.1f}s")
-    print(f"  │  tpuf reads:   n={len(tpuf_reads)}"
-          f"  p50={np.percentile([e['total_ms'] for e in tpuf_reads], 50):.1f}ms"
-          f"  p99={np.percentile([e['total_ms'] for e in tpuf_reads], 99):.1f}ms"
-          f"  recall_mean={np.mean([e['recall'] for e in tpuf_reads]):.3f}")
-    print(f"  │  qdrant reads: n={len(qdrant_reads)}"
-          f"  p50={np.percentile([e['total_ms'] for e in qdrant_reads], 50):.1f}ms"
-          f"  p99={np.percentile([e['total_ms'] for e in qdrant_reads], 99):.1f}ms"
-          f"  recall_mean={np.mean([e['recall'] for e in qdrant_reads]):.3f}")
+    def _rw_summary(label, evts):
+        if not evts:
+            print(f"  │  {label}: n=0 (no successful reads)")
+            return
+        lats = [e['total_ms'] for e in evts]
+        recs = [e['recall'] for e in evts if 'recall' in e]
+        print(f"  │  {label}: n={len(evts)}"
+              f"  p50={np.percentile(lats, 50):.1f}ms"
+              f"  p99={np.percentile(lats, 99):.1f}ms"
+              f"  recall_mean={np.mean(recs):.3f}" if recs else "")
+
+    _rw_summary("tpuf reads  ", tpuf_reads)
+    _rw_summary("qdrant reads", qdrant_reads)
     print(f"  └─")
 
 
