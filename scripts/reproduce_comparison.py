@@ -257,23 +257,38 @@ async def qdrant_stored_gb(collection_name):
     return None
 
 
+async def qdrant_upsert_timed(collection, points_dicts):
+    """POST to Qdrant REST API directly to capture server-side processing time.
+    Returns server_time_ms from the response 'time' field (seconds → ms)."""
+    url = os.environ["QDRANT_CLUSTER_URL"].rstrip("/") + f"/collections/{collection}/points"
+    api_key = os.environ.get("QDRANT_API_KEY")
+    headers = {"api-key": api_key, "Content-Type": "application/json"} if api_key else {"Content-Type": "application/json"}
+    body = {"points": points_dicts}
+    async with httpx.AsyncClient(timeout=120) as client:
+        resp = await client.put(url, json=body, headers=headers)
+        resp.raise_for_status()
+    return resp.json().get("time", 0) * 1000  # seconds → ms
+
+
 async def qdrant_upload(qc, collection, vectors, ids, payloads=None):
     total = len(ids)
     t0 = time.perf_counter()
     batch_lats = []
+    server_ms_list = []
     for start in range(0, total, BATCH_SIZE):
         end = min(start + BATCH_SIZE, total)
-        points = [
-            models.PointStruct(
-                id=int(ids[start + i]),
-                vector=vec.tolist(),
-                payload=payloads[start + i] if payloads else None,
-            )
+        points_dicts = [
+            {
+                "id": int(ids[start + i]),
+                "vector": vec.tolist(),
+                **({"payload": payloads[start + i]} if payloads else {}),
+            }
             for i, vec in enumerate(vectors[start:end])
         ]
         bt = time.perf_counter()
-        await qc.upsert(collection_name=collection, points=points)
+        server_ms = await qdrant_upsert_timed(collection, points_dicts)
         batch_lats.append(time.perf_counter() - bt)
+        server_ms_list.append(server_ms)
         if (start // BATCH_SIZE) % 20 == 0:
             print(f"    qdrant {end}/{total}", flush=True)
     t_upsert = time.perf_counter() - t0
@@ -288,6 +303,10 @@ async def qdrant_upload(qc, collection, vectors, ids, payloads=None):
     s = _upload_stats(total, batch_lats, t_upsert)
     s["index_s"]  = round(t_total - t_upsert, 1)
     s["total_s"]  = round(t_total, 1)
+    if server_ms_list:
+        arr = np.array(server_ms_list)
+        s["server_p50_ms"] = round(float(np.percentile(arr, 50)), 1)
+        s["server_p99_ms"] = round(float(np.percentile(arr, 99)), 1)
     stored_gb = await qdrant_stored_gb(collection)
     if stored_gb is not None:
         s["stored_gb"] = stored_gb
