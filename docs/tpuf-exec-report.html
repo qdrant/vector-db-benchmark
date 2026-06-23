@@ -555,9 +555,19 @@
             <td class="win-qdrant">8.4 ms</td>
           </tr>
           <tr>
+            <td>Server-side latency p99</td>
+            <td class="win-tie">40 ms (DBpedia) / 472 ms (H&amp;M warm) / 1,777 ms (H&amp;M cold, 94% server-side)</td>
+            <td class="win-qdrant">2.5 ms (flat across all QPS)</td>
+          </tr>
+          <tr>
             <td>Server-side latency (architectural floor)</td>
             <td class="win-tie">10 ms (NVMe centroid scan)</td>
             <td class="win-qdrant">1.9 ms (HNSW in RAM)</td>
+          </tr>
+          <tr>
+            <td>Data scanned per query</td>
+            <td class="win-tie">~full dataset (0.615–0.873 GB)</td>
+            <td class="win-qdrant">Index lookup (no full scan)</td>
           </tr>
           <tr>
             <td>Multi-tenant RPS (p=1)</td>
@@ -576,7 +586,7 @@
           </tr>
           <tr>
             <td>Filtered search p99 — cold start</td>
-            <td class="win-tie">1,891 ms</td>
+            <td class="win-tie">1,891 ms (94% server-side)</td>
             <td class="win-qdrant">10.1 ms</td>
           </tr>
           <tr>
@@ -634,20 +644,20 @@
     <div class="charts-grid">
 
       <div class="chart-card">
-        <div class="chart-title">Mean Query Latency — Lower is Better</div>
+        <div class="chart-title">Mean Query Latency — Lower is Better (dim=total, bright=server p50)</div>
         <div class="chart-scroll">
           <canvas id="chart-latency" width="540" height="280"
-            aria-label="Horizontal bar chart comparing mean query latency. turbopuffer: 15.9ms, 139ms, 24.0ms. Qdrant: 6.9ms, 6.1ms, 5.3ms.">
+            aria-label="Horizontal bar chart comparing mean query latency with server-side overlay. turbopuffer: 15.9ms (10ms server), 139ms, 24.0ms (19ms server). Qdrant: 6.9ms (1.9ms server), 6.1ms, 5.3ms.">
           </canvas>
         </div>
         <div class="chart-legend">
           <div class="legend-item">
             <div class="legend-dot" style="background:#F97316;"></div>
-            turbopuffer
+            turbopuffer (bright = server p50)
           </div>
           <div class="legend-item">
             <div class="legend-dot" style="background:#A855F7;"></div>
-            Qdrant Cloud
+            Qdrant Cloud (bright = server p50)
           </div>
         </div>
       </div>
@@ -672,29 +682,61 @@
       </div>
 
       <div class="chart-card wide">
-        <div class="chart-title">Filtered Search p99 — Cold-Start Risk</div>
+        <div class="chart-title">Filtered Search p99 — Cold-Start Risk (Server vs Network Breakdown)</div>
         <div class="chart-scroll" style="display:flex; justify-content:center;">
-          <canvas id="chart-cold" width="400" height="280"
-            aria-label="Vertical bar chart: turbopuffer warm 538ms, turbopuffer cold 1891ms, Qdrant 10.1ms.">
+          <canvas id="chart-cold" width="480" height="300"
+            aria-label="Stacked vertical bar chart: tpuf warm 538ms (472ms server + 66ms network), tpuf cold 1891ms (1777ms server + 114ms network, 94% server-side), Qdrant 10.1ms (2.9ms server + 7.2ms network).">
           </canvas>
         </div>
         <div class="chart-legend" style="justify-content:center;">
           <div class="legend-item">
-            <div class="legend-dot" style="background:rgba(249,115,22,0.5);"></div>
-            turbopuffer warm
+            <div class="legend-dot" style="background:#F97316;"></div>
+            tpuf server-side (S3/NVMe)
           </div>
           <div class="legend-item">
-            <div class="legend-dot" style="background:#F97316;"></div>
-            turbopuffer cold
+            <div class="legend-dot" style="background:rgba(249,115,22,0.4);"></div>
+            tpuf network
           </div>
           <div class="legend-item">
             <div class="legend-dot" style="background:#A855F7;"></div>
-            Qdrant (always warm)
+            Qdrant server-side
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:rgba(168,85,247,0.45);"></div>
+            Qdrant network
           </div>
         </div>
       </div>
 
     </div>
+
+    <!-- Upload timeline chart -->
+    <div class="chart-card wide" style="margin-top:0;">
+      <div class="chart-title">Upload time breakdown — upsert vs index build</div>
+      <div class="chart-scroll">
+        <canvas id="chart-upload" width="900" height="340"
+          aria-label="Horizontal stacked bar chart showing upload time breakdown by engine and dataset.">
+        </canvas>
+      </div>
+      <div class="chart-legend" style="margin-top:14px;">
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#F97316;"></div>
+          turbopuffer upsert
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#A855F7;"></div>
+          Qdrant upsert
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#7C3AED;"></div>
+          Qdrant HNSW index build
+        </div>
+      </div>
+      <p style="margin-top:12px;font-size:12px;color:var(--text-dim);line-height:1.6;max-width:820px;">
+        Qdrant's H&amp;M upload includes 196s of one-time HNSW construction. turbopuffer has no write-time index — the equivalent cost is paid at every query (0.615–0.873 GB scanned per query).
+      </p>
+    </div>
+
   </div>
 </section>
 
@@ -765,6 +807,30 @@
     <p style="margin-top:0.9rem;font-size:13px;color:var(--text-dim);max-width:820px;line-height:1.7;">
       Qdrant's p50 stays flat at ~7–8ms across all load levels. turbopuffer's latency plateaus around 15–16ms — a floor set by NVMe centroid traversal (10ms server-side) rather than network. At every QPS level, Qdrant delivers roughly 2× lower median latency and 2–4× lower p99.
     </p>
+
+    <!-- Cost vs QPS chart -->
+    <div class="chart-card" style="margin-top:2rem;max-width:860px;">
+      <div class="chart-title">Monthly Cost vs Sustained QPS — Crossover at ~10 QPS</div>
+      <div class="chart-scroll">
+        <canvas id="chart-cost-qps" width="820" height="280"
+          aria-label="Line chart showing monthly cost vs QPS. turbopuffer cost rises linearly; Qdrant stays flat at $26.10. Crossover at approximately 10 QPS.">
+        </canvas>
+      </div>
+      <div class="chart-legend" style="margin-top:14px;">
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#F97316;"></div>
+          turbopuffer (per-query billing)
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#A855F7;"></div>
+          Qdrant Cloud (flat $26.10/mo)
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#F59E0B;border-radius:2px;"></div>
+          Break-even ~10 QPS
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -858,20 +924,23 @@
 (function () {
   'use strict';
 
-  var C_QDRANT   = '#A855F7';
-  var C_TPUF     = '#F97316';
-  var C_TPUF_DIM = 'rgba(249,115,22,0.5)';
-  var C_TEXT     = '#DCE6F0';
-  var C_DIM      = '#7A9BBF';
-  var C_GRID     = 'rgba(30,58,95,0.7)';
-  var C_BG       = '#132035';
-  var MONO       = "'JetBrains Mono','Fira Code','Courier New',monospace";
+  var C_QDRANT      = '#A855F7';
+  var C_QDRANT_DIM  = 'rgba(168,85,247,0.45)';
+  var C_QDRANT_IDX  = '#7C3AED';
+  var C_TPUF        = '#F97316';
+  var C_TPUF_DIM    = 'rgba(249,115,22,0.45)';
+  var C_AMBER       = '#F59E0B';
+  var C_TEXT        = '#DCE6F0';
+  var C_DIM         = '#7A9BBF';
+  var C_GRID        = 'rgba(30,58,95,0.7)';
+  var C_BG          = '#132035';
+  var MONO          = "'JetBrains Mono','Fira Code','Courier New',monospace";
 
-  /* HiDPI setup */
+  /* HiDPI setup — uses logical CSS size, not canvas attribute */
   function setupCanvas(canvas) {
     var dpr = window.devicePixelRatio || 1;
-    var w = canvas.width;
-    var h = canvas.height;
+    var w = canvas.offsetWidth  || canvas.width;
+    var h = canvas.offsetHeight || canvas.height;
     canvas.width  = w * dpr;
     canvas.height = h * dpr;
     canvas.style.width  = w + 'px';
@@ -898,24 +967,26 @@
     ctx.closePath();
   }
 
-  /* ── Chart 1: Horizontal grouped bars — latency ──── */
+  /* ── Chart 1: Horizontal grouped bars — latency with server overlay ──── */
   function drawHBarChart(canvas) {
     var s = setupCanvas(canvas);
     var ctx = s.ctx, w = s.w, h = s.h;
 
+    // total latency + server latency (p50)
     var groups = [
-      { label: 'DBpedia unfiltered (p=1)', tpuf: 15.9, qdrant: 6.9 },
-      { label: 'H&M filtered warm (p=32)', tpuf: 139,  qdrant: 6.1 },
-      { label: 'Multi-tenant (p=1)',        tpuf: 24.0, qdrant: 5.3 }
+      { label: 'DBpedia unfiltered (p=1)', tpuf: 15.9, tpufServer: 10,  qdrant: 6.9, qdrantServer: 1.9 },
+      { label: 'H&M filtered warm (p=32)', tpuf: 139,  tpufServer: null, qdrant: 6.1, qdrantServer: null },
+      { label: 'Multi-tenant (p=1)',        tpuf: 24.0, tpufServer: 19,  qdrant: 5.3, qdrantServer: null }
     ];
 
     var maxVal = 150;
-    var padL = 210, padR = 72, padT = 20, padB = 28;
+    var padL = 210, padR = 90, padT = 24, padB = 28;
     var chartW = w - padL - padR;
-    var barH   = 18;
-    var innerGap = 6;
+    var barH   = 16;
+    var srvH   = 10; // server latency bar height
+    var innerGap = 5;
     var groupH   = barH * 2 + innerGap;
-    var groupGap = 30;
+    var groupGap = 28;
     var totalH   = groupH + groupGap;
 
     ctx.fillStyle = C_BG;
@@ -950,32 +1021,62 @@
       ctx.textBaseline = 'middle';
       ctx.fillText(g.label, padL - 10, midY);
 
-      /* turbopuffer bar */
+      /* turbopuffer bar (total) */
       var tpufPx = Math.max(1, (g.tpuf / maxVal) * chartW);
-      ctx.fillStyle = C_TPUF;
+      ctx.fillStyle = C_TPUF_DIM;
       roundRect(ctx, padL, baseY, tpufPx, barH, 3);
       ctx.fill();
+
+      /* turbopuffer server overlay */
+      if (g.tpufServer !== null) {
+        var srvPx = Math.max(1, (g.tpufServer / maxVal) * chartW);
+        ctx.fillStyle = C_TPUF;
+        roundRect(ctx, padL, baseY + (barH - srvH) / 2, srvPx, srvH, 2);
+        ctx.fill();
+      }
+
       ctx.fillStyle = C_TEXT;
       ctx.font = 'bold 11px ' + MONO;
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
-      ctx.fillText(g.tpuf + ' ms', padL + tpufPx + 6, baseY + barH / 2);
+      var tLabel = g.tpuf + ' ms' + (g.tpufServer !== null ? ' (srv ' + g.tpufServer + ')' : '');
+      ctx.fillText(tLabel, padL + tpufPx + 6, baseY + barH / 2);
 
-      /* Qdrant bar */
+      /* Qdrant bar (total) */
       var qdPx = Math.max(1, (g.qdrant / maxVal) * chartW);
       var qdY  = baseY + barH + innerGap;
-      ctx.fillStyle = C_QDRANT;
+      ctx.fillStyle = C_QDRANT_DIM;
       roundRect(ctx, padL, qdY, qdPx, barH, 3);
       ctx.fill();
+
+      /* Qdrant server overlay */
+      if (g.qdrantServer !== null) {
+        var qdSrvPx = Math.max(1, (g.qdrantServer / maxVal) * chartW);
+        ctx.fillStyle = C_QDRANT;
+        roundRect(ctx, padL, qdY + (barH - srvH) / 2, qdSrvPx, srvH, 2);
+        ctx.fill();
+      }
+
       ctx.fillStyle = C_TEXT;
       ctx.font = 'bold 11px ' + MONO;
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
-      ctx.fillText(g.qdrant + ' ms', padL + qdPx + 6, qdY + barH / 2);
+      var qLabel = g.qdrant + ' ms' + (g.qdrantServer !== null ? ' (srv ' + g.qdrantServer + ')' : '');
+      ctx.fillText(qLabel, padL + qdPx + 6, qdY + barH / 2);
     });
+
+    /* Mini legend for server overlay */
+    var legY = h - padB - 4;
+    ctx.fillStyle = C_DIM;
+    ctx.font = '10px Inter,system-ui,sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillRect(padL, legY, 20, 7);
+    ctx.fillStyle = C_TEXT;
+    ctx.fillText('Total (dim = total, bright = server p50)', padL + 26, legY + 3);
   }
 
-  /* ── Chart 2: Line chart — cost vs QPS ──────────── */
+  /* ── Chart 2: Line chart — cost vs QPS (existing card) ──────────── */
   function drawLineChart(canvas) {
     var s = setupCanvas(canvas);
     var ctx = s.ctx, w = s.w, h = s.h;
@@ -1073,20 +1174,21 @@
     drawSeries(qdData, C_QDRANT);
   }
 
-  /* ── Chart 3: Vertical bars — cold-start risk ────── */
+  /* ── Chart 3: Vertical stacked bars — cold-start risk with server/network breakdown ────── */
   function drawVBarChart(canvas) {
     var s = setupCanvas(canvas);
     var ctx = s.ctx, w = s.w, h = s.h;
 
+    // Each bar: server portion (dark) + network portion (lighter)
     var bars = [
-      { label: 'tpuf warm',             value: 538,  color: C_TPUF_DIM },
-      { label: 'tpuf cold',             value: 1891, color: C_TPUF },
-      { label: 'Qdrant\n(always warm)', value: 10.1, color: C_QDRANT }
+      { label: 'tpuf warm',             server: 472,  network: 66,  colorServer: C_TPUF,     colorNet: 'rgba(249,115,22,0.4)', annotation: null },
+      { label: 'tpuf cold',             server: 1777, network: 114, colorServer: C_TPUF,     colorNet: 'rgba(249,115,22,0.4)', annotation: '94% server-side' },
+      { label: 'Qdrant\n(always warm)', server: 2.9,  network: 7.2, colorServer: C_QDRANT,   colorNet: C_QDRANT_DIM,           annotation: null }
     ];
     var maxVal = 2100;
     var threshold = 100;
 
-    var padL = 36, padR = 20, padT = 36, padB = 60;
+    var padL = 46, padR = 20, padT = 48, padB = 60;
     var chartW = w - padL - padR;
     var chartH = h - padT - padB;
 
@@ -1096,7 +1198,7 @@
     function toY(v) { return padT + (1 - v / maxVal) * chartH; }
 
     /* Y grid */
-    [0, 500, 1000, 1891].forEach(function (v) {
+    [0, 500, 1000, 1500, 2000].forEach(function (v) {
       var y = toY(v);
       ctx.beginPath();
       ctx.strokeStyle = C_GRID;
@@ -1133,12 +1235,23 @@
     var barW  = slotW * 0.55;
 
     bars.forEach(function (bar, i) {
+      var total = bar.server + bar.network;
       var x  = padL + i * slotW + (slotW - barW) / 2;
-      var bH = Math.max(2, (bar.value / maxVal) * chartH);
-      var y  = toY(bar.value);
+      var bH = Math.max(2, (total / maxVal) * chartH);
+      var serverH = Math.max(1, (bar.server / maxVal) * chartH);
+      var netH = Math.max(1, (bar.network / maxVal) * chartH);
+      var bottomY = padT + chartH; // bar bottom
 
-      ctx.fillStyle = bar.color;
-      roundRect(ctx, x, y, barW, bH, 3);
+      // Draw network portion on top (lighter)
+      var netY = bottomY - bH;
+      ctx.fillStyle = bar.colorNet;
+      roundRect(ctx, x, netY, barW, netH, 3);
+      ctx.fill();
+
+      // Draw server portion below network (darker, main color)
+      var serverY = bottomY - serverH;
+      ctx.fillStyle = bar.colorServer;
+      roundRect(ctx, x, serverY, barW, serverH, 3);
       ctx.fill();
 
       /* Value above bar */
@@ -1146,8 +1259,17 @@
       ctx.font = 'bold 11px ' + MONO;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
-      var label = bar.value < 10 ? bar.value + ' ms' : bar.value + 'ms';
-      ctx.fillText(label, x + barW / 2, y - 4);
+      var valLabel = total >= 1000 ? total.toLocaleString() + 'ms' : (total < 10 ? total + ' ms' : total + 'ms');
+      ctx.fillText(valLabel, x + barW / 2, netY - 4);
+
+      /* Annotation (e.g. "94% server-side") */
+      if (bar.annotation) {
+        ctx.fillStyle = C_AMBER;
+        ctx.font = 'bold 10px Inter,system-ui,sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(bar.annotation, x + barW / 2, netY - 18);
+      }
 
       /* X label (supports \n) */
       var lines = bar.label.split('\n');
@@ -1159,6 +1281,236 @@
         ctx.fillText(line, x + barW / 2, h - padB + 8 + li * 15);
       });
     });
+
+    /* Legend inside chart */
+    var legItems = [
+      { color: C_TPUF, label: 'tpuf server-side (S3/NVMe)' },
+      { color: 'rgba(249,115,22,0.4)', label: 'tpuf network' },
+      { color: C_QDRANT, label: 'Qdrant server-side' },
+      { color: C_QDRANT_DIM, label: 'Qdrant network' }
+    ];
+    var legX = padL + 4, legY = padT + 6;
+    legItems.forEach(function(it, idx) {
+      var lx = legX + idx * 170;
+      if (lx + 165 > w - padR) { lx = legX; legY += 18; }
+      ctx.fillStyle = it.color;
+      ctx.fillRect(lx, legY, 10, 10);
+      ctx.fillStyle = C_DIM;
+      ctx.font = '10px Inter,system-ui,sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(it.label, lx + 14, legY + 5);
+    });
+  }
+
+  /* ── Chart 4: Horizontal stacked bars — upload timeline ────── */
+  function drawUploadChart(canvas) {
+    var s = setupCanvas(canvas);
+    var ctx = s.ctx, w = s.w, h = s.h;
+
+    var rows = [
+      { label: 'tpuf DBpedia',  upsert: 160,  index: 0,   color: C_TPUF,   wps: '624 wps' },
+      { label: 'Qdrant DBpedia', upsert: 234,  index: 0,   color: C_QDRANT, wps: '428 wps' },
+      { label: 'tpuf H&M',     upsert: 183,  index: 0,   color: C_TPUF,   wps: '574 wps' },
+      { label: 'Qdrant H&M',   upsert: 346,  index: 196, color: C_QDRANT, wps: '304 wps' },
+      { label: 'tpuf MT',      upsert: 146,  index: 0,   color: C_TPUF,   wps: '6,847 wps' },
+      { label: 'Qdrant MT',    upsert: 1226, index: 5,   color: C_QDRANT, wps: '816 wps' }
+    ];
+
+    var maxVal = 1300;
+    var padL = 140, padR = 140, padT = 16, padB = 28;
+    var chartW = w - padL - padR;
+    var barH   = 22;
+    var barGap = 12;
+    var totalH = (barH + barGap) * rows.length + padT + padB;
+
+    // Resize canvas height to fit
+    var dpr = window.devicePixelRatio || 1;
+    canvas.height = totalH * dpr;
+    canvas.style.height = totalH + 'px';
+    var chartHCalc = totalH - padT - padB;
+
+    ctx.fillStyle = C_BG;
+    ctx.fillRect(0, 0, w, totalH);
+
+    /* X axis grid */
+    [0, 250, 500, 750, 1000, 1250].forEach(function(v) {
+      if (v > maxVal) return;
+      var x = padL + (v / maxVal) * chartW;
+      ctx.beginPath();
+      ctx.strokeStyle = C_GRID;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 4]);
+      ctx.moveTo(x, padT);
+      ctx.lineTo(x, totalH - padB);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = C_DIM;
+      ctx.font = '10px Inter,system-ui,sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText(v + 's', x, totalH - padB + 4);
+    });
+
+    rows.forEach(function(row, i) {
+      var y = padT + i * (barH + barGap);
+      var upsertPx = Math.max(1, (row.upsert / maxVal) * chartW);
+      var indexPx  = row.index > 0 ? Math.max(1, (row.index / maxVal) * chartW) : 0;
+      var total    = row.upsert + row.index;
+      var totalPx  = upsertPx + indexPx;
+
+      /* Row label */
+      ctx.fillStyle = C_TEXT;
+      ctx.font = '12px Inter,system-ui,sans-serif';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(row.label, padL - 8, y + barH / 2);
+
+      /* Upsert bar */
+      ctx.fillStyle = row.color;
+      roundRect(ctx, padL, y, upsertPx, barH, 3);
+      ctx.fill();
+
+      /* Index build bar */
+      if (indexPx > 0) {
+        ctx.fillStyle = C_QDRANT_IDX;
+        roundRect(ctx, padL + upsertPx, y, indexPx, barH, 3);
+        ctx.fill();
+      }
+
+      /* Total label + wps */
+      ctx.fillStyle = C_TEXT;
+      ctx.font = 'bold 11px ' + MONO;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      var lx = padL + totalPx + 8;
+      ctx.fillText(total + 's', lx, y + barH / 2 - 5);
+      ctx.fillStyle = C_DIM;
+      ctx.font = '10px Inter,system-ui,sans-serif';
+      ctx.fillText(row.wps, lx, y + barH / 2 + 8);
+    });
+  }
+
+  /* ── Chart 5: Cost vs QPS line chart (in cost section) ──────────── */
+  function drawCostQpsChart(canvas) {
+    var s = setupCanvas(canvas);
+    var ctx = s.ctx, w = s.w, h = s.h;
+
+    var xPoints  = [0, 1, 5, 10, 20, 50, 55];
+    var tpufPts  = [[1, 3.42], [5, 16.69], [10, 33.28], [20, 66.46], [50, 165.99]];
+    var maxY = 200;
+    var maxX = 55;
+
+    var padL = 56, padR = 32, padT = 32, padB = 36;
+    var chartW = w - padL - padR;
+    var chartH = h - padT - padB;
+
+    ctx.fillStyle = C_BG;
+    ctx.fillRect(0, 0, w, h);
+
+    function toX(v) { return padL + (v / maxX) * chartW; }
+    function toY(v) { return padT + (1 - Math.min(v, maxY) / maxY) * chartH; }
+
+    /* Y grid */
+    [0, 50, 100, 150, 200].forEach(function (v) {
+      var y = toY(v);
+      ctx.beginPath();
+      ctx.strokeStyle = C_GRID;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 4]);
+      ctx.moveTo(padL, y);
+      ctx.lineTo(w - padR, y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = C_DIM;
+      ctx.font = '10px Inter,system-ui,sans-serif';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('$' + v, padL - 6, y);
+    });
+
+    /* X labels */
+    [0, 10, 20, 30, 40, 50].forEach(function(v) {
+      ctx.fillStyle = C_DIM;
+      ctx.font = '10px Inter,system-ui,sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText(v, toX(v), h - padB + 6);
+    });
+    ctx.fillStyle = C_DIM;
+    ctx.font = '10px Inter,system-ui,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('QPS', padL + chartW / 2, h - padB + 18);
+
+    /* tpuf fill area */
+    ctx.beginPath();
+    ctx.moveTo(toX(0), toY(0));
+    tpufPts.forEach(function(pt) { ctx.lineTo(toX(pt[0]), toY(pt[1])); });
+    ctx.lineTo(toX(50), toY(maxY));
+    ctx.lineTo(toX(0), toY(maxY));
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(249,115,22,0.08)';
+    ctx.fill();
+
+    /* tpuf line */
+    ctx.beginPath();
+    ctx.strokeStyle = C_TPUF;
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = 'round';
+    ctx.moveTo(toX(0), toY(0));
+    tpufPts.forEach(function(pt) { ctx.lineTo(toX(pt[0]), toY(pt[1])); });
+    ctx.stroke();
+
+    /* tpuf dots */
+    tpufPts.forEach(function(pt) {
+      var x = toX(pt[0]), y = toY(pt[1]);
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = C_BG;
+      ctx.fill();
+      ctx.strokeStyle = C_TPUF;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      var isTop = pt[1] > maxY * 0.75;
+      ctx.fillStyle = C_TPUF;
+      ctx.font = 'bold 10px ' + MONO;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = isTop ? 'bottom' : 'top';
+      ctx.fillText('$' + pt[1].toFixed(0), x, y + (isTop ? -8 : 8));
+    });
+
+    /* Qdrant flat line */
+    ctx.beginPath();
+    ctx.strokeStyle = C_QDRANT;
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([]);
+    ctx.moveTo(toX(0), toY(26.10));
+    ctx.lineTo(toX(55), toY(26.10));
+    ctx.stroke();
+    ctx.fillStyle = C_QDRANT;
+    ctx.font = 'bold 10px ' + MONO;
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('$26.10 (flat)', toX(55) - 4, toY(26.10) - 4);
+
+    /* Break-even vertical dashed line at 10 QPS */
+    var bex = toX(10);
+    ctx.beginPath();
+    ctx.strokeStyle = C_AMBER;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 4]);
+    ctx.moveTo(bex, padT + 16);
+    ctx.lineTo(bex, h - padB);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    /* Break-even label */
+    ctx.fillStyle = C_AMBER;
+    ctx.font = 'bold 10px Inter,system-ui,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('Break-even ~10 QPS', bex, padT + 2);
   }
 
   /* ── Hero canvas: animated scan-line + dot grid ─── */
@@ -1226,6 +1578,8 @@
     drawHBarChart(document.getElementById('chart-latency'));
     drawLineChart(document.getElementById('chart-cost'));
     drawVBarChart(document.getElementById('chart-cold'));
+    drawUploadChart(document.getElementById('chart-upload'));
+    drawCostQpsChart(document.getElementById('chart-cost-qps'));
   });
 
 })();

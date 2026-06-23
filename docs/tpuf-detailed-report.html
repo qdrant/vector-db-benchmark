@@ -636,15 +636,15 @@ canvas {
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>Dataset</th><th>Engine</th><th>Time (min)</th></tr>
+            <tr><th>Dataset</th><th>Engine</th><th>Time (min)</th><th>Index wait</th><th>Stored GB</th></tr>
           </thead>
           <tbody>
-            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-tpuf"></span>turbopuffer</td><td class="win">2.7</td></tr>
-            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-qdrant"></span>Qdrant</td><td>3.9</td></tr>
-            <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-tpuf"></span>turbopuffer</td><td class="win">3.1</td></tr>
-            <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-qdrant"></span>Qdrant</td><td>9.0</td></tr>
-            <tr><td>Multi-tenant 100K&times;768</td><td><span class="chip-tpuf"></span>turbopuffer</td><td class="win">2.4</td></tr>
-            <tr><td>Multi-tenant 100K&times;768</td><td><span class="chip-qdrant"></span>Qdrant</td><td>20.5</td></tr>
+            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-tpuf"></span>turbopuffer</td><td class="win">2.7</td><td>—</td><td>0.615 GB</td></tr>
+            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-qdrant"></span>Qdrant</td><td>3.9</td><td>~0s</td><td>—</td></tr>
+            <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-tpuf"></span>turbopuffer</td><td class="win">3.1</td><td>—</td><td>0.873 GB</td></tr>
+            <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-qdrant"></span>Qdrant</td><td>9.0</td><td>195.8s</td><td>—</td></tr>
+            <tr><td>Multi-tenant 100K&times;768</td><td><span class="chip-tpuf"></span>turbopuffer</td><td class="win">2.4</td><td>—</td><td>—</td></tr>
+            <tr><td>Multi-tenant 100K&times;768</td><td><span class="chip-qdrant"></span>Qdrant</td><td>20.5</td><td>5.1s</td><td>—</td></tr>
           </tbody>
         </table>
       </div>
@@ -653,8 +653,17 @@ canvas {
         <div class="chart-sub">Minutes to fully index. Lower is better.</div>
         <canvas id="c-upload" width="560" height="220" aria-label="Horizontal bar chart: turbopuffer uploads 2.7, 3.1, 2.4 min; Qdrant 3.9, 9.0, 20.5 min"></canvas>
       </div>
+      <div class="chart-block">
+        <div class="chart-title">Upload Timeline &mdash; Upsert + Index</div>
+        <div class="chart-sub">Stacked bars: solid = upsert, lighter = HNSW build wait. Seconds.</div>
+        <canvas id="c-upload-timeline" width="560" height="240" aria-label="Stacked horizontal bar chart showing upsert and index times for tpuf and Qdrant per dataset"></canvas>
+        <div style="font-size:11px;color:var(--text-2);margin-top:8px;font-style:italic;">Qdrant H&amp;M: 346s upsert + 196s HNSW build (one-time). turbopuffer: no write-time index &mdash; equivalent cost paid at every query (~0.615&ndash;0.873 GB scanned per query).</div>
+      </div>
       <div class="callout">
         Qdrant's multi-tenant index time (20.5 min) reflects 100 separate HNSW graph constructions &mdash; one per tenant namespace. turbopuffer writes all to S3 without graph building, taking only 2.4 min &mdash; a <strong>~8.5&times; speed advantage here</strong>, though it trades query-time graph traversal quality for it.
+      </div>
+      <div class="callout neutral">
+        <strong>Write-time vs query-time:</strong> turbopuffer stores 0.615 GB for DBpedia (&asymp; raw vector size: 100K &times; 1536-dim &times; 4B). Qdrant builds HNSW at write time &mdash; 195.8s for H&amp;M, ~0s for DBpedia (concurrent), 5.1s for MT sub-graphs. This one-time write cost is the source of Qdrant&rsquo;s 1.9ms query server latency: the index is in RAM, already built.
       </div>
     </section>
 
@@ -670,24 +679,27 @@ canvas {
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>Engine</th><th>RPS</th><th>Mean</th><th>p99</th><th>Server p50</th><th>Recall</th></tr>
+            <tr><th>Engine</th><th>RPS</th><th>Mean</th><th>p99</th><th>Srv p50</th><th>Srv p99</th><th>Billed GB/q</th><th>Recall</th></tr>
           </thead>
           <tbody>
             <tr>
               <td><span class="chip-tpuf"></span>tpuf serverless</td>
-              <td>57.1</td><td>15.9ms</td><td>47.1ms</td><td>10ms</td><td>98.51%</td>
+              <td>57.1</td><td>15.9ms</td><td>47.1ms</td><td>10ms</td><td>40ms</td><td>0.615 GB</td><td>98.51%</td>
             </tr>
             <tr>
               <td><span class="chip-qdrant"></span>Qdrant</td>
-              <td class="win">143.2</td><td class="win">6.9ms</td><td class="win">8.4ms</td><td class="win">1.9ms</td><td class="win">98.36%</td>
+              <td class="win">143.2</td><td class="win">6.9ms</td><td class="win">8.4ms</td><td class="win">1.9ms</td><td class="win">2.5ms</td><td>—</td><td class="win">98.36%</td>
             </tr>
           </tbody>
         </table>
       </div>
       <div class="chart-block">
-        <div class="chart-title">DBpedia Latency Distribution &mdash; p=1</div>
-        <div class="chart-sub">Mean / p99 in milliseconds. Lower is better.</div>
-        <canvas id="c-dbpedia-lat" width="560" height="260" aria-label="Grouped bar chart showing turbopuffer latencies versus Qdrant: tpuf mean 15.9ms p99 47.1ms; Qdrant mean 6.9ms p99 8.4ms"></canvas>
+        <div class="chart-title">DBpedia Latency Distribution &mdash; p=1 (Total vs Server)</div>
+        <div class="chart-sub">Mean / p99 total latency and server latency in milliseconds. Lower is better.</div>
+        <canvas id="c-dbpedia-lat" width="560" height="280" aria-label="Grouped bar chart showing turbopuffer and Qdrant total and server latencies: tpuf total mean 15.9ms server 10ms; Qdrant total mean 6.9ms server 1.9ms"></canvas>
+      </div>
+      <div class="callout">
+        <strong>Full-dataset scan per query:</strong> tpuf bills 0.615 GB per DBpedia query &mdash; essentially the entire dataset (0.614 GB raw). Cost scales linearly with data size &times; QPS. Qdrant server p99 = 2.5ms (1.3&times; p50); tpuf server p99 = 40ms (4&times; p50).
       </div>
 
       <h3>4.2 &mdash; Fixed-QPS Sweep</h3>
@@ -696,16 +708,16 @@ canvas {
           <thead>
             <tr>
               <th>QPS</th>
-              <th>tpuf p50</th><th>tpuf p99</th><th>tpuf $/mo</th>
-              <th>qdrant p50</th><th>qdrant p99</th><th>qdrant $/mo</th>
+              <th>tpuf p50</th><th>tpuf p99</th><th>tpuf srv_p99</th><th>tpuf $/mo</th>
+              <th>qdrant p50</th><th>qdrant p99</th><th>qdrant srv_p99</th><th>qdrant $/mo</th>
             </tr>
           </thead>
           <tbody>
-            <tr><td>1</td><td>21.4ms</td><td>56.3ms</td><td class="win">$3.42</td><td class="win">7.9ms</td><td>22.2ms</td><td>$26.10</td></tr>
-            <tr><td>5</td><td>15.5ms</td><td>33.8ms</td><td class="win">$16.69</td><td class="win">7.7ms</td><td>14.6ms</td><td>$26.10</td></tr>
-            <tr><td>10</td><td>15.9ms</td><td>41.3ms</td><td>$33.28</td><td class="win">7.4ms</td><td class="win">12.2ms</td><td class="win">$26.10</td></tr>
-            <tr><td>20</td><td>15.7ms</td><td>44.7ms</td><td>$66.46</td><td class="win">7.6ms</td><td class="win">13.0ms</td><td class="win">$26.10</td></tr>
-            <tr><td>50</td><td>15.2ms</td><td>42.7ms</td><td>$165.99</td><td class="win">7.3ms</td><td class="win">10.7ms</td><td class="win">$26.10</td></tr>
+            <tr><td>1</td><td>21.4ms</td><td>56.3ms</td><td>46ms</td><td class="win">$3.42</td><td class="win">7.9ms</td><td>22.2ms</td><td class="win">2.7ms</td><td>$26.10</td></tr>
+            <tr><td>5</td><td>15.5ms</td><td>33.8ms</td><td>25ms</td><td class="win">$16.69</td><td class="win">7.7ms</td><td>14.6ms</td><td class="win">2.5ms</td><td>$26.10</td></tr>
+            <tr><td>10</td><td>15.9ms</td><td>41.3ms</td><td>35ms</td><td>$33.28</td><td class="win">7.4ms</td><td class="win">12.2ms</td><td class="win">2.5ms</td><td class="win">$26.10</td></tr>
+            <tr><td>20</td><td>15.7ms</td><td>44.7ms</td><td>38ms</td><td>$66.46</td><td class="win">7.6ms</td><td class="win">13.0ms</td><td class="win">2.5ms</td><td class="win">$26.10</td></tr>
+            <tr><td>50</td><td>15.2ms</td><td>42.7ms</td><td>35ms</td><td>$165.99</td><td class="win">7.3ms</td><td class="win">10.7ms</td><td class="win">2.5ms</td><td class="win">$26.10</td></tr>
           </tbody>
         </table>
       </div>
@@ -715,9 +727,12 @@ canvas {
         <canvas id="c-qps-lat" width="560" height="240" aria-label="Line chart: turbopuffer and Qdrant mean and p99 latency across 1, 5, 10, 20, 50 QPS"></canvas>
       </div>
       <div class="chart-block">
-        <div class="chart-title">Monthly Cost vs QPS</div>
+        <div class="chart-title">Monthly Cost vs QPS &mdash; With Break-Even</div>
         <div class="chart-sub">turbopuffer scales linearly with queries; Qdrant is flat. Break-even ~10 QPS.</div>
-        <canvas id="c-cost" width="560" height="240" aria-label="Line chart: turbopuffer cost rises from $3.42 to $165.99; Qdrant flat at $26.10."></canvas>
+        <canvas id="c-cost" width="560" height="260" aria-label="Line chart with filled area: turbopuffer cost rises from $3.42 to $165.99; Qdrant flat at $26.10. Crossover highlighted at 10 QPS."></canvas>
+      </div>
+      <div class="callout neutral">
+        Qdrant server p99 stays at 2.5ms from 1&rarr;50 QPS &mdash; the single node has ample headroom. tpuf server p99 is 25&ndash;46ms (flat at higher floor).
       </div>
 
       <h3>4.3 &mdash; Cost Model by Dataset Scale</h3>
@@ -750,11 +765,11 @@ canvas {
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>State</th><th>RPS</th><th>Mean</th><th>p50 (server)</th><th>p99</th><th>Recall</th></tr>
+            <tr><th>State</th><th>RPS</th><th>Mean</th><th>Srv p50</th><th>p99</th><th>Srv p99</th><th>Billed GB/q</th><th>Recall</th></tr>
           </thead>
           <tbody>
-            <tr><td>Warm cache</td><td>6.0</td><td>139ms</td><td>119ms server p50</td><td>538ms</td><td>88.94%</td></tr>
-            <tr><td>Cold cache</td><td>3.5</td><td>—</td><td>—</td><td style="background:#FEF2F2;color:#991B1B;">1,891ms</td><td>88.94%</td></tr>
+            <tr><td>Warm cache</td><td>6.0</td><td>167ms</td><td>119ms</td><td>538ms</td><td>472ms</td><td>0.872 GB</td><td>88.94%</td></tr>
+            <tr><td>Cold cache</td><td>3.5</td><td>285ms</td><td>149ms</td><td style="background:#FEF2F2;color:#991B1B;">1,891ms</td><td style="background:#FEF2F2;color:#991B1B;">1,777ms</td><td>0.872 GB</td><td>88.94%</td></tr>
           </tbody>
         </table>
       </div>
@@ -773,10 +788,13 @@ canvas {
         </table>
       </div>
 
+      <div class="callout tpuf">
+        <strong>94% of cold p99 is server-side:</strong> server_p99 = 1,777ms out of 1,891ms. Only 114ms is network. The cold-start penalty is entirely S3 fetches for uncached centroid blocks. Even warm: server_p99 = 472ms of 538ms (88% server-side NVMe tail).
+      </div>
       <div class="chart-block">
-        <div class="chart-title">H&amp;M p99 Latency &mdash; Warm vs Cold vs Qdrant</div>
-        <div class="chart-sub">Milliseconds. The 100ms line marks a practical interactive-latency threshold.</div>
-        <canvas id="c-hm-p99" width="400" height="260" aria-label="Bar chart: tpuf warm p99=538ms, tpuf cold p99=1891ms, Qdrant p=1 p99=10.1ms"></canvas>
+        <div class="chart-title">H&amp;M p99 Latency &mdash; Server vs Network Breakdown</div>
+        <div class="chart-sub">Stacked bars: server-side (NVMe/S3) + network. Qdrant always warm (HNSW in RAM).</div>
+        <canvas id="c-hm-p99" width="480" height="300" aria-label="Stacked bar chart: tpuf warm server 472ms + network 66ms; tpuf cold server 1777ms + network 114ms; Qdrant server 2.9ms + network 7.2ms"></canvas>
       </div>
       <div class="callout tpuf">
         <strong>Why recall drops under filtering:</strong> SPFresh post-filters after centroid traversal &mdash; vectors matching the filter may not be in the traversed centroid regions at all. Qdrant's filter-aware HNSW traversal constrains the graph walk to matching nodes, preserving recall. The ~7% gap (88.94% vs 95.71%) is not tunable on turbopuffer.
@@ -793,25 +811,31 @@ canvas {
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>Config</th><th>p</th><th>RPS</th><th>p50</th><th>p99</th><th>Recall</th></tr>
+            <tr><th>Config</th><th>p</th><th>RPS</th><th>p50</th><th>p99</th><th>Srv p99</th><th>Billed GB/q</th><th>Recall</th></tr>
           </thead>
           <tbody>
-            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>1</td><td>33.5</td><td>24.0ms</td><td>119.6ms</td><td>100%</td></tr>
-            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>1</td><td class="win">184.6</td><td class="win">5.3ms</td><td class="win">9.7ms</td><td>100%</td></tr>
-            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>8</td><td class="win">43.7</td><td class="win">21.7ms</td><td class="win">54.9ms</td><td>100%</td></tr>
-            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>8</td><td>46.9</td><td>17.3ms</td><td>96.8ms</td><td>100%</td></tr>
-            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>32</td><td>16.8</td><td>55.3ms</td><td>207ms</td><td>100%</td></tr>
-            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>32</td><td>9.5</td><td>74.5ms</td><td>444.8ms</td><td>100%</td></tr>
+            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>1</td><td>33.5</td><td>24.0ms</td><td>119.6ms</td><td>114ms</td><td>0.256 GB</td><td>100%</td></tr>
+            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>1</td><td class="win">184.6</td><td class="win">5.3ms</td><td class="win">9.7ms</td><td>—</td><td>—</td><td>100%</td></tr>
+            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>8</td><td class="win">43.7</td><td class="win">21.7ms</td><td class="win">54.9ms</td><td>41ms</td><td>0.256 GB</td><td>100%</td></tr>
+            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>8</td><td>46.9</td><td>17.3ms</td><td>96.8ms</td><td>—</td><td>—</td><td>100%</td></tr>
+            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>32</td><td class="win">16.8</td><td>55.3ms</td><td>207ms</td><td>29ms</td><td>0.256 GB</td><td>100%</td></tr>
+            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>32</td><td>9.5</td><td>74.5ms</td><td>444.8ms</td><td>—</td><td>—</td><td>100%</td></tr>
           </tbody>
         </table>
       </div>
       <div class="chart-block">
         <div class="chart-title">Multi-Tenant RPS vs Concurrency</div>
-        <div class="chart-sub">Requests per second at p=1, p=8, p=32. Qdrant leads at low concurrency; turbopuffer leads at high concurrency.</div>
-        <canvas id="c-mt-rps" width="560" height="260" aria-label="Grouped bar chart: tpuf 33.5/43.7/16.8 RPS vs Qdrant 184.6/46.9/9.5 RPS at p=1/8/32"></canvas>
+        <div class="chart-sub">Requests per second at p=1, p=8, p=32. Qdrant leads at low concurrency; tpuf crossover at p=32.</div>
+        <canvas id="c-mt-rps" width="560" height="280" aria-label="Line chart: tpuf 33.5/43.7/16.8 RPS vs Qdrant 184.6/46.9/9.5 RPS at p=1/8/32, crossover at p=32"></canvas>
       </div>
       <div class="callout neutral">
         <strong>Why 100% recall?</strong> With ~1,000 vectors per tenant, both HNSW and SPFresh centroid structures have zero approximation error &mdash; the entire per-tenant index fits in a single graph/centroid traversal. The multi-tenant comparison is purely a throughput and cost question, not a recall question.
+      </div>
+      <div class="callout neutral">
+        <strong>p=32 autoscaling crossover:</strong> tpuf outperforms the single-node Qdrant at p=32 (16.8 vs 9.5 RPS) because Qdrant&rsquo;s 2CPU node saturates (mean latency 5ms&rarr;105ms = 20&times;). tpuf autoscales horizontally. This is a node-sizing issue: a larger Qdrant instance restores the 5&times; advantage at all concurrency levels.
+      </div>
+      <div class="callout tpuf">
+        <strong>Billed GB per MT query:</strong> tpuf bills 0.256 GB per MT query vs ~0.031 GB raw vector data per namespace (10K &times; 768-dim &times; 4B) &mdash; ~8&times; overhead from centroid tree structure.
       </div>
     </section>
 
@@ -1845,6 +1869,237 @@ document.addEventListener('DOMContentLoaded', function() {
       ctx.fillText(groups[i], cx, H - pad.b + 18);
     }
     drawLegend(ctx, pad.l, H - 6, [['#FED7AA', 'baseline'], [C.tpuf, 'under aggressor']]);
+  })();
+
+  // §3 Upload timeline stacked bars
+  (function() {
+    var res = setupCanvas('c-upload-timeline');
+    if (!res) return;
+    var ctx = res[0], W = res[1], H = res[2];
+
+    var rows = [
+      { label: 'tpuf DBpedia',   upsert: 160, index: 0,   tpufBar: true  },
+      { label: 'Qdrant DBpedia', upsert: 234, index: 0,   tpufBar: false },
+      { label: 'tpuf H&M',       upsert: 183, index: 0,   tpufBar: true  },
+      { label: 'Qdrant H&M',     upsert: 346, index: 196, tpufBar: false },
+      { label: 'tpuf MT',        upsert: 146, index: 0,   tpufBar: true  },
+      { label: 'Qdrant MT',      upsert: 1226, index: 5,  tpufBar: false }
+    ];
+    var maxV  = 1350;
+    var pad   = { t: 16, r: 100, b: 36, l: 130 };
+    var pW    = W - pad.l - pad.r;
+    var barH  = 22, gap = 10;
+
+    // X grid
+    var xTicks = [0, 300, 600, 900, 1200];
+    for (var gi = 0; gi < xTicks.length; gi++) {
+      var v = xTicks[gi];
+      var x = pad.l + (v / maxV) * pW;
+      ctx.strokeStyle = C.grid; ctx.lineWidth = 0.5;
+      ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, H - pad.b); ctx.stroke();
+      ctx.fillStyle = C.text2; ctx.font = '10px monospace'; ctx.textAlign = 'center';
+      ctx.fillText(v + 's', x, H - pad.b + 14);
+    }
+
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      var y = pad.t + i * (barH + gap);
+      var mainColor = row.tpufBar ? C.tpuf : C.qdrant;
+      var accentColor = row.tpufBar ? C.tpuf2 : C.qdrant2;
+      var wU = (row.upsert / maxV) * pW;
+      // Upsert bar
+      ctx.fillStyle = mainColor;
+      roundRect(ctx, pad.l, y, wU, barH, 3);
+      // Index bar (stacked)
+      if (row.index > 0) {
+        var wI = (row.index / maxV) * pW;
+        ctx.fillStyle = accentColor;
+        roundRect(ctx, pad.l + wU, y, wI, barH, 3);
+      }
+      // Label
+      ctx.fillStyle = C.text2; ctx.font = '11px system-ui'; ctx.textAlign = 'right';
+      ctx.fillText(row.label, pad.l - 6, y + barH / 2 + 4);
+      // Value
+      var total = row.upsert + row.index;
+      ctx.fillStyle = C.text; ctx.font = 'bold 10px monospace'; ctx.textAlign = 'left';
+      ctx.fillText(total + 's', pad.l + (total / maxV) * pW + 5, y + barH / 2 + 4);
+    }
+    drawLegend(ctx, pad.l, H - 8, [
+      [C.tpuf, 'tpuf upsert'], [C.tpuf2, 'tpuf index'],
+      [C.qdrant, 'qdrant upsert'], [C.qdrant2, 'qdrant HNSW build']
+    ]);
+  })();
+
+  // §4.1 updated DBpedia latency chart — total vs server grouped bars
+  // Override the existing c-dbpedia-lat chart function
+  (function() {
+    var res = setupCanvas('c-dbpedia-lat');
+    if (!res) return;
+    var ctx = res[0], W = res[1], H = res[2];
+
+    // Groups: Mean, p99
+    // For each group: tpuf total, tpuf server, qdrant total, qdrant server
+    var groups = ['Mean latency', 'p99 latency'];
+    var tpufTotal  = [15.9, 47.1];
+    var tpufServer = [10.0, 40.0];
+    var qdTotal    = [6.9,  8.4];
+    var qdServer   = [1.9,  2.5];
+    var maxV  = 55;
+    var pad   = { t: 24, r: 20, b: 60, l: 44 };
+    var pW    = W - pad.l - pad.r;
+    var pH    = H - pad.t - pad.b;
+    var groupW = pW / groups.length;
+    var barW   = groupW * 0.18;
+
+    drawYGrid(ctx, W, H, pad, maxV, 5);
+
+    for (var i = 0; i < groups.length; i++) {
+      var cx = pad.l + groupW * i + groupW / 2;
+      var offsets = [-barW * 1.8, -barW * 0.6, barW * 0.6, barW * 1.8];
+      var vals    = [tpufTotal[i], tpufServer[i], qdTotal[i], qdServer[i]];
+      var colors  = [C.tpuf, C.tpuf2, C.qdrant, C.qdrant2];
+      for (var j = 0; j < 4; j++) {
+        var bh = (vals[j] / maxV) * pH;
+        ctx.fillStyle = colors[j];
+        roundRect(ctx, cx + offsets[j] - barW/2, pad.t + pH - bh, barW, bh, 3);
+        ctx.fillStyle = C.text2; ctx.font = '9px monospace'; ctx.textAlign = 'center';
+        ctx.fillText(vals[j] + 'ms', cx + offsets[j], pad.t + pH - bh - 5);
+      }
+      ctx.fillStyle = C.text2; ctx.font = '11px system-ui'; ctx.textAlign = 'center';
+      ctx.fillText(groups[i], cx, H - pad.b + 18);
+    }
+    drawLegend(ctx, pad.l, H - pad.b + 32, [
+      [C.tpuf, 'tpuf total'], [C.tpuf2, 'tpuf server'],
+      [C.qdrant, 'qdrant total'], [C.qdrant2, 'qdrant server']
+    ]);
+  })();
+
+  // §5 H&M updated stacked bar chart — server vs network breakdown
+  (function() {
+    var res = setupCanvas('c-hm-p99');
+    if (!res) return;
+    var ctx = res[0], W = res[1], H = res[2];
+
+    var bars = [
+      { label: 'tpuf warm',  server: 472,  network: 66,  serverColor: C.tpuf,   networkColor: C.tpuf2  },
+      { label: 'tpuf cold',  server: 1777, network: 114, serverColor: '#DC2626', networkColor: '#FCA5A5' },
+      { label: 'Qdrant p=1', server: 2.9,  network: 7.2, serverColor: C.qdrant, networkColor: C.qdrant2 }
+    ];
+    var maxV = 2000;
+    var pad  = { t: 24, r: 24, b: 48, l: 54 };
+    var pW   = W - pad.l - pad.r;
+    var pH   = H - pad.t - pad.b;
+    var barW = pW / bars.length * 0.50;
+
+    // Y grid
+    var ySteps = [0, 500, 1000, 1500, 2000];
+    for (var i = 0; i < ySteps.length; i++) {
+      var v = ySteps[i];
+      var y = pad.t + pH - (v / maxV) * pH;
+      ctx.strokeStyle = C.grid; ctx.lineWidth = 0.5;
+      ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + pW, y); ctx.stroke();
+      ctx.fillStyle = C.text2; ctx.font = '10px monospace'; ctx.textAlign = 'right';
+      ctx.fillText(v >= 1000 ? (v/1000).toFixed(1)+'k' : v, pad.l - 4, y + 4);
+    }
+
+    // 100ms threshold
+    var y100 = pad.t + pH - (100 / maxV) * pH;
+    ctx.strokeStyle = 'rgba(234,88,12,0.5)'; ctx.lineWidth = 1; ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(pad.l, y100); ctx.lineTo(pad.l + pW, y100); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = C.tpuf; ctx.font = '9px monospace'; ctx.textAlign = 'right';
+    ctx.fillText('100ms', pad.l - 4, y100 - 4);
+
+    for (var i = 0; i < bars.length; i++) {
+      var bar = bars[i];
+      var cx = pad.l + (pW / bars.length) * (i + 0.5);
+      var totalH = ((bar.server + bar.network) / maxV) * pH;
+      var serverH = (bar.server / maxV) * pH;
+      var networkH = (bar.network / maxV) * pH;
+
+      // Server portion (bottom of stacked bar = bottom of total bar)
+      ctx.fillStyle = bar.serverColor;
+      roundRect(ctx, cx - barW/2, pad.t + pH - totalH, barW, serverH, 3);
+      // Network portion (top)
+      ctx.fillStyle = bar.networkColor;
+      roundRect(ctx, cx - barW/2, pad.t + pH - totalH - networkH + serverH, barW, networkH, 2);
+
+      // Total label
+      var total = bar.server + bar.network;
+      ctx.fillStyle = C.text; ctx.font = 'bold 11px monospace'; ctx.textAlign = 'center';
+      var lbl = total >= 1000 ? total.toLocaleString() + 'ms' : total + 'ms';
+      ctx.fillText(lbl, cx, pad.t + pH - totalH - networkH + serverH - networkH - 6);
+
+      // "94% server-side" annotation on cold bar
+      if (i === 1) {
+        ctx.fillStyle = '#991B1B'; ctx.font = 'bold 9px monospace'; ctx.textAlign = 'center';
+        ctx.fillText('94% server', cx, pad.t + pH - totalH + 14);
+      }
+
+      // X label
+      ctx.fillStyle = C.text2; ctx.font = '11px system-ui'; ctx.textAlign = 'center';
+      ctx.fillText(bar.label, cx, H - pad.b + 16);
+    }
+    drawLegend(ctx, pad.l, H - 8, [
+      [C.tpuf, 'Server-side (NVMe/S3)'], [C.tpuf2, 'Network (~5ms RTT)'],
+      [C.qdrant, 'Qdrant server'], [C.qdrant2, 'Qdrant network']
+    ]);
+  })();
+
+  // §6 Multi-tenant RPS line chart (override grouped bar to line chart)
+  (function() {
+    var res = setupCanvas('c-mt-rps');
+    if (!res) return;
+    var ctx = res[0], W = res[1], H = res[2];
+
+    var concurrency = [1, 8, 32];
+    var tpufRPS  = [33.5, 43.7, 16.8];
+    var qdrantRPS = [184.6, 46.9, 9.5];
+    var maxV = 220;
+    var pad  = { t: 24, r: 24, b: 60, l: 50 };
+    var pW   = W - pad.l - pad.r;
+    var pH   = H - pad.t - pad.b;
+    var N    = concurrency.length;
+
+    drawYGrid(ctx, W, H, pad, maxV, 5);
+
+    function xp(i) { return pad.l + (i / (N - 1)) * pW; }
+    function yp(v) { return pad.t + pH - (v / maxV) * pH; }
+
+    // Crossover region highlight at p=32
+    var x32 = xp(2);
+    ctx.fillStyle = 'rgba(234,88,12,0.06)';
+    ctx.fillRect(x32 - 20, pad.t, 40, pH);
+    ctx.fillStyle = C.tpuf; ctx.font = '9px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('tpuf > qdrant', x32, pad.t + 12);
+
+    function drawLineChart(data, color, label, isDash) {
+      ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
+      ctx.setLineDash(isDash ? [5, 4] : []);
+      ctx.beginPath();
+      for (var i = 0; i < data.length; i++) {
+        if (i === 0) ctx.moveTo(xp(i), yp(data[i]));
+        else ctx.lineTo(xp(i), yp(data[i]));
+      }
+      ctx.stroke(); ctx.setLineDash([]);
+      for (var i = 0; i < data.length; i++) {
+        ctx.fillStyle = color;
+        ctx.beginPath(); ctx.arc(xp(i), yp(data[i]), 4, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = C.text; ctx.font = 'bold 10px monospace'; ctx.textAlign = 'center';
+        ctx.fillText(data[i], xp(i), yp(data[i]) - 9);
+      }
+    }
+
+    drawLineChart(qdrantRPS, C.qdrant, 'Qdrant', false);
+    drawLineChart(tpufRPS,   C.tpuf,   'tpuf',   false);
+
+    for (var i = 0; i < concurrency.length; i++) {
+      ctx.fillStyle = C.text2; ctx.font = '11px system-ui'; ctx.textAlign = 'center';
+      ctx.fillText('p=' + concurrency[i], xp(i), H - pad.b + 18);
+    }
+    ctx.fillStyle = C.text2; ctx.font = '10px monospace'; ctx.textAlign = 'left';
+    ctx.fillText('concurrency', pad.l, H - 4);
+    drawLegend(ctx, pad.l, H - pad.b + 34, [[C.tpuf, 'turbopuffer RPS'], [C.qdrant, 'Qdrant RPS']]);
   })();
 
 }); // end DOMContentLoaded

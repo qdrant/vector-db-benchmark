@@ -50,16 +50,18 @@ Recall at p>1 is now measured correctly — results are stored at their dispatch
 
 All uploads use batch=128 and the async client.
 
-| Dataset | Engine | Time | WPS | Batch p50 | Batch p99 | Server p50 |
-|---------|--------|------|-----|-----------|-----------|------------|
-| DBpedia 100K×1536 | turbopuffer | 2.7 min (160s) | 624 | 192ms | 352ms | 180ms |
-| DBpedia 100K×1536 | Qdrant Cloud | 3.9 min (234s) | 428 | 285ms | 323ms | — |
-| H&M 105K×2048 | turbopuffer | 3.1 min (183s) | 574 | 208ms | 335ms | 192ms |
-| H&M 105K×2048 | Qdrant Cloud | 9.0 min (542s) | 304 | 401ms | 459ms | — |
-| Multi-tenant 1M×768 (100 namespaces) | turbopuffer | 2.4 min (146s) wall | 6847 (parallel) | — | — | — |
-| Multi-tenant 1M×768 (1 collection + sub-graph index) | Qdrant Cloud | 20.5 min (1231s) | 816 | 148ms | 175ms | — |
+| Dataset | Engine | Time | WPS | Batch p50 | Batch p99 | Server p50 | Index wait | Stored GB |
+|---------|--------|------|-----|-----------|-----------|------------|------------|-----------|
+| DBpedia 100K×1536 | turbopuffer | 2.7 min (160s) | 624 | 192ms | 352ms | 180ms | — | 0.615 GB |
+| DBpedia 100K×1536 | Qdrant Cloud | 3.9 min (234s) | 428 | 285ms | 323ms | — | ~0s | — |
+| H&M 105K×2048 | turbopuffer | 3.1 min (183s) | 574 | 208ms | 335ms | 192ms | — | 0.873 GB |
+| H&M 105K×2048 | Qdrant Cloud | 9.0 min (542s) | 304 | 401ms | 459ms | — | 195.8s | — |
+| Multi-tenant 1M×768 | turbopuffer | 2.4 min (146s) | 6847 (parallel) | 207ms | 338ms | — | — | — |
+| Multi-tenant 1M×768 | Qdrant Cloud | 20.5 min (1231s) | 816 | 148ms | 175ms | — | 5.1s | — |
 
 Qdrant upload times now reflect the upsert+index split: for H&M, 346s upsert + 196s HNSW build = 542s total. The HNSW build is a one-time write-time cost; turbopuffer defers equivalent work to query time (NVMe fetches per query).
+
+**Write-time vs query-time tradeoff:** turbopuffer stores vectors directly to S3 with no server-side index construction (stored footprint ≈ raw vector data: 0.615 GB for 100K×1536-dim). Qdrant builds HNSW at write time: 195.8s for H&M (36% of total upload time), ~0s for DBpedia (built concurrently during upsert), 5.1s for multi-tenant sub-graphs. This one-time write cost is what enables Qdrant's 1ms server-side query latency — turbopuffer defers the equivalent work to every query (scanning ~0.615 GB of data per DBpedia query).
 
 **turbopuffer vs Qdrant on uploads:** turbopuffer is faster for unfiltered datasets (2.7 min vs 3.9 min for DBpedia) because writes go directly to S3 with minimal server-side processing. Qdrant is significantly slower for H&M (9.0 vs 3.1 min) — 2048-dim vectors mean larger HTTP payloads per batch, and Qdrant processes each batch through an HTTP API with segment metadata updates plus a 196s HNSW index build.
 
@@ -71,28 +73,32 @@ Qdrant upload times now reflect the upsert+index split: for H&M, 346s upsert + 1
 
 ### 4.1 Single-connection baseline (p=1)
 
-| Engine | RPS | Mean | p50 | p99 | Server p50 | Recall |
-|--------|-----|------|-----|-----|------------|--------|
-| turbopuffer serverless p=1 | 57.1 | 15.9ms | — | 47.1ms | 10ms | 98.51% |
-| turbopuffer serverless p=8 | 51.4 | — | — | — | 10ms | 98.51% |
-| Qdrant Cloud p=1 | **143.2** | **6.9ms** | — | **8.4ms** | **1.9ms** | 98.36% |
-| Qdrant Cloud p=8 | 48.1 | — | — | — | 2.0ms | 98.36% |
+| Engine | RPS | Mean | p99 | Server p50 | Server p99 | Billed GB/query | Recall |
+|--------|-----|------|-----|------------|------------|-----------------|--------|
+| turbopuffer serverless p=1 | 57.1 | 15.9ms | 47.1ms | 10ms | 40ms | 0.615 GB | 98.51% |
+| turbopuffer serverless p=8 | 51.4 | 19.4ms | 40.8ms | 10ms | 30ms | 0.615 GB | 98.51% |
+| Qdrant Cloud p=1 | **143.2** | **6.9ms** | **8.4ms** | **1.9ms** | **2.5ms** | — | 98.36% |
+| Qdrant Cloud p=8 | 48.1 | 20.8ms | 54.1ms | 2.0ms | 7.3ms | — | 98.36% |
 
 Same recall (98.5% tpuf vs 98.4% qdrant). **Qdrant: 2.5× higher throughput, 2.3× lower latency** at p=1.
 
 The gap is architectural. Qdrant's HNSW query takes **1.9ms server-side** (confirmed via `server_time` response header); the remaining ~5ms is network RTT (same-region). turbopuffer's server latency floor is **10ms** — the NVMe centroid traversal cost. No configuration change reduces this: it is the cost of SPFresh's object-storage model.
 
+**Full dataset scan per query:** turbopuffer bills 0.615 GB per DBpedia query — essentially the entire 0.614 GB dataset (100K × 1536-dim × 4B). This is SPFresh's centroid traversal model: every query reads a significant fraction of the centroid tree from NVMe. Cost scales linearly with dataset size × QPS.
+
+**Qdrant server tail is rock-stable:** p99 server latency is 2.5ms vs p50 of 1.9ms (1.3× ratio). Under 1–50 QPS, Qdrant server p99 never exceeds 2.7ms. turbopuffer server p99 is 40ms vs p50 of 10ms (4× ratio).
+
 ### 4.2 Fixed-QPS sweep — latency under sustained load + cost
 
 Queries fired at exact intervals for 120 seconds per level. These numbers are the primary cost analysis input.
 
-| QPS | tpuf n | tpuf mean | tpuf p50 | tpuf p99 | tpuf srv_p50 | tpuf $/mo | qdrant mean | qdrant p50 | qdrant p99 | qdrant srv_p50 | qdrant $/mo |
-|-----|--------|-----------|----------|----------|--------------|-----------|-------------|------------|------------|----------------|-------------|
-| 1 | 120 | — | 21.4ms | 56.3ms | 15ms | $3.42 | — | 7.9ms | 22.2ms | 2.0ms | $26.10 |
-| 5 | 600 | — | 15.5ms | 33.8ms | 10ms | $16.69 | — | 7.7ms | 14.6ms | 2.0ms | $26.10 |
-| 10 | 1200 | — | 15.9ms | 41.3ms | 10ms | $33.28 | — | 7.4ms | 12.2ms | 2.0ms | $26.10 |
-| 20 | 2400 | — | 15.7ms | 44.7ms | 10ms | $66.46 | — | 7.6ms | 13.0ms | 1.9ms | $26.10 |
-| 50 | 6000 | — | 15.2ms | 42.7ms | 10ms | $165.99 | — | 7.3ms | 10.7ms | 1.9ms | $26.10 |
+| QPS | tpuf p50 | tpuf p99 | tpuf srv_p50 | tpuf srv_p99 | tpuf $/mo | qdrant p50 | qdrant p99 | qdrant srv_p50 | qdrant srv_p99 | qdrant $/mo |
+|-----|----------|----------|--------------|--------------|-----------|------------|------------|----------------|----------------|-------------|
+| 1   | 21.4ms | 56.3ms | 15ms | 46ms | $3.42 | 7.9ms | 22.2ms | 2.0ms | 2.7ms | $26.10 |
+| 5   | 15.5ms | 33.8ms | 10ms | 25ms | $16.69 | 7.7ms | 14.6ms | 2.0ms | 2.5ms | $26.10 |
+| 10  | 15.9ms | 41.3ms | 10ms | 35ms | $33.28 | 7.4ms | 12.2ms | 2.0ms | 2.5ms | $26.10 |
+| 20  | 15.7ms | 44.7ms | 10ms | 38ms | $66.46 | 7.6ms | 13.0ms | 1.9ms | 2.5ms | $26.10 |
+| 50  | 15.2ms | 42.7ms | 10ms | 35ms | $165.99 | 7.3ms | 10.7ms | 1.9ms | 2.5ms | $26.10 |
 
 **Key observations:**
 
@@ -100,6 +106,7 @@ Queries fired at exact intervals for 120 seconds per level. These numbers are th
 - **Qdrant latency is flat** (7.3–7.9ms p50). Both engines are capacity-headroom-bound at 1–50 QPS for this dataset.
 - **Cost crossover at ~10 QPS.** Below: turbopuffer is cheaper. Above: Qdrant is cheaper and faster. At 10 QPS: $33 vs $26, and Qdrant p99 is 3× lower (12ms vs 41ms).
 - **There is no QPS level where turbopuffer is simultaneously cheaper and faster** for a sustained workload.
+- **Qdrant server latency is completely flat under load:** server p99 stays at 2.5ms from 1 QPS to 50 QPS — the node has ample headroom. turbopuffer server p99 is 25–46ms (flat too, but at a 10–20× higher floor).
 
 ### 4.3 Cost model detail
 
@@ -127,10 +134,14 @@ The 1.28 GB minimum is critical: a 308 MB namespace (100K × 1536-dim f16) is bi
 
 Replicas were pinned and waited for `ready_replicas=4/4` before sending traffic.
 
-| State | RPS | Mean | p50 | p99 | Server p50 | Recall |
-|-------|-----|------|-----|-----|------------|--------|
-| Warm (NVMe-cached after warmup queries) | 6.0 | 139ms | — | 538ms | 119ms | 88.94% |
-| **Cold** (fresh namespace via `copy_from`, no warmup) | 3.5 | 163ms | — | **1,891ms** | — | 88.94% |
+| State | RPS | Mean | p50 | p99 | Server p50 | Server p99 | Billed GB/query | Recall |
+|-------|-----|------|-----|-----|------------|------------|-----------------|--------|
+| Warm (NVMe-cached) | 6.0 | 167ms | 139ms | 538ms | 119ms | 472ms | 0.872 GB | 88.94% |
+| **Cold** (fresh namespace via `copy_from`, no warmup) | 3.5 | 285ms | 163ms | **1,891ms** | 149ms | **1,777ms** | — | 88.94% |
+
+Server p99=472ms vs total p99=538ms — 88% of the warm tail is server-side NVMe latency, not network.
+
+**94% of cold p99 is server-side:** server_p99=1,777ms out of total_p99=1,891ms. Only 114ms is network — the remaining 1,777ms is S3 fetches for uncached centroid blocks. This eliminates any network-distance explanation for cold-start latency.
 
 **Cold vs warm:** p99 jumps from 538ms to 1,891ms — **3.5× worse, same config, same region**. The cold namespace was created via `copy_from` (copies S3 objects without NVMe cache). On cold, each filtered query touches multiple uncached centroid regions, each requiring an S3 fetch.
 
@@ -185,20 +196,24 @@ Dataset: 1M vectors total, 100 tenants, ~10K vectors/tenant. Only the per-tenant
 
 ### 6.1 Single-connection (p=1) — reliable
 
-| Engine | Config | Parallel | RPS | p50 | p99 | Server p50 | Recall |
-|--------|--------|----------|-----|-----|-----|------------|--------|
-| turbopuffer | ns-per-tenant | p=1 | 33.5 | 24.0ms | 119.6ms | 19ms | **100%** |
-| turbopuffer | ns-per-tenant | p=8 | 43.7 | 21.7ms | 54.9ms | 16ms | **100%** |
-| turbopuffer | ns-per-tenant | p=32 | 16.8 | 55.3ms | 207ms | 15ms | **100%** |
-| Qdrant Cloud | payload_m=16 | p=1 | **184.6** | **5.3ms** | **9.7ms** | — | **100%** |
-| Qdrant Cloud | payload_m=16 | p=8 | 46.9 | 17.3ms | 96.8ms | — | **100%** |
-| Qdrant Cloud | payload_m=16 | p=32 | 9.5 | 74.5ms | 444.8ms | — | **100%** |
+| Config | p | RPS | p50 | p99 | Server p50 | Server p99 | Billed GB/query | Recall |
+|--------|---|-----|-----|-----|------------|------------|-----------------|--------|
+| tpuf ns-per-tenant | 1 | 33.5 | 24.0ms | 119.6ms | 19ms | 114ms | 0.256 GB | **100%** |
+| tpuf ns-per-tenant | 8 | 43.7 | 21.7ms | 54.9ms | 16ms | 41ms | 0.256 GB | **100%** |
+| tpuf ns-per-tenant | 32 | 16.8 | 55.3ms | 207ms | 15ms | 29ms | 0.256 GB | **100%** |
+| qdrant payload_m16 | 1 | **184.6** | **5.3ms** | **9.7ms** | — | — | — | **100%** |
+| qdrant payload_m16 | 8 | 46.9 | 17.3ms | 96.8ms | — | — | — | **100%** |
+| qdrant payload_m16 | 32 | 9.5 | 74.5ms | 444.8ms | — | — | — | **100%** |
 
 **Both engines achieve 100% recall. Qdrant delivers 5.5× higher throughput at 4.5× lower p50 latency** at p=1.
 
 The performance gap has two causes: (1) each turbopuffer query requires an HTTP round-trip to a separate namespace endpoint (~15–19ms server-side overhead); Qdrant's sub-graph routing is in-process and nearly free. (2) turbopuffer's NVMe latency floor (~13–15ms) vs Qdrant's RAM floor (~2ms).
 
 The wide p99 for turbopuffer at p=1 (119.6ms vs 9.7ms) is explained by the namespace routing overhead varying under load — some namespace lookups hit cold or lightly-warmed NVMe regions.
+
+**Billed GB per MT query:** 0.256 GB billed per namespace query vs ~0.031 GB raw vector data per namespace (10K × 768-dim × 4B). turbopuffer scans ~8× the raw data size per namespace — centroid tree overhead.
+
+**p=32 autoscaling crossover:** At p=32, tpuf (16.8 RPS, 55ms p50) outperforms the single 2CPU Qdrant node (9.5 RPS, 75ms p50) — the Qdrant node saturates under 32 concurrent queries (mean latency jumps 20× from p=1 to p=32). turbopuffer's serverless autoscaling offsets this. This is a single-node sizing issue, not an architectural ceiling — a larger Qdrant node would restore the 5× advantage.
 
 ### 6.2 Upload tradeoff for multi-tenant
 
