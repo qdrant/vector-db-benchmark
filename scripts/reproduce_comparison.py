@@ -1048,15 +1048,14 @@ async def phase_concurrent_write_read(run_dir, state, args):
     async def writer_tpuf():
         written = 0
         for start in range(0, len(ids), BATCH_SIZE):
-            batch_ids  = ids[start:start + BATCH_SIZE]
-            batch_vecs = vecs[start:start + BATCH_SIZE]
+            end = min(start + BATCH_SIZE, len(ids))
             t_batch = time.perf_counter()
-            await tpuf_ns.upsert(
-                ids=batch_ids,
-                vectors=batch_vecs.tolist(),
+            await tpuf_ns.write(
+                upsert_columns={"id": ids[start:end], "vector": vecs[start:end].tolist()},
+                distance_metric="cosine_distance",
             )
             ms = (time.perf_counter() - t_batch) * 1000
-            written += len(batch_ids)
+            written += end - start
             write_events.append({
                 "wall_t": round(time.perf_counter() - t0, 3),
                 "engine": "tpuf",
