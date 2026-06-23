@@ -459,10 +459,8 @@ canvas {
 }
 .implication-list li {
   counter-increment: impl;
-  display: grid;
-  grid-template-columns: 28px 1fr;
-  gap: 12px;
-  padding: 12px 0;
+  position: relative;
+  padding: 12px 0 12px 40px;
   border-bottom: 1px solid var(--border);
   font-size: 13px;
   line-height: 1.6;
@@ -470,11 +468,13 @@ canvas {
 }
 .implication-list li::before {
   content: counter(impl, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: 14px;
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 700;
   color: var(--qdrant);
-  padding-top: 2px;
 }
 .implication-list li strong { color: var(--text); }
 
