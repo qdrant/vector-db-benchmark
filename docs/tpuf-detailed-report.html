@@ -617,7 +617,7 @@ canvas {
           <tbody>
             <tr><td>DBpedia</td><td>100K</td><td>1,536</td><td>Unfiltered ANN search</td></tr>
             <tr><td>H&amp;M</td><td>105K</td><td>2,048</td><td>Filtered search (fashion attributes)</td></tr>
-            <tr><td>Random-768</td><td>100K</td><td>768</td><td>Multi-tenant (100 namespaces &times; ~1K vectors)</td></tr>
+            <tr><td>Random-768</td><td>1M</td><td>768</td><td>Multi-tenant (100 tenants &times; 10K vectors each)</td></tr>
           </tbody>
         </table>
       </div>
@@ -636,15 +636,15 @@ canvas {
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>Dataset</th><th>Engine</th><th>Time (min)</th><th>Index wait</th><th>Stored GB</th></tr>
+            <tr><th>Dataset</th><th>Engine</th><th>Total time (min)‡</th><th>Extra index wait†</th><th>Stored GB</th></tr>
           </thead>
           <tbody>
             <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-tpuf"></span>turbopuffer</td><td class="win">2.7</td><td>—</td><td>0.615 GB</td></tr>
-            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-qdrant"></span>Qdrant</td><td>3.9</td><td>~0s</td><td>—</td></tr>
+            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-qdrant"></span>Qdrant</td><td>3.9</td><td>0s (concurrent)</td><td>—</td></tr>
             <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-tpuf"></span>turbopuffer</td><td class="win">3.1</td><td>—</td><td>0.873 GB</td></tr>
             <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-qdrant"></span>Qdrant</td><td>9.0</td><td>195.8s</td><td>—</td></tr>
-            <tr><td>Multi-tenant 100K&times;768</td><td><span class="chip-tpuf"></span>turbopuffer</td><td class="win">2.4</td><td>—</td><td>—</td></tr>
-            <tr><td>Multi-tenant 100K&times;768</td><td><span class="chip-qdrant"></span>Qdrant</td><td>20.5</td><td>5.1s</td><td>—</td></tr>
+            <tr><td>Multi-tenant 1M&times;768</td><td><span class="chip-tpuf"></span>turbopuffer</td><td class="win">2.4</td><td>—</td><td>—</td></tr>
+            <tr><td>Multi-tenant 1M&times;768</td><td><span class="chip-qdrant"></span>Qdrant</td><td>20.5</td><td>5.1s</td><td>—</td></tr>
           </tbody>
         </table>
       </div>
@@ -657,10 +657,10 @@ canvas {
         <div class="chart-title">Upload Timeline &mdash; Upsert + Index</div>
         <div class="chart-sub">Stacked bars: solid = upsert, lighter = HNSW build wait. Seconds.</div>
         <canvas id="c-upload-timeline" width="560" height="240" aria-label="Stacked horizontal bar chart showing upsert and index times for tpuf and Qdrant per dataset"></canvas>
-        <div style="font-size:11px;color:var(--text-2);margin-top:8px;font-style:italic;">Qdrant H&amp;M: 346s upsert + 196s HNSW build (one-time). turbopuffer: no write-time index &mdash; equivalent cost paid at every query (~0.615&ndash;0.873 GB scanned per query).</div>
+        <div style="font-size:11px;color:var(--text-2);margin-top:8px;font-style:italic;">‡ Total time = upsert + extra index wait (end-to-end until collection is fully indexed and GREEN). For Qdrant H&amp;M: 5.8 min upsert + 3.3 min HNSW build = 9.0 min total. For DBpedia: 3.9 min upsert, HNSW built concurrently so extra wait = 0s, total = 3.9 min.<br>† Extra index wait = additional time after the last upsert batch until GREEN status. 0s means HNSW finished within the upsert window (concurrent build); 195.8s means it spilled past upsert (2048-dim builds slower than 1536-dim). Same benchmarking code for all datasets. turbopuffer has no write-time index — equivalent cost paid at every query (~0.615–0.873 GB scanned per query).</div>
       </div>
       <div class="callout">
-        Qdrant's multi-tenant index time (20.5 min) reflects 100 separate HNSW graph constructions &mdash; one per tenant namespace. turbopuffer writes all to S3 without graph building, taking only 2.4 min &mdash; a <strong>~8.5&times; speed advantage here</strong>, though it trades query-time graph traversal quality for it.
+        The multi-tenant dataset is <strong>1M vectors total</strong> (100 tenants &times; 10K each) &mdash; 10&times; more data than DBpedia. Qdrant uploads all 1M sequentially in batches to one collection (<code>payload_m=16</code>, <code>is_tenant=True</code>), building per-tenant HNSW sub-graphs in the background. turbopuffer uploads 100 namespaces in <strong>parallel</strong> (asyncio.gather, semaphore=10 concurrent), so its 2.4 min wall-clock reflects parallel throughput across all tenants simultaneously. At comparable per-batch throughput (816 vs 6,847 wps), the parallel vs sequential methodology plus 10&times; more data explains the 8.5&times; wall-clock gap &mdash; not a Qdrant limitation per se.
       </div>
       <div class="callout neutral">
         <strong>Write-time vs query-time:</strong> turbopuffer stores 0.615 GB for DBpedia (&asymp; raw vector size: 100K &times; 1536-dim &times; 4B). Qdrant builds HNSW at write time &mdash; 195.8s for H&amp;M, ~0s for DBpedia (concurrent), 5.1s for MT sub-graphs. This one-time write cost is the source of Qdrant&rsquo;s 1.9ms query server latency: the index is in RAM, already built.
@@ -781,9 +781,9 @@ canvas {
             <tr><th>Concurrency</th><th>RPS</th><th>Mean</th><th>p50</th><th>p99</th><th>Recall</th></tr>
           </thead>
           <tbody>
-            <tr><td>p=1</td><td class="win">159.4</td><td class="win">6.1ms</td><td class="win">—</td><td class="win">10.1ms</td><td class="win">95.71%</td></tr>
-            <tr><td>p=8</td><td>42.4</td><td>—</td><td>20.4ms</td><td>61.2ms</td><td>95.71%</td></tr>
-            <tr><td>p=32</td><td>6.7</td><td>—</td><td>109.7ms</td><td>605ms</td><td>95.71%</td></tr>
+            <tr><td>p=1</td><td class="win">159.4</td><td class="win">6.3ms</td><td class="win">6.1ms</td><td class="win">10.1ms</td><td class="win">95.71%</td></tr>
+            <tr><td>p=8</td><td>42.4</td><td>23.6ms</td><td>20.4ms</td><td>61.2ms</td><td>95.71%</td></tr>
+            <tr><td>p=32</td><td>6.7</td><td>150.1ms</td><td>109.7ms</td><td>605ms</td><td>95.71%</td></tr>
           </tbody>
         </table>
       </div>
@@ -1293,7 +1293,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!res) return;
     var ctx = res[0], W = res[1], H = res[2];
 
-    var datasets = ['DBpedia 100K×1536', 'H&M 105K×2048', 'Multi-tenant 100K×768'];
+    var datasets = ['DBpedia 100K×1536', 'H&M 105K×2048', 'Multi-tenant 1M×768'];
     var tpuf   = [2.7, 3.1, 2.4];
     var qdrant = [3.9, 9.0, 20.5];
     var maxV   = 22;

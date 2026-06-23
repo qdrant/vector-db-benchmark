@@ -48,16 +48,20 @@ turbopuffer is not a better search engine. It is a cheaper storage tier for spor
 
 ### Upload (batch=128, async client, aws-us-west-2)
 
-| Engine | Dataset | Vectors | Time | Throughput | Index wait | Stored (tpuf) |
+| Engine | Dataset | Vectors | Total time† | Throughput | Extra index wait‡ | Stored (tpuf) |
 |--------|---------|---------|------|------------|------------|---------------|
 | turbopuffer | DBpedia (1536-dim) | 100K | 2.7 min | 624 wps | — | 0.615 GB |
-| Qdrant Cloud | DBpedia (1536-dim) | 100K | 3.9 min | 428 wps | ~0s | — |
+| Qdrant Cloud | DBpedia (1536-dim) | 100K | 3.9 min | 428 wps | 0s (concurrent) | — |
 | turbopuffer | H&M (2048-dim) | 105K | 3.1 min | 574 wps | — | 0.873 GB |
 | Qdrant Cloud | H&M (2048-dim) | 105K | 9.0 min | 304 wps | 195.8s | — |
-| turbopuffer | Multi-tenant 768-dim (100 ns parallel) | 100K | 2.4 min | 6847 wps | — | — |
-| Qdrant Cloud | Multi-tenant 768-dim (1 collection) | 100K | 20.5 min | 816 wps | 5.1s | — |
+| turbopuffer | Multi-tenant 768-dim (100 ns, parallel upload) | 1M | 2.4 min | 6847 wps | — | — |
+| Qdrant Cloud | Multi-tenant 768-dim (1 collection, sequential) | 1M | 20.5 min | 816 wps | 5.1s | — |
 
-**Write-time vs query-time tradeoff:** Qdrant's H&M upload includes 195.8s of HNSW index construction (36% of total time) — a one-time cost that enables 1ms server-side queries forever after. turbopuffer skips this step and stores raw vectors to S3 (0.615 GB for DBpedia — nearly 1:1 with raw vector size). The deferred cost appears at query time: every DBpedia query scans ~0.615 GB of data (essentially the full dataset), which is why tpuf cost scales with dataset size × QPS.
+†Total time = upsert + extra index wait. For Qdrant H&M: 5.8 min upsert + 3.3 min HNSW build = 9.0 min total. For DBpedia: 3.9 min upsert, HNSW finished concurrently (extra wait = 0s), total = 3.9 min.
+
+‡Extra index wait = additional time after last upsert batch until GREEN. DBpedia = 0s (1536-dim HNSW finished within upsert window); H&M = 195.8s (2048-dim spilled past upsert). Same benchmarking code for all datasets.
+
+**Write-time vs query-time tradeoff:** Qdrant builds HNSW for all datasets — 195.8s additional wait for H&M (2048-dim), embedded within the 234s window for DBpedia (1536-dim, builds fast enough to finish concurrently), 5.1s for MT. This one-time cost enables 1.9ms server-side queries. turbopuffer stores raw vectors to S3 (0.615 GB for DBpedia — 1:1 with raw vector size) with no write-time indexing. The deferred cost appears at every query: ~0.615 GB scanned per DBpedia query, so tpuf cost scales with data size × QPS.
 
 Qdrant is slower to upload for H&M (larger vectors, more HTTP payload per batch) and significantly slower for the multi-tenant collection — building per-tenant HNSW sub-graphs (`payload_m=16`) is expensive at write time. turbopuffer writes directly to object storage with no server-side index construction.
 
@@ -134,7 +138,7 @@ Qdrant's HNSW graph is in RAM — there is no cold-start state. Latency and reca
 
 ---
 
-### Search — Multi-Tenant (100K × 768-dim, 100 tenants)
+### Search — Multi-Tenant (1M × 768-dim, 100 tenants, 10K vectors/tenant)
 
 Dataset: 100K vectors across 100 tenants (~1K per tenant). turbopuffer routes each query to its per-tenant namespace (100 namespaces total). Qdrant uses one collection with per-tenant HNSW sub-graphs (`m=0, payload_m=16, is_tenant=True`).
 
