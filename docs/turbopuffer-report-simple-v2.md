@@ -140,7 +140,7 @@ Qdrant's HNSW graph is in RAM — there is no cold-start state. Latency and reca
 
 ### Search — Multi-Tenant (1M × 768-dim, 100 tenants, 10K vectors/tenant)
 
-Dataset: 100K vectors across 100 tenants (~1K per tenant). turbopuffer routes each query to its per-tenant namespace (100 namespaces total). Qdrant uses one collection with per-tenant HNSW sub-graphs (`m=0, payload_m=16, is_tenant=True`).
+Dataset: 1M vectors across 100 tenants (~10K per tenant). turbopuffer routes each query to its per-tenant namespace (100 namespaces total). Qdrant uses one collection with per-tenant HNSW sub-graphs (`m=0, payload_m=16, is_tenant=True`).
 
 #### Single-connection (p=1) — reliable measurement
 

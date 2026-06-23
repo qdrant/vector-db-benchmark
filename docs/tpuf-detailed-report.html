@@ -806,7 +806,7 @@ canvas {
       <div class="section-header">
         <div class="section-eyebrow">&sect;6</div>
         <h2>Multi-Tenant Search</h2>
-        <p>100 tenants, ~1,000 vectors each. At this per-tenant scale, both engines achieve 100% recall &mdash; the index structures have no room for approximation error over 1K vectors. Throughput tells the real story.</p>
+        <p>100 tenants, ~10,000 vectors each (1M total). At this per-tenant scale, both engines achieve 100% recall &mdash; the index structures have negligible approximation error over 10K vectors. Throughput tells the real story.</p>
       </div>
       <div class="table-wrap">
         <table>
@@ -829,7 +829,7 @@ canvas {
         <canvas id="c-mt-rps" width="560" height="280" aria-label="Line chart: tpuf 33.5/43.7/16.8 RPS vs Qdrant 184.6/46.9/9.5 RPS at p=1/8/32, crossover at p=32"></canvas>
       </div>
       <div class="callout neutral">
-        <strong>Why 100% recall?</strong> With ~1,000 vectors per tenant, both HNSW and SPFresh centroid structures have zero approximation error &mdash; the entire per-tenant index fits in a single graph/centroid traversal. The multi-tenant comparison is purely a throughput and cost question, not a recall question.
+        <strong>Why 100% recall?</strong> With ~10,000 vectors per tenant, both HNSW (Qdrant: <code>m=0, payload_m=16</code> builds per-tenant sub-graphs) and SPFresh centroid structures (tpuf) have negligible approximation error &mdash; the per-tenant index is small enough for near-exhaustive traversal. The multi-tenant comparison is purely a throughput and cost question, not a recall quality question.
       </div>
       <div class="callout neutral">
         <strong>p=32 autoscaling crossover:</strong> tpuf outperforms the single-node Qdrant at p=32 (16.8 vs 9.5 RPS) because Qdrant&rsquo;s 2CPU node saturates (mean latency 5ms&rarr;105ms = 20&times;). tpuf autoscales horizontally. This is a node-sizing issue: a larger Qdrant instance restores the 5&times; advantage at all concurrency levels.

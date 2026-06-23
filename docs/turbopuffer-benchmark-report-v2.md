@@ -228,7 +228,7 @@ turbopuffer is ~8.5× faster to upload for multi-tenant because it writes direct
 
 ### 6.3 Cost for multi-tenant
 
-The cost model is identical to single-namespace: each turbopuffer namespace incurs the 1.28 GB minimum billing. 100 namespaces at 1K vectors each (~0.8 MB f16 vectors) are all billed at the 1.28 GB minimum — total storage cost is negligible; query cost is $1.28 per million queries **per namespace**.
+The cost model is identical to single-namespace: each turbopuffer namespace incurs a minimum billing floor. 100 namespaces at 10K vectors each (~15 MB f16 vectors per namespace; billed_gb_avg = 0.256 GB/query per namespace). Total storage cost is negligible; query cost scales with QPS × namespaces.
 
 For sparse multi-tenant workloads (most tenants idle), turbopuffer costs near-zero. For tenants with sustained traffic (>~8 QPS), Qdrant is cheaper and 5× faster.
 
