@@ -637,16 +637,16 @@ canvas {
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>Dataset</th><th>Engine</th><th>Total time (min)‡</th><th>Extra index wait†</th><th>Stored GB</th></tr>
+            <tr><th>Dataset</th><th>Engine</th><th>Time (min)‡</th><th>WPS</th><th>Batch p50</th><th>Batch p99</th><th>Srv p50</th><th>Srv p99</th><th>Index wait†</th><th>Stored GB</th></tr>
           </thead>
           <tbody>
-            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-tpuf"></span>turbopuffer (serverless)</td><td class="win">2.7</td><td>—</td><td>0.615 GB</td></tr>
-            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-tpuf"></span>turbopuffer (pinned-1r)</td><td class="win">2.6</td><td>—</td><td>0.615 GB</td></tr>
-            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-qdrant"></span>Qdrant</td><td>3.9</td><td>0s (concurrent)</td><td>0.614 GB</td></tr>
-            <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-tpuf"></span>turbopuffer</td><td class="win">3.1</td><td>—</td><td>0.873 GB</td></tr>
-            <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-qdrant"></span>Qdrant</td><td>9.0</td><td>195.8s</td><td>0.926 GB</td></tr>
-            <tr><td>Multi-tenant 1M&times;768</td><td><span class="chip-tpuf"></span>turbopuffer</td><td class="win">2.4</td><td>—</td><td>—</td></tr>
-            <tr><td>Multi-tenant 1M&times;768</td><td><span class="chip-qdrant"></span>Qdrant</td><td>20.5</td><td>5.1s</td><td>3.200 GB</td></tr>
+            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-tpuf"></span>tpuf serverless</td><td class="win">2.7</td><td>624</td><td>192ms</td><td>352ms</td><td>180ms</td><td>341ms</td><td>—</td><td>0.615 GB</td></tr>
+            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-tpuf"></span>tpuf pinned-1r</td><td class="win">2.6</td><td>633</td><td>188ms</td><td>295ms</td><td>176ms</td><td>282ms</td><td>—</td><td>0.615 GB</td></tr>
+            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-qdrant"></span>Qdrant</td><td>3.9</td><td>428</td><td>285ms</td><td>323ms</td><td>—</td><td>—</td><td>0s (concurrent)</td><td>0.614 GB</td></tr>
+            <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-tpuf"></span>tpuf serverless</td><td class="win">3.1</td><td>574</td><td>208ms</td><td>335ms</td><td>192ms</td><td>318ms</td><td>—</td><td>0.873 GB</td></tr>
+            <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-qdrant"></span>Qdrant</td><td>9.0</td><td>304</td><td>401ms</td><td>459ms</td><td>—</td><td>—</td><td>195.8s</td><td>0.926 GB</td></tr>
+            <tr><td>Multi-tenant 1M&times;768</td><td><span class="chip-tpuf"></span>tpuf (100 ns, parallel)</td><td class="win">2.4</td><td>6847</td><td>207ms</td><td>338ms</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+            <tr><td>Multi-tenant 1M&times;768</td><td><span class="chip-qdrant"></span>Qdrant</td><td>20.5</td><td>816</td><td>148ms</td><td>175ms</td><td>—</td><td>—</td><td>5.1s</td><td>3.200 GB</td></tr>
           </tbody>
         </table>
       </div>
@@ -684,17 +684,13 @@ canvas {
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>Engine</th><th>RPS</th><th>Mean</th><th>p99</th><th>Srv p50</th><th>Srv p99</th><th>Billed GB/q</th><th>Recall</th></tr>
+            <tr><th>Engine</th><th>p</th><th>RPS</th><th>Mean</th><th>p99</th><th>Srv p50</th><th>Srv p99</th><th>Billed GB/q</th><th>Recall</th></tr>
           </thead>
           <tbody>
-            <tr>
-              <td><span class="chip-tpuf"></span>tpuf serverless</td>
-              <td>57.1</td><td>15.9ms</td><td>47.1ms</td><td>10ms</td><td>40ms</td><td>0.615 GB</td><td>98.51%</td>
-            </tr>
-            <tr>
-              <td><span class="chip-qdrant"></span>Qdrant</td>
-              <td class="win">143.2</td><td class="win">6.9ms</td><td class="win">8.4ms</td><td class="win">1.9ms</td><td class="win">2.5ms</td><td>—</td><td class="win">98.36%</td>
-            </tr>
+            <tr><td><span class="chip-tpuf"></span>tpuf serverless</td><td>1</td><td>57.1</td><td>15.9ms</td><td>47.1ms</td><td>10ms</td><td>40ms</td><td>0.615 GB</td><td>98.51%</td></tr>
+            <tr><td><span class="chip-tpuf"></span>tpuf serverless</td><td>8</td><td>51.4</td><td>19.4ms</td><td>40.8ms</td><td>10ms</td><td>30ms</td><td>0.615 GB</td><td>98.51%</td></tr>
+            <tr><td><span class="chip-qdrant"></span>Qdrant</td><td>1</td><td class="win">143.2</td><td class="win">6.9ms</td><td class="win">8.4ms</td><td class="win">1.9ms</td><td class="win">2.5ms</td><td>—</td><td class="win">98.36%</td></tr>
+            <tr><td><span class="chip-qdrant"></span>Qdrant</td><td>8</td><td>48.1</td><td>20.8ms</td><td>54.1ms</td><td>2.0ms</td><td>7.3ms</td><td>—</td><td>98.36%</td></tr>
           </tbody>
         </table>
       </div>
@@ -713,16 +709,16 @@ canvas {
           <thead>
             <tr>
               <th>QPS</th>
-              <th>tpuf p50</th><th>tpuf p99</th><th>tpuf srv_p99</th><th>tpuf $/mo</th>
-              <th>qdrant p50</th><th>qdrant p99</th><th>qdrant srv_p99</th><th>qdrant $/mo</th>
+              <th>tpuf p50</th><th>tpuf p99</th><th>tpuf srv_p50</th><th>tpuf srv_p99</th><th>tpuf $/mo</th>
+              <th>qdrant p50</th><th>qdrant p99</th><th>qdrant srv_p50</th><th>qdrant srv_p99</th><th>qdrant $/mo</th>
             </tr>
           </thead>
           <tbody>
-            <tr><td>1</td><td>21.4ms</td><td>56.3ms</td><td>46ms</td><td class="win">$3.42</td><td class="win">7.9ms</td><td>22.2ms</td><td class="win">2.7ms</td><td>$26.10</td></tr>
-            <tr><td>5</td><td>15.5ms</td><td>33.8ms</td><td>25ms</td><td class="win">$16.69</td><td class="win">7.7ms</td><td>14.6ms</td><td class="win">2.5ms</td><td>$26.10</td></tr>
-            <tr><td>10</td><td>15.9ms</td><td>41.3ms</td><td>35ms</td><td>$33.28</td><td class="win">7.4ms</td><td class="win">12.2ms</td><td class="win">2.5ms</td><td class="win">$26.10</td></tr>
-            <tr><td>20</td><td>15.7ms</td><td>44.7ms</td><td>38ms</td><td>$66.46</td><td class="win">7.6ms</td><td class="win">13.0ms</td><td class="win">2.5ms</td><td class="win">$26.10</td></tr>
-            <tr><td>50</td><td>15.2ms</td><td>42.7ms</td><td>35ms</td><td>$165.99</td><td class="win">7.3ms</td><td class="win">10.7ms</td><td class="win">2.5ms</td><td class="win">$26.10</td></tr>
+            <tr><td>1</td><td>21.4ms</td><td>56.3ms</td><td>15ms</td><td>46ms</td><td class="win">$3.42</td><td class="win">7.9ms</td><td>22.2ms</td><td class="win">2.0ms</td><td class="win">2.7ms</td><td>$26.10</td></tr>
+            <tr><td>5</td><td>15.5ms</td><td>33.8ms</td><td>10ms</td><td>25ms</td><td class="win">$16.69</td><td class="win">7.7ms</td><td>14.6ms</td><td class="win">2.0ms</td><td class="win">2.5ms</td><td>$26.10</td></tr>
+            <tr><td>10</td><td>15.9ms</td><td>41.3ms</td><td>10ms</td><td>35ms</td><td>$33.28</td><td class="win">7.4ms</td><td class="win">12.2ms</td><td class="win">2.0ms</td><td class="win">2.5ms</td><td class="win">$26.10</td></tr>
+            <tr><td>20</td><td>15.7ms</td><td>44.7ms</td><td>10ms</td><td>38ms</td><td>$66.46</td><td class="win">7.6ms</td><td class="win">13.0ms</td><td class="win">1.9ms</td><td class="win">2.5ms</td><td class="win">$26.10</td></tr>
+            <tr><td>50</td><td>15.2ms</td><td>42.7ms</td><td>10ms</td><td>35ms</td><td>$165.99</td><td class="win">7.3ms</td><td class="win">10.7ms</td><td class="win">1.9ms</td><td class="win">2.5ms</td><td class="win">$26.10</td></tr>
           </tbody>
         </table>
       </div>
@@ -770,11 +766,11 @@ canvas {
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>State</th><th>RPS</th><th>Mean</th><th>Srv p50</th><th>p99</th><th>Srv p99</th><th>Billed GB/q</th><th>Recall</th></tr>
+            <tr><th>State</th><th>RPS</th><th>Mean</th><th>p50</th><th>p99</th><th>Srv p50</th><th>Srv p99</th><th>Billed GB/q</th><th>Recall</th></tr>
           </thead>
           <tbody>
-            <tr><td>Warm cache</td><td>6.0</td><td>167ms</td><td>119ms</td><td>538ms</td><td>472ms</td><td>0.872 GB</td><td>88.94%</td></tr>
-            <tr><td>Cold cache</td><td>3.5</td><td>285ms</td><td>149ms</td><td style="background:#FEF2F2;color:#991B1B;">1,891ms</td><td style="background:#FEF2F2;color:#991B1B;">1,777ms</td><td>0.872 GB</td><td>88.94%</td></tr>
+            <tr><td>Warm cache</td><td>6.0</td><td>167ms</td><td>139ms</td><td>538ms</td><td>119ms</td><td>472ms</td><td>0.872 GB</td><td>88.94%</td></tr>
+            <tr><td>Cold cache</td><td>3.5</td><td>285ms</td><td>163ms</td><td style="background:#FEF2F2;color:#991B1B;">1,891ms</td><td>149ms</td><td style="background:#FEF2F2;color:#991B1B;">1,777ms</td><td>0.872 GB</td><td>88.94%</td></tr>
           </tbody>
         </table>
       </div>
@@ -783,12 +779,12 @@ canvas {
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>Concurrency</th><th>RPS</th><th>Mean</th><th>p50</th><th>p99</th><th>Recall</th></tr>
+            <tr><th>Concurrency</th><th>RPS</th><th>Mean</th><th>p50</th><th>p99</th><th>Srv p50</th><th>Recall</th></tr>
           </thead>
           <tbody>
-            <tr><td>p=1</td><td class="win">159.4</td><td class="win">6.3ms</td><td class="win">6.1ms</td><td class="win">10.1ms</td><td class="win">95.71%</td></tr>
-            <tr><td>p=8</td><td>42.4</td><td>23.6ms</td><td>20.4ms</td><td>61.2ms</td><td>95.71%</td></tr>
-            <tr><td>p=32</td><td>6.7</td><td>150.1ms</td><td>109.7ms</td><td>605ms</td><td>95.71%</td></tr>
+            <tr><td>p=1</td><td class="win">159.4</td><td class="win">6.3ms</td><td class="win">6.1ms</td><td class="win">10.1ms</td><td class="win">1.0ms</td><td class="win">95.71%</td></tr>
+            <tr><td>p=8</td><td>42.4</td><td>23.6ms</td><td>20.4ms</td><td>61.2ms</td><td>1.1ms</td><td>95.71%</td></tr>
+            <tr><td>p=32</td><td>6.7</td><td>150.1ms</td><td>109.7ms</td><td>605ms</td><td>1.1ms</td><td>95.71%</td></tr>
           </tbody>
         </table>
       </div>
@@ -816,15 +812,15 @@ canvas {
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>Config</th><th>p</th><th>RPS</th><th>p50</th><th>p99</th><th>Srv p99</th><th>Billed GB/q</th><th>Recall</th></tr>
+            <tr><th>Config</th><th>p</th><th>RPS</th><th>p50</th><th>p99</th><th>Srv p50</th><th>Srv p99</th><th>Billed GB/q</th><th>Recall</th></tr>
           </thead>
           <tbody>
-            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>1</td><td>33.5</td><td>24.0ms</td><td>119.6ms</td><td>114ms</td><td>0.256 GB</td><td>100%</td></tr>
-            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>1</td><td class="win">184.6</td><td class="win">5.3ms</td><td class="win">9.7ms</td><td>—</td><td>—</td><td>100%</td></tr>
-            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>8</td><td class="win">43.7</td><td class="win">21.7ms</td><td class="win">54.9ms</td><td>41ms</td><td>0.256 GB</td><td>100%</td></tr>
-            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>8</td><td>46.9</td><td>17.3ms</td><td>96.8ms</td><td>—</td><td>—</td><td>100%</td></tr>
-            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>32</td><td class="win">16.8</td><td>55.3ms</td><td>207ms</td><td>29ms</td><td>0.256 GB</td><td>100%</td></tr>
-            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>32</td><td>9.5</td><td>74.5ms</td><td>444.8ms</td><td>—</td><td>—</td><td>100%</td></tr>
+            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>1</td><td>33.5</td><td>24.0ms</td><td>119.6ms</td><td>19ms</td><td>114ms</td><td>0.256 GB</td><td>100%</td></tr>
+            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>1</td><td class="win">184.6</td><td class="win">5.3ms</td><td class="win">9.7ms</td><td>—</td><td>—</td><td>—</td><td>100%</td></tr>
+            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>8</td><td class="win">43.7</td><td class="win">21.7ms</td><td class="win">54.9ms</td><td>16ms</td><td>41ms</td><td>0.256 GB</td><td>100%</td></tr>
+            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>8</td><td>46.9</td><td>17.3ms</td><td>96.8ms</td><td>—</td><td>—</td><td>—</td><td>100%</td></tr>
+            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>32</td><td class="win">16.8</td><td>55.3ms</td><td>207ms</td><td>15ms</td><td>29ms</td><td>0.256 GB</td><td>100%</td></tr>
+            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>32</td><td>9.5</td><td>74.5ms</td><td>444.8ms</td><td>—</td><td>—</td><td>—</td><td>100%</td></tr>
           </tbody>
         </table>
       </div>
