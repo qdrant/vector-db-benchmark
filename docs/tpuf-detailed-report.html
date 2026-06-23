@@ -595,6 +595,7 @@ canvas {
         <li><strong>Pinned mode.</strong> Dedicated NVMe, fixed replicas, full machine isolation. Eliminates noisy-neighbor contention but removes scale-to-zero savings.</li>
         <li><strong>Cold-start penalty.</strong> After any restart, the first queries must fetch index data from S3 before NVMe is warm. Penalty: 100&ndash;1500ms on first queries, converging to steady-state after ~30 requests.</li>
         <li><strong>SPFresh algorithm.</strong> Centroid-based ANN that post-filters for attribute predicates rather than integrating filters into graph traversal. Leads to measurable recall drops under selective filter conditions.</li>
+        <li><strong>Write pipeline &amp; index visibility.</strong> Writes are group-committed (100&ndash;250ms window) and flushed as an append-only WAL entry to S3. Indexing (SPFresh centroid tree) is asynchronous &mdash; new vectors are <em>immediately readable</em> via exhaustive WAL scan before the index is built. There is no write-blocking indexing phase (unlike Qdrant&rsquo;s HNSW build). With strong consistency (default), each query checks S3 for the latest WAL version, adding ~10ms overhead &mdash; this is the architectural source of the 10ms server-side latency floor. Eventual consistency mode skips this check (sub-10ms possible, up to ~1h staleness).</li>
       </ul>
     </section>
 
@@ -663,7 +664,7 @@ canvas {
         The multi-tenant dataset is <strong>1M vectors total</strong> (100 tenants &times; 10K each) &mdash; 10&times; more data than DBpedia. Qdrant uploads all 1M sequentially in batches to one collection (<code>payload_m=16</code>, <code>is_tenant=True</code>), building per-tenant HNSW sub-graphs in the background. turbopuffer uploads 100 namespaces in <strong>parallel</strong> (asyncio.gather, semaphore=10 concurrent), so its 2.4 min wall-clock reflects parallel throughput across all tenants simultaneously. At comparable per-batch throughput (816 vs 6,847 wps), the parallel vs sequential methodology plus 10&times; more data explains the 8.5&times; wall-clock gap &mdash; not a Qdrant limitation per se.
       </div>
       <div class="callout neutral">
-        <strong>Write-time vs query-time:</strong> turbopuffer stores 0.615 GB for DBpedia (&asymp; raw vector size: 100K &times; 1536-dim &times; 4B). Qdrant builds HNSW at write time &mdash; 195.8s for H&amp;M, ~0s for DBpedia (concurrent), 5.1s for MT sub-graphs. This one-time write cost is the source of Qdrant&rsquo;s 1.9ms query server latency: the index is in RAM, already built.
+        <strong>Write-time vs query-time:</strong> turbopuffer stores 0.615 GB for DBpedia (&asymp; raw vector size: 100K &times; 1536-dim &times; 4B). Qdrant builds HNSW at write time &mdash; 195.8s for H&amp;M, ~0s for DBpedia (concurrent), 5.1s for MT sub-graphs. This one-time write cost is the source of Qdrant&rsquo;s 1.9ms query server latency: the index is in RAM, already built. turbopuffer&rsquo;s SPFresh index is built <em>asynchronously</em> after writes commit to the S3 WAL &mdash; writes return immediately (no blocking index phase), but every query pays the centroid-scan cost at read time.
       </div>
     </section>
 
