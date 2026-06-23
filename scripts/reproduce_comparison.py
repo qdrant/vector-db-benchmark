@@ -77,6 +77,7 @@ PHASES = [
     "search_hm_warm",
     "search_hm_cold",
     "search_multitenant",
+    "concurrent_write_read",
 ]
 
 # tpuf DBpedia 100K×1536 cost constants (from pricing analysis)
@@ -353,11 +354,12 @@ async def unpin(ns):
 def _tpuf_perf(r):
     """Extract perf+billing dict from a tpuf NamespaceQueryResponse."""
     return {
-        "server_total_ms":    r.performance.server_total_ms,
-        "query_execution_ms": r.performance.query_execution_ms,
-        "cache_hit_ratio":    r.performance.cache_hit_ratio,
-        "cache_temperature":  r.performance.cache_temperature,
-        "billable_bytes":     r.billing.billable_logical_bytes_queried,
+        "server_total_ms":        r.performance.server_total_ms,
+        "query_execution_ms":     r.performance.query_execution_ms,
+        "cache_hit_ratio":        r.performance.cache_hit_ratio,
+        "cache_temperature":      r.performance.cache_temperature,
+        "exhaustive_search_count": r.performance.exhaustive_search_count,
+        "billable_bytes":         r.billing.billable_logical_bytes_queried,
     }
 
 async def run_search(query_fn, tests, concurrency, n=N_SEARCH, collect_perf=False):
@@ -396,18 +398,20 @@ async def run_search(query_fn, tests, concurrency, n=N_SEARCH, collect_perf=Fals
     s["recall_pct"] = round(float(np.mean(recalls)) * 100, 2)
 
     if tpuf_perf_rows:
-        srv    = np.array([p["server_total_ms"]    for p in tpuf_perf_rows])
-        exe    = np.array([p["query_execution_ms"] for p in tpuf_perf_rows])
-        hit    = np.array([p["cache_hit_ratio"]    for p in tpuf_perf_rows])
-        billed = np.array([p["billable_bytes"]     for p in tpuf_perf_rows])
-        s["tpuf_server_p50_ms"] = round(float(np.percentile(srv, 50)), 1)
-        s["tpuf_server_p99_ms"] = round(float(np.percentile(srv, 99)), 1)
-        s["tpuf_exec_p50_ms"]   = round(float(np.percentile(exe, 50)), 1)
-        s["tpuf_exec_p99_ms"]   = round(float(np.percentile(exe, 99)), 1)
-        s["tpuf_cache_hit_avg"] = round(float(np.mean(hit)), 3)
-        s["tpuf_billed_gb_avg"] = round(float(np.mean(billed)) / 1e9, 6)
+        srv    = np.array([p["server_total_ms"]        for p in tpuf_perf_rows])
+        exe    = np.array([p["query_execution_ms"]     for p in tpuf_perf_rows])
+        hit    = np.array([p["cache_hit_ratio"]        for p in tpuf_perf_rows])
+        billed = np.array([p["billable_bytes"]         for p in tpuf_perf_rows])
+        exh    = np.array([p["exhaustive_search_count"] for p in tpuf_perf_rows])
+        s["tpuf_server_p50_ms"]   = round(float(np.percentile(srv, 50)), 1)
+        s["tpuf_server_p99_ms"]   = round(float(np.percentile(srv, 99)), 1)
+        s["tpuf_exec_p50_ms"]     = round(float(np.percentile(exe, 50)), 1)
+        s["tpuf_exec_p99_ms"]     = round(float(np.percentile(exe, 99)), 1)
+        s["tpuf_cache_hit_avg"]   = round(float(np.mean(hit)), 3)
+        s["tpuf_billed_gb_avg"]   = round(float(np.mean(billed)) / 1e9, 6)
+        s["tpuf_exhaustive_avg"]  = round(float(np.mean(exh)), 1)
         temps = [p["cache_temperature"] for p in tpuf_perf_rows]
-        s["tpuf_cache_temp"]    = max(set(temps), key=temps.count)  # mode
+        s["tpuf_cache_temp"]      = max(set(temps), key=temps.count)  # mode
 
     if qdrant_server_ms:
         arr = np.array(qdrant_server_ms)
@@ -1004,20 +1008,254 @@ def _report_fixedqps(r):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# PHASE: concurrent_write_read
+# ═══════════════════════════════════════════════════════════════════════════════
+
+TPUF_DBPEDIA_RW   = "reproduce-dbpedia-100k-1536-rw"
+QDRANT_DBPEDIA_RW = "reproduce-dbpedia-rw"
+RW_POST_UPLOAD_S  = 120   # keep reading this many seconds after upload finishes
+RW_READ_INTERVAL  = 0.5   # seconds between successive single queries
+
+async def phase_concurrent_write_read(run_dir, state, args):
+    print("\n═══ concurrent_write_read ═══")
+    vecs  = np.load(DBPEDIA / "vectors.npy")
+    ids   = list(range(len(vecs)))
+    tests = [json.loads(l) for l in open(DBPEDIA / "tests.jsonl")]
+    print(f"  {vecs.shape[0]} × {vecs.shape[1]}, {len(tests)} query vectors, batch={BATCH_SIZE}")
+
+    t0 = time.perf_counter()   # experiment wall clock
+
+    # ── shared event lists (appended from both tasks) ───────────────────────
+    write_events  = []   # {wall_t, engine, vectors_written, batch_ms}
+    read_events   = []   # {wall_t, engine, total_ms, ...engine-specific fields..., recall}
+    qdrant_info_events = []  # {wall_t, vectors_count, indexed_vectors_count}
+    upload_done   = {"tpuf": False, "qdrant": False}
+
+    # ── tpuf setup ──────────────────────────────────────────────────────────
+    tc = make_tpuf()
+    tpuf_ns = tc.namespace(TPUF_DBPEDIA_RW)
+
+    # ── Qdrant setup ────────────────────────────────────────────────────────
+    qc = make_qdrant()
+    await qc.create_collection(
+        collection_name=QDRANT_DBPEDIA_RW,
+        vectors_config=models.VectorParams(size=vecs.shape[1], distance=models.Distance.COSINE),
+        hnsw_config=models.HnswConfigDiff(m=16, ef_construct=128),
+        optimizers_config=models.OptimizersConfigDiff(memmap_threshold=10_000_000),
+    )
+
+    # ── Writer: tpuf ────────────────────────────────────────────────────────
+    async def writer_tpuf():
+        written = 0
+        for start in range(0, len(ids), BATCH_SIZE):
+            batch_ids  = ids[start:start + BATCH_SIZE]
+            batch_vecs = vecs[start:start + BATCH_SIZE]
+            t_batch = time.perf_counter()
+            await tpuf_ns.upsert(
+                ids=batch_ids,
+                vectors=batch_vecs.tolist(),
+            )
+            ms = (time.perf_counter() - t_batch) * 1000
+            written += len(batch_ids)
+            write_events.append({
+                "wall_t": round(time.perf_counter() - t0, 3),
+                "engine": "tpuf",
+                "vectors_written": written,
+                "batch_ms": round(ms, 1),
+            })
+        upload_done["tpuf"] = True
+        print(f"  tpuf writer done at t={time.perf_counter()-t0:.1f}s")
+
+    # ── Writer: Qdrant ──────────────────────────────────────────────────────
+    async def writer_qdrant():
+        written = 0
+        for start in range(0, len(ids), BATCH_SIZE):
+            batch_ids  = ids[start:start + BATCH_SIZE]
+            batch_vecs = vecs[start:start + BATCH_SIZE]
+            points = [
+                {"id": int(bid), "vector": batch_vecs[i].tolist()}
+                for i, bid in enumerate(batch_ids)
+            ]
+            ms = await qdrant_upsert_timed(QDRANT_DBPEDIA_RW, points)
+            written += len(batch_ids)
+            write_events.append({
+                "wall_t": round(time.perf_counter() - t0, 3),
+                "engine": "qdrant",
+                "vectors_written": written,
+                "batch_ms": round(ms, 1),
+            })
+        upload_done["qdrant"] = True
+        print(f"  qdrant writer done at t={time.perf_counter()-t0:.1f}s")
+
+    # ── Reader: tpuf ────────────────────────────────────────────────────────
+    async def reader_tpuf():
+        await asyncio.sleep(1.0)   # let first batch land
+        q_idx = 0
+        while True:
+            t_read = time.perf_counter()
+            test   = tests[q_idx % len(tests)]
+            q_idx += 1
+            try:
+                r = await tpuf_ns.query(
+                    rank_by=("vector", "ANN", test["query"]),
+                    top_k=10,
+                    include_attributes=False,
+                )
+                elapsed_ms = (time.perf_counter() - t_read) * 1000
+                p = r.performance
+                b = r.billing
+                returned_ids = [x.id for x in r.rows]
+                rec = recall_at_k(returned_ids, test["closest_ids"])
+                # staleness: seconds between last visible write and this query
+                liwa = p.last_included_write_at
+                staleness_ms = None
+                if liwa is not None:
+                    import datetime
+                    now_utc = datetime.datetime.now(datetime.timezone.utc)
+                    staleness_ms = round((now_utc - liwa).total_seconds() * 1000, 1)
+                read_events.append({
+                    "wall_t":                round(time.perf_counter() - t0, 3),
+                    "engine":                "tpuf",
+                    "total_ms":              round(elapsed_ms, 1),
+                    "server_total_ms":       p.server_total_ms,
+                    "query_execution_ms":    p.query_execution_ms,
+                    "cache_hit_ratio":       round(p.cache_hit_ratio, 3),
+                    "cache_temperature":     p.cache_temperature,
+                    "exhaustive_search_count": p.exhaustive_search_count,
+                    "staleness_ms":          staleness_ms,
+                    "billed_bytes":          b.billable_logical_bytes_queried if b else None,
+                    "recall":                round(rec, 4),
+                    "n_results":             len(returned_ids),
+                })
+            except Exception as e:
+                read_events.append({
+                    "wall_t": round(time.perf_counter() - t0, 3),
+                    "engine": "tpuf",
+                    "error":  str(e),
+                })
+            # stop RW_POST_UPLOAD_S after tpuf upload finishes
+            if upload_done["tpuf"] and (time.perf_counter() - t0) > _upload_end_t.get("tpuf", 0) + RW_POST_UPLOAD_S:
+                break
+            await asyncio.sleep(RW_READ_INTERVAL)
+
+    # ── Reader: Qdrant ──────────────────────────────────────────────────────
+    async def reader_qdrant():
+        await asyncio.sleep(1.0)
+        q_idx = 0
+        while True:
+            t_read = time.perf_counter()
+            test   = tests[q_idx % len(tests)]
+            q_idx += 1
+            try:
+                raw = await qc.http.search_api.query_points(
+                    collection_name=QDRANT_DBPEDIA_RW,
+                    query_request=models.QueryRequest(
+                        query=test["query"],
+                        params=models.SearchParams(hnsw_ef=128),
+                        limit=10, with_vector=False, with_payload=False,
+                    ),
+                )
+                elapsed_ms = (time.perf_counter() - t_read) * 1000
+                returned_ids = [pt.id for pt in raw.result.points]
+                rec = recall_at_k(returned_ids, test["closest_ids"])
+                read_events.append({
+                    "wall_t":       round(time.perf_counter() - t0, 3),
+                    "engine":       "qdrant",
+                    "total_ms":     round(elapsed_ms, 1),
+                    "server_ms":    round(raw.time * 1000, 1),
+                    "recall":       round(rec, 4),
+                    "n_results":    len(returned_ids),
+                })
+            except Exception as e:
+                read_events.append({
+                    "wall_t": round(time.perf_counter() - t0, 3),
+                    "engine": "qdrant",
+                    "error":  str(e),
+                })
+            if upload_done["qdrant"] and (time.perf_counter() - t0) > _upload_end_t["qdrant"] + RW_POST_UPLOAD_S:
+                break
+            await asyncio.sleep(RW_READ_INTERVAL)
+
+    # ── Qdrant collection info poller ────────────────────────────────────────
+    async def poller_qdrant():
+        while not upload_done["qdrant"] or (time.perf_counter() - t0) < _upload_end_t.get("qdrant", 1e9) + RW_POST_UPLOAD_S:
+            try:
+                info = await qc.get_collection(QDRANT_DBPEDIA_RW)
+                qdrant_info_events.append({
+                    "wall_t":               round(time.perf_counter() - t0, 3),
+                    "vectors_count":        info.vectors_count,
+                    "indexed_vectors_count": info.indexed_vectors_count,
+                })
+            except Exception:
+                pass
+            await asyncio.sleep(5.0)
+            if upload_done["qdrant"] and (time.perf_counter() - t0) > _upload_end_t.get("qdrant", 0) + RW_POST_UPLOAD_S:
+                break
+
+    # ── track upload end times ───────────────────────────────────────────────
+    _upload_end_t = {}
+
+    async def tracked_writer_tpuf():
+        await writer_tpuf()
+        _upload_end_t["tpuf"] = time.perf_counter() - t0
+
+    async def tracked_writer_qdrant():
+        await writer_qdrant()
+        _upload_end_t["qdrant"] = time.perf_counter() - t0
+
+    # ── run all tasks concurrently ───────────────────────────────────────────
+    await asyncio.gather(
+        tracked_writer_tpuf(),
+        tracked_writer_qdrant(),
+        reader_tpuf(),
+        reader_qdrant(),
+        poller_qdrant(),
+    )
+
+    await qc.close()
+
+    result = {
+        "write_events":       write_events,
+        "read_events":        read_events,
+        "qdrant_info_events": qdrant_info_events,
+        "upload_end_t":       _upload_end_t,
+        "n_queries":          len(tests),
+        "n_vectors":          len(ids),
+    }
+    mark_done(run_dir, state, "concurrent_write_read", result)
+
+    tpuf_reads  = [e for e in read_events  if e["engine"] == "tpuf"   and "error" not in e]
+    qdrant_reads = [e for e in read_events if e["engine"] == "qdrant" and "error" not in e]
+    print(f"\n  ┌─ Concurrent write+read summary")
+    print(f"  │  tpuf upload done:   t={_upload_end_t.get('tpuf','?'):.1f}s")
+    print(f"  │  qdrant upload done: t={_upload_end_t.get('qdrant','?'):.1f}s")
+    print(f"  │  tpuf reads:   n={len(tpuf_reads)}"
+          f"  p50={np.percentile([e['total_ms'] for e in tpuf_reads], 50):.1f}ms"
+          f"  p99={np.percentile([e['total_ms'] for e in tpuf_reads], 99):.1f}ms"
+          f"  recall_mean={np.mean([e['recall'] for e in tpuf_reads]):.3f}")
+    print(f"  │  qdrant reads: n={len(qdrant_reads)}"
+          f"  p50={np.percentile([e['total_ms'] for e in qdrant_reads], 50):.1f}ms"
+          f"  p99={np.percentile([e['total_ms'] for e in qdrant_reads], 99):.1f}ms"
+          f"  recall_mean={np.mean([e['recall'] for e in qdrant_reads]):.3f}")
+    print(f"  └─")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # MAIN
 # ═══════════════════════════════════════════════════════════════════════════════
 
 PHASE_FNS = {
-    "delete":                  phase_delete,
-    "upload_dbpedia":          phase_upload_dbpedia,
-    "upload_dbpedia_pinned":   phase_upload_dbpedia_pinned,
-    "upload_hm":               phase_upload_hm,
-    "upload_multitenant":      phase_upload_multitenant,
-    "search_dbpedia_warm":     phase_search_dbpedia_warm,
-    "search_dbpedia_fixedqps": phase_search_dbpedia_fixedqps,
-    "search_hm_warm":          phase_search_hm_warm,
-    "search_hm_cold":          phase_search_hm_cold,
-    "search_multitenant":      phase_search_multitenant,
+    "delete":                   phase_delete,
+    "upload_dbpedia":           phase_upload_dbpedia,
+    "upload_dbpedia_pinned":    phase_upload_dbpedia_pinned,
+    "upload_hm":                phase_upload_hm,
+    "upload_multitenant":       phase_upload_multitenant,
+    "search_dbpedia_warm":      phase_search_dbpedia_warm,
+    "search_dbpedia_fixedqps":  phase_search_dbpedia_fixedqps,
+    "search_hm_warm":           phase_search_hm_warm,
+    "search_hm_cold":           phase_search_hm_cold,
+    "search_multitenant":       phase_search_multitenant,
+    "concurrent_write_read":    phase_concurrent_write_read,
 }
 
 async def main():
