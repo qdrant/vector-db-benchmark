@@ -5,7 +5,8 @@ Saves results after each phase and skips completed phases on re-run.
 
 Phases (in order):
   delete                — wipe comparison namespaces/collections from both DBs
-  upload_dbpedia        — DBpedia 100K×1536 → tpuf + Qdrant (batch=128)
+  upload_dbpedia        — DBpedia 100K×1536 → tpuf serverless + Qdrant (batch=128)
+  upload_dbpedia_pinned — DBpedia 100K×1536 → tpuf pinned-1r (single-replica write throughput)
   upload_hm             — H&M 105K×2048    → tpuf + Qdrant (batch=128)
   upload_multitenant    — random-768 1M×100 tenants → tpuf (100 ns) + Qdrant (payload_m=16)
   search_dbpedia_warm   — DBpedia warm: p=1, p=8 — tpuf serverless + Qdrant
@@ -48,9 +49,10 @@ HM       = BASE / "datasets/h-and-m-2048-angular/hnm"
 MT       = BASE / "datasets/random-768-100-tenants/random_keywords_1m_768_vocab_100"
 
 # ── Namespace / collection names ───────────────────────────────────────────────
-TPUF_DBPEDIA  = "reproduce-dbpedia-100k-1536"
-TPUF_HM       = "reproduce-hm-105k-2048"
-TPUF_MT_PFX   = "reproduce-mt-"            # + tenant value
+TPUF_DBPEDIA        = "reproduce-dbpedia-100k-1536"
+TPUF_DBPEDIA_PINNED = "reproduce-dbpedia-pinned-1r"
+TPUF_HM             = "reproduce-hm-105k-2048"
+TPUF_MT_PFX         = "reproduce-mt-"      # + tenant value
 
 QDRANT_DBPEDIA = "reproduce-dbpedia"
 QDRANT_HM      = "reproduce-hm"
@@ -67,6 +69,7 @@ PINNED_REPLICAS   = 4
 PHASES = [
     "delete",
     "upload_dbpedia",
+    "upload_dbpedia_pinned",
     "upload_hm",
     "upload_multitenant",
     "search_dbpedia_warm",
@@ -440,7 +443,7 @@ async def phase_delete(run_dir, state, args):
     tc = make_tpuf()
     qc = make_qdrant()
 
-    to_del_tpuf = [TPUF_DBPEDIA, TPUF_HM]
+    to_del_tpuf = [TPUF_DBPEDIA, TPUF_DBPEDIA_PINNED, TPUF_HM]
     try:
         async for ns in tc.namespaces():
             if ns.id.startswith(TPUF_MT_PFX):
@@ -494,6 +497,49 @@ async def phase_upload_dbpedia(run_dir, state, args):
     r = {"tpuf": tpuf, "qdrant": qt, "batch": BATCH_SIZE}
     mark_done(run_dir, state, "upload_dbpedia", r)
     report_upload("DBpedia 100K×1536", r)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PHASE 1b: upload_dbpedia_pinned
+# Upload DBpedia into a pinned-1r namespace to measure single-replica write
+# throughput and compare server-side write latency vs serverless.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+async def phase_upload_dbpedia_pinned(run_dir, state, args):
+    if args.skip_pinned:
+        print("\n═══ upload_dbpedia_pinned (skipped — --skip-pinned) ═══")
+        return
+    print("\n═══ upload_dbpedia_pinned ═══")
+    vecs = np.load(DBPEDIA / "vectors.npy")
+    ids  = list(range(len(vecs)))
+    print(f"  {vecs.shape[0]} × {vecs.shape[1]}, batch={BATCH_SIZE}, pinned-1r")
+
+    tc = make_tpuf()
+    ns = tc.namespace(TPUF_DBPEDIA_PINNED)
+
+    # Write one seed batch so the namespace exists before pinning.
+    seed_cols = {"id": ids[:BATCH_SIZE], "vector": vecs[:BATCH_SIZE].tolist()}
+    await ns.write(upsert_columns=seed_cols, distance_metric="cosine_distance")
+    print("  Seed batch written — pinning namespace...")
+
+    await pin_and_wait(ns, replicas=1)
+
+    # Upload all vectors (including the seed batch — idempotent upsert).
+    tpuf = await tpuf_upload(ns, ids, vecs)
+    print(f"  tpuf pinned-1r: {tpuf['total_s']/60:.1f} min  wps={tpuf['wps']}")
+
+    await unpin(ns)
+
+    r = {"tpuf_pinned_1r": tpuf, "batch": BATCH_SIZE}
+    mark_done(run_dir, state, "upload_dbpedia_pinned", r)
+    sv = tpuf.get("server_p50_ms", "?")
+    sv99 = tpuf.get("server_p99_ms", "?")
+    bg = tpuf.get("billable_gb", "?")
+    print(f"\n  ┌─ Upload: DBpedia 100K×1536 pinned-1r  batch={BATCH_SIZE}")
+    print(f"  │  tpuf pinned-1r: {tpuf['total_s']/60:.1f} min  wps={tpuf['wps']}"
+          f"  batch_p50={tpuf['batch_p50_ms']}ms  batch_p99={tpuf['batch_p99_ms']}ms"
+          f"  server_p50={sv}ms  server_p99={sv99}ms  billable_gb={bg}")
+    print(f"  └─")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -945,6 +991,7 @@ def _report_fixedqps(r):
 PHASE_FNS = {
     "delete":                  phase_delete,
     "upload_dbpedia":          phase_upload_dbpedia,
+    "upload_dbpedia_pinned":   phase_upload_dbpedia_pinned,
     "upload_hm":               phase_upload_hm,
     "upload_multitenant":      phase_upload_multitenant,
     "search_dbpedia_warm":     phase_search_dbpedia_warm,
