@@ -489,39 +489,29 @@ async def qdrant_trigger_and_wait_index(qc, collection, total_vectors, indexing_
     }
 
 
-async def tpuf_poll_spfresh_index(ns, test_vec, total_vectors, poll_interval=5, stall_timeout=300):
-    """Poll until exhaustive_search_count reaches 0.
+async def tpuf_poll_spfresh_index(ns, total_vectors, poll_interval=5):
+    """Poll ns.metadata().index until status == 'up-to-date'.
 
-    Stall detection: if the count hasn't decreased in stall_timeout seconds,
-    break early and record residual_exhaustive so the caller knows indexing
-    plateaued (tpuf serverless WAL sometimes retains a small non-zero tail).
+    Uses the official index status endpoint rather than query-level
+    exhaustive_search_count, which is query-dependent and not a reliable
+    completion signal.
     """
-    print("  Polling SPFresh build (exhaustive_search_count → 0) ...", flush=True)
+    print("  Polling SPFresh build (index.status → up-to-date) ...", flush=True)
     t0 = time.perf_counter()
     poll_rows = []
-    last_change_t = t0
-    prev_exhaustive = None
     while True:
-        bt = time.perf_counter()
-        r  = await ns.query(rank_by=("vector", "ANN", test_vec), top_k=10, include_attributes=False)
-        query_ms   = round((time.perf_counter() - bt) * 1000, 1)
-        t_s        = round(time.perf_counter() - t0, 1)
-        exhaustive = r.performance.exhaustive_search_count if r.performance else -1
-        pct = f"{(1 - exhaustive / total_vectors) * 100:.1f}%" if total_vectors and exhaustive >= 0 else "?"
-        poll_rows.append([t_s, exhaustive, query_ms])
-        print(f"    t={t_s}s  exhaustive={exhaustive}  indexed≈{pct}  query={query_ms}ms", flush=True)
-        if exhaustive == 0:
+        meta = await ns.metadata()
+        t_s  = round(time.perf_counter() - t0, 1)
+        idx  = meta.index
+        if idx.status == "up-to-date":
+            poll_rows.append([t_s, 0])
+            print(f"    t={t_s}s  status=up-to-date", flush=True)
             break
-        if exhaustive != prev_exhaustive:
-            last_change_t = time.perf_counter()
-            prev_exhaustive = exhaustive
-        elif time.perf_counter() - last_change_t >= stall_timeout:
-            print(f"  WARNING: exhaustive stalled at {exhaustive} for {stall_timeout}s — treating as done", flush=True)
-            break
+        unindexed_bytes = getattr(idx, "unindexed_bytes", -1)
+        poll_rows.append([t_s, unindexed_bytes])
+        print(f"    t={t_s}s  status=updating  unindexed_bytes={unindexed_bytes}", flush=True)
         await asyncio.sleep(poll_interval)
-    residual = poll_rows[-1][1] if poll_rows else 0
-    return {"index_s": round(time.perf_counter() - t0, 1), "poll_rows": poll_rows,
-            "residual_exhaustive": residual}
+    return {"index_s": round(time.perf_counter() - t0, 1), "poll_rows": poll_rows}
 
 
 # ── Pinning helpers ────────────────────────────────────────────────────────────
@@ -778,7 +768,7 @@ async def op_upload(ds: DatasetConfig, active: list[str], run_dir: Path, state: 
             mark_variant_done(run_dir, state, ds.key, "upload", "tpuf", up)
         else:
             up  = await tpuf_upload(ns, ids, vecs, extra_cols=extra_cols)
-            idx = await tpuf_poll_spfresh_index(ns, test_vec, len(ids))
+            idx = await tpuf_poll_spfresh_index(ns, len(ids))
             print(f"  tpuf: upload={up['total_s']/60:.1f}min  SPFresh={idx['index_s']/60:.2f}min  total={(up['total_s']+idx['index_s'])/60:.1f}min  wps={up['wps']}")
             mark_variant_done(run_dir, state, ds.key, "upload", "tpuf",
                               {**up, "spfresh_index_s": idx["index_s"], "spfresh_poll_rows": idx["poll_rows"]})
@@ -797,7 +787,7 @@ async def op_upload(ds: DatasetConfig, active: list[str], run_dir: Path, state: 
             await ns_p.write(upsert_columns=seed, distance_metric="cosine_distance")
             await pin_and_wait(ns_p, replicas=1)
             up  = await tpuf_upload(ns_p, ids, vecs, extra_cols=extra_cols)
-            idx = await tpuf_poll_spfresh_index(ns_p, test_vec, len(ids))
+            idx = await tpuf_poll_spfresh_index(ns_p, len(ids))
             await unpin(ns_p)
             print(f"  tpuf pinned-1r: upload={up['total_s']/60:.1f}min  SPFresh={idx['index_s']/60:.2f}min  wps={up['wps']}")
             mark_variant_done(run_dir, state, ds.key, "upload", "tpuf_pinned_1r",
