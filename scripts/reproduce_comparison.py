@@ -79,7 +79,6 @@ PHASES = [
     "upload_dbpedia",
     "upload_dbpedia_pinned",
     "upload_dbpedia_disk",
-    "upload_qdrant_deferred_idx_dbpedia",
     "upload_qdrant_deferred_idx_hm",
     "upload_hm",
     "upload_multitenant",
@@ -669,21 +668,46 @@ async def phase_upload_dbpedia(run_dir, state, args):
     tpuf = {**tpuf_up, "spfresh_index_s": tpuf_idx["index_s"], "spfresh_poll_rows": tpuf_idx["poll_rows"]}
 
     qc = make_qdrant()
+    hnsw_cfg = models.HnswConfigDiff(m=16, ef_construct=128)
+
+    # Qdrant concurrent: default indexing_threshold, HNSW builds during upsert
     await qc.create_collection(
         collection_name=QDRANT_DBPEDIA,
         vectors_config=models.VectorParams(size=vecs.shape[1], distance=models.Distance.COSINE),
-        hnsw_config=models.HnswConfigDiff(m=16, ef_construct=128),
+        hnsw_config=hnsw_cfg,
         optimizers_config=models.OptimizersConfigDiff(memmap_threshold=10_000_000),
     )
     qt = await qdrant_upload(qc, QDRANT_DBPEDIA, vecs, ids)
-    print(f"  qdrant: upsert {(qt['total_s']-qt['index_s'])/60:.1f} min  index {qt['index_s']/60:.1f} min  total {qt['total_s']/60:.1f} min  wps={qt['wps']}")
+    print(f"  qdrant concurrent: upsert {(qt['total_s']-qt['index_s'])/60:.1f} min  index {qt['index_s']/60:.1f} min  total {qt['total_s']/60:.1f} min  wps={qt['wps']}")
+
+    # Qdrant deferred: indexing_threshold=0 during upsert, then trigger HNSW build
+    try:
+        await qc.delete_collection(QDRANT_DBPEDIA_DEFERRED_IDX)
+    except Exception:
+        pass
+    await qc.create_collection(
+        collection_name=QDRANT_DBPEDIA_DEFERRED_IDX,
+        vectors_config=models.VectorParams(size=vecs.shape[1], distance=models.Distance.COSINE),
+        hnsw_config=hnsw_cfg,
+        optimizers_config=models.OptimizersConfigDiff(indexing_threshold=0, memmap_threshold=10_000_000),
+    )
+    qt_upsert = await qdrant_upload_only(qc, QDRANT_DBPEDIA_DEFERRED_IDX, vecs, ids)
+    print(f"  qdrant deferred upsert: {qt_upsert['total_s']/60:.2f} min  wps={qt_upsert['wps']}")
+    qt_index = await qdrant_trigger_and_wait_index(qc, QDRANT_DBPEDIA_DEFERRED_IDX, len(ids))
+    print(f"  qdrant deferred HNSW:   {qt_index['index_s']}s ({qt_index['index_s']/60:.2f} min)  {qt_index['index_vps']} vps")
+    qt_deferred = {"upsert": qt_upsert, "indexing": qt_index, "total_s": round(qt_upsert["total_s"] + qt_index["index_s"], 1)}
+
     await qc.close()
 
-    r = {"tpuf": tpuf, "qdrant": qt, "batch": BATCH_SIZE}
+    r = {"tpuf": tpuf, "qdrant": qt, "qdrant_deferred": qt_deferred, "batch": BATCH_SIZE}
     mark_done(run_dir, state, "upload_dbpedia", r)
     report_upload("DBpedia 100K×1536", r)
     tpuf_total = tpuf_up["total_s"] + tpuf_idx["index_s"]
-    print(f"  tpuf total (upload+SPFresh): {tpuf_total/60:.2f} min  vs qdrant {qt['total_s']/60:.2f} min")
+    print(f"\n  ┌─ Upload comparison: DBpedia 100K×1536")
+    print(f"  │  tpuf          upload={tpuf_up['total_s']/60:.2f}min  SPFresh={tpuf_idx['index_s']/60:.2f}min  total={tpuf_total/60:.2f}min")
+    print(f"  │  qdrant conc.  upsert+index={qt['total_s']/60:.2f}min (concurrent, index_s={qt['index_s']}s extra)")
+    print(f"  │  qdrant defer. upsert={qt_upsert['total_s']/60:.2f}min  HNSW={qt_index['index_s']/60:.2f}min  total={qt_deferred['total_s']/60:.2f}min")
+    print(f"  └─")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1692,7 +1716,6 @@ PHASE_FNS = {
     "upload_dbpedia":                        phase_upload_dbpedia,
     "upload_dbpedia_pinned":                 phase_upload_dbpedia_pinned,
     "upload_dbpedia_disk":                   phase_upload_dbpedia_disk,
-    "upload_qdrant_deferred_idx_dbpedia":    lambda rd, st, ar: phase_upload_qdrant_deferred_idx(rd, st, ar, "dbpedia"),
     "upload_qdrant_deferred_idx_hm":         lambda rd, st, ar: phase_upload_qdrant_deferred_idx(rd, st, ar, "hm"),
     "upload_hm":                             phase_upload_hm,
     "upload_multitenant":                    phase_upload_multitenant,
