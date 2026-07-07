@@ -13,10 +13,10 @@
   --text:      #1A2332;
   --text-2:    #5A6A7E;
   --border:    #E2E8F0;
-  --qdrant:    #7C3AED;
-  --qdrant-bg: #F5F0FF;
-  --tpuf:      #EA580C;
-  --tpuf-bg:   #FFF4EE;
+  --qdrant:    #DC244C;
+  --qdrant-bg: #FDEDF1;
+  --tpuf:      #3B82F6;
+  --tpuf-bg:   #EFF6FF;
   --code-bg:   #1E293B;
   --code-text: #94A3B8;
   --win:       #D1FAE5;
@@ -590,7 +590,7 @@ canvas {
         <p>turbopuffer is an S3-backed vector database built around SPFresh centroid-based ANN search. It stores the vector index on object storage and uses a local NVMe cache to accelerate repeated queries. It offers two deployment modes &mdash; serverless and pinned &mdash; and deliberately exposes no recall tuning knobs.</p>
       </div>
       <ul class="prop-list">
-        <li><strong>No recall tuning.</strong> Locked at 88.94% recall on filtered search and 98.51% on unfiltered. You cannot trade latency for recall.</li>
+        <li><strong>No recall tuning.</strong> Locked at 89.14% recall on filtered search and 98.51% on unfiltered. You cannot trade latency for recall.</li>
         <li><strong>Serverless mode.</strong> Shared compute, scales to zero between queries, inherent noisy-neighbor risk when multiple namespaces share a host.</li>
         <li><strong>Pinned mode.</strong> Dedicated NVMe, fixed replicas, full machine isolation. Eliminates noisy-neighbor contention but removes scale-to-zero savings.</li>
         <li><strong>Cold-start penalty.</strong> After any restart, the first queries must fetch index data from S3 before NVMe is warm. Penalty: 100&ndash;1500ms on first queries, converging to steady-state after ~30 requests.</li>
@@ -632,7 +632,7 @@ canvas {
       <div class="section-header">
         <div class="section-eyebrow tpuf-eye">&sect;3</div>
         <h2>Upload Performance</h2>
-        <p>turbopuffer writes directly to S3, producing faster uploads on smaller vector dimensions. Qdrant builds a navigable HNSW graph at index time &mdash; cost scales with vector count and dimensions.</p>
+        <p>turbopuffer writes directly to S3 at faster raw WPS than Qdrant, but SPFresh builds asynchronously after upload. Results split by dataset: <strong>tpuf wins total wall-clock on H&amp;M</strong> (4.1 vs 8.4 min) because SPFresh adds only 60s; <strong>Qdrant wins on DBpedia</strong> (3.9 vs 5.6 min) because SPFresh adds 173s there.</p>
       </div>
       <div class="table-wrap">
         <table>
@@ -640,35 +640,36 @@ canvas {
             <tr><th>Dataset</th><th>Engine</th><th>Time (min)‡</th><th>WPS</th><th>Batch p50</th><th>Batch p99</th><th>Srv p50</th><th>Srv p99</th><th>Index wait†</th><th>Stored GB</th></tr>
           </thead>
           <tbody>
-            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-tpuf"></span>tpuf serverless</td><td class="win">2.7</td><td>624</td><td>192ms</td><td>352ms</td><td>180ms</td><td>341ms</td><td>—</td><td>0.615 GB</td></tr>
-            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-tpuf"></span>tpuf pinned-1r</td><td class="win">2.6</td><td>633</td><td>188ms</td><td>295ms</td><td>176ms</td><td>282ms</td><td>—</td><td>0.615 GB</td></tr>
-            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-qdrant"></span>Qdrant</td><td>3.9</td><td>428</td><td>285ms</td><td>323ms</td><td>—</td><td>—</td><td>0s (concurrent)</td><td>0.614 GB</td></tr>
-            <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-tpuf"></span>tpuf serverless</td><td class="win">3.1</td><td>574</td><td>208ms</td><td>335ms</td><td>192ms</td><td>318ms</td><td>—</td><td>0.873 GB</td></tr>
-            <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-qdrant"></span>Qdrant</td><td>9.0</td><td>304</td><td>401ms</td><td>459ms</td><td>—</td><td>—</td><td>195.8s</td><td>0.926 GB</td></tr>
+            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-tpuf"></span>tpuf serverless</td><td>5.6</td><td>624</td><td>192ms</td><td>352ms</td><td>180ms</td><td>341ms</td><td>173s (SPFresh)</td><td>0.615 GB</td></tr>
+            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-tpuf"></span>tpuf pinned-1r</td><td>5.5</td><td>633</td><td>188ms</td><td>295ms</td><td>176ms</td><td>282ms</td><td>~173s (est.)</td><td>0.615 GB</td></tr>
+            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-qdrant"></span>Qdrant concurrent</td><td class="win">3.9</td><td>417</td><td>294ms</td><td>365ms</td><td>3.3ms</td><td>18.5ms</td><td>0s (concurrent)</td><td>0.614 GB</td></tr>
+            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-qdrant"></span>Qdrant deferred</td><td>5.3</td><td>423</td><td>291ms</td><td>349ms</td><td>3.2ms</td><td>5.6ms</td><td>84s (HNSW)</td><td>0.614 GB</td></tr>
+            <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-tpuf"></span>tpuf serverless</td><td class="win">4.1</td><td>565</td><td>208ms</td><td>335ms</td><td>192ms</td><td>318ms</td><td>60s (SPFresh)</td><td>0.873 GB</td></tr>
+            <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-qdrant"></span>Qdrant concurrent</td><td>8.4</td><td>316</td><td>401ms</td><td>459ms</td><td>—</td><td>—</td><td>168s</td><td>0.926 GB</td></tr>
+            <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-qdrant"></span>Qdrant deferred</td><td>9.1</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>222s (HNSW)</td><td>0.926 GB</td></tr>
             <tr><td>Multi-tenant 1M&times;768</td><td><span class="chip-tpuf"></span>tpuf (100 ns, parallel)</td><td class="win">2.4 (p=10)</td><td>6847*</td><td>207ms</td><td>338ms</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
             <tr><td>Multi-tenant 1M&times;768</td><td><span class="chip-qdrant"></span>Qdrant</td><td>20.5</td><td>816</td><td>148ms</td><td>175ms</td><td>—</td><td>—</td><td>5.1s</td><td>3.200 GB</td></tr>
           </tbody>
         </table>
       </div>
       <div class="chart-block">
-        <div class="chart-title">Upload Time Comparison</div>
-        <div class="chart-sub">Minutes to fully index. Lower is better.</div>
-        <canvas id="c-upload" width="560" height="220" aria-label="Horizontal bar chart: turbopuffer uploads 2.7, 3.1, 2.4 min; Qdrant 3.9, 9.0, 20.5 min"></canvas>
-      </div>
-      <div class="chart-block">
-        <div class="chart-title">Upload Timeline &mdash; Upsert + Index</div>
-        <div class="chart-sub">Stacked bars: solid = upsert, lighter = HNSW build wait. Seconds.</div>
-        <canvas id="c-upload-timeline" width="560" height="240" aria-label="Stacked horizontal bar chart showing upsert and index times for tpuf and Qdrant per dataset"></canvas>
-        <div style="font-size:11px;color:var(--text-2);margin-top:8px;font-style:italic;">‡ Total time = upsert + extra index wait (end-to-end until collection is fully indexed and GREEN). For Qdrant H&amp;M: 5.8 min upsert + 3.3 min HNSW build = 9.0 min total. For DBpedia: 3.9 min upsert, HNSW built concurrently so extra wait = 0s, total = 3.9 min.<br>† Extra index wait = additional time after the last upsert batch until GREEN status. 0s means HNSW finished within the upsert window (concurrent build); 195.8s means it spilled past upsert (2048-dim builds slower than 1536-dim). Same benchmarking code for all datasets. turbopuffer has no write-time index — equivalent cost paid at every query (~0.615–0.873 GB scanned per query).<br>* MT tpuf WPS is aggregate wall-clock throughput (total vectors / wall time) across 10 concurrent namespace uploads (asyncio.Semaphore=10). Per-namespace WPS ≈ 624 — same as single-namespace DBpedia.</div>
+        <div class="chart-title">Upload Time — Upsert + Index Build</div>
+        <div class="chart-sub">Stacked bars: solid = upsert, lighter = index build (SPFresh or HNSW). Total = time to fully-indexed state. Seconds.</div>
+        <canvas id="c-upload-timeline" width="560" height="330" aria-label="Stacked horizontal bar chart showing upsert and index build times per engine and dataset"></canvas>
+        <div style="font-size:11px;color:var(--text-2);margin-top:8px;font-style:italic;">‡ Total time = upsert + index build (end-to-end until fully indexed). For H&amp;M Qdrant concurrent: 5.5 min upsert + 2.8 min HNSW = 8.4 min. For DBpedia: 3.9 min upsert, HNSW built concurrently so extra wait ≈ 0s.<br>† Index wait = additional time after last upsert batch until GREEN status. 0s means HNSW finished within the upsert window. turbopuffer SPFresh builds asynchronously after writes commit to S3 WAL — 173s for DBpedia 100K×1536d, 60s for H&amp;M 105K×2048d (higher-dim vectors but same 100K scale).<br>* MT tpuf WPS is aggregate wall-clock throughput across 10 concurrent namespace uploads. Per-namespace WPS ≈ 624.</div>
       </div>
       <div class="callout">
         The multi-tenant dataset is <strong>1M vectors total</strong> (100 tenants &times; 10K each) &mdash; 10&times; more data than DBpedia. Qdrant uploads all 1M sequentially in batches to one collection (<code>payload_m=16</code>, <code>is_tenant=True</code>), building per-tenant HNSW sub-graphs in the background. turbopuffer uploads 100 namespaces in <strong>parallel</strong> (asyncio.gather, semaphore=10 concurrent), so its 2.4 min wall-clock reflects parallel throughput. Sequential uploads at ~624 WPS per namespace would take <strong>~26.7 min</strong> (100 &times; ~16s) &mdash; parallelism delivers an <strong>~11&times; speedup</strong>. Both engines use the same batch size (128 vectors/batch). The methodology difference (parallel vs sequential) accounts for most of the 8.5&times; wall-clock gap; Qdrant also pays extra for HNSW sub-graph construction at write time.
       </div>
       <div class="callout neutral">
-        <strong>Write-time vs query-time:</strong> turbopuffer stores 0.615 GB for DBpedia (&asymp; raw vector size: 100K &times; 1536-dim &times; 4B). Qdrant builds HNSW at write time &mdash; 195.8s for H&amp;M, ~0s for DBpedia (concurrent), 5.1s for MT sub-graphs. This one-time write cost is the source of Qdrant&rsquo;s 1.9ms query server latency: the index is in RAM, already built. turbopuffer&rsquo;s SPFresh index is built <em>asynchronously</em> after writes commit to the S3 WAL &mdash; writes return immediately (no blocking index phase), but every query pays the centroid-scan cost at read time.
+        <strong>Write-time vs query-time:</strong> turbopuffer stores 0.615 GB for DBpedia (&asymp; raw vector size: 100K &times; 1536-dim &times; 4B). Qdrant builds HNSW at write time &mdash; 168s for H&amp;M, ~0s for DBpedia (concurrent), 5.1s for MT sub-graphs. This one-time write cost is the source of Qdrant&rsquo;s 1.9ms query server latency: the index is in RAM, already built. turbopuffer&rsquo;s SPFresh index is built <em>asynchronously</em> after writes commit to the S3 WAL &mdash; writes return immediately (no blocking index phase). SPFresh takes ~173s for DBpedia 100K&times;1536d and ~60s for H&amp;M 105K&times;2048d; during that window WAL vectors are brute-force scanned per query. Once SPFresh is built, queries use the centroid index from NVMe.
       </div>
       <div class="callout neutral">
         <strong>Pinning does not affect write throughput.</strong> Measured on DBpedia 100K&times;1536: serverless 624 WPS vs pinned-1r 633 WPS &mdash; statistically identical. batch_p99 is slightly lower pinned (295ms vs 352ms), likely from reduced noisy-neighbor contention on a dedicated machine. Writes go directly to S3 WAL in both modes; the pinned replica only serves reads from its NVMe cache. Single-replica tpuf write capacity: <strong>~625 WPS</strong> at batch=128 for 1536-dim vectors.
+      </div>
+
+      <div class="callout neutral">
+        <strong>tpuf raw upload WPS (~565–625) is 50–60% faster than Qdrant (~316–417)</strong>, but SPFresh builds the centroid index asynchronously after upload (173s for DBpedia, 60s for H&amp;M) &mdash; during which WAL vectors are brute-force scanned on every query. The total wall-clock outcome depends on SPFresh duration relative to upsert time: <strong>tpuf wins on H&amp;M</strong> (4.1 vs 8.4 min) because 60s SPFresh is absorbed into a short upsert; <strong>Qdrant wins on DBpedia</strong> (3.9 vs 5.6 min) because 173s SPFresh pushes tpuf past Qdrant&rsquo;s HNSW-concurrent result. The deferred Qdrant experiment confirms concurrent is optimal: running HNSW <em>after</em> upload (5.3 min DBpedia, 9.1 min H&amp;M) is slower than running it concurrently (3.9 min, 8.4 min), because the concurrent build overlaps with the upsert window.
       </div>
     </section>
 
@@ -776,15 +777,16 @@ canvas {
         <p>Filtered vector search is where architecture choices have the sharpest consequences. SPFresh (turbopuffer) post-filters: it traverses centroids first, then discards non-matching vectors. Qdrant integrates the filter directly into HNSW traversal, preserving effective graph structure.</p>
       </div>
 
-      <h3>5.1 &mdash; turbopuffer (serverless, p=1 warm / cold)</h3>
+      <h3>5.1 &mdash; turbopuffer (serverless, hot NVMe cache)</h3>
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>State</th><th>RPS</th><th>Mean</th><th>p50</th><th>p99</th><th>Srv p50</th><th>Srv p99</th><th>Billed GB/q</th><th>Recall</th></tr>
+            <tr><th>p</th><th>RPS</th><th>Mean</th><th>p50</th><th>p99</th><th>Srv p50</th><th>Srv p99</th><th>Billed GB/q</th><th>Recall</th></tr>
           </thead>
           <tbody>
-            <tr><td>Warm cache</td><td>6.0</td><td>167ms</td><td>139ms</td><td>538ms</td><td>119ms</td><td>472ms</td><td>0.872 GB</td><td>88.94%</td></tr>
-            <tr><td>Cold cache</td><td>3.5</td><td>285ms</td><td>163ms</td><td style="background:#FEF2F2;color:#991B1B;">1,891ms</td><td>149ms</td><td style="background:#FEF2F2;color:#991B1B;">1,777ms</td><td>0.872 GB</td><td>88.94%</td></tr>
+            <tr><td>1</td><td>47.4</td><td>21.1ms</td><td>19.8ms</td><td>50.0ms</td><td>14ms</td><td>44ms</td><td>0.872 GB</td><td>89.14%</td></tr>
+            <tr><td>8</td><td>42.0</td><td>23.8ms</td><td>22.3ms</td><td>41.9ms</td><td>14ms</td><td>29ms</td><td>0.872 GB</td><td>89.18%</td></tr>
+            <tr><td>32</td><td>12.8</td><td>78.0ms</td><td>67.5ms</td><td>394.3ms</td><td>15ms</td><td>35ms</td><td>0.872 GB</td><td>89.17%</td></tr>
           </tbody>
         </table>
       </div>
@@ -796,23 +798,23 @@ canvas {
             <tr><th>Concurrency</th><th>RPS</th><th>Mean</th><th>p50</th><th>p99</th><th>Srv p50</th><th>Recall</th></tr>
           </thead>
           <tbody>
-            <tr><td>p=1</td><td class="win">159.4</td><td class="win">6.3ms</td><td class="win">6.1ms</td><td class="win">10.1ms</td><td class="win">1.0ms</td><td class="win">95.71%</td></tr>
-            <tr><td>p=8</td><td>42.4</td><td>23.6ms</td><td>20.4ms</td><td>61.2ms</td><td>1.1ms</td><td>95.71%</td></tr>
-            <tr><td>p=32</td><td>6.7</td><td>150.1ms</td><td>109.7ms</td><td>605ms</td><td>1.1ms</td><td>95.71%</td></tr>
+            <tr><td>p=1</td><td class="win">149.6</td><td class="win">6.7ms</td><td class="win">6.6ms</td><td class="win">9.9ms</td><td class="win">1.1ms</td><td class="win">95.85%</td></tr>
+            <tr><td>p=8</td><td>42.5</td><td>23.5ms</td><td>20.0ms</td><td>69.0ms</td><td>1.1ms</td><td>95.85%</td></tr>
+            <tr><td>p=32</td><td>8.3</td><td>120.1ms</td><td>87.0ms</td><td>517.2ms</td><td>1.1ms</td><td>95.85%</td></tr>
           </tbody>
         </table>
       </div>
 
       <div class="callout tpuf">
-        <strong>94% of cold p99 is server-side:</strong> server_p99 = 1,777ms out of 1,891ms. Only 114ms is network. The cold-start penalty is entirely S3 fetches for uncached centroid blocks. Even warm: server_p99 = 472ms of 538ms (88% server-side NVMe tail).
+        <strong>Cold-start penalty (prior measurement):</strong> tpuf cold p99 = 1,891ms (server_p99 = 1,777ms — 94% server-side S3 fetches). Hot cache (NVMe, above) p99 = 50ms — a 38&times; improvement once centroids are cached. Qdrant has no cold-start: HNSW lives in RAM permanently.
       </div>
       <div class="chart-block">
         <div class="chart-title">H&amp;M p99 Latency &mdash; Server vs Network Breakdown</div>
         <div class="chart-sub">Stacked bars: server-side (NVMe/S3) + network. Qdrant always warm (HNSW in RAM).</div>
-        <canvas id="c-hm-p99" width="480" height="300" aria-label="Stacked bar chart: tpuf warm server 472ms + network 66ms; tpuf cold server 1777ms + network 114ms; Qdrant server 2.9ms + network 7.2ms"></canvas>
+        <canvas id="c-hm-p99" width="480" height="300" aria-label="Bar chart: tpuf hot p99 50ms; tpuf cold p99 1891ms; Qdrant p=1 p99 9.9ms"></canvas>
       </div>
       <div class="callout tpuf">
-        <strong>Why recall drops under filtering:</strong> SPFresh post-filters after centroid traversal &mdash; vectors matching the filter may not be in the traversed centroid regions at all. Qdrant's filter-aware HNSW traversal constrains the graph walk to matching nodes, preserving recall. The ~7% gap (88.94% vs 95.71%) is not tunable on turbopuffer.
+        <strong>Why recall drops under filtering:</strong> SPFresh post-filters after centroid traversal &mdash; vectors matching the filter may not be in the traversed centroid regions at all. Qdrant's filter-aware HNSW traversal constrains the graph walk to matching nodes, preserving recall. The ~7% gap (89.14% vs 95.85%) is not tunable on turbopuffer.
       </div>
     </section>
 
@@ -864,7 +866,7 @@ canvas {
       <div class="chart-block">
         <div class="chart-title">Recall by Scenario</div>
         <div class="chart-sub">Higher is better. Dashed line at 95% marks a common quality threshold.</div>
-        <canvas id="c-recall" width="560" height="200" aria-label="Grouped horizontal bars: unfiltered tpuf 98.51% vs Qdrant 98.36%, filtered tpuf 88.94% vs Qdrant 95.71%, multi-tenant both 100%"></canvas>
+        <canvas id="c-recall" width="560" height="200" aria-label="Grouped horizontal bars: unfiltered tpuf 98.51% vs Qdrant 98.36%, filtered tpuf 89.14% vs Qdrant 95.85%, multi-tenant both 100%"></canvas>
       </div>
       <div class="callout tpuf">
         <strong>The ~7% recall gap on filtered search is structural, not tunable.</strong> SPFresh's post-filter architecture cannot be configured to match Qdrant's filter-integrated HNSW. If your workload involves selective attribute filtering, this gap is permanent.
@@ -1007,7 +1009,7 @@ canvas {
       </div>
 
       <div class="callout tpuf">
-        <strong>tpuf WAL exhaustive scan explains why recall stays healthy during upload.</strong> Every unindexed vector in the WAL is brute-force scanned on each query (<code>exhaustive_search_count</code> averages 18,056 during upload, max 50,560). This scan rescues recall — without it, freshly uploaded vectors would be invisible to SPFresh. The cost: p99 inflates to 325ms vs 58ms post-upload. The exhaustive scan count trails to zero within ~14s of the last write, at which point SPFresh has fully indexed the WAL.
+        <strong>tpuf WAL exhaustive scan explains why recall stays healthy during upload.</strong> Every unindexed vector in the WAL is brute-force scanned on each query (<code>exhaustive_search_count</code> averages 18,056 during upload, max 50,560). This scan rescues recall — without it, freshly uploaded vectors would be invisible to SPFresh. The cost: p99 inflates to 325ms vs 58ms post-upload. The exhaustive scan count trails to zero within ~14s of the last write in this incremental scenario (SPFresh builds continuously during upload, so only the final WAL batch remains at end). A cold full build from an empty namespace takes ~173s for 100K&times;1536d (see §3.1).
       </div>
 
       <div class="chart-block">
@@ -1103,7 +1105,7 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
       </div>
 
       <div class="callout tpuf">
-        <strong>The 64 GB billing floor dominates everything below ~5 GB.</strong> For the H&amp;M benchmark dataset (0.43 GB actual), pinned 4-replica costs <strong>$2,476/month</strong> &mdash; 95&times; more than Qdrant's $26.10 &mdash; while delivering worse throughput (6.0 RPS warm vs 159.4 RPS), worse p99 (538ms warm vs 10.1ms), and lower recall (88.94% vs 95.71%). For datasets under ~5 GB, pinning is strictly worse on every dimension: cost, throughput, and recall.
+        <strong>The 64 GB billing floor dominates everything below ~5 GB.</strong> For the H&amp;M benchmark dataset (0.43 GB actual), pinned 4-replica costs <strong>$2,476/month</strong> &mdash; 95&times; more than Qdrant's $26.10 &mdash; while delivering worse throughput (47.4 RPS hot vs 149.6 RPS), worse p99 (50ms hot vs 9.9ms), and lower recall (89.14% vs 95.85%). For datasets under ~5 GB, pinning is strictly worse on every dimension: cost, throughput, and recall.
       </div>
 
       <h3>9.2 &mdash; Break-Even Analysis</h3>
@@ -1133,12 +1135,12 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
           </thead>
           <tbody>
             <tr><td>Latency floor</td><td>~10ms server (NVMe centroid)</td><td class="win">~2ms server (HNSW in RAM)</td></tr>
-            <tr><td>Filtered recall</td><td>88.94% (fixed)</td><td class="win">95.71% (tunable)</td></tr>
+            <tr><td>Filtered recall</td><td>89.14% (fixed)</td><td class="win">95.85% (tunable)</td></tr>
             <tr><td>Cold-start p99</td><td style="color:#991B1B;background:#FEF2F2;">1,891ms</td><td class="win">None</td></tr>
             <tr><td>Multi-tenant throughput (p=1)</td><td>33.5 RPS</td><td class="win">184.6 RPS</td></tr>
             <tr><td>Idle cost</td><td class="win">~$0</td><td>~$26/mo</td></tr>
             <tr><td>Break-even QPS</td><td></td><td class="win">~10 QPS</td></tr>
-            <tr><td>Upload speed</td><td class="win">2&ndash;9&times; faster</td><td>Slower (HNSW build)</td></tr>
+            <tr><td>Upload speed (total)</td><td class="win">Wins H&amp;M (4.1 vs 8.4 min)</td><td class="win">Wins DBpedia (3.9 vs 5.6 min)</td></tr>
             <tr><td>Recall tuning</td><td>None</td><td class="win">Full (ef, quantization)</td></tr>
             <tr><td>Noisy-neighbor risk</td><td>High (serverless)</td><td class="win">None</td></tr>
           </tbody>
@@ -1156,8 +1158,8 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
         <div class="sum-card">
           <div class="sum-card-label">Filtered Recall</div>
           <div class="sum-card-vals">
-            <div class="sum-val"><span class="dot" style="background:var(--tpuf)"></span>tpuf: 88.94%</div>
-            <div class="sum-val win-val"><span class="dot" style="background:var(--qdrant)"></span>Qdrant: 95.71% &#10003;</div>
+            <div class="sum-val"><span class="dot" style="background:var(--tpuf)"></span>tpuf: 89.14%</div>
+            <div class="sum-val win-val"><span class="dot" style="background:var(--qdrant)"></span>Qdrant: 95.85% &#10003;</div>
           </div>
         </div>
         <div class="sum-card">
@@ -1175,10 +1177,10 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
           </div>
         </div>
         <div class="sum-card">
-          <div class="sum-card-label">Upload Speed</div>
+          <div class="sum-card-label">Upload Speed (total)</div>
           <div class="sum-card-vals">
-            <div class="sum-val win-val"><span class="dot" style="background:var(--tpuf)"></span>tpuf: 2&ndash;9&times; faster &#10003;</div>
-            <div class="sum-val"><span class="dot" style="background:var(--qdrant)"></span>Qdrant: slower</div>
+            <div class="sum-val win-val"><span class="dot" style="background:var(--tpuf)"></span>tpuf wins H&amp;M: 4.1 vs 8.4 min &#10003;</div>
+            <div class="sum-val win-val"><span class="dot" style="background:var(--qdrant)"></span>Qdrant wins DBpedia: 3.9 vs 5.6 min &#10003;</div>
           </div>
         </div>
         <div class="sum-card">
@@ -1202,7 +1204,7 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
         <li><strong>Below ~10 QPS/namespace, serverless turbopuffer saves money.</strong> Above it, Qdrant is both cheaper and faster. The break-even is stable across dataset scales &mdash; plan around it. <em>This only applies to serverless mode.</em></li>
         <li><strong>Pinned mode has a billing floor that dominates small datasets.</strong> For any dataset under ~10 GB, pinned turbopuffer costs 10&ndash;95&times; more than Qdrant Cloud with no performance benefit. Workloads that need consistent low-latency (no cold-start variance) pay this premium regardless of query type.</li>
         <li><strong>Serverless noisy-neighbor is a real operational risk.</strong> A single bursty tenant in serverless mode triples all other tenants' p50 latency. Pinning eliminates this but removes scale-to-zero. Design your tenancy model before choosing serverless.</li>
-        <li><strong>Filtered search recall is not tunable on turbopuffer.</strong> If your workload uses selective attribute filters and 88.94% recall is insufficient, Qdrant is the only option. This constraint is architectural, not a configuration gap.</li>
+        <li><strong>Filtered search recall is not tunable on turbopuffer.</strong> If your workload uses selective attribute filters and 89.14% recall is insufficient, Qdrant is the only option. This constraint is architectural, not a configuration gap.</li>
         <li><strong>Multi-tenant idle SaaS is turbopuffer's strongest case.</strong> If most tenants are mostly idle, scale-to-zero is worth real money. At active-tenant load, Qdrant is 5.5&times; faster (184.6 vs 33.5 RPS) &mdash; the advantage flips completely when tenants are active.</li>
         <li><strong>Cold-start latency must be part of your SLA calculation.</strong> The 1,891ms p99 cold-start is not a fringe edge case &mdash; it occurs after any restart, any scale-to-zero event in serverless mode. Plan pre-warm queries or accept the SLA window.</li>
       </ol>
@@ -1214,10 +1216,10 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
 <script>
 // ── Color constants ───────────────────────────────────────────
 var C = {
-  tpuf:    '#EA580C',
-  tpuf2:   '#F97316',
-  qdrant:  '#7C3AED',
-  qdrant2: '#A78BFA',
+  tpuf:    '#3B82F6',
+  tpuf2:   '#93C5FD',
+  qdrant:  '#DC244C',
+  qdrant2: '#F07090',
   grid:    '#E2E8F0',
   text:    '#1A2332',
   text2:   '#5A6A7E',
@@ -1458,49 +1460,6 @@ function drawLegend(ctx, x, y, items) {
 // ── All static charts — run after DOM ready ───────────────────
 document.addEventListener('DOMContentLoaded', function() {
 
-  // §3 Upload horizontal bars
-  (function() {
-    var res = setupCanvas('c-upload');
-    if (!res) return;
-    var ctx = res[0], W = res[1], H = res[2];
-
-    var datasets = ['DBpedia 100K×1536', 'H&M 105K×2048', 'Multi-tenant 1M×768'];
-    var tpuf   = [2.7, 3.1, 2.4];
-    var qdrant = [3.9, 9.0, 20.5];
-    var maxV   = 22;
-    var pad    = { t: 16, r: 80, b: 28, l: 155 };
-    var pW     = W - pad.l - pad.r;
-    var barH   = 18, gap = 8, groupH = barH * 2 + gap, groupGap = 16;
-
-    // X grid
-    var xTicks = [0, 5, 10, 15, 20];
-    for (var gi = 0; gi < xTicks.length; gi++) {
-      var v = xTicks[gi];
-      var x = pad.l + (v / maxV) * pW;
-      ctx.strokeStyle = C.grid; ctx.lineWidth = 0.5;
-      ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, H - pad.b); ctx.stroke();
-      ctx.fillStyle = C.text2; ctx.font = '10px monospace'; ctx.textAlign = 'center';
-      ctx.fillText(v + ' min', x, H - pad.b + 14);
-    }
-
-    for (var i = 0; i < datasets.length; i++) {
-      var yBase = pad.t + i * (groupH + groupGap);
-      // tpuf bar
-      ctx.fillStyle = C.tpuf;
-      roundRect(ctx, pad.l, yBase, (tpuf[i] / maxV) * pW, barH, 3);
-      ctx.fillStyle = C.text; ctx.font = 'bold 10px monospace'; ctx.textAlign = 'left';
-      ctx.fillText(tpuf[i] + ' min', pad.l + (tpuf[i] / maxV) * pW + 5, yBase + barH / 2 + 4);
-      // qdrant bar
-      ctx.fillStyle = C.qdrant;
-      roundRect(ctx, pad.l, yBase + barH + gap, (qdrant[i] / maxV) * pW, barH, 3);
-      ctx.fillText(qdrant[i] + ' min', pad.l + (qdrant[i] / maxV) * pW + 5, yBase + barH + gap + barH / 2 + 4);
-      // label
-      ctx.fillStyle = C.text2; ctx.font = '11px system-ui'; ctx.textAlign = 'right';
-      ctx.fillText(datasets[i], pad.l - 6, yBase + barH + 4);
-    }
-    drawLegend(ctx, pad.l, H - 6, [[C.tpuf, 'turbopuffer'], [C.qdrant, 'Qdrant']]);
-  })();
-
   // §4.1 DBpedia latency grouped bars
   (function() {
     var res = setupCanvas('c-dbpedia-lat');
@@ -1655,9 +1614,9 @@ document.addEventListener('DOMContentLoaded', function() {
     var ctx = res[0], W = res[1], H = res[2];
 
     var bars = [
-      { label: 'tpuf warm', v: 538,  color: C.tpuf    },
+      { label: 'tpuf hot',  v: 50,   color: C.tpuf    },
       { label: 'tpuf cold', v: 1891, color: '#DC2626'  },
-      { label: 'Qdrant p=1', v: 10.1, color: C.qdrant  }
+      { label: 'Qdrant p=1', v: 9.9, color: C.qdrant  }
     ];
     var maxV = 2000;
     var pad  = { t: 20, r: 20, b: 40, l: 52 };
@@ -1743,8 +1702,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var ctx = res[0], W = res[1], H = res[2];
 
     var scenarios = ['Unfiltered (DBpedia)', 'Filtered (H&M)', 'Multi-tenant'];
-    var tpuf    = [98.51, 88.94, 100];
-    var qdrant  = [98.36, 95.71, 100];
+    var tpuf    = [98.51, 89.14, 100];
+    var qdrant  = [98.36, 95.85, 100];
     var minV    = 85, maxV = 102, range = maxV - minV;
     var pad     = { t: 16, r: 75, b: 24, l: 140 };
     var pW      = W - pad.l - pad.r;
@@ -2049,12 +2008,14 @@ document.addEventListener('DOMContentLoaded', function() {
     var ctx = res[0], W = res[1], H = res[2];
 
     var rows = [
-      { label: 'tpuf DBpedia',   upsert: 160, index: 0,   tpufBar: true  },
-      { label: 'Qdrant DBpedia', upsert: 234, index: 0,   tpufBar: false },
-      { label: 'tpuf H&M',       upsert: 183, index: 0,   tpufBar: true  },
-      { label: 'Qdrant H&M',     upsert: 346, index: 196, tpufBar: false },
-      { label: 'tpuf MT',        upsert: 146, index: 0,   tpufBar: true  },
-      { label: 'Qdrant MT',      upsert: 1226, index: 5,  tpufBar: false }
+      { label: 'tpuf DBpedia',            upsert: 162, index: 173, tpufBar: true  },
+      { label: 'Qdrant DBpedia (conc.)',   upsert: 234, index: 0,   tpufBar: false },
+      { label: 'Qdrant DBpedia (deferred)',upsert: 237, index: 84,  tpufBar: false },
+      { label: 'tpuf H&M',                upsert: 186, index: 60,  tpufBar: true  },
+      { label: 'Qdrant H&M (conc.)',      upsert: 330, index: 168, tpufBar: false },
+      { label: 'Qdrant H&M (deferred)',   upsert: 324, index: 222, tpufBar: false },
+      { label: 'tpuf MT',                 upsert: 146, index: 0,   tpufBar: true  },
+      { label: 'Qdrant MT',               upsert: 1226, index: 5,  tpufBar: false }
     ];
     var maxV  = 1350;
     var pad   = { t: 16, r: 100, b: 36, l: 130 };
@@ -2096,7 +2057,7 @@ document.addEventListener('DOMContentLoaded', function() {
       ctx.fillText(total + 's', pad.l + (total / maxV) * pW + 5, y + barH / 2 + 4);
     }
     drawLegend(ctx, pad.l, H - 8, [
-      [C.tpuf, 'tpuf upsert'], [C.tpuf2, 'tpuf index'],
+      [C.tpuf, 'tpuf upsert'], [C.tpuf2, 'tpuf SPFresh build'],
       [C.qdrant, 'qdrant upsert'], [C.qdrant2, 'qdrant HNSW build']
     ]);
   })();
