@@ -489,10 +489,18 @@ async def qdrant_trigger_and_wait_index(qc, collection, total_vectors, indexing_
     }
 
 
-async def tpuf_poll_spfresh_index(ns, test_vec, total_vectors, poll_interval=5):
+async def tpuf_poll_spfresh_index(ns, test_vec, total_vectors, poll_interval=5, stall_timeout=300):
+    """Poll until exhaustive_search_count reaches 0.
+
+    Stall detection: if the count hasn't decreased in stall_timeout seconds,
+    break early and record residual_exhaustive so the caller knows indexing
+    plateaued (tpuf serverless WAL sometimes retains a small non-zero tail).
+    """
     print("  Polling SPFresh build (exhaustive_search_count → 0) ...", flush=True)
     t0 = time.perf_counter()
     poll_rows = []
+    last_change_t = t0
+    prev_exhaustive = None
     while True:
         bt = time.perf_counter()
         r  = await ns.query(rank_by=("vector", "ANN", test_vec), top_k=10, include_attributes=False)
@@ -504,8 +512,16 @@ async def tpuf_poll_spfresh_index(ns, test_vec, total_vectors, poll_interval=5):
         print(f"    t={t_s}s  exhaustive={exhaustive}  indexed≈{pct}  query={query_ms}ms", flush=True)
         if exhaustive == 0:
             break
+        if exhaustive != prev_exhaustive:
+            last_change_t = time.perf_counter()
+            prev_exhaustive = exhaustive
+        elif time.perf_counter() - last_change_t >= stall_timeout:
+            print(f"  WARNING: exhaustive stalled at {exhaustive} for {stall_timeout}s — treating as done", flush=True)
+            break
         await asyncio.sleep(poll_interval)
-    return {"index_s": round(time.perf_counter() - t0, 1), "poll_rows": poll_rows}
+    residual = poll_rows[-1][1] if poll_rows else 0
+    return {"index_s": round(time.perf_counter() - t0, 1), "poll_rows": poll_rows,
+            "residual_exhaustive": residual}
 
 
 # ── Pinning helpers ────────────────────────────────────────────────────────────
@@ -1346,6 +1362,13 @@ async def op_disk(ds: DatasetConfig, active: list[str], run_dir: Path, state: di
 # OP: delete  (scoped to selected datasets)
 # ═══════════════════════════════════════════════════════════════════════════════
 
+def _engine_filter_matches(args_engines, family: str) -> bool:
+    """True if the engine family ('tpuf' or 'qdrant') passes the --engine prefix filter."""
+    if not args_engines:
+        return True
+    return any(family.startswith(e) or e.startswith(family) for e in args_engines)
+
+
 async def phase_delete(run_dir: Path, state: dict, args):
     datasets_to_clean = args.dataset if args.dataset else list(DATASETS.keys())
     print(f"\n═══ delete  datasets={datasets_to_clean} ═══")
@@ -1355,40 +1378,43 @@ async def phase_delete(run_dir: Path, state: dict, args):
 
     for ds_key in datasets_to_clean:
         ds = DATASETS[ds_key]
-        tpuf_names = [ds.tpuf_ns_pinned, ds.tpuf_ns_rw] if ds.tpuf_ns_pinned else [ds.tpuf_ns_rw]
-        if ds.tenant_field:
-            # List and delete all MT namespaces; deduplicate in case tpuf_ns_rw starts with tpuf_ns prefix
-            try:
-                async for ns in tc.namespaces():
-                    if ns.id.startswith(ds.tpuf_ns) and ns.id not in tpuf_names:
-                        tpuf_names.append(ns.id)
-            except Exception:
-                pass
-        else:
-            tpuf_names = [ds.tpuf_ns, ds.tpuf_ns_pinned, ds.tpuf_ns_rw, f"{ds.tpuf_ns}-cold"]
 
-        for name in tpuf_names:
-            if not name:
-                continue
-            try:
-                await tc.namespace(name).delete_all()
-                print(f"  tpuf ✓ {name}")
-            except Exception as e:
-                print(f"  tpuf skip {name}: {e}")
+        if _engine_filter_matches(args.engine, "tpuf"):
+            tpuf_names = [ds.tpuf_ns_pinned, ds.tpuf_ns_rw] if ds.tpuf_ns_pinned else [ds.tpuf_ns_rw]
+            if ds.tenant_field:
+                # List and delete all MT namespaces; deduplicate in case tpuf_ns_rw starts with tpuf_ns prefix
+                try:
+                    async for ns in tc.namespaces():
+                        if ns.id.startswith(ds.tpuf_ns) and ns.id not in tpuf_names:
+                            tpuf_names.append(ns.id)
+                except Exception:
+                    pass
+            else:
+                tpuf_names = [ds.tpuf_ns, ds.tpuf_ns_pinned, ds.tpuf_ns_rw, f"{ds.tpuf_ns}-cold"]
 
-        qdrant_names = [ds.qdrant_col, ds.qdrant_col_rw]
-        if ds.qdrant_col_deferred:
-            qdrant_names.append(ds.qdrant_col_deferred)
-        if ds.key == "dbpedia":
-            qdrant_names += ["reproduce-dbpedia-disk-vec", "reproduce-dbpedia-disk-all"]
-        for name in qdrant_names:
-            if not name:
-                continue
-            try:
-                await qc.delete_collection(name)
-                print(f"  qdrant ✓ {name}")
-            except Exception as e:
-                print(f"  qdrant skip {name}: {e}")
+            for name in tpuf_names:
+                if not name:
+                    continue
+                try:
+                    await tc.namespace(name).delete_all()
+                    print(f"  tpuf ✓ {name}")
+                except Exception as e:
+                    print(f"  tpuf skip {name}: {e}")
+
+        if _engine_filter_matches(args.engine, "qdrant"):
+            qdrant_names = [ds.qdrant_col, ds.qdrant_col_rw]
+            if ds.qdrant_col_deferred:
+                qdrant_names.append(ds.qdrant_col_deferred)
+            if ds.key == "dbpedia":
+                qdrant_names += ["reproduce-dbpedia-disk-vec", "reproduce-dbpedia-disk-all"]
+            for name in qdrant_names:
+                if not name:
+                    continue
+                try:
+                    await qc.delete_collection(name)
+                    print(f"  qdrant ✓ {name}")
+                except Exception as e:
+                    print(f"  qdrant skip {name}: {e}")
 
     await qc.close()
     mark_variant_done(run_dir, state, "delete", "delete", "all", {})
