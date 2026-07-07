@@ -57,7 +57,7 @@ All uploads use batch=128 and the async client.
 | DBpedia 100K×1536 | Qdrant Cloud | 3.9 min (234s) | 428 | 285ms | 323ms | — | 0s (concurrent) | 0.614 GB |
 | H&M 105K×2048 | turbopuffer | 3.1 min (183s) | 574 | 208ms | 335ms | 192ms | — | 0.873 GB |
 | H&M 105K×2048 | Qdrant Cloud | 9.0 min (542s) | 304 | 401ms | 459ms | — | 195.8s | 0.926 GB |
-| Multi-tenant 1M×768 | turbopuffer | 2.4 min (146s) | 6847 (parallel) | 207ms | 338ms | — | — | — |
+| Multi-tenant 1M×768 | turbopuffer | 2.4 min (p=10) | 6847* (parallel) | 207ms | 338ms | — | — | — |
 | Multi-tenant 1M×768 | Qdrant Cloud | 20.5 min (1231s) | 816 | 148ms | 175ms | — | 5.1s | 3.200 GB |
 
 †Total time = upsert + extra index wait (end-to-end until fully indexed and GREEN). For Qdrant H&M: 346s upsert + 196s extra = 542s total (9.0 min). For DBpedia: 234s upsert, HNSW finished concurrently so extra = 0s, total = 234s.
@@ -65,6 +65,8 @@ All uploads use batch=128 and the async client.
 ‡Extra index wait = additional time after the last upsert batch until GREEN status. DBpedia shows 0s because HNSW (1536-dim, 100K vectors) finished within the upsert window; H&M shows 195.8s because 2048-dim builds slower and spilled past upsert. Same benchmarking code for all datasets.
 
 §Stored GB: turbopuffer = `billable_logical_bytes_written` (upsert response); Qdrant = `vectors_size_bytes + payloads_size_bytes` from `/telemetry?details_level=10`. Qdrant stores f32 (4B/float); tpuf stores f16 (2B/float) but centroid-tree overhead brings tpuf's footprint close to Qdrant's f32 size. MT tpuf billable_gb not captured in this run (script fix applied for next run).
+
+*WPS shown for MT tpuf is aggregate wall-clock throughput (total vectors / wall time) across all 10 concurrent namespace uploads (asyncio.Semaphore=10). Per-namespace WPS ≈ 624 (same as single-namespace DBpedia).
 
 **turbopuffer write pipeline:** Writes are group-committed in 100–250ms windows, then flushed as an append-only WAL entry to S3 (durable on success). Indexing (SPFresh centroid tree) is **asynchronous and decoupled** — a background job picks up the WAL and builds/updates the index. Crucially, data is **immediately visible to reads** even before indexing: queries fall back to exhaustive WAL scanning for unindexed data. This is why tpuf reports no "extra index wait" — there is no write-blocking indexing phase. The trade-off surfaces at query time: every query must scan the centroid tree (and any unindexed WAL entries), which is why tpuf has a 10ms server-side latency floor even for warm data. With **strong consistency** (default), every query checks S3 for the latest WAL version (~10ms overhead) — this is architecturally what explains the 10ms NVMe floor. With **eventual consistency** (opt-in), this S3 check is skipped, enabling sub-10ms latency at the cost of up to ~1h staleness.
 
@@ -74,7 +76,7 @@ All uploads use batch=128 and the async client.
 
 **turbopuffer vs Qdrant on uploads:** turbopuffer is faster for unfiltered datasets (2.7 min vs 3.9 min for DBpedia) because writes go directly to S3 with minimal server-side processing. Qdrant is significantly slower for H&M (9.0 vs 3.1 min) — 2048-dim vectors mean larger HTTP payloads per batch, and Qdrant processes each batch through an HTTP API with segment metadata updates plus a 196s HNSW index build.
 
-**Multi-tenant write cost:** turbopuffer uploads 100 namespaces in **parallel** (asyncio.gather, semaphore=10 concurrent) over 2.4 min wall-clock. Qdrant uploads all **1M vectors sequentially** in batches to a single collection with `payload_m=16` over 20.5 min. The gap has two causes: (1) parallel vs sequential methodology, (2) 1M total vectors vs Qdrant building per-tenant HNSW sub-graphs at write time. That write cost pays off at query time (5.5× lower multi-tenant latency). This is a write-vs-read tradeoff: turbopuffer amortizes to query time (S3 fetches), Qdrant amortizes to write time (index construction).
+**Multi-tenant write cost:** turbopuffer uploads 100 namespaces in **parallel** (asyncio.gather, semaphore=10 concurrent) over 2.4 min wall-clock. Sequential uploads would take ~26.7 min (100 × ~16s per 10K-vector namespace at ~624 WPS) — the parallelism provides an ~11× speedup. Both engines use the same batch size (128 vectors/batch). Qdrant uploads all **1M vectors sequentially** in batches to a single collection with `payload_m=16` over 20.5 min. The gap has two causes: (1) parallel vs sequential methodology, (2) Qdrant building per-tenant HNSW sub-graphs at write time. That write cost pays off at query time (5.5× lower multi-tenant latency). This is a write-vs-read tradeoff: turbopuffer amortizes to query time (S3 fetches), Qdrant amortizes to write time (index construction).
 
 ---
 
@@ -426,7 +428,7 @@ Results: `results/reproduce-2026-06-22T22-25-07/state.json`
 | DBpedia 100K×1536 | Qdrant | 234s (HNSW built concurrently during upsert) | 428 | 285ms | 323ms |
 | H&M 105K×2048 | turbopuffer | 183s | 574 | 208ms | 335ms |
 | H&M 105K×2048 | Qdrant | 542s (upsert 346s + index 196s) | 304 | 401ms | 459ms |
-| Multi-tenant 1M×768 | turbopuffer (100 ns) | 146s wall | 6847 (parallel) | — | — |
+| Multi-tenant 1M×768 | turbopuffer (100 ns) | 146s (p=10) | 6847* (parallel) | — | — |
 | Multi-tenant 1M×768 | Qdrant (1 collection) | 1231s (upsert 1226s + index 5s) | 816 | 148ms | 175ms |
 
 ### DBpedia warm search

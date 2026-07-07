@@ -562,7 +562,7 @@ canvas {
 
     <!-- Hero -->
     <div class="hero">
-      <div class="hero-eyebrow">Vector Database Benchmark &middot; 2025</div>
+      <div class="hero-eyebrow">Vector Database Benchmark &middot; 2026</div>
       <h1>turbopuffer vs Qdrant Cloud<br>Detailed Benchmark Report</h1>
       <p class="hero-sub">
         Three datasets, four concurrency levels, upload throughput, filtered search, multi-tenant isolation,
@@ -645,7 +645,7 @@ canvas {
             <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-qdrant"></span>Qdrant</td><td>3.9</td><td>428</td><td>285ms</td><td>323ms</td><td>—</td><td>—</td><td>0s (concurrent)</td><td>0.614 GB</td></tr>
             <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-tpuf"></span>tpuf serverless</td><td class="win">3.1</td><td>574</td><td>208ms</td><td>335ms</td><td>192ms</td><td>318ms</td><td>—</td><td>0.873 GB</td></tr>
             <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-qdrant"></span>Qdrant</td><td>9.0</td><td>304</td><td>401ms</td><td>459ms</td><td>—</td><td>—</td><td>195.8s</td><td>0.926 GB</td></tr>
-            <tr><td>Multi-tenant 1M&times;768</td><td><span class="chip-tpuf"></span>tpuf (100 ns, parallel)</td><td class="win">2.4</td><td>6847</td><td>207ms</td><td>338ms</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+            <tr><td>Multi-tenant 1M&times;768</td><td><span class="chip-tpuf"></span>tpuf (100 ns, parallel)</td><td class="win">2.4 (p=10)</td><td>6847*</td><td>207ms</td><td>338ms</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
             <tr><td>Multi-tenant 1M&times;768</td><td><span class="chip-qdrant"></span>Qdrant</td><td>20.5</td><td>816</td><td>148ms</td><td>175ms</td><td>—</td><td>—</td><td>5.1s</td><td>3.200 GB</td></tr>
           </tbody>
         </table>
@@ -659,10 +659,10 @@ canvas {
         <div class="chart-title">Upload Timeline &mdash; Upsert + Index</div>
         <div class="chart-sub">Stacked bars: solid = upsert, lighter = HNSW build wait. Seconds.</div>
         <canvas id="c-upload-timeline" width="560" height="240" aria-label="Stacked horizontal bar chart showing upsert and index times for tpuf and Qdrant per dataset"></canvas>
-        <div style="font-size:11px;color:var(--text-2);margin-top:8px;font-style:italic;">‡ Total time = upsert + extra index wait (end-to-end until collection is fully indexed and GREEN). For Qdrant H&amp;M: 5.8 min upsert + 3.3 min HNSW build = 9.0 min total. For DBpedia: 3.9 min upsert, HNSW built concurrently so extra wait = 0s, total = 3.9 min.<br>† Extra index wait = additional time after the last upsert batch until GREEN status. 0s means HNSW finished within the upsert window (concurrent build); 195.8s means it spilled past upsert (2048-dim builds slower than 1536-dim). Same benchmarking code for all datasets. turbopuffer has no write-time index — equivalent cost paid at every query (~0.615–0.873 GB scanned per query).</div>
+        <div style="font-size:11px;color:var(--text-2);margin-top:8px;font-style:italic;">‡ Total time = upsert + extra index wait (end-to-end until collection is fully indexed and GREEN). For Qdrant H&amp;M: 5.8 min upsert + 3.3 min HNSW build = 9.0 min total. For DBpedia: 3.9 min upsert, HNSW built concurrently so extra wait = 0s, total = 3.9 min.<br>† Extra index wait = additional time after the last upsert batch until GREEN status. 0s means HNSW finished within the upsert window (concurrent build); 195.8s means it spilled past upsert (2048-dim builds slower than 1536-dim). Same benchmarking code for all datasets. turbopuffer has no write-time index — equivalent cost paid at every query (~0.615–0.873 GB scanned per query).<br>* MT tpuf WPS is aggregate wall-clock throughput (total vectors / wall time) across 10 concurrent namespace uploads (asyncio.Semaphore=10). Per-namespace WPS ≈ 624 — same as single-namespace DBpedia.</div>
       </div>
       <div class="callout">
-        The multi-tenant dataset is <strong>1M vectors total</strong> (100 tenants &times; 10K each) &mdash; 10&times; more data than DBpedia. Qdrant uploads all 1M sequentially in batches to one collection (<code>payload_m=16</code>, <code>is_tenant=True</code>), building per-tenant HNSW sub-graphs in the background. turbopuffer uploads 100 namespaces in <strong>parallel</strong> (asyncio.gather, semaphore=10 concurrent), so its 2.4 min wall-clock reflects parallel throughput across all tenants simultaneously. At comparable per-batch throughput (816 vs 6,847 wps), the parallel vs sequential methodology plus 10&times; more data explains the 8.5&times; wall-clock gap &mdash; not a Qdrant limitation per se.
+        The multi-tenant dataset is <strong>1M vectors total</strong> (100 tenants &times; 10K each) &mdash; 10&times; more data than DBpedia. Qdrant uploads all 1M sequentially in batches to one collection (<code>payload_m=16</code>, <code>is_tenant=True</code>), building per-tenant HNSW sub-graphs in the background. turbopuffer uploads 100 namespaces in <strong>parallel</strong> (asyncio.gather, semaphore=10 concurrent), so its 2.4 min wall-clock reflects parallel throughput. Sequential uploads at ~624 WPS per namespace would take <strong>~26.7 min</strong> (100 &times; ~16s) &mdash; parallelism delivers an <strong>~11&times; speedup</strong>. Both engines use the same batch size (128 vectors/batch). The methodology difference (parallel vs sequential) accounts for most of the 8.5&times; wall-clock gap; Qdrant also pays extra for HNSW sub-graph construction at write time.
       </div>
       <div class="callout neutral">
         <strong>Write-time vs query-time:</strong> turbopuffer stores 0.615 GB for DBpedia (&asymp; raw vector size: 100K &times; 1536-dim &times; 4B). Qdrant builds HNSW at write time &mdash; 195.8s for H&amp;M, ~0s for DBpedia (concurrent), 5.1s for MT sub-graphs. This one-time write cost is the source of Qdrant&rsquo;s 1.9ms query server latency: the index is in RAM, already built. turbopuffer&rsquo;s SPFresh index is built <em>asynchronously</em> after writes commit to the S3 WAL &mdash; writes return immediately (no blocking index phase), but every query pays the centroid-scan cost at read time.
@@ -737,7 +737,21 @@ canvas {
       </div>
 
       <h3>4.3 &mdash; Cost Model by Dataset Scale</h3>
+      <p>turbopuffer charges three components independently; Qdrant charges a flat monthly cluster fee.</p>
       <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Component</th><th>turbopuffer</th><th>Qdrant Cloud</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Storage</td><td>$0.33/GB/month (f16: 2 bytes/dim)</td><td>Included</td></tr>
+            <tr><td>Writes</td><td>$2/GB (f32: 4 bytes/dim) + batch discount</td><td>Included</td></tr>
+            <tr><td>Queries</td><td>$0.001/TB scanned, min <strong>1.28 GB/namespace</strong></td><td>Unlimited</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:13px;color:var(--text-2);margin-top:4px;">The 1.28 GB minimum is critical: a 308 MB namespace (100K &times; 1536-dim f16) is billed as 1.28 GB per scan query &mdash; a cost floor of <strong>$1.28 per million queries</strong> regardless of actual data size.</p>
+      <div class="table-wrap" style="margin-top:20px;">
         <table>
           <thead>
             <tr><th>Dataset</th><th>tpuf $/1M queries</th><th>Qdrant $/mo</th><th>Break-even QPS</th></tr>
@@ -862,7 +876,7 @@ canvas {
       <div class="section-header">
         <div class="section-eyebrow tpuf-eye">&sect;8</div>
         <h2>turbopuffer Internals</h2>
-        <p>Five experiments that reveal how turbopuffer behaves under the hood: NVMe cache warmup dynamics, concurrency scaling behavior, replica scaling, cross-namespace contention in serverless mode, and write throughput under pinning.</p>
+        <p>Nine experiments that reveal how turbopuffer behaves under the hood and how it compares to Qdrant disk mode. Key findings: (1) SPFresh does lazy per-centroid NVMe caching &mdash; ~75 sequential queries to reach stable warm latency, no global pre-fetch. (2) A single pinned replica saturates at ~6&ndash;8 CPU cores; serverless outperforms it at p&ge;8. (3) Correctly-warmed 4-replica pinned peaks at 473 RPS &mdash; NVMe bandwidth, not CPU, is the ceiling. (4) A pinned replica takes ~80s to become <code>ready</code> and is still cold after that &mdash; first query hits ~600ms. (5) <code>hint_cache_warm</code> used inline is 13&times; worse than default &mdash; it is for pre-warming, not per-query prefix. (6) All namespaces under one API key share one physical machine in serverless mode; a bursty tenant degrades all others ~3&times;. (7) Pinning has zero effect on write throughput (624 vs 633 WPS). (8) During concurrent writes, tpuf's WAL exhaustive scan rescues recall at the cost of 1.8&times; higher p99 &mdash; latency normalises within seconds of indexing completing. (9) Qdrant disk mode has bimodal behavior: p99=1,457ms cold (EBS random I/O storm) vs p99=10ms warm &mdash; once 586 MB fits in OS page cache the disk-mode penalty disappears entirely.</p>
       </div>
 
       <h3>8.1 &mdash; Cold Warmup Curve</h3>
@@ -889,13 +903,45 @@ canvas {
         <canvas id="c-4r" width="560" height="240" aria-label="Line chart: peaks at 473 RPS at p=16, then plateaus/declines at higher concurrency"></canvas>
       </div>
 
-      <h3>8.4 &mdash; Server-Side Latency Gap</h3>
+      <h3>8.4 &mdash; Replica Boot Time</h3>
+      <p>How long does it take to go from "pin namespace" to "serving warm traffic"? We called <code>update_metadata(pinning={"replicas": 1})</code> and polled <code>ns.metadata()</code> every 5 seconds until ready, then immediately issued queries.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Step</th><th>Duration</th></tr></thead>
+          <tbody>
+            <tr><td><code>ready_replicas</code> 0/1 &rarr; 1/1</td><td><strong>~80 seconds</strong> (16 polls &times; 5s)</td></tr>
+            <tr><td>First query after <code>ready_replicas=1</code></td><td><strong>~617ms</strong> &mdash; NVMe still cold</td></tr>
+            <tr><td>Rolling warm state (&lt;20ms mean)</td><td>~11 sequential queries (~2 seconds)</td></tr>
+            <tr><td><strong>Total: pin &rarr; warm serving</strong></td><td><strong>~90&ndash;100 seconds</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout tpuf">
+        <code>ready_replicas=N</code> means the compute node is running &mdash; <strong>not</strong> that NVMe is populated. Any deployment runbook that sends traffic immediately after <code>ready_replicas</code> confirmation will hit cold latency spikes on the first 10&ndash;15 queries (~600ms each). A warmup pass of ~75 sequential queries is required before serving production traffic.
+      </div>
+
+      <h3>8.5 &mdash; <code>hint_cache_warm</code> Behavior</h3>
+      <p>turbopuffer exposes a <code>hint_cache_warm</code> API for pre-warming a namespace before a burst. We measured the effect of using it inline (calling the hint, then immediately querying) at p=8 on DBpedia.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Config</th><th>RPS</th><th>Mean latency</th></tr></thead>
+          <tbody>
+            <tr><td>Default serverless p=8</td><td class="win"><strong>224 RPS</strong></td><td class="win">22.9ms</td></tr>
+            <tr><td><code>hint_cache_warm</code> inline p=8</td><td style="color:#991B1B;font-weight:600;">17 RPS</td><td style="color:#991B1B;">459ms</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout tpuf">
+        <strong><code>hint_cache_warm</code> used inline is 13&times; worse than default serverless.</strong> The cache-warm RPC is a synchronous call adding ~400ms overhead before each query. It is designed for pre-warming a cold namespace before a burst (send the hint, wait, then serve) &mdash; not as a per-query prefix. Using it inline inverts its intended effect entirely.
+      </div>
+
+      <h3>8.6 &mdash; Server-Side Latency Gap</h3>
       <p>Measuring server-reported latency (excluding network round-trip) reveals an architectural floor difference. At steady state on DBpedia (unfiltered), turbopuffer server latency is consistently <strong>~10ms</strong> while Qdrant server latency is <strong>~1.9ms</strong>.</p>
       <div class="callout tpuf">
         <strong>Qdrant server latency is 1.9ms (HNSW index in RAM); tpuf server latency floor is 10ms (NVMe centroid traversal). This 5&times; gap is architectural and irreducible regardless of network.</strong> The gap reflects the fundamental storage medium: HNSW traversal on RAM vs. SPFresh centroid reads from NVMe. No configuration on either side can close it.
       </div>
 
-      <h3>8.5 &mdash; Cross-Namespace Contention (Serverless)</h3>
+      <h3>8.7 &mdash; Cross-Namespace Contention (Serverless)</h3>
       <p>A high-throughput "aggressor" namespace and a "victim" namespace both sharing the same API key on serverless. The aggressor runs at full blast; we measure what happens to victim latency.</p>
       <div class="chart-block">
         <div class="chart-title">Victim p50 Latency &mdash; Baseline vs Under Aggressor Load</div>
@@ -906,7 +952,7 @@ canvas {
         <strong>Serverless noisy-neighbor:</strong> a bursty tenant triples victim latency (14.9ms &#8594; 52.8ms, +255%). Pinning reduces this to a 20% variance (16.3ms &#8594; 19.5ms). If your workload includes any bursty tenants in serverless mode, all other tenants under the same API key are affected.
       </div>
 
-      <h3>8.5 &mdash; Write Throughput: Serverless vs Pinned</h3>
+      <h3>8.8 &mdash; Write Throughput: Serverless vs Pinned</h3>
       <p>Does pinning a namespace affect write performance? We uploaded DBpedia 100K&times;1536 twice &mdash; once serverless, once to a pinned-1r namespace &mdash; using identical batch size and client configuration.</p>
       <div class="table-wrap">
         <table>
@@ -920,18 +966,127 @@ canvas {
       <div class="callout neutral">
         <strong>Pinning has zero effect on write throughput.</strong> 624 vs 633 WPS is within noise. The slight p99 improvement on pinned (295ms vs 352ms) is consistent with lower noisy-neighbor contention on a dedicated machine &mdash; not a write-path difference. This confirms that turbopuffer writes go directly to the S3 WAL in both modes; the pinned replica only maintains an NVMe read cache and is not involved in the write path at all. Single-replica tpuf write capacity: <strong>~625 WPS</strong> at batch=128 for 1536-dim vectors, independent of deployment mode.
       </div>
+
+      <h3>8.9 &mdash; Concurrent Write-Read Dynamics</h3>
+      <p>Both engines were loaded from empty while a reader fired every 500ms, starting at the same moment as the writers — no pre-loading, no index warmup. 100K&times;1536 DBpedia vectors uploaded in ~254s; queries continued for 120s after the last write. Recall uses the same ground-truth queries as all other benchmarks.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Phase</th>
+              <th>turbopuffer &mdash; p50 / p99 / recall</th>
+              <th>Qdrant &mdash; p50 / p99 / recall</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>During upload</strong> (0&ndash;254s)</td>
+              <td>30ms / 325ms / <strong>49%</strong></td>
+              <td>18ms / 46ms / <strong>49%</strong></td>
+            </tr>
+            <tr>
+              <td><strong>After upload</strong> (254&ndash;374s)</td>
+              <td>21ms / 58ms / <strong>99%</strong></td>
+              <td class="win">7.9ms / 15ms / <strong>99%</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="chart-block">
+        <div class="chart-title">Read Latency During and After Concurrent Upload</div>
+        <div class="chart-sub">Each dot = one query. Lines = rolling p50 (window 25). Dashed line = upload complete.</div>
+        <canvas id="c-rw-lat" width="600" height="300" aria-label="Scatter plot: tpuf latency 30ms p50 during upload with p99 spikes to 325ms; drops to 21ms after. Qdrant 18ms during, 7.9ms after."></canvas>
+      </div>
+
+      <div class="chart-block">
+        <div class="chart-title">Recall Progression: Both Engines from Empty</div>
+        <div class="chart-sub">Rolling mean (window 25). Recall builds as more vectors are uploaded; reaches ~99% after upload completes.</div>
+        <canvas id="c-rw-recall" width="600" height="240" aria-label="Line chart: recall builds from 0% to ~49% at midpoint then ~99% after upload complete, both engines track closely."></canvas>
+      </div>
+
+      <div class="callout tpuf">
+        <strong>tpuf WAL exhaustive scan explains why recall stays healthy during upload.</strong> Every unindexed vector in the WAL is brute-force scanned on each query (<code>exhaustive_search_count</code> averages 18,056 during upload, max 50,560). This scan rescues recall — without it, freshly uploaded vectors would be invisible to SPFresh. The cost: p99 inflates to 325ms vs 58ms post-upload. The exhaustive scan count trails to zero within ~14s of the last write, at which point SPFresh has fully indexed the WAL.
+      </div>
+
+      <div class="chart-block">
+        <div class="chart-title">turbopuffer: WAL Exhaustive Scan Count per Query</div>
+        <div class="chart-sub">Unindexed WAL documents scanned per query. Nonzero = SPFresh falling back to brute force for unindexed vectors.</div>
+        <canvas id="c-rw-exh" width="600" height="220" aria-label="Scatter plot: exhaustive_search_count oscillates 0-50560 during upload, drops to 0 within seconds of upload completing."></canvas>
+      </div>
+
+      <div class="chart-block">
+        <div class="chart-title">Qdrant: Total vs HNSW-Indexed Vectors During Upload</div>
+        <div class="chart-sub">Gap = optimizer backlog. Qdrant HNSW optimizer stays within ~3K vectors (~3%) of the write front.</div>
+        <canvas id="c-rw-qdrant-idx" width="600" height="220" aria-label="Line chart: points_count grows to 100K over 254s; indexed_vectors_count follows closely with 1-3K lag throughout."></canvas>
+      </div>
+
+      <div class="callout neutral">
+        <strong>Both engines deliver ~49% recall at the upload midpoint</strong> — consistent with the expected value when half the dataset is loaded (neighbors are uniformly distributed, so ~50% of any query's true neighbors are already present). Qdrant's HNSW optimizer stays within 3% of the write front throughout, and its latency improves 2.3&times; once upload completes (18ms &rarr; 7.9ms p50). tpuf's WAL scan preserves recall at the cost of 5.6&times; p99 inflation during upload (58ms &rarr; 325ms).
+      </div>
+
+      <h3>8.10 &mdash; Qdrant Disk Mode vs turbopuffer (EBS Cold/Warm)</h3>
+      <p>Qdrant supports mmap-based vector storage (<code>on_disk=True</code>) where vectors and/or the HNSW graph are served from disk on demand. We benchmarked two configurations against turbopuffer using DBpedia 100K&times;1536 on Qdrant Cloud (AWS us-west-2, 64 GB RAM, EBS storage) with clean state after each upload. <em>disk-vec</em>: vectors on EBS, HNSW graph in RAM. <em>disk-all</em>: both on EBS.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Config</th><th>State</th><th>ef</th><th>p50 (ms)</th><th>p90 (ms)</th><th>p99 (ms)</th><th>Recall</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Qdrant disk-vec</td><td><span style="color:#991B1B;font-weight:600">Cold</span></td><td>128</td><td>7.2</td><td style="color:#991B1B">68.9</td><td style="color:#991B1B;font-weight:600">1,457</td><td>98.3%</td></tr>
+            <tr><td>Qdrant disk-all</td><td><span style="color:#991B1B;font-weight:600">Cold</span></td><td>128</td><td>7.1</td><td style="color:#991B1B">72.8</td><td style="color:#991B1B;font-weight:600">1,403</td><td>98.1%</td></tr>
+            <tr><td>Qdrant disk-vec</td><td>Warm</td><td>32</td><td>5.8</td><td>6.4</td><td>8.8</td><td>93.5%</td></tr>
+            <tr><td>Qdrant disk-vec</td><td>Warm</td><td>64</td><td class="win">6.4</td><td>7.1</td><td>9.9</td><td>97.4%</td></tr>
+            <tr><td>Qdrant disk-vec</td><td>Warm</td><td>128</td><td>7.1</td><td>7.8</td><td>10.4</td><td>98.8%</td></tr>
+            <tr><td>Qdrant RAM</td><td>Always warm</td><td>128</td><td>6.9</td><td>7.5</td><td>9.4</td><td>98.4%</td></tr>
+            <tr><td>turbopuffer</td><td>Cache-hot</td><td>—</td><td>15.2</td><td>17.7</td><td>40.8</td><td>98.5%</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="chart-block">
+        <div class="chart-title">p99 Latency: Cold Start vs Warm (p=1, concurrency=1)</div>
+        <canvas id="c-disk-cold" width="560" height="240" style="width:100%;height:240px;display:block"></canvas>
+      </div>
+
+      <div class="chart-block">
+        <div class="chart-title">Warm Latency — p=8 Concurrency (recall annotated above bars)</div>
+        <canvas id="c-disk-p8" width="560" height="240" style="width:100%;height:240px;display:block"></canvas>
+      </div>
+
+      <div class="callout warning">
+        <strong>Cold start on EBS is catastrophic at the tail:</strong> p50 cold is fine (7ms — some pages already in OS cache from the upload process), but p99=1,457ms exposes the EBS random I/O storm when page faults cascade across uncached regions. After ~1,000 warmup queries, the entire 586 MB dataset (100K&times;1536&times;4B) fits in 64 GB page cache and disk mode becomes statistically indistinguishable from pure-RAM mode (7.1ms vs 6.9ms p50, 10.4ms vs 9.4ms p99). The EBS cold/warm gap is real — but only materializes on first access after upload or node restart.
+      </div>
+
+      <div class="callout neutral">
+        <strong>ef=64 is the warm disk sweet spot:</strong> 6.4ms p50 (+7% faster than RAM ef=128 — fewer candidates, fewer potential page faults), 97.4% recall (only &minus;1% from RAM). Putting the HNSW graph on disk too (<em>disk-all</em>) adds no measurable overhead — the graph is &lt;10 MB vs 586 MB of vector payload. At p=8 concurrency all warmed configs converge to 17–21ms p50; tpuf (48.7ms p99) edges out most Qdrant disk configs in tail latency at high concurrency, but loses 2&times; at p=1 steady-state.
+      </div>
     </section>
 
     <!-- §9 -->
     <section class="section" id="s9">
       <div class="section-header">
         <div class="section-eyebrow tpuf-eye">&sect;9</div>
-        <h2>Pinned Mode: The Real Cost of Filtered Search</h2>
-        <p>turbopuffer requires pinning for reliable filtered-search latency. The serverless model's scale-to-zero economics do not apply when the namespace must stay resident. Pinned billing introduces a 64 GB floor regardless of actual data size &mdash; with catastrophic consequences for small datasets.</p>
+        <h2>Pinned Mode: Billing Economics</h2>
+        <p>Pinned mode keeps a turbopuffer namespace resident on dedicated hardware, eliminating serverless cold-start variance for any query type. The tradeoff is economic: pinned billing applies a 64 GB floor regardless of actual data size, making it prohibitively expensive for small datasets.</p>
       </div>
 
       <h3>9.1 &mdash; Billing Model</h3>
-      <p>Pinned namespaces are billed at <strong>$0.01325/GB-hr</strong> (derived from turbopuffer's published example: $2,476 &divide; (256 GB &times; 730 hr/month)), applied to <code>max(actual_gb, 64)</code> &times; replicas &times; 730 hr/month. Storage is billed separately at $0.33/GB/month on actual data.</p>
+      <p>Pinned namespace billing is documented at <a href="https://turbopuffer.com/docs/pinning" target="_blank" rel="noopener">turbopuffer.com/docs/pinning</a>. Two key facts are stated explicitly:</p>
+      <ul style="margin:0.5rem 0 0.75rem 1.5rem;line-height:1.9;">
+        <li><strong>64 GB minimum:</strong> &ldquo;namespaces smaller than 64 GB are billed at 64 GB&rdquo;</li>
+        <li><strong>Rate example:</strong> a 256 GB namespace at 1 replica = <strong>$2,476/month</strong> (storage component)</li>
+      </ul>
+      <p>From these two facts the per-GB-hr rate is derived:</p>
+      <pre style="background:var(--code-bg,#1E293B);color:#E2E8F0;padding:0.85rem 1rem;border-radius:6px;font-size:12px;overflow-x:auto;margin:0.75rem 0;">rate  = $2,476 &divide; (256 GB &times; 730 hr/mo)  =  <strong>$0.01325 / GB-hr</strong>
+
+monthly cost  =  max(actual_gb, 64) &times; replicas &times; 730 &times; $0.01325
+             +  actual_gb &times; $0.33   (storage, billed separately)
+
+floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / replica / mo</strong>
+              64 GB &times; 4r &times; 730 &times; $0.01325  =  <strong>$2,476 / mo</strong>  &larr; matches published 4r example</pre>
 
       <div class="table-wrap">
         <table>
@@ -1045,7 +1200,7 @@ canvas {
       </div>
       <ol class="implication-list">
         <li><strong>Below ~10 QPS/namespace, serverless turbopuffer saves money.</strong> Above it, Qdrant is both cheaper and faster. The break-even is stable across dataset scales &mdash; plan around it. <em>This only applies to serverless mode.</em></li>
-        <li><strong>Filtered search requires pinning, and pinning has a 64 GB billing floor.</strong> For any dataset under ~10 GB, pinned turbopuffer costs 10&ndash;95&times; more than Qdrant Cloud with no performance benefit. The serverless cost crossover does not apply to filtered search workloads.</li>
+        <li><strong>Pinned mode has a billing floor that dominates small datasets.</strong> For any dataset under ~10 GB, pinned turbopuffer costs 10&ndash;95&times; more than Qdrant Cloud with no performance benefit. Workloads that need consistent low-latency (no cold-start variance) pay this premium regardless of query type.</li>
         <li><strong>Serverless noisy-neighbor is a real operational risk.</strong> A single bursty tenant in serverless mode triples all other tenants' p50 latency. Pinning eliminates this but removes scale-to-zero. Design your tenancy model before choosing serverless.</li>
         <li><strong>Filtered search recall is not tunable on turbopuffer.</strong> If your workload uses selective attribute filters and 88.94% recall is insufficient, Qdrant is the only option. This constraint is architectural, not a configuration gap.</li>
         <li><strong>Multi-tenant idle SaaS is turbopuffer's strongest case.</strong> If most tenants are mostly idle, scale-to-zero is worth real money. At active-tenant load, Qdrant is 5.5&times; faster (184.6 vs 33.5 RPS) &mdash; the advantage flips completely when tenants are active.</li>
@@ -2117,6 +2272,458 @@ document.addEventListener('DOMContentLoaded', function() {
     ctx.fillText('concurrency', pad.l, H - 4);
     drawLegend(ctx, pad.l, H - pad.b + 34, [[C.tpuf, 'turbopuffer RPS'], [C.qdrant, 'Qdrant RPS']]);
   })();
+
+  // ── §8.9 Concurrent Write-Read charts ─────────────────────────
+  (function() {
+    // tpuf row: [wall_t, total_ms, server_ms, recall, exhaustive_count, staleness_ms, vectors_written]
+    var RW_TPUF   = [[2.07,44.1,20,0.0,384,583.0,384],[2.71,20.1,15,0.0,640,1225.0,640],[3.38,26.4,20,0.0,896,895.0,896],[4.01,19.9,15,0.0,1152,526.0,1152],[4.69,31.7,14,0.1,1408,1203.0,1408],[5.36,27.8,22,0.0,1664,877.0,1664],[6.01,34.6,15,0.0,1920,529.0,1920],[6.65,21.5,15,0.0,2176,1170.0,2176],[7.3,21.6,17,0.0,2432,819.0,2432],[7.97,25.4,20,0.0,2688,485.0,2688],[8.6,18.8,14,0.1,2944,1113.0,2944],[9.24,22.0,15,0.0,3200,758.0,3200],[9.88,20.3,16,0.0,3456,394.0,3456],[10.54,29.2,23,0.4,3712,1051.0,3712],[11.22,23.5,18,0.0,3968,733.0,3968],[11.86,19.2,14,0.0,4224,379.0,4224],[12.5,30.5,23,0.1,4480,1016.0,4480],[13.12,22.0,17,0.0,4736,639.0,4736],[13.74,30.3,19,0.0,4992,261.0,4992],[14.37,21.8,15,0.1,5248,884.0,5248],[15.0,23.3,16,0.0,5504,511.0,5504],[15.65,22.0,17,0.1,5760,1162.0,5760],[16.28,30.3,17,0.0,6016,793.0,6016],[16.91,23.4,17,0.2,6272,430.0,6272],[17.55,30.4,18,0.1,6528,1065.0,6528],[18.2,27.8,21,0.0,6784,720.0,6784],[18.83,27.4,22,0.1,7040,349.0,7040],[19.46,27.3,22,0.2,7296,979.0,7296],[20.12,29.0,22,0.0,7552,635.0,7552],[20.75,22.0,17,0.1,7808,261.0,7808],[21.36,21.2,16,0.1,8064,879.0,8064],[22.01,25.3,18,0.1,8320,528.0,8320],[22.65,22.1,18,0.1,8576,1167.0,8576],[23.3,20.4,16,0.0,8832,815.0,8832],[23.93,29.8,19,0.0,9088,446.0,9088],[24.59,24.0,18,0.0,9344,1109.0,9344],[25.24,31.2,18,0.0,9600,752.0,9600],[26.14,300.5,69,0.1,9856,661.0,9856],[26.83,25.2,19,0.0,10240,343.0,10240],[27.46,29.2,23,0.2,10496,980.0,10496],[28.11,39.6,34,0.2,10752,627.0,10752],[28.73,25.7,19,0.3,11008,1242.0,11008],[29.37,38.7,17,0.1,11264,889.0,11264],[30.01,26.2,19,0.1,11520,528.0,11520],[30.64,26.8,20,0.4,11776,1153.0,11776],[31.28,22.6,16,0.2,12032,792.0,12032],[31.92,26.0,19,0.2,12288,432.0,12288],[32.56,33.0,20,0.1,12544,1072.0,12544],[33.22,25.9,16,0.4,12800,734.0,12800],[33.85,27.1,20,0.1,13056,362.0,13056],[34.47,24.5,18,0.5,13312,986.0,13312],[35.11,25.8,19,0.2,13568,628.0,13568],[35.75,25.6,18,0.0,13824,1261.0,13824],[36.4,26.9,20,0.0,14080,911.0,14080],[37.04,25.8,19,0.1,14336,555.0,14336],[37.7,26.4,20,0.6,14592,1213.0,14592],[38.36,27.7,21,0.0,14848,874.0,14848],[39.03,29.4,22,0.1,15104,550.0,15104],[39.65,28.7,22,0.2,15360,1169.0,15360],[40.29,28.8,22,0.1,15616,809.0,15616],[40.92,26.4,20,0.0,15872,437.0,15872],[41.56,27.9,21,0.5,16128,1071.0,16128],[42.2,28.3,21,0.2,16384,719.0,16384],[42.86,29.0,22,0.1,16640,379.0,16640],[43.48,26.6,20,0.0,16896,995.0,16896],[44.14,42.3,21,0.2,17152,658.0,17152],[44.76,28.4,22,0.0,17408,278.0,17408],[45.38,29.2,23,0.7,17664,899.0,17664],[46.02,28.4,21,0.2,17920,538.0,17920],[46.65,29.3,23,0.4,18176,1169.0,18176],[47.33,29.1,22,0.1,18432,846.0,18432],[47.97,30.5,25,0.0,18688,484.0,18688],[48.62,29.6,23,0.2,18944,1139.0,18944],[49.24,28.7,23,0.3,19200,755.0,19200],[49.88,48.9,29,0.0,19456,391.0,19456],[50.48,26.5,20,0.3,19712,995.0,19712],[51.41,316.9,175,0.1,1408,929.0,19968],[52.12,25.6,13,0.4,1792,632.0,20352],[52.76,21.0,16,0.2,2048,278.0,20608],[53.38,23.4,17,0.0,2304,901.0,20864],[54.04,20.4,16,0.3,2560,552.0,21120],[54.67,23.2,18,0.3,2816,1182.0,21376],[55.29,20.8,13,0.2,3072,806.0,21632],[55.95,19.9,15,0.1,3328,470.0,21888],[56.62,23.8,19,0.4,3584,1136.0,22144],[57.26,20.7,17,0.5,3840,780.0,22400],[57.95,20.1,15,0.1,4096,465.0,22656],[58.6,30.1,19,0.2,4352,1116.0,22912],[59.23,22.5,17,0.2,4608,749.0,23168],[59.86,20.8,17,0.1,4864,374.0,23424],[60.53,22.5,17,0.5,5120,1042.0,23680],[61.16,22.2,15,0.2,5376,672.0,23936],[61.84,23.5,17,0.2,5632,357.0,24192],[62.5,41.7,24,0.0,5888,1015.0,24448],[63.12,25.8,19,0.7,6144,635.0,24704],[63.74,23.1,17,0.4,6400,253.0,24960],[64.38,24.5,18,0.1,6656,896.0,25216],[65.03,22.5,16,0.6,6912,548.0,25472],[65.69,22.7,17,0.0,7168,1207.0,25728],[66.32,22.4,17,0.1,7424,832.0,25984],[66.99,28.3,22,0.4,7680,502.0,26240],[67.61,26.5,20,0.0,7936,1126.0,26496],[68.25,37.3,16,0.7,8192,764.0,26752],[68.91,30.8,25,0.5,8448,422.0,27008],[69.53,27.5,22,0.3,8704,1048.0,27264],[70.19,26.4,21,0.2,8960,703.0,27520],[70.82,23.3,17,0.7,9216,331.0,27776],[71.46,24.2,18,0.4,9472,977.0,28032],[72.11,31.0,25,0.4,9728,626.0,28288],[72.75,28.8,23,0.4,9984,268.0,28544],[73.39,26.5,21,0.1,10240,908.0,28800],[74.03,31.6,24,0.3,10496,549.0,29056],[74.7,28.2,23,0.2,10752,1219.0,29312],[75.33,29.2,23,0.3,11008,844.0,29568],[75.96,28.3,23,0.2,11264,475.0,29824],[76.57,22.5,16,0.2,11520,1084.0,30080],[77.21,25.1,19,0.3,11776,724.0,30336],[77.83,29.8,18,0.0,12032,347.0,30592],[78.47,23.0,16,0.5,12288,980.0,30848],[79.16,33.2,25,0.2,12544,672.0,31104],[79.82,28.7,23,0.2,12800,339.0,31360],[80.46,25.7,19,0.5,13056,976.0,31616],[81.14,25.4,19,0.6,13312,652.0,31872],[81.78,25.5,19,0.3,13568,294.0,32128],[82.45,58.0,52,0.6,13824,968.0,32384],[83.05,27.3,21,0.5,14080,561.0,32640],[83.68,38.4,20,0.5,14336,1192.0,32896],[84.33,26.7,20,0.4,14592,842.0,33152],[84.97,30.8,22,0.5,14848,488.0,33408],[85.61,27.0,20,0.7,15104,1123.0,33664],[86.24,30.5,25,0.5,15360,752.0,33920],[86.89,30.3,25,0.4,15616,401.0,34176],[87.58,31.0,20,0.6,15872,1098.0,34432],[88.26,29.5,21,0.6,16128,774.0,34688],[88.94,25.6,19,0.6,16384,451.0,34944],[89.59,25.8,19,0.2,16640,1102.0,35200],[90.24,27.2,20,0.2,16896,753.0,35456],[90.89,31.9,20,0.3,17152,406.0,35712],[91.53,27.6,22,0.3,17408,1051.0,35968],[92.2,28.4,23,0.5,17664,713.0,36224],[92.84,26.8,21,0.4,17792,352.0,36352],[93.5,31.9,22,0.7,18048,1021.0,36608],[94.14,29.2,24,0.7,18304,652.0,36864],[94.77,30.4,22,0.6,18560,283.0,37120],[95.41,34.4,29,0.3,18816,929.0,37376],[96.04,27.1,21,0.4,19072,556.0,37632],[96.71,28.4,23,0.7,19328,1223.0,37888],[97.36,33.2,22,0.3,19584,872.0,38144],[98.02,29.9,24,0.3,19840,536.0,38400],[98.66,31.2,24,0.2,20096,1174.0,38656],[99.3,28.6,23,0.8,20352,813.0,38912],[99.94,38.0,34,0.0,20608,457.0,39168],[100.58,27.9,23,0.9,20864,1092.0,39424],[101.51,329.1,200,0.8,1408,1024.0,39808],[102.44,299.1,177,0.2,1792,956.0,40064],[103.14,23.1,16,0.5,2176,659.0,40448],[103.74,21.8,16,0.2,2304,259.0,40576],[104.38,33.8,15,0.2,2560,894.0,40832],[105.0,20.9,15,0.7,2816,512.0,41088],[105.62,27.1,21,0.6,3072,1141.0,41344],[106.26,22.2,16,0.1,3328,772.0,41600],[106.88,23.5,17,0.1,3584,394.0,41856],[107.51,20.5,15,0.4,3840,1024.0,42112],[108.14,24.3,15,0.0,4096,659.0,42368],[108.8,20.5,14,1.0,4352,314.0,42624],[109.42,21.2,16,0.3,4608,939.0,42880],[110.06,20.9,16,0.8,4864,571.0,43136],[110.73,25.5,20,0.6,5120,247.0,43392],[111.36,37.6,18,0.3,5376,880.0,43648],[111.99,22.9,17,0.5,5632,507.0,43904],[112.62,22.9,17,0.8,5888,1133.0,44160],[113.24,23.5,19,0.0,6144,759.0,44416],[113.87,43.3,38,0.4,6272,1385.0,44544],[114.49,29.9,23,0.3,6528,1007.0,44800],[115.13,25.8,19,0.9,6784,647.0,45056],[115.83,24.0,18,0.7,7040,342.0,45312],[116.46,29.7,24,0.8,7296,978.0,45568],[117.09,38.2,20,0.4,7552,610.0,45824],[117.74,26.6,20,1.0,7808,256.0,46080],[118.58,25.1,19,0.6,8064,1094.0,46336],[119.31,31.9,25,0.6,8320,828.0,46592],[119.94,35.1,29,0.5,8576,454.0,46848],[120.58,30.2,23,0.6,8832,1096.0,47104],[121.2,29.5,23,0.2,9088,717.0,47360],[121.85,37.6,18,0.5,9344,362.0,47616],[122.47,24.8,19,0.5,9600,983.0,47872],[123.09,23.6,18,0.7,9856,605.0,48128],[123.76,26.0,20,0.7,10112,272.0,48384],[124.42,33.1,28,0.3,10368,932.0,48640],[125.05,26.6,21,0.7,10624,566.0,48896],[125.69,36.9,30,0.0,10880,1204.0,49152],[126.31,26.6,20,0.1,11136,831.0,49408],[126.94,28.0,22,0.7,11392,457.0,49664],[127.59,44.9,26,0.8,11648,1107.0,49920],[128.22,29.9,24,0.5,11904,738.0,50176],[128.85,27.1,20,0.9,12160,365.0,50432],[129.49,25.2,19,0.8,12416,1002.0,50688],[130.12,33.7,28,0.7,12672,632.0,50944],[130.75,39.6,19,0.3,12928,263.0,51200],[131.38,33.2,27,0.4,13184,898.0,51456],[132.0,30.3,18,0.4,13440,517.0,51712],[132.63,27.2,21,0.7,13696,1151.0,51968],[133.27,28.9,23,0.7,13952,785.0,52224],[133.93,30.3,25,0.4,14208,441.0,52480],[134.53,25.2,19,0.5,14464,1050.0,52736],[135.17,27.7,21,0.6,14720,688.0,52992],[135.79,31.3,26,0.5,14976,310.0,53248],[136.41,41.3,23,0.5,15232,930.0,53504],[137.03,27.0,21,0.4,15488,548.0,53760],[137.69,54.4,49,0.7,15744,1209.0,54016],[138.33,27.4,21,0.4,16000,848.0,54272],[138.97,28.3,22,0.7,16256,487.0,54528],[139.62,33.5,28,0.8,16512,1132.0,54784],[140.23,27.0,21,0.4,16768,743.0,55040],[140.86,42.7,22,0.3,17024,374.0,55296],[141.51,39.8,34,0.9,17280,1027.0,55552],[142.14,39.6,34,0.5,17536,656.0,55808],[142.8,45.8,40,0.8,17792,313.0,56064],[143.41,26.9,21,0.8,18048,922.0,56320],[144.08,63.3,45,0.8,18304,594.0,56576],[144.71,59.5,53,0.8,18560,1220.0,56832],[145.3,31.8,26,0.0,18816,815.0,57088],[145.94,29.1,23,0.7,19072,454.0,57344],[146.75,163.6,23,0.8,19328,1266.0,57600],[147.45,44.0,39,0.5,19712,968.0,57984],[148.14,29.5,24,0.3,19968,659.0,58240],[148.8,30.3,25,0.9,20224,312.0,58496],[149.43,28.2,23,1.0,20480,947.0,58752],[150.06,39.5,22,0.6,20736,581.0,59008],[150.72,46.4,41,0.7,20992,1231.0,59264],[151.35,36.1,30,0.8,21248,871.0,59520],[152.03,37.2,32,0.6,21376,550.0,59648],[152.65,30.1,23,0.7,21632,1167.0,59904],[153.32,33.8,28,0.4,21888,833.0,60160],[153.97,31.8,26,0.6,22144,481.0,60416],[154.67,43.5,38,0.6,22400,1184.0,60672],[155.32,42.6,37,0.7,22656,836.0,60928],[156.0,31.8,25,0.9,22912,513.0,61184],[156.67,35.8,30,0.5,23168,1183.0,61440],[157.35,36.7,30,0.5,23424,869.0,61696],[157.99,30.4,25,0.6,23680,501.0,61952],[158.63,32.2,27,0.8,23936,1148.0,62208],[159.28,29.2,24,0.6,24192,793.0,62464],[159.91,32.9,27,0.8,24448,422.0,62720],[160.54,33.7,27,0.5,24704,1058.0,62976],[161.16,31.0,25,0.7,24960,680.0,63232],[161.84,33.1,26,0.9,25216,361.0,63488],[162.48,32.6,27,0.5,25472,997.0,63744],[163.13,36.3,30,0.7,25728,645.0,64000],[163.75,31.6,26,0.3,25984,266.0,64256],[164.39,33.7,28,0.8,26240,908.0,64512],[165.03,36.7,30,0.5,26496,546.0,64768],[165.66,32.7,27,0.1,26752,1179.0,65024],[166.29,31.4,25,0.3,27008,806.0,65280],[166.95,36.6,31,0.7,27264,466.0,65536],[167.59,34.5,27,0.6,27520,1106.0,65792],[168.29,33.5,28,0.5,27776,806.0,66048],[168.94,32.6,26,0.8,28032,460.0,66304],[169.59,33.7,28,0.7,28288,1110.0,66560],[170.22,32.5,27,0.8,28544,738.0,66816],[170.88,32.8,27,0.8,28800,396.0,67072],[171.52,33.8,28,0.9,29056,1031.0,67328],[172.16,35.6,30,0.3,29312,679.0,67584],[172.79,33.3,27,0.7,29568,302.0,67840],[173.42,32.4,27,0.7,29824,938.0,68096],[174.04,35.4,29,0.8,30080,560.0,68352],[174.69,33.5,28,0.3,30336,1210.0,68608],[175.34,40.1,34,0.0,30592,854.0,68864],[175.98,42.2,36,0.4,30848,496.0,69120],[176.6,40.9,34,0.4,31104,1119.0,69376],[177.23,34.7,29,0.8,31360,744.0,69632],[177.89,77.8,43,0.9,31616,406.0,69888],[178.55,63.4,58,0.9,31872,1061.0,70144],[179.16,36.3,31,0.7,32128,681.0,70400],[179.81,46.9,42,0.4,32384,323.0,70656],[180.43,60.9,56,0.4,32640,946.0,70912],[181.05,39.2,34,0.7,32896,569.0,71168],[181.67,35.0,29,1.0,33152,1189.0,71424],[182.32,37.6,33,0.8,33408,835.0,71680],[182.95,32.5,28,0.9,33664,466.0,71936],[183.61,44.4,39,0.7,33920,1125.0,72192],[184.23,34.6,30,0.8,34176,746.0,72448],[184.88,40.4,36,0.7,34432,401.0,72704],[185.53,59.2,55,0.9,34688,1046.0,72960],[186.14,50.6,31,0.7,34944,657.0,73216],[186.77,41.1,36,0.6,35200,286.0,73472],[187.41,37.4,32,0.6,35456,926.0,73728],[188.05,38.6,34,0.8,35712,566.0,73984],[188.68,36.2,31,0.5,35968,1197.0,74240],[189.32,38.7,34,0.3,36224,840.0,74496],[189.95,42.0,37,0.5,36480,468.0,74752],[190.58,36.0,31,0.7,36736,1094.0,75008],[191.22,35.8,31,0.5,36992,731.0,75264],[191.84,36.6,32,0.5,37248,354.0,75520],[192.5,40.0,32,1.0,37504,1016.0,75776],[193.14,39.5,34,0.9,37760,654.0,76032],[193.77,38.9,34,0.8,38016,290.0,76288],[194.41,41.5,36,0.5,38272,927.0,76544],[195.06,39.5,34,0.6,38528,574.0,76800],[195.71,54.4,35,0.6,38784,1227.0,77056],[196.34,39.8,35,0.2,39040,860.0,77312],[196.97,37.3,31,0.4,39296,485.0,77568],[197.62,41.0,36,0.5,39552,1140.0,77824],[198.26,39.4,34,1.0,39808,779.0,78080],[198.94,42.6,37,0.8,40064,452.0,78336],[199.55,37.0,32,0.3,40320,1062.0,78592],[200.21,36.6,32,0.0,40576,724.0,78848],[200.89,46.5,41,0.9,40832,409.0,79104],[201.58,49.2,31,0.3,41088,1097.0,79360],[202.25,36.1,31,0.9,41344,769.0,79616],[202.89,45.2,35,0.8,41600,410.0,79872],[203.53,38.7,34,0.5,41856,1050.0,80128],[204.17,40.0,34,0.5,42112,688.0,80384],[204.83,39.8,34,0.6,42368,348.0,80640],[205.45,39.7,35,0.5,42624,968.0,80896],[206.09,39.0,34,0.6,42880,609.0,81152],[206.74,39.7,35,0.8,43136,256.0,81408],[207.38,38.3,33,1.0,43392,894.0,81664],[208.04,47.0,43,0.7,43648,554.0,81920],[208.67,42.1,37,0.5,43904,1183.0,82176],[209.34,46.1,41,0.8,44160,851.0,82432],[209.96,39.3,34,0.8,44416,473.0,82688],[210.64,40.4,35,0.6,44672,1152.0,82944],[211.27,41.1,35,0.3,44928,783.0,83200],[211.92,41.5,36,0.9,45184,431.0,83456],[212.55,47.1,42,0.9,45440,1064.0,83712],[213.19,39.9,35,0.7,45696,709.0,83968],[213.82,40.7,36,0.6,45952,336.0,84224],[214.47,43.3,37,0.8,46208,983.0,84480],[215.11,46.7,42,1.0,46464,626.0,84736],[215.82,47.3,43,0.9,46720,1335.0,84992],[216.44,40.2,35,0.8,46976,954.0,85248],[217.09,55.4,36,1.0,47232,609.0,85504],[217.76,42.3,37,0.3,47488,273.0,85760],[218.68,312.3,72,0.6,47744,1198.0,86016],[219.35,38.5,34,0.7,48000,867.0,86272],[219.98,39.9,33,0.9,48256,493.0,86528],[220.62,42.4,37,0.8,48512,1140.0,86784],[221.25,41.8,37,0.6,48768,769.0,87040],[221.89,42.4,37,0.7,49024,407.0,87296],[222.56,64.6,45,0.9,49280,1080.0,87552],[223.2,41.1,36,0.9,49536,715.0,87808],[223.83,40.4,35,1.0,49792,350.0,88064],[224.49,42.4,37,1.0,50048,1002.0,88320],[225.11,43.2,39,0.8,50304,626.0,88576],[225.76,46.4,41,0.3,50560,276.0,88832],[226.68,343.9,279,0.6,2560,1194.0,89216],[227.38,61.2,56,0.7,2944,890.0,89472],[228.26,312.2,66,1.0,3200,780.0,89728],[228.93,21.0,14,0.6,3584,445.0,90112],[229.56,21.5,15,1.0,3840,1072.0,90368],[230.19,21.8,15,0.7,4096,701.0,90624],[230.88,29.7,16,1.0,4352,392.0,90880],[231.56,22.8,16,1.0,4608,1079.0,91136],[232.38,45.0,19,1.0,4864,891.0,91392],[233.15,23.0,16,0.9,5120,667.0,91648],[233.81,20.9,14,0.9,5376,329.0,91904],[234.5,22.2,15,0.9,5632,1017.0,92160],[235.14,27.6,17,0.7,5888,657.0,92416],[236.48,698.1,591,1.0,6144,1000.0,92928],[237.47,324.6,151,0.8,6656,985.0,93184],[238.55,373.9,209,0.9,7040,1061.0,93696],[239.26,44.3,40,1.0,7424,772.0,93952],[239.9,47.5,42,0.8,7680,417.0,94208],[240.58,55.2,50,0.9,7936,1092.0,94464],[241.2,24.4,18,0.8,8064,717.0,94592],[241.88,29.2,21,1.0,8320,399.0,94848],[242.53,23.9,17,1.0,8576,1048.0,95104],[243.18,24.9,18,0.9,8832,699.0,95360],[243.82,23.0,16,0.8,9088,333.0,95616],[244.49,29.5,21,1.0,9344,1009.0,95872],[245.13,24.8,18,0.9,9600,646.0,96128],[245.82,41.4,20,1.0,9856,337.0,96384],[246.46,27.3,19,0.5,10112,975.0,96640],[247.12,23.5,17,0.9,10368,640.0,96896],[247.77,25.7,18,0.9,10624,285.0,97152],[248.41,25.2,18,1.0,10880,926.0,97408],[249.07,30.6,24,1.0,11136,586.0,97664],[249.71,26.1,19,1.0,11392,1223.0,97920],[250.37,27.1,20,1.0,11648,881.0,98176],[251.02,24.0,17,1.0,11904,538.0,98432],[251.68,41.2,17,1.0,12160,1197.0,98688],[252.31,23.9,17,1.0,12416,827.0,98944],[252.97,45.6,24,0.9,12672,486.0,99200],[253.49,20.5,15,1.0,12928,1007.0,99456],[254.01,20.7,16,1.0,13312,528.0,99840],[254.54,25.2,19,1.0,13472,1055.0,100000],[255.07,25.2,20,1.0,13472,1582.0,100000],[255.59,22.9,16,1.0,13472,2105.0,100000],[256.12,28.3,18,1.0,13472,2635.0,100000],[256.64,22.5,16,1.0,13472,3159.0,100000],[257.17,28.5,23,1.0,13472,3689.0,100000],[257.69,21.9,15,1.0,13472,4211.0,100000],[258.22,22.2,17,1.0,13472,4735.0,100000],[258.75,27.7,17,1.0,13472,5264.0,100000],[259.28,27.3,22,1.0,13472,5792.0,100000],[259.8,19.7,13,1.0,13472,6312.0,100000],[260.33,30.4,21,1.0,13472,6844.0,100000],[260.85,24.9,18,1.0,13472,7369.0,100000],[261.38,22.0,17,1.0,13472,7892.0,100000],[261.9,24.8,18,1.0,13472,8418.0,100000],[262.43,21.5,17,1.0,13472,8940.0,100000],[262.95,22.9,16,1.0,13472,9465.0,100000],[263.48,29.5,21,1.0,13472,9995.0,100000],[264.0,21.3,15,0.9,13472,10517.0,100000],[264.53,28.9,24,1.0,13472,11047.0,100000],[265.06,31.9,25,1.0,13472,11579.0,100000],[265.59,27.9,22,1.0,13472,12109.0,100000],[266.12,24.5,18,1.0,13472,12635.0,100000],[266.65,26.9,22,1.0,13472,13163.0,100000],[267.17,23.7,17,1.0,13472,13688.0,100000],[267.69,19.9,15,1.0,13472,14208.0,100000],[268.21,21.6,15,1.0,13472,14731.0,100000],[268.74,20.9,16,1.0,13472,15252.0,100000],[269.26,20.5,14,1.0,13472,15774.0,100000],[269.78,20.2,15,1.0,13472,16295.0,100000],[270.3,22.3,15,1.0,13472,16819.0,100000],[270.82,19.9,15,1.0,13472,17339.0,100000],[271.36,35.3,29,1.0,13472,17876.0,100000],[271.88,20.2,15,1.0,13472,18397.0,100000],[272.4,21.0,14,1.0,13472,18920.0,100000],[272.93,25.2,20,1.0,13472,19446.0,100000],[273.45,23.1,16,1.0,13472,19970.0,100000],[273.98,19.2,14,1.0,13472,20491.0,100000],[274.5,23.2,17,1.0,13472,21016.0,100000],[275.02,19.8,15,1.0,13472,21536.0,100000],[275.56,36.6,29,1.0,13472,22074.0,100000],[276.09,31.0,26,0.9,13472,22606.0,100000],[276.62,32.1,25,0.9,13472,23140.0,100000],[277.15,26.8,22,1.0,13472,23667.0,100000],[277.68,23.2,17,1.0,13472,24191.0,100000],[278.2,20.4,16,1.0,13472,24712.0,100000],[278.73,30.8,24,1.0,13472,25244.0,100000],[279.25,20.7,16,1.0,13472,25766.0,100000],[279.77,22.5,16,1.0,13472,26289.0,100000],[280.3,22.8,18,0.7,13472,26812.0,100000],[280.82,24.3,17,1.0,13472,27338.0,100000],[281.34,21.4,17,1.0,13472,27860.0,100000],[281.88,30.2,24,1.0,13472,28391.0,100000],[282.4,26.8,22,1.0,13472,28919.0,100000],[282.93,30.0,23,0.9,13472,29450.0,100000],[283.46,27.0,22,0.9,13472,29979.0,100000],[283.99,26.4,20,1.0,13472,30506.0,100000],[284.52,26.0,21,1.0,13472,31034.0,100000],[285.04,23.7,17,1.0,13472,31559.0,100000],[285.57,25.5,21,1.0,13472,32085.0,100000],[286.13,64.6,58,1.0,13472,32651.0,100000],[286.66,21.1,16,1.0,13472,33173.0,100000],[287.18,23.1,17,1.0,13472,33698.0,100000],[287.72,40.6,35,1.0,13472,34239.0,100000],[288.25,23.0,17,1.0,13472,34764.0,100000],[288.77,22.2,17,1.0,13472,35288.0,100000],[289.3,28.3,21,1.0,13472,35819.0,100000],[289.83,29.0,24,1.0,13472,36349.0,100000],[290.37,30.4,24,1.0,13472,36880.0,100000],[290.89,28.8,23,1.0,13472,37410.0,100000],[291.42,23.5,17,1.0,13472,37935.0,100000],[291.96,36.5,31,1.0,13472,38472.0,100000],[292.48,26.5,20,1.0,13472,39000.0,100000],[293.01,21.0,16,1.0,13472,39522.0,100000],[293.53,27.1,21,1.0,13472,40050.0,100000],[294.06,19.6,15,1.0,13472,40570.0,100000],[294.6,41.8,35,1.0,13472,41113.0,100000],[295.12,21.7,17,1.0,13472,41636.0,100000],[295.65,27.8,21,1.0,13472,42165.0,100000],[296.17,21.4,17,1.0,13472,42688.0,100000],[296.7,23.7,17,1.0,13472,43214.0,100000],[297.23,28.0,23,1.0,13472,43742.0,100000],[297.76,28.6,22,0.9,13472,44272.0,100000],[298.29,28.4,23,1.0,13472,44801.0,100000],[298.82,28.9,22,1.0,13472,45331.0,100000],[299.35,33.1,28,0.9,13472,45866.0,100000],[299.88,27.7,21,1.0,13472,46394.0,100000],[300.4,25.6,20,1.0,13472,46921.0,100000],[300.93,23.5,17,1.0,13472,47446.0,100000],[301.45,20.8,16,1.0,13472,47969.0,100000],[301.99,31.0,25,1.0,13472,48502.0,100000],[302.51,23.6,19,1.0,13472,49026.0,100000],[303.04,23.5,17,1.0,13472,49550.0,100000],[303.56,24.9,20,1.0,13472,50077.0,100000],[304.37,306.3,299,0.9,0,50885.0,100000],[304.91,35.0,29,1.0,0,51422.0,100000],[305.42,15.1,8,1.0,0,51938.0,100000],[305.94,15.5,11,1.0,0,52455.0,100000],[306.45,15.6,9,1.0,0,52971.0,100000],[306.97,15.9,11,1.0,0,53488.0,100000],[307.49,15.7,9,1.0,0,54005.0,100000],[308.0,14.5,9,1.0,0,54521.0,100000],[308.52,17.9,11,1.0,0,55039.0,100000],[309.04,13.5,9,1.0,0,55554.0,100000],[309.56,15.8,9,1.0,0,56071.0,100000],[310.07,12.7,8,1.0,0,56586.0,100000],[310.59,18.6,12,1.0,0,57105.0,100000],[311.11,16.4,12,1.0,0,57623.0,100000],[311.63,18.1,11,1.0,0,58143.0,100000],[312.15,23.4,18,1.0,0,58667.0,100000],[312.68,23.7,17,1.0,0,59193.0,100000],[313.2,22.4,17,0.9,0,59716.0,100000],[313.72,16.4,10,1.0,0,60234.0,100000],[314.24,16.1,11,1.0,0,60751.0,100000],[314.75,16.4,10,1.0,0,61269.0,100000],[315.27,14.4,10,1.0,0,61786.0,100000],[315.79,15.6,9,1.0,0,62302.0,100000],[316.31,20.9,16,1.0,0,62823.0,100000],[316.84,34.9,29,1.0,0,63359.0,100000],[317.37,22.2,17,1.0,0,63881.0,100000],[317.88,18.7,12,1.0,0,64401.0,100000],[318.42,30.7,25,1.0,0,64932.0,100000],[318.96,40.4,34,1.0,0,65473.0,100000],[319.48,19.5,14,1.0,0,65994.0,100000],[320.0,19.9,14,1.0,0,66514.0,100000],[320.52,19.0,13,1.0,0,67035.0,100000],[321.04,22.8,16,1.0,0,67558.0,100000],[321.56,16.4,12,1.0,0,68076.0,100000],[322.08,15.1,8,1.0,0,68592.0,100000],[322.59,15.0,10,1.0,0,69107.0,100000],[323.11,16.8,10,1.0,0,69625.0,100000],[323.63,15.1,10,1.0,0,70141.0,100000],[324.14,16.2,10,1.0,0,70659.0,100000],[324.66,14.5,10,1.0,0,71175.0,100000],[325.18,23.5,17,1.0,0,71700.0,100000],[325.71,20.9,16,1.0,0,72223.0,100000],[326.22,15.4,9,1.0,0,72739.0,100000],[326.74,14.9,10,1.0,0,73255.0,100000],[327.26,22.5,15,1.0,0,73778.0,100000],[327.78,20.0,14,0.8,0,74299.0,100000],[328.3,16.7,10,1.0,0,74817.0,100000],[328.81,13.7,8,1.0,0,75331.0,100000],[329.34,20.8,14,1.0,0,75853.0,100000],[329.85,12.2,7,1.0,0,76366.0,100000],[330.37,16.3,9,1.0,0,76883.0,100000],[330.88,16.7,11,1.0,0,77401.0,100000],[331.41,19.4,13,1.0,0,77921.0,100000],[331.92,16.0,11,1.0,0,78439.0,100000],[332.44,16.2,9,1.0,0,78957.0,100000],[332.96,16.2,11,1.0,0,79474.0,100000],[333.48,16.3,10,0.8,0,79992.0,100000],[333.99,14.9,10,1.0,0,80508.0,100000],[334.51,16.6,10,1.0,0,81026.0,100000],[335.02,14.1,9,0.9,0,81541.0,100000],[335.54,15.5,8,1.0,0,82058.0,100000],[336.06,13.0,8,1.0,0,82573.0,100000],[336.58,15.8,9,1.0,0,83091.0,100000],[337.09,15.2,10,1.0,0,83608.0,100000],[337.61,16.1,9,1.0,0,84125.0,100000],[338.13,15.9,11,0.9,0,84642.0,100000],[338.65,18.0,11,1.0,0,85162.0,100000],[339.16,13.6,8,1.0,0,85677.0,100000],[339.68,20.0,13,1.0,0,86198.0,100000],[340.2,15.5,11,1.0,0,86716.0,100000],[340.72,19.6,12,1.0,0,87236.0,100000],[341.24,15.9,11,1.0,0,87754.0,100000],[341.76,22.0,16,1.0,0,88276.0,100000],[342.27,14.2,9,1.0,0,88791.0,100000],[342.8,18.5,11,0.9,0,89313.0,100000],[343.31,13.8,9,1.0,0,89827.0,100000],[343.84,25.9,19,1.0,0,90354.0,100000],[344.36,14.9,10,1.0,0,90870.0,100000],[344.88,22.2,15,1.0,0,91393.0,100000],[345.39,14.4,9,1.0,0,91908.0,100000],[345.91,14.9,8,1.0,0,92424.0,100000],[346.44,29.1,24,1.0,0,92954.0,100000],[346.96,18.1,12,1.0,0,93473.0,100000],[347.47,14.7,10,1.0,0,93989.0,100000],[348.0,22.3,15,1.0,0,94512.0,100000],[348.52,20.7,15,0.9,0,95033.0,100000],[349.03,15.1,8,1.0,0,95550.0,100000],[349.56,20.1,15,1.0,0,96071.0,100000],[350.07,17.5,10,1.0,0,96589.0,100000],[350.6,23.1,18,1.0,0,97113.0,100000],[351.12,24.2,17,1.0,0,97639.0,100000],[351.65,25.3,21,1.0,0,98165.0,100000],[352.17,18.2,11,1.0,0,98686.0,100000],[352.69,21.0,16,1.0,0,99208.0,100000],[353.21,19.1,12,1.0,0,99728.0,100000],[353.73,17.5,12,1.0,0,100248.0,100000],[354.25,16.8,10,0.9,0,100766.0,100000],[354.77,15.4,11,1.0,0,101282.0,100000],[355.29,16.5,9,0.9,0,101800.0,100000],[355.8,14.7,10,1.0,0,102317.0,100000],[356.32,19.9,13,1.0,0,102837.0,100000],[356.84,16.2,11,1.0,0,103355.0,100000],[357.44,101.3,95,1.0,0,103957.0,100000],[357.96,18.9,14,1.0,0,104477.0,100000],[358.48,21.5,15,1.0,0,105000.0,100000],[359.0,14.2,9,1.0,0,105516.0,100000],[359.53,24.4,18,1.0,0,106042.0,100000],[360.05,23.8,19,1.0,0,106567.0,100000],[360.58,28.5,20,1.0,0,107096.0,100000],[361.11,23.4,18,1.0,0,107622.0,100000],[361.63,20.6,12,1.0,0,108144.0,100000],[362.16,34.7,30,1.0,0,108679.0,100000],[362.68,15.7,9,1.0,0,109196.0,100000],[363.2,23.5,19,1.0,0,109720.0,100000],[363.73,27.6,21,1.0,0,110248.0,100000],[364.26,22.7,17,1.0,0,110771.0,100000],[364.77,16.0,9,1.0,0,111288.0,100000],[365.29,16.4,12,1.0,0,111805.0,100000],[365.82,27.3,19,1.0,0,112333.0,100000],[366.34,23.2,18,1.0,0,112857.0,100000],[366.87,27.4,21,1.0,0,113386.0,100000],[367.4,25.8,21,0.9,0,113912.0,100000],[367.94,38.2,32,1.0,0,114451.0,100000],[368.46,23.2,18,1.0,0,114975.0,100000],[368.98,19.1,13,1.0,0,115495.0,100000],[369.5,22.5,18,1.0,0,116018.0,100000],[370.03,23.6,17,1.0,0,116543.0,100000],[370.56,30.7,25,1.0,0,117075.0,100000],[371.07,15.0,8,1.0,0,117591.0,100000],[371.6,19.0,14,1.0,0,118111.0,100000],[372.12,20.4,14,1.0,0,118634.0,100000],[372.64,18.9,14,1.0,0,119153.0,100000],[373.16,18.7,12,1.0,0,119673.0,100000],[373.69,33.5,29,1.0,0,120208.0,100000],[374.22,24.6,18,1.0,0,120733.0,100000]];
+    // qdrant row: [wall_t, total_ms, server_ms, recall]
+    var RW_QDRANT = [[2.04,11.8,0.7,0.0],[2.71,20.0,0.4,0.0],[3.36,20.7,0.5,0.0],[4.0,10.3,0.5,0.0],[4.68,24.0,0.6,0.1],[5.35,19.7,0.6,0.0],[6.0,23.0,0.7,0.0],[6.64,10.5,0.7,0.0],[7.29,10.4,0.8,0.0],[7.95,9.2,0.8,0.0],[8.6,23.1,0.9,0.1],[9.24,18.4,0.9,0.0],[9.88,22.5,1.1,0.0],[10.52,7.5,0.9,0.4],[11.22,32.6,0.9,0.0],[11.86,15.7,1.4,0.0],[12.49,23.5,1.5,0.1],[13.12,18.7,1.4,0.0],[13.74,23.8,1.4,0.0],[14.36,9.8,1.4,0.1],[14.98,10.6,1.6,0.0],[15.64,17.6,1.4,0.1],[16.28,30.0,1.6,0.0],[16.9,10.4,1.4,0.2],[17.55,30.0,1.6,0.1],[18.2,19.3,1.5,0.0],[18.82,19.0,1.6,0.1],[19.45,19.2,1.5,0.2],[20.12,28.6,2.0,0.0],[20.74,16.9,1.6,0.1],[21.39,46.5,1.7,0.1],[22.01,22.1,1.4,0.1],[22.65,21.2,1.8,0.1],[23.3,17.4,1.7,0.0],[23.92,23.1,1.6,0.0],[24.59,18.4,1.5,0.0],[25.24,31.3,1.7,0.0],[25.86,12.6,1.6,0.1],[26.5,29.1,1.7,0.0],[27.14,16.4,1.7,0.2],[27.77,28.2,2.0,0.2],[28.41,20.5,12.2,0.3],[29.04,22.7,1.9,0.1],[29.69,17.4,1.7,0.1],[30.3,9.9,1.6,0.4],[30.96,17.4,1.9,0.2],[31.61,29.5,1.8,0.2],[32.23,17.8,1.7,0.1],[32.87,21.8,1.8,0.4],[33.53,15.3,1.9,0.1],[34.15,16.9,1.9,0.5],[34.79,15.8,1.9,0.2],[35.41,16.5,1.8,0.0],[36.06,28.6,1.8,0.0],[36.72,26.4,1.7,0.1],[37.35,28.4,1.8,0.6],[38.02,15.8,2.0,0.0],[38.7,28.2,1.8,0.1],[39.33,8.9,1.6,0.2],[39.96,18.2,1.8,0.1],[40.59,10.0,1.7,0.0],[41.23,28.7,1.6,0.5],[41.86,15.9,1.8,0.2],[42.52,20.2,9.3,0.1],[43.16,17.4,1.8,0.0],[43.77,10.1,1.4,0.2],[44.44,15.1,1.8,0.0],[45.06,14.8,1.8,0.5],[45.7,29.9,1.7,0.2],[46.33,15.7,1.8,0.4],[47.01,41.3,1.8,0.1],[47.63,16.0,1.7,0.0],[48.29,31.7,1.9,0.2],[48.92,15.3,1.6,0.2],[49.53,17.6,2.0,0.0],[50.16,16.0,1.6,0.3],[50.78,8.1,1.5,0.1],[51.45,17.6,1.5,0.4],[52.13,35.7,2.0,0.2],[52.76,16.6,1.8,0.0],[53.37,12.2,1.6,0.3],[54.03,29.0,1.8,0.3],[54.66,17.2,1.8,0.2],[55.29,20.5,1.8,0.1],[55.95,17.7,1.9,0.4],[56.61,18.2,1.8,0.5],[57.26,17.8,2.0,0.1],[57.95,20.3,2.0,0.2],[58.6,29.7,1.8,0.2],[59.23,17.5,2.3,0.1],[59.86,24.5,1.9,0.5],[60.52,10.6,1.9,0.2],[61.16,23.7,1.8,0.2],[61.84,14.3,1.9,0.0],[62.48,23.1,1.5,0.7],[63.11,17.2,1.5,0.4],[63.73,18.1,1.8,0.1],[64.37,16.6,2.0,0.6],[65.03,17.6,1.7,0.0],[65.68,11.3,1.5,0.1],[66.31,19.8,2.0,0.4],[66.97,34.0,1.8,0.0],[67.61,26.6,1.9,0.7],[68.24,33.4,2.0,0.4],[68.89,17.4,2.3,0.3],[69.52,11.4,1.6,0.2],[70.17,10.1,1.9,0.7],[70.81,17.3,1.9,0.4],[71.45,11.0,1.9,0.4],[72.1,17.6,1.9,0.4],[72.74,17.2,1.5,0.1],[73.38,17.2,1.9,0.3],[74.02,22.9,1.9,0.2],[74.68,10.2,1.9,0.3],[75.33,29.5,1.9,0.2],[75.95,17.7,1.8,0.2],[76.56,17.5,2.0,0.3],[77.2,16.8,1.6,0.0],[77.84,44.3,2.0,0.5],[78.46,16.6,2.0,0.2],[79.16,33.4,2.1,0.2],[79.81,18.0,2.0,0.5],[80.45,18.2,1.7,0.6],[81.13,18.1,1.9,0.3],[81.77,17.9,1.9,0.6],[82.41,32.0,1.8,0.5],[83.03,16.5,2.0,0.4],[83.67,29.1,1.9,0.4],[84.32,18.1,2.0,0.5],[84.97,30.5,2.2,0.7],[85.6,17.5,1.9,0.5],[86.22,18.1,2.0,0.4],[86.87,19.7,2.1,0.6],[87.56,12.4,1.9,0.6],[88.25,24.3,2.1,0.6],[88.93,17.7,2.1,0.2],[89.59,34.0,1.7,0.2],[90.23,18.4,1.9,0.2],[90.89,32.3,2.1,0.3],[91.52,11.4,2.2,0.5],[92.19,23.9,1.8,0.4],[92.83,19.7,2.0,0.7],[93.49,17.5,1.6,0.7],[94.13,19.6,2.0,0.6],[94.77,29.9,1.6,0.3],[95.4,18.7,2.0,0.4],[96.03,21.0,2.0,0.7],[96.7,18.2,1.7,0.3],[97.36,32.7,2.1,0.3],[98.01,18.9,2.1,0.2],[98.67,48.1,2.1,0.8],[99.29,15.0,2.3,0.0],[99.92,18.4,1.6,0.9],[100.57,18.0,1.8,0.8],[101.22,45.9,18.0,0.2],[101.84,17.4,2.1,0.5],[102.46,21.8,2.6,0.2],[103.14,14.4,1.7,0.1],[103.75,27.7,2.2,0.7],[104.38,14.9,1.7,0.6],[104.98,11.2,1.7,0.1],[105.62,21.2,6.4,0.1],[106.25,12.0,1.6,0.4],[106.88,23.9,2.0,0.0],[107.5,18.2,1.3,1.0],[108.14,23.9,2.0,0.3],[108.81,31.3,2.1,0.8],[109.42,15.5,2.0,0.6],[110.05,16.9,1.5,0.3],[110.72,17.3,1.4,0.5],[111.36,32.2,1.7,0.8],[111.98,17.3,1.9,0.0],[112.62,31.7,1.9,0.4],[113.24,15.1,2.1,0.3],[113.9,75.2,1.9,0.9],[114.48,15.3,2.0,0.7],[115.12,20.7,2.0,0.8],[115.82,18.3,4.8,0.4],[116.45,17.4,1.6,1.0],[117.09,31.0,2.0,0.6],[117.73,18.6,2.0,0.6],[118.59,39.4,2.2,0.5],[119.3,14.6,1.7,0.6],[119.92,18.9,1.7,0.2],[120.56,11.9,1.9,0.5],[121.18,10.8,1.8,0.5],[121.84,31.0,1.8,0.7],[122.46,18.1,1.7,0.7],[123.09,23.4,1.7,0.3],[123.75,18.2,1.8,0.6],[124.4,18.3,2.3,0.0],[125.04,17.7,1.5,0.1],[125.67,19.7,1.8,0.7],[126.3,10.4,2.0,0.8],[126.93,19.9,2.2,0.5],[127.58,30.5,2.0,0.9],[128.21,22.8,12.1,0.8],[128.84,19.7,1.8,0.7],[129.48,16.9,2.2,0.3],[130.09,9.9,1.9,0.4],[130.74,30.8,2.1,0.4],[131.37,17.9,2.1,0.7],[132.0,30.5,1.8,0.7],[132.62,11.2,1.9,0.4],[133.26,19.9,2.0,0.5],[133.91,17.1,2.1,0.6],[134.52,16.5,2.2,0.5],[135.16,17.1,2.0,0.5],[135.78,18.5,2.1,0.4],[136.4,29.8,1.9,0.7],[137.02,18.9,2.3,0.4],[137.67,32.0,1.8,0.7],[138.32,18.3,1.8,0.8],[138.96,19.7,2.1,0.3],[139.6,18.3,2.2,0.3],[140.22,16.5,2.0,0.9],[140.85,33.6,1.9,0.5],[141.49,19.4,1.7,0.8],[142.12,17.6,3.4,0.8],[142.77,19.0,2.0,0.8],[143.4,17.1,1.5,0.8],[144.04,29.4,1.7,0.0],[144.66,18.0,1.9,0.7],[145.3,31.5,2.1,0.8],[145.93,17.9,2.3,0.5],[146.77,182.4,2.2,0.3],[147.43,19.1,2.0,0.9],[148.13,17.6,2.0,1.0],[148.78,33.9,2.2,0.2],[149.42,19.0,1.9,0.7],[150.05,29.9,2.2,0.8],[150.69,19.4,2.1,0.6],[151.35,32.7,2.4,0.7],[152.01,18.6,1.8,0.4],[152.63,11.2,2.1,0.6],[153.3,17.3,1.7,0.6],[153.96,22.5,2.2,0.7],[154.64,18.6,1.9,0.9],[155.29,18.1,2.1,0.5],[155.98,20.2,2.2,0.5],[156.65,20.5,2.0,0.6],[157.33,18.8,2.2,0.8],[157.97,17.8,2.0,0.6],[158.62,29.9,1.8,0.8],[159.26,11.1,1.5,0.5],[159.91,41.2,17.7,0.7],[160.53,15.3,2.1,0.9],[161.16,30.8,1.7,0.5],[161.83,18.0,2.1,0.7],[162.48,32.2,2.2,0.3],[163.11,18.3,1.9,0.8],[163.74,16.8,2.2,0.5],[164.38,18.1,2.1,0.1],[165.03,38.9,2.2,0.3],[165.65,14.4,2.0,0.7],[166.29,31.2,2.0,0.6],[166.93,18.3,2.6,0.5],[167.58,23.7,2.2,0.8],[168.27,19.0,1.2,0.7],[168.93,21.5,1.4,0.7],[169.58,17.2,1.8,0.8],[170.21,23.3,1.8,0.9],[170.86,18.6,2.0,0.3],[171.5,23.1,2.0,0.7],[172.14,18.0,1.9,0.7],[172.78,27.9,1.9,0.8],[173.4,11.3,2.0,0.3],[174.04,31.2,1.7,0.0],[174.67,9.9,2.1,0.4],[175.34,39.8,2.1,0.3],[175.95,17.7,1.4,0.8],[176.58,21.9,1.1,0.9],[177.2,11.0,1.7,0.9],[177.84,23.1,1.6,0.7],[178.51,31.7,18.4,0.4],[179.16,30.0,1.9,0.4],[179.78,17.0,2.1,0.7],[180.41,42.1,1.4,1.0],[181.03,17.6,1.9,0.7],[181.67,31.0,2.0,0.9],[182.3,17.9,2.2,0.7],[182.94,21.3,1.7,0.6],[183.58,17.2,1.6,0.7],[184.21,18.2,2.1,0.9],[184.86,32.9,2.0,0.7],[185.5,31.3,2.4,0.6],[186.12,31.6,2.3,0.6],[186.75,18.5,1.3,0.8],[187.41,40.8,17.3,0.4],[188.03,16.0,2.0,0.3],[188.66,20.2,2.3,0.5],[189.3,18.3,2.0,0.7],[189.93,17.6,1.9,0.5],[190.57,44.2,2.3,0.5],[191.2,17.6,2.2,1.0],[191.83,29.7,2.0,0.9],[192.48,20.1,2.4,0.8],[193.13,31.8,1.9,0.5],[193.75,18.8,2.3,0.6],[194.39,24.3,2.1,0.6],[195.03,17.2,2.2,0.2],[195.7,44.2,2.3,0.4],[196.33,24.8,2.3,0.5],[196.96,30.9,1.8,0.9],[197.6,17.9,2.3,0.7],[198.24,20.6,2.1,0.3],[198.91,17.3,1.8,0.0],[199.53,19.7,2.0,0.9],[200.19,34.2,2.1,0.2],[200.86,17.6,1.5,0.9],[201.56,31.0,2.0,0.8],[202.23,17.9,2.1,0.5],[202.88,34.1,2.4,0.4],[203.51,17.5,2.3,0.6],[204.16,26.1,2.2,0.5],[204.81,18.1,2.1,0.6],[205.42,11.1,1.4,0.8],[206.07,18.1,1.6,1.0],[206.72,18.3,3.9,0.7],[207.37,31.5,2.0,0.5],[208.01,16.3,1.4,0.8],[208.66,33.9,2.2,0.8],[209.31,21.3,2.2,0.6],[209.94,20.9,2.0,0.3],[210.61,18.8,7.8,0.9],[211.25,19.4,1.8,0.9],[211.89,18.8,2.2,0.7],[212.53,29.9,1.8,0.5],[213.17,18.8,1.7,0.8],[213.8,19.8,1.9,0.9],[214.44,19.8,1.7,0.9],[215.07,10.4,2.0,0.8],[215.79,34.5,2.0,1.0],[216.41,18.4,1.5,0.3],[217.07,32.2,2.3,0.6],[217.72,11.2,1.2,0.7],[218.4,31.5,1.8,0.9],[219.0,8.0,2.0,0.8],[219.63,19.1,1.9,0.6],[220.28,16.5,2.1,0.7],[220.91,20.0,1.7,0.9],[221.56,28.4,2.5,0.9],[222.19,16.7,2.1,1.0],[222.86,16.5,2.5,1.0],[223.5,16.2,2.2,0.8],[224.14,16.2,1.7,0.3],[224.77,15.2,2.4,0.6],[225.41,16.4,2.1,0.7],[226.04,15.4,1.8,1.0],[226.72,40.6,2.2,0.6],[227.33,17.2,2.1,1.0],[227.98,32.3,1.5,0.7],[228.61,16.2,2.0,1.0],[229.23,16.3,1.6,1.0],[229.87,16.7,2.0,1.0],[230.51,20.1,1.7,0.9],[231.22,16.6,1.8,0.8],[231.97,27.0,2.1,0.9],[232.77,21.7,1.8,0.7],[233.48,20.9,2.2,1.0],[234.16,16.6,2.3,0.8],[234.81,16.6,1.5,0.9],[235.46,18.4,2.4,1.0],[236.13,22.6,1.8,0.9],[236.84,8.5,2.0,0.8],[237.49,8.2,2.0,1.0],[238.2,30.6,1.8,1.0],[238.9,17.9,2.2,1.0],[239.56,19.0,2.3,0.9],[240.2,10.4,1.7,0.8],[240.84,8.0,2.0,1.0],[241.54,17.1,2.4,0.9],[242.19,9.1,2.0,1.0],[242.85,9.9,1.8,0.2],[243.49,19.1,2.0,0.9],[244.16,35.7,2.0,0.9],[244.79,9.9,2.0,1.0],[245.45,19.5,2.1,0.7],[246.12,10.8,2.1,1.0],[246.77,8.3,1.4,1.0],[247.45,16.4,2.3,1.0],[248.08,17.7,1.9,1.0],[248.73,7.7,1.8,1.0],[249.37,10.0,2.2,1.0],[250.03,29.7,2.2,1.0],[250.69,8.8,2.1,1.0],[251.34,21.9,2.1,1.0],[251.98,8.9,2.1,1.0],[252.62,15.6,1.9,1.0],[253.13,7.8,2.0,1.0],[253.64,7.4,1.7,1.0],[254.14,7.5,2.0,1.0],[254.65,9.5,2.2,1.0],[255.16,8.9,2.0,0.9],[255.67,8.7,2.3,1.0],[256.18,7.7,1.9,1.0],[256.69,8.5,2.3,1.0],[257.2,8.4,2.2,1.0],[257.71,7.7,1.6,1.0],[258.22,10.1,1.7,1.0],[258.73,7.2,1.6,1.0],[259.24,7.8,2.2,1.0],[259.75,7.6,1.7,1.0],[260.26,8.0,2.2,1.0],[260.77,8.4,2.0,1.0],[261.28,8.8,1.8,1.0],[261.79,8.8,2.3,1.0],[262.3,8.0,1.9,0.8],[262.81,8.0,2.0,1.0],[263.31,7.5,2.1,1.0],[263.82,7.7,1.8,1.0],[264.33,8.1,2.2,1.0],[264.84,7.6,2.2,1.0],[265.35,7.4,2.0,1.0],[265.86,7.7,1.9,1.0],[266.37,8.0,2.0,1.0],[266.88,7.6,2.0,1.0],[267.38,7.4,1.5,1.0],[267.89,7.6,2.0,1.0],[268.4,7.7,2.0,1.0],[268.91,7.4,1.6,1.0],[269.42,8.9,2.1,1.0],[269.93,8.1,2.1,1.0],[270.45,16.7,2.4,1.0],[270.95,8.1,2.0,1.0],[271.46,7.5,1.4,1.0],[271.97,7.7,1.5,1.0],[272.48,7.8,2.2,1.0],[272.99,7.7,2.0,1.0],[273.5,7.7,1.5,1.0],[274.01,7.5,1.9,1.0],[274.52,7.2,1.6,1.0],[275.02,7.3,1.8,1.0],[275.53,7.8,1.8,1.0],[276.04,8.0,2.3,1.0],[276.55,8.1,2.1,1.0],[277.06,7.9,2.3,1.0],[277.57,8.0,1.9,1.0],[278.08,8.3,2.1,1.0],[278.59,7.7,1.9,1.0],[279.1,8.0,2.2,0.9],[279.61,8.7,2.3,0.9],[280.12,7.7,1.6,1.0],[280.63,7.9,2.1,1.0],[281.14,8.5,2.3,1.0],[281.65,7.7,2.1,1.0],[282.16,9.0,2.3,0.9],[282.69,31.1,2.2,1.0],[283.2,7.5,1.8,1.0],[283.71,7.8,1.8,1.0],[284.21,8.4,2.3,1.0],[284.73,8.1,2.2,1.0],[285.23,7.6,1.4,1.0],[285.74,8.6,2.1,1.0],[286.25,7.9,2.0,1.0],[286.76,7.3,1.8,1.0],[287.27,11.8,1.9,1.0],[287.78,8.5,2.2,1.0],[288.29,8.6,2.0,1.0],[288.8,7.6,2.1,1.0],[289.31,9.8,2.1,1.0],[289.82,8.8,1.5,1.0],[290.33,7.8,2.1,1.0],[290.84,8.2,2.0,1.0],[291.35,7.1,1.7,1.0],[291.86,8.0,1.5,1.0],[292.37,8.8,1.9,0.8],[292.87,7.6,2.0,0.9],[293.38,8.1,1.8,1.0],[293.89,7.9,2.1,1.0],[294.4,8.2,2.2,0.9],[294.91,7.3,2.0,1.0],[295.42,7.1,1.9,1.0],[295.93,8.1,1.7,1.0],[296.44,7.3,2.0,1.0],[296.94,7.6,2.1,1.0],[297.45,8.0,2.0,1.0],[297.96,10.2,2.0,1.0],[298.48,8.3,2.1,1.0],[298.99,9.3,2.3,0.9],[299.49,8.0,2.3,1.0],[300.0,9.1,1.8,0.7],[300.51,8.5,1.9,1.0],[301.02,8.0,2.0,1.0],[301.53,8.6,1.9,1.0],[302.04,8.0,2.1,1.0],[302.55,7.9,1.8,1.0],[303.06,7.9,2.1,1.0],[303.57,7.7,2.1,1.0],[304.07,7.4,1.9,1.0],[304.58,7.8,2.1,1.0],[305.09,8.6,1.9,1.0],[305.6,7.4,1.7,1.0],[306.11,7.6,1.6,1.0],[306.62,8.8,2.1,1.0],[307.13,8.1,2.4,1.0],[307.63,6.9,1.3,1.0],[308.14,7.7,2.1,1.0],[308.65,7.6,2.2,1.0],[309.16,8.0,2.2,1.0],[309.67,7.6,2.0,1.0],[310.18,9.3,2.2,1.0],[310.69,7.9,1.7,1.0],[311.2,8.0,2.1,1.0],[311.71,8.2,2.0,1.0],[312.21,7.6,1.6,1.0],[312.72,7.9,1.9,1.0],[313.23,9.7,2.4,1.0],[313.74,7.7,2.1,1.0],[314.25,7.5,1.9,1.0],[314.76,7.5,2.1,1.0],[315.27,8.1,2.6,1.0],[315.78,7.3,1.7,1.0],[316.28,7.6,2.0,1.0],[316.79,7.7,1.7,1.0],[317.3,7.2,1.6,1.0],[317.81,8.0,2.2,1.0],[318.32,7.9,1.7,1.0],[318.83,7.5,1.8,1.0],[319.34,7.7,2.1,1.0],[319.85,7.9,2.2,1.0],[320.36,7.6,1.8,1.0],[320.87,8.5,2.0,1.0],[321.37,7.7,1.4,1.0],[321.88,8.9,1.7,1.0],[322.39,7.6,2.0,1.0],[322.9,7.5,2.2,0.9],[323.41,7.8,2.0,1.0],[323.92,7.6,2.1,1.0],[324.43,8.2,2.0,1.0],[324.94,8.3,2.3,1.0],[325.45,8.0,2.3,1.0],[325.96,8.2,2.3,1.0],[326.47,8.8,2.1,1.0],[326.98,8.6,2.1,1.0],[327.49,8.9,2.1,1.0],[328.0,8.2,2.3,1.0],[328.5,7.6,2.0,1.0],[329.01,10.0,1.9,1.0],[329.52,8.0,2.3,0.9],[330.03,7.7,1.7,1.0],[330.54,7.5,1.8,1.0],[331.05,8.8,2.3,1.0],[331.56,8.0,2.3,1.0],[332.07,7.9,1.7,1.0],[332.58,8.4,2.1,1.0],[333.09,7.6,1.8,1.0],[333.6,9.1,1.8,1.0],[334.11,7.5,1.9,1.0],[334.61,7.7,1.9,1.0],[335.12,8.0,2.1,1.0],[335.63,8.1,2.0,0.9],[336.14,9.5,1.9,1.0],[336.65,7.6,1.8,1.0],[337.16,8.1,2.2,1.0],[337.67,10.9,1.8,1.0],[338.18,9.2,2.1,1.0],[338.69,7.7,2.0,1.0],[339.2,6.9,1.4,1.0],[339.71,7.5,1.8,1.0],[340.22,6.9,1.6,1.0],[340.73,8.9,1.9,1.0],[341.24,7.8,2.0,1.0],[341.74,7.7,1.9,1.0],[342.25,7.5,1.8,1.0],[342.76,9.5,2.1,1.0],[343.27,8.5,2.6,1.0],[343.78,9.2,2.3,1.0],[344.29,7.9,1.4,1.0],[344.8,7.9,1.8,1.0],[345.31,7.6,1.8,1.0],[345.82,7.6,1.9,1.0],[346.33,8.3,1.8,1.0],[346.85,17.6,1.9,1.0],[347.36,8.0,2.3,0.9],[347.86,7.7,2.0,1.0],[348.37,8.6,2.1,0.9],[348.88,8.1,2.0,1.0],[349.39,8.1,2.0,1.0],[349.9,8.8,2.3,1.0],[350.41,9.1,1.8,1.0],[350.92,8.6,2.1,1.0],[351.43,7.7,2.0,1.0],[351.94,8.0,2.1,1.0],[352.45,8.3,1.6,1.0],[352.96,8.0,2.0,1.0],[353.48,12.4,2.2,1.0],[353.99,8.0,2.4,1.0],[354.49,7.3,1.7,1.0],[355.0,7.4,1.9,1.0],[355.51,10.3,2.0,1.0],[356.02,8.9,2.2,1.0],[356.53,7.0,1.6,1.0],[357.04,9.3,1.6,1.0],[357.55,7.9,1.8,1.0],[358.06,7.3,1.8,1.0],[358.57,8.3,1.9,1.0],[359.08,7.6,1.7,1.0],[359.58,8.3,2.1,1.0],[360.09,9.2,2.2,1.0],[360.6,7.9,1.8,1.0],[361.11,10.7,2.2,1.0],[361.62,8.2,1.9,1.0],[362.13,7.7,2.2,1.0],[362.64,7.9,2.1,1.0],[363.15,7.8,1.9,1.0],[363.66,8.7,2.1,1.0],[364.17,7.8,2.0,1.0],[364.68,7.6,1.9,1.0],[365.19,8.4,1.8,1.0],[365.7,10.4,2.3,1.0],[366.21,9.2,1.8,1.0],[366.72,7.9,2.3,1.0],[367.23,8.6,1.9,1.0],[367.74,7.3,1.9,1.0],[368.25,7.5,1.8,1.0],[368.76,7.7,2.0,1.0],[369.26,7.7,1.7,1.0],[369.77,8.2,2.3,1.0],[370.28,7.2,1.6,1.0],[370.79,7.2,1.9,1.0],[371.3,7.8,1.5,1.0],[371.81,8.2,1.8,1.0],[372.32,7.6,1.9,1.0],[372.83,7.9,2.1,1.0],[373.33,7.2,1.9,1.0]];
+    // qdrant_info row: [wall_t, points_count, indexed_vectors_count]
+    var RW_INFO   = [[1.01,0,0],[6.02,1920,0],[11.24,3968,0],[16.29,6016,5248],[21.36,8064,7040],[26.48,10112,8832],[31.59,12160,10624],[36.7,14208,12416],[41.87,16256,14208],[46.99,18304,17792],[52.1,20352,19584],[57.27,22400,21376],[62.49,24448,23168],[67.59,26496,24960],[72.75,28544,26752],[77.82,30592,28544],[83.04,32640,30336],[88.26,34688,32128],[93.51,36736,35712],[98.65,38784,37504],[103.73,40832,39296],[108.79,42880,41088],[113.85,44928,42880],[118.94,46848,44672],[124.07,48896,46464],[129.16,50944,50048],[134.21,52992,51840],[139.28,55040,53632],[144.34,57088,55424],[149.43,59008,57216],[154.65,61056,59008],[159.91,63104,60800],[165.01,65152,62592],[170.23,67200,64384],[175.32,69248,67968],[180.39,71296,69760],[185.49,73344,71552],[190.55,75392,73344],[195.68,77440,75136],[200.87,79488,76928],[206.08,81536,78720],[211.27,83584,80512],[216.42,85632,84096],[221.54,87680,85888],[226.69,89728,87680],[231.98,91776,91264],[237.15,93696,93056],[242.21,95616,94848],[247.45,97664,96640],[252.62,99712,98432],[257.63,100000,98432],[262.64,100000,98432],[267.64,100000,98432],[272.65,100000,98432],[277.65,100000,98432],[282.66,100000,98432],[287.67,100000,98432],[292.68,100000,98432],[297.68,100000,98432],[302.69,100000,98432],[307.69,100000,98432],[312.7,100000,98432],[317.71,100000,98432],[322.71,100000,98432],[327.72,100000,98432],[332.72,100000,98432],[337.73,100000,98432],[342.74,100000,98432],[347.74,100000,98432],[352.75,100000,98432],[357.75,100000,98432],[362.76,100000,98432],[367.77,100000,98432],[372.77,100000,98432]];
+
+    var UE_TPUF   = 254.2;  // upload_end for tpuf (seconds)
+    var UE_QDRANT = 253.1;  // upload_end for qdrant (seconds)
+    var T_MAX     = 375;    // x-axis max (seconds)
+
+    // Rolling percentile (sorted window around each point)
+    function rollingPct(data, xIdx, yIdx, winHalf, pct) {
+      var n = data.length;
+      var out = [];
+      for (var i = 0; i < n; i++) {
+        var lo = Math.max(0, i - winHalf);
+        var hi = Math.min(n - 1, i + winHalf);
+        var vals = [];
+        for (var j = lo; j <= hi; j++) vals.push(data[j][yIdx]);
+        vals.sort(function(a, b) { return a - b; });
+        out.push([data[i][xIdx], vals[Math.floor(vals.length * pct)]]);
+      }
+      return out;
+    }
+
+    // Rolling mean
+    function rollingMean(data, xIdx, yIdx, winHalf) {
+      var n = data.length;
+      var out = [];
+      for (var i = 0; i < n; i++) {
+        var lo = Math.max(0, i - winHalf);
+        var hi = Math.min(n - 1, i + winHalf);
+        var sum = 0;
+        for (var j = lo; j <= hi; j++) sum += data[j][yIdx];
+        out.push([data[i][xIdx], sum / (hi - lo + 1)]);
+      }
+      return out;
+    }
+
+    function drawVLine(ctx, x, H, pad, color, label) {
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([5, 4]);
+      ctx.beginPath();
+      ctx.moveTo(x, pad.t);
+      ctx.lineTo(x, H - pad.b);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      if (label) {
+        ctx.fillStyle = color;
+        ctx.font = '9px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(label, x, pad.t - 3);
+      }
+      ctx.restore();
+    }
+
+    // ── Plot 1: Latency scatter + rolling p50 ─────────────────
+    var res = setupCanvas('c-rw-lat');
+    if (res) {
+      var ctx = res[0], W = res[1], H = res[2];
+      var pad = { t: 22, r: 20, b: 38, l: 52 };
+      var pW = W - pad.l - pad.r;
+      var pH = H - pad.t - pad.b;
+      var Y_MAX = 380;
+
+      ctx.fillStyle = '#FAFBFC';
+      ctx.fillRect(0, 0, W, H);
+
+      function xp(t)  { return pad.l + Math.min(t, T_MAX) / T_MAX * pW; }
+      function yp(ms) { return pad.t + pH - Math.min(ms, Y_MAX) / Y_MAX * pH; }
+
+      // Grid
+      [0, 100, 200, 300].forEach(function(v) {
+        var y = yp(v);
+        ctx.strokeStyle = C.grid; ctx.lineWidth = 0.5;
+        ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + pW, y); ctx.stroke();
+        ctx.fillStyle = C.text2; ctx.font = '10px monospace'; ctx.textAlign = 'right';
+        ctx.fillText(v + 'ms', pad.l - 4, y + 4);
+      });
+      // X axis ticks
+      [0, 60, 120, 180, 240, 300, 360].forEach(function(v) {
+        var x = xp(v);
+        ctx.strokeStyle = C.grid; ctx.lineWidth = 0.5;
+        ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + pH); ctx.stroke();
+        ctx.fillStyle = C.text2; ctx.font = '10px monospace'; ctx.textAlign = 'center';
+        ctx.fillText(v + 's', x, H - pad.b + 14);
+      });
+
+      // Upload done line
+      drawVLine(ctx, xp(UE_TPUF), H, pad, '#64748B', 'upload done');
+
+      // Dots: tpuf (orange)
+      ctx.fillStyle = 'rgba(234,88,12,0.35)';
+      RW_TPUF.forEach(function(r) {
+        var x = xp(r[0]), y = yp(r[1]);
+        ctx.beginPath(); ctx.arc(x, y, 2.5, 0, 6.283); ctx.fill();
+      });
+
+      // Dots: qdrant (purple)
+      ctx.fillStyle = 'rgba(124,58,237,0.3)';
+      RW_QDRANT.forEach(function(r) {
+        var x = xp(r[0]), y = yp(r[1]);
+        ctx.beginPath(); ctx.arc(x, y, 2.5, 0, 6.283); ctx.fill();
+      });
+
+      // Rolling p50 lines
+      function drawRollingLine(smoothed, color) {
+        ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.setLineDash([]);
+        ctx.beginPath();
+        for (var i = 0; i < smoothed.length; i++) {
+          var x = xp(smoothed[i][0]), y = yp(smoothed[i][1]);
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+      drawRollingLine(rollingPct(RW_TPUF, 0, 1, 12, 0.5),   C.tpuf);
+      drawRollingLine(rollingPct(RW_QDRANT, 0, 1, 12, 0.5), C.qdrant);
+
+      ctx.fillStyle = C.text2; ctx.font = '10px monospace'; ctx.textAlign = 'left';
+      ctx.fillText('time (seconds)', pad.l, H - 4);
+      drawLegend(ctx, pad.l, H - pad.b + 24, [
+        [C.tpuf,   'tpuf (dots=raw, line=rolling p50)'],
+        [C.qdrant, 'Qdrant']
+      ]);
+    }
+
+    // ── Plot 2: Recall progression ────────────────────────────
+    res = setupCanvas('c-rw-recall');
+    if (res) {
+      var ctx = res[0], W = res[1], H = res[2];
+      var pad = { t: 22, r: 20, b: 38, l: 52 };
+      var pW = W - pad.l - pad.r;
+      var pH = H - pad.t - pad.b;
+
+      ctx.fillStyle = '#FAFBFC';
+      ctx.fillRect(0, 0, W, H);
+
+      function xp(t)  { return pad.l + Math.min(t, T_MAX) / T_MAX * pW; }
+      function yp(v)  { return pad.t + pH - Math.min(v, 1.0) * pH; }
+
+      // Grid
+      [0, 0.25, 0.5, 0.75, 1.0].forEach(function(v) {
+        var y = yp(v);
+        ctx.strokeStyle = C.grid; ctx.lineWidth = 0.5;
+        ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + pW, y); ctx.stroke();
+        ctx.fillStyle = C.text2; ctx.font = '10px monospace'; ctx.textAlign = 'right';
+        ctx.fillText(Math.round(v * 100) + '%', pad.l - 4, y + 4);
+      });
+      [0, 60, 120, 180, 240, 300, 360].forEach(function(v) {
+        var x = xp(v);
+        ctx.strokeStyle = C.grid; ctx.lineWidth = 0.5;
+        ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + pH); ctx.stroke();
+        ctx.fillStyle = C.text2; ctx.font = '10px monospace'; ctx.textAlign = 'center';
+        ctx.fillText(v + 's', x, H - pad.b + 14);
+      });
+
+      drawVLine(ctx, xp(UE_TPUF), H, pad, '#64748B', 'upload done');
+
+      function drawRecallLine(data, yIdx, color) {
+        var smooth = rollingMean(data, 0, yIdx, 12);
+        ctx.strokeStyle = color; ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        for (var i = 0; i < smooth.length; i++) {
+          var x = xp(smooth[i][0]), y = yp(smooth[i][1]);
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+      drawRecallLine(RW_TPUF,   3, C.tpuf);
+      drawRecallLine(RW_QDRANT, 3, C.qdrant);
+
+      ctx.fillStyle = C.text2; ctx.font = '10px monospace'; ctx.textAlign = 'left';
+      ctx.fillText('time (seconds)', pad.l, H - 4);
+      drawLegend(ctx, pad.l, H - pad.b + 24, [
+        [C.tpuf,   'turbopuffer recall'],
+        [C.qdrant, 'Qdrant recall']
+      ]);
+    }
+
+    // ── Plot 3: tpuf exhaustive_search_count ──────────────────
+    res = setupCanvas('c-rw-exh');
+    if (res) {
+      var ctx = res[0], W = res[1], H = res[2];
+      var pad = { t: 22, r: 20, b: 38, l: 58 };
+      var pW = W - pad.l - pad.r;
+      var pH = H - pad.t - pad.b;
+      var Y_MAX = 55000;
+
+      ctx.fillStyle = '#FAFBFC';
+      ctx.fillRect(0, 0, W, H);
+
+      function xp(t)  { return pad.l + Math.min(t, T_MAX) / T_MAX * pW; }
+      function yp(v)  { return pad.t + pH - Math.min(v, Y_MAX) / Y_MAX * pH; }
+
+      [0, 10000, 20000, 30000, 40000, 50000].forEach(function(v) {
+        var y = yp(v);
+        ctx.strokeStyle = C.grid; ctx.lineWidth = 0.5;
+        ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + pW, y); ctx.stroke();
+        ctx.fillStyle = C.text2; ctx.font = '10px monospace'; ctx.textAlign = 'right';
+        ctx.fillText(v === 0 ? '0' : (v / 1000).toFixed(0) + 'k', pad.l - 4, y + 4);
+      });
+      [0, 60, 120, 180, 240, 300, 360].forEach(function(v) {
+        var x = xp(v);
+        ctx.strokeStyle = C.grid; ctx.lineWidth = 0.5;
+        ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + pH); ctx.stroke();
+        ctx.fillStyle = C.text2; ctx.font = '10px monospace'; ctx.textAlign = 'center';
+        ctx.fillText(v + 's', x, H - pad.b + 14);
+      });
+
+      drawVLine(ctx, xp(UE_TPUF), H, pad, '#64748B', 'upload done');
+
+      // Dots
+      ctx.fillStyle = 'rgba(234,88,12,0.45)';
+      RW_TPUF.forEach(function(r) {
+        var x = xp(r[0]), y = yp(r[4]);
+        ctx.beginPath(); ctx.arc(x, y, 2.5, 0, 6.283); ctx.fill();
+      });
+
+      // Rolling mean line
+      var smooth = rollingMean(RW_TPUF, 0, 4, 12);
+      ctx.strokeStyle = C.tpuf; ctx.lineWidth = 2; ctx.setLineDash([]);
+      ctx.beginPath();
+      smooth.forEach(function(pt, i) {
+        var x = xp(pt[0]), y = yp(pt[1]);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      ctx.fillStyle = C.text2; ctx.font = '10px monospace'; ctx.textAlign = 'left';
+      ctx.fillText('unindexed WAL docs scanned per query', pad.l, H - 4);
+      ctx.fillText('time (seconds)', pad.l + 200, H - 4);
+    }
+
+    // ── Plot 4: Qdrant indexed vs total ───────────────────────
+    res = setupCanvas('c-rw-qdrant-idx');
+    if (res) {
+      var ctx = res[0], W = res[1], H = res[2];
+      var pad = { t: 22, r: 20, b: 38, l: 58 };
+      var pW = W - pad.l - pad.r;
+      var pH = H - pad.t - pad.b;
+      var Y_MAX = 105000;
+
+      ctx.fillStyle = '#FAFBFC';
+      ctx.fillRect(0, 0, W, H);
+
+      function xp(t)  { return pad.l + Math.min(t, T_MAX) / T_MAX * pW; }
+      function yp(v)  { return pad.t + pH - Math.min(v, Y_MAX) / Y_MAX * pH; }
+
+      [0, 25000, 50000, 75000, 100000].forEach(function(v) {
+        var y = yp(v);
+        ctx.strokeStyle = C.grid; ctx.lineWidth = 0.5;
+        ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + pW, y); ctx.stroke();
+        ctx.fillStyle = C.text2; ctx.font = '10px monospace'; ctx.textAlign = 'right';
+        ctx.fillText(v === 0 ? '0' : (v / 1000).toFixed(0) + 'k', pad.l - 4, y + 4);
+      });
+      [0, 60, 120, 180, 240, 300, 360].forEach(function(v) {
+        var x = xp(v);
+        ctx.strokeStyle = C.grid; ctx.lineWidth = 0.5;
+        ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + pH); ctx.stroke();
+        ctx.fillStyle = C.text2; ctx.font = '10px monospace'; ctx.textAlign = 'center';
+        ctx.fillText(v + 's', x, H - pad.b + 14);
+      });
+
+      drawVLine(ctx, xp(UE_QDRANT), H, pad, '#64748B', 'upload done');
+
+      // Fill between points_count and indexed_vectors_count
+      ctx.fillStyle = 'rgba(124,58,237,0.12)';
+      ctx.beginPath();
+      // Forward along points_count
+      for (var i = 0; i < RW_INFO.length; i++) {
+        var x = xp(RW_INFO[i][0]), y = yp(RW_INFO[i][1]);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      // Backward along indexed_vectors_count
+      for (var i = RW_INFO.length - 1; i >= 0; i--) {
+        var x = xp(RW_INFO[i][0]), y = yp(RW_INFO[i][2]);
+        ctx.lineTo(x, y);
+      }
+      ctx.closePath(); ctx.fill();
+
+      // points_count line (solid)
+      ctx.strokeStyle = C.qdrant; ctx.lineWidth = 2.5; ctx.setLineDash([]);
+      ctx.beginPath();
+      RW_INFO.forEach(function(r, i) {
+        var x = xp(r[0]), y = yp(r[1]);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      // indexed_vectors_count line (dashed)
+      ctx.strokeStyle = C.qdrant2; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      RW_INFO.forEach(function(r, i) {
+        var x = xp(r[0]), y = yp(r[2]);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = C.text2; ctx.font = '10px monospace'; ctx.textAlign = 'left';
+      ctx.fillText('time (seconds)', pad.l, H - 4);
+      drawLegend(ctx, pad.l, H - pad.b + 24, [
+        [C.qdrant,  'points_count (total uploaded)'],
+        [C.qdrant2, 'indexed_vectors_count (HNSW-optimized)', true]
+      ]);
+    }
+
+  })(); // end §8.9 charts
+
+  // ── §8.10 Disk mode charts ────────────────────────────────────
+  (function() {
+    // Chart 1: p99 cold vs warm comparison
+    var res = setupCanvas('c-disk-cold');
+    if (!res) return;
+    var ctx = res[0], W = res[1], H = res[2];
+    var pad = { t: 32, r: 20, b: 52, l: 58 };
+    var maxV = 1500;
+    var dims = drawYGrid(ctx, W, H, pad, maxV, 5);
+    var pW = dims.pW, pH = dims.pH;
+
+    var labels   = ['disk-vec\ncold', 'disk-all\ncold', 'disk-vec\nwarm ef128', 'Qdrant\nRAM', 'tpuf\n(ref)'];
+    var p99_vals = [1457.0, 1402.9, 10.4, 9.4, 40.8];
+    var p50_vals = [7.2,    7.1,    7.1,  6.9, 15.2];
+    var isTpuf   = [false,  false,  false, false, true];
+    var N = labels.length;
+    var gW = pW / N;
+    var bW = gW * 0.55;
+
+    function xg(i)  { return pad.l + i * gW + (gW - bW) / 2; }
+    function yv(v)  { return pad.t + pH - Math.min(v, maxV) / maxV * pH; }
+    function bh(v)  { return Math.min(v, maxV) / maxV * pH; }
+
+    // Cold zone tint
+    ctx.fillStyle = 'rgba(153,27,27,0.06)';
+    ctx.fillRect(pad.l, pad.t, 2 * gW, pH);
+    ctx.strokeStyle = 'rgba(153,27,27,0.25)'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.rect(pad.l, pad.t, 2 * gW, pH); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(153,27,27,0.55)'; ctx.font = '9px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('EBS cold', pad.l + gW, pad.t + 12);
+
+    for (var g = 0; g < N; g++) {
+      var baseColor = isTpuf[g] ? C.tpuf : C.qdrant;
+      var lightColor = isTpuf[g] ? C.tpuf2 : C.qdrant2;
+
+      // p99 bar
+      ctx.fillStyle = (g < 2) ? '#B91C1C' : baseColor;
+      roundRect(ctx, xg(g), yv(p99_vals[g]), bW, bh(p99_vals[g]), 2);
+
+      // p99 annotation
+      var lbl = p99_vals[g] >= 1000 ? (p99_vals[g] / 1000).toFixed(1) + 's' : p99_vals[g].toFixed(0) + 'ms';
+      ctx.fillStyle = (g < 2) ? '#991B1B' : C.text2;
+      ctx.font = (g < 2) ? 'bold 9px monospace' : '9px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(lbl, xg(g) + bW / 2, yv(p99_vals[g]) - 4);
+
+      // p50 tick (tiny stub at bottom)
+      var p50h = bh(p50_vals[g]);
+      ctx.fillStyle = lightColor;
+      ctx.fillRect(xg(g), pad.t + pH - p50h, bW, p50h);
+      ctx.fillStyle = C.text2; ctx.font = '8px monospace'; ctx.textAlign = 'center';
+      ctx.fillText('p50 ' + p50_vals[g].toFixed(0) + 'ms', xg(g) + bW / 2, pad.t + pH - p50h - 2);
+
+      // group label
+      var lx = xg(g) + bW / 2;
+      var lines = labels[g].split('\n');
+      ctx.fillStyle = C.text2; ctx.font = '9px monospace'; ctx.textAlign = 'center';
+      for (var l = 0; l < lines.length; l++) {
+        ctx.fillText(lines[l], lx, H - pad.b + 13 + l * 11);
+      }
+    }
+
+    ctx.fillStyle = C.text2; ctx.font = '10px monospace'; ctx.textAlign = 'right';
+    ctx.fillText('ms', pad.l - 4, pad.t - 6);
+
+    drawLegend(ctx, pad.l, H - 4, [
+      ['#B91C1C',  'p99 cold (EBS storm)'],
+      [C.qdrant,   'p99 warm'],
+      [C.qdrant2,  'p50 stub']
+    ]);
+  })();
+
+  (function() {
+    // Chart 2: Warm p=8 comparison across configs (p50 + p99, recall annotated)
+    var res = setupCanvas('c-disk-p8');
+    if (!res) return;
+    var ctx = res[0], W = res[1], H = res[2];
+    var pad = { t: 40, r: 20, b: 52, l: 50 };
+    var maxV = 100;
+    var dims = drawYGrid(ctx, W, H, pad, maxV, 5);
+    var pW = dims.pW, pH = dims.pH;
+
+    var labels  = ['tpuf', 'RAM\nef128', 'disk-vec\nef32', 'disk-vec\nef64', 'disk-vec\nef128', 'disk-all\nef128'];
+    var p50_p8  = [18.5, 18.8, 18.4, 19.9, 21.2, 17.6];
+    var p99_p8  = [48.7, 50.6, 59.9, 93.8, 55.8, 53.0];
+    var recall  = [98.5, 98.4, 93.5, 97.4, 98.8, 98.8];
+    var N = labels.length;
+    var gW  = pW / N;
+    var bW  = gW * 0.28;
+    var sep = gW * 0.03;
+
+    function xg(i) { return pad.l + i * gW + gW * 0.1; }
+    function yv(v) { return pad.t + pH - Math.min(v, maxV) / maxV * pH; }
+    function bh(v) { return Math.min(v, maxV) / maxV * pH; }
+
+    for (var g = 0; g < N; g++) {
+      var c1 = (g === 0) ? C.tpuf2 : C.qdrant2;
+      var c2 = (g === 0) ? C.tpuf  : C.qdrant;
+
+      ctx.fillStyle = c1;
+      roundRect(ctx, xg(g), yv(p50_p8[g]), bW, bh(p50_p8[g]), 2);
+
+      ctx.fillStyle = c2;
+      roundRect(ctx, xg(g) + bW + sep, yv(p99_p8[g]), bW, bh(p99_p8[g]), 2);
+
+      // recall annotation (above group, colored amber if low)
+      var rc = recall[g] < 95 ? '#D97706' : C.text2;
+      ctx.fillStyle = rc; ctx.font = (recall[g] < 95 ? 'bold ' : '') + '8px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(recall[g].toFixed(0) + '%', xg(g) + bW + sep / 2, pad.t - 10);
+
+      // group label
+      var lx = xg(g) + bW + sep / 2;
+      var lines = labels[g].split('\n');
+      ctx.fillStyle = C.text2; ctx.font = '9px monospace'; ctx.textAlign = 'center';
+      for (var l = 0; l < lines.length; l++) {
+        ctx.fillText(lines[l], lx, H - pad.b + 13 + l * 11);
+      }
+    }
+
+    // recall header arrow
+    ctx.fillStyle = C.text2; ctx.font = '8px monospace'; ctx.textAlign = 'left';
+    ctx.fillText('recall ↑', pad.l, pad.t - 20);
+
+    ctx.fillStyle = C.text2; ctx.font = '10px monospace'; ctx.textAlign = 'right';
+    ctx.fillText('ms', pad.l - 4, pad.t - 6);
+
+    drawLegend(ctx, pad.l, H - 4, [
+      [C.qdrant2, 'p50 (Qdrant)'],
+      [C.qdrant,  'p99 (Qdrant)'],
+      [C.tpuf2,   'p50 (tpuf)', false],
+      [C.tpuf,    'p99 (tpuf)', false]
+    ]);
+  })();
+  // end §8.10 charts
+
 
 }); // end DOMContentLoaded
 

@@ -54,14 +54,21 @@ TPUF_DBPEDIA_PINNED = "reproduce-dbpedia-pinned-1r"
 TPUF_HM             = "reproduce-hm-105k-2048"
 TPUF_MT_PFX         = "reproduce-mt-"      # + tenant value
 
-QDRANT_DBPEDIA = "reproduce-dbpedia"
-QDRANT_HM      = "reproduce-hm"
-QDRANT_MT      = "reproduce-multitenant"
+QDRANT_DBPEDIA              = "reproduce-dbpedia"
+QDRANT_DBPEDIA_DISK_VEC     = "reproduce-dbpedia-disk-vec"
+QDRANT_DBPEDIA_DISK_ALL     = "reproduce-dbpedia-disk-all"
+QDRANT_DBPEDIA_DEFERRED_IDX = "reproduce-dbpedia-deferred-idx"
+QDRANT_HM                   = "reproduce-hm"
+QDRANT_HM_DEFERRED_IDX      = "reproduce-hm-deferred-idx"
+QDRANT_MT                   = "reproduce-multitenant"
 
 # ── Benchmark params ───────────────────────────────────────────────────────────
 BATCH_SIZE        = 128
 N_SEARCH          = 1000
 N_WARM_HM         = 80
+N_WARMUP_DISK     = 1000   # warmup queries per disk config; ~72% page coverage at ef=128
+N_COLD_DISK       = 200    # cold-start queries (valid only immediately after upload)
+EF_SWEEP_DISK     = [32, 64, 128]
 FIXED_QPS_LEVELS  = [1, 5, 10, 20, 50]
 FIXED_QPS_SECS    = 120
 PINNED_REPLICAS   = 4
@@ -70,15 +77,43 @@ PHASES = [
     "delete",
     "upload_dbpedia",
     "upload_dbpedia_pinned",
+    "upload_dbpedia_disk",
+    "upload_qdrant_deferred_idx_dbpedia",
+    "upload_qdrant_deferred_idx_hm",
     "upload_hm",
     "upload_multitenant",
     "search_dbpedia_warm",
     "search_dbpedia_fixedqps",
+    "search_dbpedia_disk",
     "search_hm_warm",
     "search_hm_cold",
     "search_multitenant",
     "concurrent_write_read",
 ]
+
+# ── Deferred-index dataset configs (extensible to hm / multitenant) ────────────
+# hnsw_config / extra_cols_fn are called at phase time with loaded data.
+DEFERRED_IDX_DATASETS = {
+    "dbpedia": {
+        "label":      "DBpedia 100K×1536",
+        "path":       None,          # filled at runtime: DBPEDIA
+        "collection": QDRANT_DBPEDIA_DEFERRED_IDX,
+        "hnsw_m":     16,
+        "hnsw_ef":    128,
+        "has_payload": False,
+        "payload_indices": [],       # list of (field, schema) tuples
+    },
+    "hm": {
+        "label":      "H&M 105K×2048",
+        "path":       None,          # filled at runtime: HM
+        "collection": QDRANT_HM_DEFERRED_IDX,
+        "hnsw_m":     16,
+        "hnsw_ef":    128,
+        "has_payload": True,
+        "payload_indices": [],       # populated at phase time from filters.json
+    },
+    # multitenant uses a different collection structure; add when needed
+}
 
 # tpuf DBpedia 100K×1536 cost constants (from pricing analysis)
 TPUF_COST_PER_QUERY  = 1.28 / 1_000_000   # $0.001/TB × 1.28GB min
@@ -122,6 +157,7 @@ def stats(lats_s: list) -> dict:
         "rps":     round(len(lats_s) / total, 1) if total > 0 else 0,
         "mean_ms": round(float(a.mean()), 1),
         "p50_ms":  round(float(np.percentile(a, 50)), 1),
+        "p90_ms":  round(float(np.percentile(a, 90)), 1),
         "p95_ms":  round(float(np.percentile(a, 95)), 1),
         "p99_ms":  round(float(np.percentile(a, 99)), 1),
     }
@@ -203,6 +239,7 @@ def _upload_stats(total, batch_lats, t_total):
         "total_s":    round(t_total, 1),
         "wps":        wps,
         "batch_p50_ms": round(float(np.percentile(batch_lats_arr, 50)) * 1000, 1),
+        "batch_p90_ms": round(float(np.percentile(batch_lats_arr, 90)) * 1000, 1),
         "batch_p99_ms": round(float(np.percentile(batch_lats_arr, 99)) * 1000, 1),
     }
 
@@ -232,6 +269,7 @@ async def tpuf_upload(ns, ids, vectors, extra_cols=None):
     if server_ms_list:
         arr = np.array(server_ms_list)
         s["server_p50_ms"] = round(float(np.percentile(arr, 50)), 1)
+        s["server_p90_ms"] = round(float(np.percentile(arr, 90)), 1)
         s["server_p99_ms"] = round(float(np.percentile(arr, 99)), 1)
     if billable_bytes:
         s["billable_gb"] = round(billable_bytes / 1e9, 4)
@@ -307,11 +345,90 @@ async def qdrant_upload(qc, collection, vectors, ids, payloads=None):
     if server_ms_list:
         arr = np.array(server_ms_list)
         s["server_p50_ms"] = round(float(np.percentile(arr, 50)), 1)
+        s["server_p90_ms"] = round(float(np.percentile(arr, 90)), 1)
         s["server_p99_ms"] = round(float(np.percentile(arr, 99)), 1)
     stored_gb = await qdrant_stored_gb(collection)
     if stored_gb is not None:
         s["stored_gb"] = stored_gb
     return s
+
+async def qdrant_upload_only(qc, collection, vectors, ids, payloads=None):
+    """Upload batches without waiting for HNSW indexing.
+
+    The collection must have been created with indexing_threshold=0 so the
+    optimizer never starts an HNSW build during this call.  Returns the same
+    metrics shape as qdrant_upload (minus index_s / total_s which are measured
+    separately by the caller).
+    """
+    total = len(ids)
+    t0 = time.perf_counter()
+    batch_lats = []
+    server_ms_list = []
+    for start in range(0, total, BATCH_SIZE):
+        end = min(start + BATCH_SIZE, total)
+        points_dicts = [
+            {
+                "id": int(ids[start + i]),
+                "vector": vec.tolist(),
+                **({"payload": payloads[start + i]} if payloads else {}),
+            }
+            for i, vec in enumerate(vectors[start:end])
+        ]
+        bt = time.perf_counter()
+        server_ms = await qdrant_upsert_timed(collection, points_dicts)
+        batch_lats.append(time.perf_counter() - bt)
+        server_ms_list.append(server_ms)
+        if (start // BATCH_SIZE) % 20 == 0:
+            print(f"    qdrant {end}/{total}", flush=True)
+    upsert_s = time.perf_counter() - t0
+    s = _upload_stats(total, batch_lats, upsert_s)
+    if server_ms_list:
+        arr = np.array(server_ms_list)
+        s["server_p50_ms"] = round(float(np.percentile(arr, 50)), 1)
+        s["server_p90_ms"] = round(float(np.percentile(arr, 90)), 1)
+        s["server_p99_ms"] = round(float(np.percentile(arr, 99)), 1)
+    stored_gb = await qdrant_stored_gb(collection)
+    if stored_gb is not None:
+        s["stored_gb"] = stored_gb
+    return s
+
+
+async def qdrant_trigger_and_wait_index(qc, collection, total_vectors, indexing_threshold=20000, poll_interval=2):
+    """Enable HNSW indexing on a previously un-indexed collection and poll
+    until status == GREEN, recording indexed_vectors_count over time.
+
+    Returns a dict with:
+      index_s       — wall-clock seconds for the full HNSW build
+      index_vps     — average vectors indexed per second
+      poll_rows     — list of [t_s, indexed_count] for plotting
+      final_indexed — indexed_vectors_count at GREEN
+    """
+    print(f"  Enabling HNSW indexing (indexing_threshold={indexing_threshold})...", flush=True)
+    await qc.update_collection(
+        collection_name=collection,
+        optimizers_config=models.OptimizersConfigDiff(indexing_threshold=indexing_threshold),
+    )
+    t0 = time.perf_counter()
+    poll_rows = []
+    while True:
+        info = await qc.get_collection(collection)
+        t_s  = round(time.perf_counter() - t0, 1)
+        indexed = info.indexed_vectors_count or 0
+        poll_rows.append([t_s, indexed])
+        pct = f"{indexed/total_vectors*100:.1f}%" if total_vectors else "?"
+        print(f"    t={t_s}s  indexed={indexed}/{total_vectors} ({pct})  status={info.status}", flush=True)
+        if info.status == models.CollectionStatus.GREEN:
+            break
+        await asyncio.sleep(poll_interval)
+    index_s = round(time.perf_counter() - t0, 1)
+    final_indexed = poll_rows[-1][1] if poll_rows else 0
+    return {
+        "index_s":       index_s,
+        "index_vps":     round(total_vectors / index_s, 1) if index_s > 0 else 0,
+        "poll_rows":     poll_rows,
+        "final_indexed": final_indexed,
+    }
+
 
 def report_upload(label, r):
     tpuf = r["tpuf"]
@@ -404,8 +521,10 @@ async def run_search(query_fn, tests, concurrency, n=N_SEARCH, collect_perf=Fals
         billed = np.array([p["billable_bytes"]         for p in tpuf_perf_rows])
         exh    = np.array([p["exhaustive_search_count"] for p in tpuf_perf_rows])
         s["tpuf_server_p50_ms"]   = round(float(np.percentile(srv, 50)), 1)
+        s["tpuf_server_p90_ms"]   = round(float(np.percentile(srv, 90)), 1)
         s["tpuf_server_p99_ms"]   = round(float(np.percentile(srv, 99)), 1)
         s["tpuf_exec_p50_ms"]     = round(float(np.percentile(exe, 50)), 1)
+        s["tpuf_exec_p90_ms"]     = round(float(np.percentile(exe, 90)), 1)
         s["tpuf_exec_p99_ms"]     = round(float(np.percentile(exe, 99)), 1)
         s["tpuf_cache_hit_avg"]   = round(float(np.mean(hit)), 3)
         s["tpuf_billed_gb_avg"]   = round(float(np.mean(billed)) / 1e9, 6)
@@ -416,6 +535,7 @@ async def run_search(query_fn, tests, concurrency, n=N_SEARCH, collect_perf=Fals
     if qdrant_server_ms:
         arr = np.array(qdrant_server_ms)
         s["qdrant_server_p50_ms"] = round(float(np.percentile(arr, 50)), 3)
+        s["qdrant_server_p90_ms"] = round(float(np.percentile(arr, 90)), 3)
         s["qdrant_server_p99_ms"] = round(float(np.percentile(arr, 99)), 3)
 
     return s
@@ -644,6 +764,7 @@ async def phase_upload_multitenant(run_dir, state, args):
         "total_s": round(wall_s, 1),
         "wps": round(len(ids) / wall_s, 1),
         "batch_p50_ms": round(float(np.percentile(all_batch_lats, 50)), 1),
+        "batch_p90_ms": round(float(np.percentile(all_batch_lats, 90)), 1),
         "batch_p99_ms": round(float(np.percentile(all_batch_lats, 99)), 1),
     }
     if all_billable_gb:
@@ -748,6 +869,7 @@ async def phase_search_dbpedia_fixedqps(run_dir, state, args):
         if tpuf_srv_ms:
             arr = np.array(tpuf_srv_ms)
             s["tpuf_server_p50_ms"] = round(float(np.percentile(arr, 50)), 1)
+            s["tpuf_server_p90_ms"] = round(float(np.percentile(arr, 90)), 1)
             s["tpuf_server_p99_ms"] = round(float(np.percentile(arr, 99)), 1)
         results[f"tpuf_qps{qps}"] = s
         pstats(f"  tpuf @ {qps} QPS", s, f"→ ${monthly_cost:.2f}/mo")
@@ -772,6 +894,7 @@ async def phase_search_dbpedia_fixedqps(run_dir, state, args):
         if qdrant_srv_ms:
             arr = np.array(qdrant_srv_ms)
             s["qdrant_server_p50_ms"] = round(float(np.percentile(arr, 50)), 3)
+            s["qdrant_server_p90_ms"] = round(float(np.percentile(arr, 90)), 3)
             s["qdrant_server_p99_ms"] = round(float(np.percentile(arr, 99)), 3)
         results[f"qdrant_qps{qps}"] = s
         pstats(f"  qdrant @ {qps} QPS", s, f"→ ${QDRANT_DBPEDIA_MONTHLY:.2f}/mo (fixed)")
@@ -1252,6 +1375,7 @@ async def phase_concurrent_write_read(run_dir, state, args):
         recs = [e['recall'] for e in evts if 'recall' in e]
         print(f"  │  {label}: n={len(evts)}"
               f"  p50={np.percentile(lats, 50):.1f}ms"
+              f"  p90={np.percentile(lats, 90):.1f}ms"
               f"  p99={np.percentile(lats, 99):.1f}ms"
               f"  recall_mean={np.mean(recs):.3f}" if recs else "")
 
@@ -1261,21 +1385,280 @@ async def phase_concurrent_write_read(run_dir, state, args):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# PHASE: upload_dbpedia_disk
+# Upload DBpedia into two Qdrant collections with disk storage:
+#   disk-vec  — vectors mmap'd to disk, HNSW index in RAM
+#   disk-all  — vectors mmap'd to disk, HNSW index also on disk
+# tpuf already has the data; only Qdrant uploads are needed here.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+async def phase_upload_dbpedia_disk(run_dir, state, args):
+    print("\n═══ upload_dbpedia_disk ═══")
+    vecs = np.load(DBPEDIA / "vectors.npy")
+    ids  = list(range(len(vecs)))
+    print(f"  {vecs.shape[0]} × {vecs.shape[1]}, batch={BATCH_SIZE}")
+
+    qc = make_qdrant()
+
+    for name in [QDRANT_DBPEDIA_DISK_VEC, QDRANT_DBPEDIA_DISK_ALL]:
+        try:
+            await qc.delete_collection(name)
+            print(f"  deleted existing {name}")
+        except Exception:
+            pass
+
+    # vectors on disk, HNSW index in RAM
+    await qc.create_collection(
+        collection_name=QDRANT_DBPEDIA_DISK_VEC,
+        vectors_config=models.VectorParams(
+            size=vecs.shape[1], distance=models.Distance.COSINE, on_disk=True,
+        ),
+        hnsw_config=models.HnswConfigDiff(m=16, ef_construct=128),
+        optimizers_config=models.OptimizersConfigDiff(memmap_threshold=10_000_000),
+    )
+    qt_vec = await qdrant_upload(qc, QDRANT_DBPEDIA_DISK_VEC, vecs, ids)
+    print(f"  disk-vec: upsert {(qt_vec['total_s']-qt_vec['index_s'])/60:.1f}min  index {qt_vec['index_s']/60:.1f}min  wps={qt_vec['wps']}")
+
+    # vectors on disk, HNSW index also on disk
+    await qc.create_collection(
+        collection_name=QDRANT_DBPEDIA_DISK_ALL,
+        vectors_config=models.VectorParams(
+            size=vecs.shape[1], distance=models.Distance.COSINE, on_disk=True,
+        ),
+        hnsw_config=models.HnswConfigDiff(m=16, ef_construct=128, on_disk=True),
+        optimizers_config=models.OptimizersConfigDiff(memmap_threshold=10_000_000),
+    )
+    qt_all = await qdrant_upload(qc, QDRANT_DBPEDIA_DISK_ALL, vecs, ids)
+    print(f"  disk-all: upsert {(qt_all['total_s']-qt_all['index_s'])/60:.1f}min  index {qt_all['index_s']/60:.1f}min  wps={qt_all['wps']}")
+
+    await qc.close()
+    r = {"disk_vec": qt_vec, "disk_all": qt_all, "batch": BATCH_SIZE}
+    mark_done(run_dir, state, "upload_dbpedia_disk", r)
+    print(f"  ┌─ Upload: DBpedia disk collections")
+    print(f"  │  disk-vec: {qt_vec['total_s']/60:.1f}min  wps={qt_vec['wps']}")
+    print(f"  │  disk-all: {qt_all['total_s']/60:.1f}min  wps={qt_all['wps']}")
+    print(f"  └─")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PHASE: upload_qdrant_deferred_idx_<dataset>
+# Measure Qdrant upsert and HNSW build as two separate timed steps:
+#   Step 1 — upload with indexing_threshold=0 (no HNSW built during writes)
+#   Step 2 — update indexing_threshold=20000, poll to GREEN recording progress
+# This gives clean, non-overlapping numbers for write throughput vs index speed.
+# Extensible: add dataset keys to DEFERRED_IDX_DATASETS above and call
+# phase_upload_qdrant_deferred_idx(run_dir, state, args, dataset_key="hm") etc.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+async def phase_upload_qdrant_deferred_idx(run_dir, state, args, dataset_key="dbpedia"):
+    phase_key = f"upload_qdrant_deferred_idx_{dataset_key}"
+    print(f"\n═══ {phase_key} ═══")
+
+    cfg = dict(DEFERRED_IDX_DATASETS[dataset_key])
+
+    # Resolve runtime paths (constants not available at module level in the dict)
+    if dataset_key == "dbpedia":
+        cfg["path"] = DBPEDIA
+    elif dataset_key == "hm":
+        cfg["path"] = HM
+    else:
+        raise ValueError(f"Unknown deferred-idx dataset: {dataset_key!r}")
+
+    vecs = np.load(cfg["path"] / "vectors.npy")
+    ids  = list(range(len(vecs)))
+    payloads = None
+    if cfg["has_payload"]:
+        payloads = [json.loads(l) for l in open(cfg["path"] / "payloads.jsonl")]
+        if dataset_key == "hm":
+            fmeta = json.loads((cfg["path"] / "filters.json").read_text())
+            cfg["payload_indices"] = [(f["name"], models.PayloadSchemaType.KEYWORD) for f in fmeta]
+
+    print(f"  {vecs.shape[0]} × {vecs.shape[1]}, batch={BATCH_SIZE}, dataset={cfg['label']}")
+
+    qc   = make_qdrant()
+    coll = cfg["collection"]
+
+    # Recreate fresh — this is a dedicated benchmark collection
+    try:
+        await qc.delete_collection(coll)
+    except Exception:
+        pass
+    await qc.create_collection(
+        collection_name=coll,
+        vectors_config=models.VectorParams(size=vecs.shape[1], distance=models.Distance.COSINE),
+        hnsw_config=models.HnswConfigDiff(m=cfg["hnsw_m"], ef_construct=cfg["hnsw_ef"]),
+        optimizers_config=models.OptimizersConfigDiff(
+            indexing_threshold=0,        # disable HNSW build during upload
+            memmap_threshold=10_000_000,
+        ),
+    )
+    for field, schema in cfg.get("payload_indices", []):
+        await qc.create_payload_index(
+            collection_name=coll,
+            field_name=field,
+            field_schema=schema,
+        )
+
+    # ── Step 1: pure upsert ───────────────────────────────────────────────────
+    print(f"  Step 1: upsert (indexing_threshold=0, no HNSW) ...", flush=True)
+    upsert = await qdrant_upload_only(qc, coll, vecs, ids, payloads=payloads)
+    print(f"  upsert done: {upsert['total_s']/60:.2f}min  wps={upsert['wps']}"
+          f"  batch_p50={upsert['batch_p50_ms']}ms  batch_p99={upsert['batch_p99_ms']}ms"
+          f"  server_p50={upsert.get('server_p50_ms','?')}ms  server_p99={upsert.get('server_p99_ms','?')}ms")
+
+    # ── Step 2: trigger + monitor HNSW build ─────────────────────────────────
+    print(f"  Step 2: HNSW build ...", flush=True)
+    indexing = await qdrant_trigger_and_wait_index(qc, coll, len(ids))
+    print(f"  index done: {indexing['index_s']}s ({indexing['index_s']/60:.2f}min)"
+          f"  speed={indexing['index_vps']} vps"
+          f"  final_indexed={indexing['final_indexed']}")
+
+    await qc.close()
+
+    total_s = upsert["total_s"] + indexing["index_s"]
+    r = {
+        "dataset":  cfg["label"],
+        "upsert":   upsert,
+        "indexing": indexing,
+        "batch":    BATCH_SIZE,
+        "total_s":  round(total_s, 1),
+    }
+    mark_done(run_dir, state, phase_key, r)
+
+    print(f"\n  ┌─ Deferred index: {cfg['label']}  batch={BATCH_SIZE}")
+    print(f"  │  Step 1 upsert:  {upsert['total_s']/60:.2f}min  wps={upsert['wps']}"
+          f"  (server_p50={upsert.get('server_p50_ms','?')}ms)")
+    print(f"  │  Step 2 HNSW:    {indexing['index_s']/60:.2f}min  ({indexing['index_vps']} vps)")
+    print(f"  └─ Total:          {total_s/60:.2f}min")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PHASE: search_dbpedia_disk
+# Improved design vs the first run:
+#   1. Cold-start captured separately (first N_COLD_DISK queries, no prior warmup).
+#      Valid only if run immediately after upload_dbpedia_disk.
+#   2. Each config gets N_WARMUP_DISK independent warmup queries before measurement.
+#      p=1 and p=8 each warm independently — no cross-contamination.
+#   3. ef sweep (EF_SWEEP_DISK) for disk configs only; RAM uses ef=128 only.
+#   4. tpuf gets an explicit 100-query warmup before any measurement.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+async def phase_search_dbpedia_disk(run_dir, state, args):
+    print("\n═══ search_dbpedia_disk ═══")
+    tests = [json.loads(l) for l in open(DBPEDIA / "tests.jsonl")]
+    tc = make_tpuf()
+    qc = make_qdrant()
+    ns = tc.namespace(TPUF_DBPEDIA)
+    results = {}
+
+    DISK_CONFIGS = [
+        ("qdrant_disk_vec", QDRANT_DBPEDIA_DISK_VEC),
+        ("qdrant_disk_all", QDRANT_DBPEDIA_DISK_ALL),
+    ]
+
+    def make_qdrant_q(coll, ef):
+        async def q(vec, cond, _qc=qc, _coll=coll, _ef=ef):
+            raw = await _qc.http.search_api.query_points(
+                collection_name=_coll,
+                query_request=models.QueryRequest(
+                    query=vec, params=models.SearchParams(hnsw_ef=_ef),
+                    limit=10, with_vector=False, with_payload=False,
+                ),
+            )
+            return ([pt.id for pt in raw.result.points], raw.time * 1000)
+        return q
+
+    async def tpuf_q(vec, cond, _ns=ns):
+        r = await _ns.query(rank_by=("vector", "ANN", vec), top_k=10, include_attributes=False)
+        return ([x.id for x in r.rows], _tpuf_perf(r))
+
+    # ── tpuf explicit warmup ──────────────────────────────────────
+    print("  warming tpuf (100 queries)...")
+    await run_search(tpuf_q, tests[:100], concurrency=1)
+
+    # ── Cold-start: disk configs, p=1, zero prior warmup ─────────
+    # Note: page-cache cold only if run directly after upload_dbpedia_disk.
+    print(f"  cold-start: disk configs, ef=128, {N_COLD_DISK} queries, p=1")
+    for cfg_name, coll in DISK_CONFIGS:
+        s = await run_search(make_qdrant_q(coll, 128), tests[:N_COLD_DISK], concurrency=1)
+        results[f"{cfg_name}_cold_p1"] = s
+        pstats(f"COLD {cfg_name} ef=128 p=1", s, f"recall={s['recall_pct']}%")
+
+    # ── Warm benchmark: independent warmup per config/ef/concurrency ─
+    for p in [1, 8]:
+        print(f"\n  ── p={p} (each config warms {N_WARMUP_DISK}q independently) ──")
+
+        # tpuf — no ef param, same warmup applied above
+        s = await run_search(tpuf_q, tests, concurrency=p, collect_perf=True)
+        results[f"tpuf_p{p}"] = s
+        pstats(f"tpuf serverless p={p}", s,
+               f"recall={s['recall_pct']}%  cache={s.get('tpuf_cache_temp','?')}")
+
+        # Qdrant RAM — ef=128 only (no disk, ef sweep not meaningful)
+        ram_q = make_qdrant_q(QDRANT_DBPEDIA, 128)
+        await run_search(ram_q, tests[:N_WARMUP_DISK], concurrency=p)
+        s = await run_search(ram_q, tests, concurrency=p)
+        results[f"qdrant_ram_ef128_p{p}"] = s
+        pstats(f"qdrant RAM ef=128 p={p}", s, f"recall={s['recall_pct']}%")
+
+        # Disk configs — ef sweep, each with independent warmup
+        for cfg_name, coll in DISK_CONFIGS:
+            for ef in EF_SWEEP_DISK:
+                q_fn = make_qdrant_q(coll, ef)
+                await run_search(q_fn, tests[:N_WARMUP_DISK], concurrency=p)
+                s = await run_search(q_fn, tests, concurrency=p)
+                results[f"{cfg_name}_ef{ef}_p{p}"] = s
+                pstats(f"qdrant {cfg_name} ef={ef} p={p}", s, f"recall={s['recall_pct']}%")
+
+    await qc.close()
+    mark_done(run_dir, state, "search_dbpedia_disk", results)
+
+    # ── Summary ───────────────────────────────────────────────────
+    print(f"\n  ┌─ DBpedia disk — warm steady-state (p=1 / p=8)")
+    print(f"  │  {'Config':38s}  {'p1 p50':>8}  {'p1 p99':>8}  {'p8 p50':>8}  {'p8 p99':>8}  {'recall':>7}")
+    warm_keys = (
+        [("tpuf serverless",               "tpuf")] +
+        [("qdrant RAM ef=128",              "qdrant_ram_ef128")] +
+        [(f"qdrant disk-vec ef={ef}",       f"qdrant_disk_vec_ef{ef}") for ef in EF_SWEEP_DISK] +
+        [(f"qdrant disk-all ef={ef}",       f"qdrant_disk_all_ef{ef}") for ef in EF_SWEEP_DISK]
+    )
+    for label, kpfx in warm_keys:
+        s1 = results.get(f"{kpfx}_p1", {})
+        s8 = results.get(f"{kpfx}_p8", {})
+        print(f"  │  {label:38s}  {s1.get('p50_ms','?'):>7.1f}ms  {s1.get('p99_ms','?'):>7.1f}ms"
+              f"  {s8.get('p50_ms','?'):>7.1f}ms  {s8.get('p99_ms','?'):>7.1f}ms"
+              f"  {s1.get('recall_pct','?'):>6}%")
+
+    print(f"\n  ┌─ DBpedia disk — cold start (p=1, first {N_COLD_DISK}q, no prior warmup)")
+    print(f"  │  {'Config':38s}  {'p50':>8}  {'p90':>8}  {'p99':>8}  {'recall':>7}")
+    for cfg_name, _ in DISK_CONFIGS:
+        s = results.get(f"{cfg_name}_cold_p1", {})
+        print(f"  │  {cfg_name+' ef=128':38s}  {s.get('p50_ms','?'):>7.1f}ms"
+              f"  {s.get('p90_ms','?'):>7.1f}ms  {s.get('p99_ms','?'):>7.1f}ms"
+              f"  {s.get('recall_pct','?'):>6}%")
+    print(f"  └─")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # MAIN
 # ═══════════════════════════════════════════════════════════════════════════════
 
 PHASE_FNS = {
-    "delete":                   phase_delete,
-    "upload_dbpedia":           phase_upload_dbpedia,
-    "upload_dbpedia_pinned":    phase_upload_dbpedia_pinned,
-    "upload_hm":                phase_upload_hm,
-    "upload_multitenant":       phase_upload_multitenant,
-    "search_dbpedia_warm":      phase_search_dbpedia_warm,
-    "search_dbpedia_fixedqps":  phase_search_dbpedia_fixedqps,
-    "search_hm_warm":           phase_search_hm_warm,
-    "search_hm_cold":           phase_search_hm_cold,
-    "search_multitenant":       phase_search_multitenant,
-    "concurrent_write_read":    phase_concurrent_write_read,
+    "delete":                                phase_delete,
+    "upload_dbpedia":                        phase_upload_dbpedia,
+    "upload_dbpedia_pinned":                 phase_upload_dbpedia_pinned,
+    "upload_dbpedia_disk":                   phase_upload_dbpedia_disk,
+    "upload_qdrant_deferred_idx_dbpedia":    lambda rd, st, ar: phase_upload_qdrant_deferred_idx(rd, st, ar, "dbpedia"),
+    "upload_qdrant_deferred_idx_hm":         lambda rd, st, ar: phase_upload_qdrant_deferred_idx(rd, st, ar, "hm"),
+    "upload_hm":                             phase_upload_hm,
+    "upload_multitenant":                    phase_upload_multitenant,
+    "search_dbpedia_warm":                   phase_search_dbpedia_warm,
+    "search_dbpedia_fixedqps":              phase_search_dbpedia_fixedqps,
+    "search_dbpedia_disk":                   phase_search_dbpedia_disk,
+    "search_hm_warm":                        phase_search_hm_warm,
+    "search_hm_cold":                        phase_search_hm_cold,
+    "search_multitenant":                    phase_search_multitenant,
+    "concurrent_write_read":                 phase_concurrent_write_read,
 }
 
 async def main():

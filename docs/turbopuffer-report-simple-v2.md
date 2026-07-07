@@ -54,7 +54,7 @@ turbopuffer is not a better search engine. It is a cheaper storage tier for spor
 | Qdrant Cloud | DBpedia (1536-dim) | 100K | 3.9 min | 428 wps | 0s (concurrent) | 0.614 GB |
 | turbopuffer | H&M (2048-dim) | 105K | 3.1 min | 574 wps | — | 0.873 GB |
 | Qdrant Cloud | H&M (2048-dim) | 105K | 9.0 min | 304 wps | 195.8s | 0.926 GB |
-| turbopuffer | Multi-tenant 768-dim (100 ns, parallel upload) | 1M | 2.4 min | 6847 wps | — | — |
+| turbopuffer | Multi-tenant 768-dim (100 ns, parallel upload) | 1M | 2.4 min (p=10) | 6847* wps | — | — |
 | Qdrant Cloud | Multi-tenant 768-dim (1 collection, sequential) | 1M | 20.5 min | 816 wps | 5.1s | 3.200 GB |
 
 †Total time = upsert + extra index wait. For Qdrant H&M: 5.8 min upsert + 3.3 min HNSW build = 9.0 min total. For DBpedia: 3.9 min upsert, HNSW finished concurrently (extra wait = 0s), total = 3.9 min.
@@ -63,7 +63,11 @@ turbopuffer is not a better search engine. It is a cheaper storage tier for spor
 
 §Stored GB: tpuf = `billable_logical_bytes_written` (upsert response, f16 + centroid-tree overhead); Qdrant = vectors + payload from `/telemetry?details_level=10` (f32). Despite tpuf using f16, centroid-tree overhead brings storage close to Qdrant's f32 footprint. MT tpuf value not captured in this run.
 
+*MT tpuf WPS is aggregate wall-clock throughput (total vectors / wall time) across 10 concurrent namespace uploads (asyncio.Semaphore=10). Per-namespace WPS ≈ 624 — same as single-namespace DBpedia.
+
 **turbopuffer write pipeline:** Writes are group-committed (100–250ms windows) then appended to a WAL on S3. Indexing (SPFresh) is asynchronous — new data is immediately visible to reads via exhaustive WAL scan before the index is built. There is no blocking index phase after upload, so tpuf shows no "extra index wait." The deferred cost is per-query: every query scans the centroid tree (and unindexed WAL). With strong consistency (default), each query also checks S3 for the latest WAL — this is the architectural source of tpuf's 10ms server-side latency floor.
+
+**MT parallel upload:** The 2.4 min tpuf multi-tenant upload uses `asyncio.gather` with `semaphore=10` to upload all 100 namespaces concurrently. Sequential uploads would take ~26.7 min (100 × ~16s per 10K-vector namespace at ~624 WPS) — a ~11× speedup from parallelism. Both engines use the same batch size (128 vectors/batch). Qdrant's MT upload is sequential to a single collection and is not comparable in methodology.
 
 **Pinning does not affect write throughput.** Measured on DBpedia: serverless 624 WPS vs pinned-1r 633 WPS — statistically identical. Writes go to S3 WAL regardless of pinning mode; the pinned replica only serves reads. Single-replica tpuf write capacity is ~625 WPS at batch=128 for 1536-dim vectors.
 

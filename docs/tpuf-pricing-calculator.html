@@ -727,7 +727,9 @@ code {
       Storage: f16 (2 B/dim) + 1.2× attr overhead at $0.33/GB.<br>
       Writes: f32 (4 B/dim) at $2/GB; batch discount: <code>min(50%, max(0, (log₁₀(KB)−1)×20%))</code>.<br>
       Queries (serverless): billed per GB scanned; 1.28 GB minimum per namespace; 80% discount above 32 GB, 96% above 128 GB; $0.001/TB. Returned attrs at $0.05/GB.<br>
-      Pinned: $0.01325/GB-hour × max(actual_gb, 64 GB) × replicas × 730 hr/mo. Queries included. Rate reverse-engineered from docs example (256 GB × 1r × 730 hr = $2,476).<br>
+      Pinned: $0.01325/GB-hour × max(actual_gb, 64 GB) × replicas × 730 hr/mo. Queries included.
+      64 GB floor confirmed in <a href="https://turbopuffer.com/docs/pinning" target="_blank">turbopuffer.com/docs/pinning</a>: "namespaces smaller than 64 GB are billed at 64 GB."
+      Rate derived from docs example: $2,476 ÷ (256 GB × 730 hr) = $0.01325/GB-hr.<br>
       Enterprise: 35% usage premium on writes and queries.
     </div>
   </div>
@@ -738,8 +740,8 @@ code {
 'use strict';
 
 /* ── Pinned pricing constants ───────────── */
-const PINNED_RATE_PER_GB_HR = 0.01325; // reverse-engineered: $2,476 / (256 GB × 730 hr)
-const PINNED_FLOOR_GB       = 64;
+const PINNED_RATE_PER_GB_HR = 0.01325; // $2,476 / (256 GB × 730 hr) — turbopuffer.com/docs/pinning example
+const PINNED_FLOOR_GB       = 64;      // confirmed: turbopuffer.com/docs/pinning — "namespaces smaller than 64 GB are billed at 64 GB"
 const HOURS_PER_MONTH       = 730;
 
 function calcPinned(docs, dims, attrBytes, replicas) {
