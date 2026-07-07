@@ -5,8 +5,9 @@ Saves results after each phase and skips completed phases on re-run.
 
 Phases (in order):
   delete                — wipe comparison namespaces/collections from both DBs
-  upload_dbpedia        — DBpedia 100K×1536 → tpuf serverless + Qdrant (batch=128)
-  upload_dbpedia_pinned — DBpedia 100K×1536 → tpuf pinned-1r (single-replica write throughput)
+  upload_dbpedia        — DBpedia 100K×1536 → tpuf serverless, tpuf pinned-1r, Qdrant concurrent, Qdrant deferred
+                          Use --upload-variants to run a subset, e.g. --upload-variants tpuf_pinned
+  upload_dbpedia_pinned — (legacy, now merged into upload_dbpedia as tpuf_pinned variant)
   upload_hm             — H&M 105K×2048    → tpuf + Qdrant (batch=128)
   upload_multitenant    — random-768 1M×100 tenants → tpuf (100 ns) + Qdrant (payload_m=16)
   search_dbpedia_warm   — DBpedia warm: p=1, p=8 — tpuf serverless + Qdrant
@@ -21,11 +22,15 @@ Usage:
   python scripts/reproduce_comparison.py
   python scripts/reproduce_comparison.py --resume results/reproduce-2026-.../
   python scripts/reproduce_comparison.py --only search_dbpedia_warm search_dbpedia_fixedqps
+  python scripts/reproduce_comparison.py --only upload_dbpedia:tpuf_pinned
+  python scripts/reproduce_comparison.py --only upload_dbpedia:tpuf*
+  python scripts/reproduce_comparison.py --only upload_dbpedia:tpuf_pinned,qdrant_concurrent
   python scripts/reproduce_comparison.py --skip upload_multitenant --skip-pinned
 """
 
 import argparse
 import asyncio
+import fnmatch
 import json
 import os
 import sys
@@ -650,8 +655,15 @@ async def phase_delete(run_dir, state, args):
 # PHASE 1: upload_dbpedia
 # ═══════════════════════════════════════════════════════════════════════════════
 
+def _variant_enabled(name: str, patterns: list[str]) -> bool:
+    return any(fnmatch.fnmatch(name, p) for p in patterns)
+
+
 async def phase_upload_dbpedia(run_dir, state, args):
-    print("\n═══ upload_dbpedia ═══")
+    vglobs = getattr(args, "phase_variants", {}).get("upload_dbpedia", "*")
+    patterns = [p.strip() for p in vglobs.split(",")]
+    print(f"\n═══ upload_dbpedia (variants: {', '.join(patterns)}) ═══")
+
     vecs = np.load(DBPEDIA / "vectors.npy")
     ids  = list(range(len(vecs)))
     print(f"  {vecs.shape[0]} × {vecs.shape[1]}, batch={BATCH_SIZE}")
@@ -659,58 +671,92 @@ async def phase_upload_dbpedia(run_dir, state, args):
     tests = [json.loads(l) for l in open(DBPEDIA / "tests.jsonl")]
     test_vec = tests[0]["query"]
 
-    tc = make_tpuf()
-    ns = tc.namespace(TPUF_DBPEDIA)
-    tpuf_up = await tpuf_upload(ns, ids, vecs)
-    print(f"  tpuf upload: {tpuf_up['total_s']/60:.1f} min  wps={tpuf_up['wps']}")
-    tpuf_idx = await tpuf_poll_spfresh_index(ns, test_vec, len(ids))
-    print(f"  tpuf SPFresh build: {tpuf_idx['index_s']}s ({tpuf_idx['index_s']/60:.2f} min)")
-    tpuf = {**tpuf_up, "spfresh_index_s": tpuf_idx["index_s"], "spfresh_poll_rows": tpuf_idx["poll_rows"]}
+    # Start from existing results so partial runs merge rather than overwrite
+    r = dict(state.get("phases", {}).get("upload_dbpedia", {}).get("results", {}))
+    r["batch"] = BATCH_SIZE
 
-    qc = make_qdrant()
-    hnsw_cfg = models.HnswConfigDiff(m=16, ef_construct=128)
+    # ── tpuf serverless ──────────────────────────────────────────────────────
+    if _variant_enabled("tpuf", patterns):
+        tc = make_tpuf()
+        ns = tc.namespace(TPUF_DBPEDIA)
+        tpuf_up = await tpuf_upload(ns, ids, vecs)
+        print(f"  tpuf upload: {tpuf_up['total_s']/60:.1f} min  wps={tpuf_up['wps']}")
+        tpuf_idx = await tpuf_poll_spfresh_index(ns, test_vec, len(ids))
+        print(f"  tpuf SPFresh build: {tpuf_idx['index_s']}s ({tpuf_idx['index_s']/60:.2f} min)")
+        r["tpuf"] = {**tpuf_up, "spfresh_index_s": tpuf_idx["index_s"], "spfresh_poll_rows": tpuf_idx["poll_rows"]}
 
-    # Qdrant concurrent: default indexing_threshold, HNSW builds during upsert
-    try:
-        await qc.delete_collection(QDRANT_DBPEDIA)
-    except Exception:
-        pass
-    await qc.create_collection(
-        collection_name=QDRANT_DBPEDIA,
-        vectors_config=models.VectorParams(size=vecs.shape[1], distance=models.Distance.COSINE),
-        hnsw_config=hnsw_cfg,
-        optimizers_config=models.OptimizersConfigDiff(memmap_threshold=10_000_000),
-    )
-    qt = await qdrant_upload(qc, QDRANT_DBPEDIA, vecs, ids)
-    print(f"  qdrant concurrent: upsert {(qt['total_s']-qt['index_s'])/60:.1f} min  index {qt['index_s']/60:.1f} min  total {qt['total_s']/60:.1f} min  wps={qt['wps']}")
+    # ── tpuf pinned-1r ───────────────────────────────────────────────────────
+    if _variant_enabled("tpuf_pinned", patterns) and not args.skip_pinned:
+        tc = make_tpuf()
+        ns_p = tc.namespace(TPUF_DBPEDIA_PINNED)
+        seed_cols = {"id": ids[:BATCH_SIZE], "vector": vecs[:BATCH_SIZE].tolist()}
+        await ns_p.write(upsert_columns=seed_cols, distance_metric="cosine_distance")
+        print("  tpuf pinned: seed batch written — pinning...")
+        await pin_and_wait(ns_p, replicas=1)
+        tpuf_p_up = await tpuf_upload(ns_p, ids, vecs)
+        print(f"  tpuf pinned upload: {tpuf_p_up['total_s']/60:.1f} min  wps={tpuf_p_up['wps']}")
+        tpuf_p_idx = await tpuf_poll_spfresh_index(ns_p, test_vec, len(ids))
+        print(f"  tpuf pinned SPFresh build: {tpuf_p_idx['index_s']}s ({tpuf_p_idx['index_s']/60:.2f} min)")
+        await unpin(ns_p)
+        r["tpuf_pinned_1r"] = {**tpuf_p_up, "spfresh_index_s": tpuf_p_idx["index_s"], "spfresh_poll_rows": tpuf_p_idx["poll_rows"]}
+    elif _variant_enabled("tpuf_pinned", patterns) and args.skip_pinned:
+        print("  tpuf_pinned skipped (--skip-pinned)")
 
-    # Qdrant deferred: indexing_threshold=0 during upsert, then trigger HNSW build
-    try:
-        await qc.delete_collection(QDRANT_DBPEDIA_DEFERRED_IDX)
-    except Exception:
-        pass
-    await qc.create_collection(
-        collection_name=QDRANT_DBPEDIA_DEFERRED_IDX,
-        vectors_config=models.VectorParams(size=vecs.shape[1], distance=models.Distance.COSINE),
-        hnsw_config=hnsw_cfg,
-        optimizers_config=models.OptimizersConfigDiff(indexing_threshold=0, memmap_threshold=10_000_000),
-    )
-    qt_upsert = await qdrant_upload_only(qc, QDRANT_DBPEDIA_DEFERRED_IDX, vecs, ids)
-    print(f"  qdrant deferred upsert: {qt_upsert['total_s']/60:.2f} min  wps={qt_upsert['wps']}")
-    qt_index = await qdrant_trigger_and_wait_index(qc, QDRANT_DBPEDIA_DEFERRED_IDX, len(ids))
-    print(f"  qdrant deferred HNSW:   {qt_index['index_s']}s ({qt_index['index_s']/60:.2f} min)  {qt_index['index_vps']} vps")
-    qt_deferred = {"upsert": qt_upsert, "indexing": qt_index, "total_s": round(qt_upsert["total_s"] + qt_index["index_s"], 1)}
+    # ── Qdrant concurrent ────────────────────────────────────────────────────
+    if _variant_enabled("qdrant_concurrent", patterns):
+        qc = make_qdrant()
+        hnsw_cfg = models.HnswConfigDiff(m=16, ef_construct=128)
+        try:
+            await qc.delete_collection(QDRANT_DBPEDIA)
+        except Exception:
+            pass
+        await qc.create_collection(
+            collection_name=QDRANT_DBPEDIA,
+            vectors_config=models.VectorParams(size=vecs.shape[1], distance=models.Distance.COSINE),
+            hnsw_config=hnsw_cfg,
+            optimizers_config=models.OptimizersConfigDiff(memmap_threshold=10_000_000),
+        )
+        qt = await qdrant_upload(qc, QDRANT_DBPEDIA, vecs, ids)
+        print(f"  qdrant concurrent: upsert {(qt['total_s']-qt['index_s'])/60:.1f} min  index {qt['index_s']/60:.1f} min  total {qt['total_s']/60:.1f} min  wps={qt['wps']}")
+        await qc.close()
+        r["qdrant"] = qt
 
-    await qc.close()
+    # ── Qdrant deferred ──────────────────────────────────────────────────────
+    if _variant_enabled("qdrant_deferred", patterns):
+        qc = make_qdrant()
+        hnsw_cfg = models.HnswConfigDiff(m=16, ef_construct=128)
+        try:
+            await qc.delete_collection(QDRANT_DBPEDIA_DEFERRED_IDX)
+        except Exception:
+            pass
+        await qc.create_collection(
+            collection_name=QDRANT_DBPEDIA_DEFERRED_IDX,
+            vectors_config=models.VectorParams(size=vecs.shape[1], distance=models.Distance.COSINE),
+            hnsw_config=hnsw_cfg,
+            optimizers_config=models.OptimizersConfigDiff(indexing_threshold=0, memmap_threshold=10_000_000),
+        )
+        qt_upsert = await qdrant_upload_only(qc, QDRANT_DBPEDIA_DEFERRED_IDX, vecs, ids)
+        print(f"  qdrant deferred upsert: {qt_upsert['total_s']/60:.2f} min  wps={qt_upsert['wps']}")
+        qt_index = await qdrant_trigger_and_wait_index(qc, QDRANT_DBPEDIA_DEFERRED_IDX, len(ids))
+        print(f"  qdrant deferred HNSW:   {qt_index['index_s']}s ({qt_index['index_s']/60:.2f} min)  {qt_index['index_vps']} vps")
+        await qc.close()
+        r["qdrant_deferred"] = {"upsert": qt_upsert, "indexing": qt_index, "total_s": round(qt_upsert["total_s"] + qt_index["index_s"], 1)}
 
-    r = {"tpuf": tpuf, "qdrant": qt, "qdrant_deferred": qt_deferred, "batch": BATCH_SIZE}
     mark_done(run_dir, state, "upload_dbpedia", r)
-    report_upload("DBpedia 100K×1536", r)
-    tpuf_total = tpuf_up["total_s"] + tpuf_idx["index_s"]
+
     print(f"\n  ┌─ Upload comparison: DBpedia 100K×1536")
-    print(f"  │  tpuf          upload={tpuf_up['total_s']/60:.2f}min  SPFresh={tpuf_idx['index_s']/60:.2f}min  total={tpuf_total/60:.2f}min")
-    print(f"  │  qdrant conc.  upsert+index={qt['total_s']/60:.2f}min (concurrent, index_s={qt['index_s']}s extra)")
-    print(f"  │  qdrant defer. upsert={qt_upsert['total_s']/60:.2f}min  HNSW={qt_index['index_s']/60:.2f}min  total={qt_deferred['total_s']/60:.2f}min")
+    if "tpuf" in r:
+        t = r["tpuf"]
+        print(f"  │  tpuf serverless  upload={t['total_s']/60:.2f}min  SPFresh={t['spfresh_index_s']/60:.2f}min  total={(t['total_s']+t['spfresh_index_s'])/60:.2f}min  wps={t['wps']}")
+    if "tpuf_pinned_1r" in r:
+        t = r["tpuf_pinned_1r"]
+        print(f"  │  tpuf pinned-1r   upload={t['total_s']/60:.2f}min  SPFresh={t['spfresh_index_s']/60:.2f}min  total={(t['total_s']+t['spfresh_index_s'])/60:.2f}min  wps={t['wps']}")
+    if "qdrant" in r:
+        qt = r["qdrant"]
+        print(f"  │  qdrant conc.     upsert+index={qt['total_s']/60:.2f}min (index_s={qt['index_s']}s extra)  wps={qt['wps']}")
+    if "qdrant_deferred" in r:
+        qd = r["qdrant_deferred"]
+        print(f"  │  qdrant deferred  upsert={qd['upsert']['total_s']/60:.2f}min  HNSW={qd['indexing']['index_s']/60:.2f}min  total={qd['total_s']/60:.2f}min  wps={qd['upsert']['wps']}")
     print(f"  └─")
 
 
@@ -1732,27 +1778,53 @@ PHASE_FNS = {
     "concurrent_write_read":                 phase_concurrent_write_read,
 }
 
+def _parse_phase_spec(s: str):
+    """Parse 'phase' or 'phase:variant-globs' into (phase, globs_str)."""
+    parts = s.split(":", 1)
+    phase = parts[0]
+    if phase not in PHASES:
+        raise argparse.ArgumentTypeError(
+            f"unknown phase {phase!r}. choices: {', '.join(PHASES)}"
+        )
+    return (phase, parts[1] if len(parts) > 1 else "*")
+
+
 async def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--resume", metavar="DIR", help="Resume from existing run directory")
-    ap.add_argument("--only",   nargs="+", choices=PHASES, metavar="PHASE", help="Run only these phases")
+    ap.add_argument("--only",   nargs="+", type=_parse_phase_spec, metavar="PHASE[:VARIANTS]",
+                    help="Run only these phases. Append :VARIANTS to filter sub-variants, e.g. "
+                         "upload_dbpedia:tpuf_pinned or upload_dbpedia:tpuf* or upload_dbpedia:tpuf_pinned,qdrant_concurrent. "
+                         "Partial variant runs merge into existing results.")
     ap.add_argument("--skip",   nargs="+", choices=PHASES, metavar="PHASE", default=[], help="Skip these phases")
     ap.add_argument("--skip-pinned", action="store_true", help="Skip H&M pinned-replica phases")
     args = ap.parse_args()
+
+    # Build phase_variants: phase → comma-separated glob string (default "*")
+    if args.only:
+        args.phase_variants = {phase: vglobs for phase, vglobs in args.only}
+        to_run = [phase for phase, _ in args.only]
+    else:
+        args.phase_variants = {}
+        to_run = PHASES
 
     run_dir = Path(args.resume) if args.resume else Path(f"results/reproduce-{time.strftime('%Y-%m-%dT%H-%M-%S')}")
     run_dir.mkdir(parents=True, exist_ok=True)
     state = load_state(run_dir)
     print(f"Run dir: {run_dir}")
 
-    to_run = args.only if args.only else PHASES
     for phase in to_run:
         if phase in args.skip:
             print(f"\n  skip {phase} (--skip)")
             continue
         if is_done(state, phase):
-            print(f"\n  skip {phase} (already done)")
-            continue
+            # Re-enter the phase if a variant filter was specified (partial run, merges results)
+            vglobs = args.phase_variants.get(phase, "*")
+            if vglobs != "*":
+                print(f"\n  re-entering {phase} (variants: {vglobs})")
+            else:
+                print(f"\n  skip {phase} (already done)")
+                continue
         await PHASE_FNS[phase](run_dir, state, args)
 
     print(f"\n═══ All done → {run_dir}/state.json ═══")
