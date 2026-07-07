@@ -671,6 +671,10 @@ async def phase_upload_dbpedia(run_dir, state, args):
     hnsw_cfg = models.HnswConfigDiff(m=16, ef_construct=128)
 
     # Qdrant concurrent: default indexing_threshold, HNSW builds during upsert
+    try:
+        await qc.delete_collection(QDRANT_DBPEDIA)
+    except Exception:
+        pass
     await qc.create_collection(
         collection_name=QDRANT_DBPEDIA,
         vectors_config=models.VectorParams(size=vecs.shape[1], distance=models.Distance.COSINE),
