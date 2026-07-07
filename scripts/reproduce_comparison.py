@@ -49,8 +49,9 @@ HM       = BASE / "datasets/h-and-m-2048-angular/hnm"
 MT       = BASE / "datasets/random-768-100-tenants/random_keywords_1m_768_vocab_100"
 
 # ── Namespace / collection names ───────────────────────────────────────────────
-TPUF_DBPEDIA        = "reproduce-dbpedia-100k-1536"
-TPUF_DBPEDIA_PINNED = "reproduce-dbpedia-pinned-1r"
+TPUF_DBPEDIA               = "reproduce-dbpedia-100k-1536"
+TPUF_DBPEDIA_PINNED        = "reproduce-dbpedia-pinned-1r"
+TPUF_DBPEDIA_SPFRESH_TIMING = "reproduce-dbpedia-spfresh-timing"
 TPUF_HM             = "reproduce-hm-105k-2048"
 TPUF_MT_PFX         = "reproduce-mt-"      # + tenant value
 
@@ -430,6 +431,40 @@ async def qdrant_trigger_and_wait_index(qc, collection, total_vectors, indexing_
     }
 
 
+async def tpuf_poll_spfresh_index(ns, test_vec, total_vectors, poll_interval=5):
+    """Poll a tpuf namespace after upload until exhaustive_search_count reaches 0.
+
+    exhaustive_search_count > 0 means unindexed WAL vectors are being scanned
+    brute-force. When it hits 0, SPFresh has indexed all vectors into its centroid
+    tree and WAL scan is no longer needed.
+
+    Returns:
+      index_s   — wall-clock seconds from first poll until exhaustive_search_count==0
+      poll_rows — list of [t_s, exhaustive_count, query_ms] for plotting
+    """
+    print("  Polling SPFresh build (exhaustive_search_count → 0) ...", flush=True)
+    t0 = time.perf_counter()
+    poll_rows = []
+    while True:
+        bt = time.perf_counter()
+        r  = await ns.query(
+            rank_by=("vector", "ANN", test_vec),
+            top_k=10,
+            include_attributes=False,
+        )
+        query_ms  = round((time.perf_counter() - bt) * 1000, 1)
+        t_s       = round(time.perf_counter() - t0, 1)
+        exhaustive = r.performance.exhaustive_search_count if r.performance else -1
+        pct_indexed = f"{(1 - exhaustive / total_vectors) * 100:.1f}%" if total_vectors and exhaustive >= 0 else "?"
+        poll_rows.append([t_s, exhaustive, query_ms])
+        print(f"    t={t_s}s  exhaustive={exhaustive}  indexed≈{pct_indexed}  query={query_ms}ms", flush=True)
+        if exhaustive == 0:
+            break
+        await asyncio.sleep(poll_interval)
+    index_s = round(time.perf_counter() - t0, 1)
+    return {"index_s": index_s, "poll_rows": poll_rows}
+
+
 def report_upload(label, r):
     tpuf = r["tpuf"]
     qt   = r["qdrant"]
@@ -622,9 +657,16 @@ async def phase_upload_dbpedia(run_dir, state, args):
     ids  = list(range(len(vecs)))
     print(f"  {vecs.shape[0]} × {vecs.shape[1]}, batch={BATCH_SIZE}")
 
+    tests = [json.loads(l) for l in open(DBPEDIA / "tests.jsonl")]
+    test_vec = tests[0]["query"]
+
     tc = make_tpuf()
-    tpuf = await tpuf_upload(tc.namespace(TPUF_DBPEDIA), ids, vecs)
-    print(f"  tpuf: {tpuf['total_s']/60:.1f} min  wps={tpuf['wps']}")
+    ns = tc.namespace(TPUF_DBPEDIA)
+    tpuf_up = await tpuf_upload(ns, ids, vecs)
+    print(f"  tpuf upload: {tpuf_up['total_s']/60:.1f} min  wps={tpuf_up['wps']}")
+    tpuf_idx = await tpuf_poll_spfresh_index(ns, test_vec, len(ids))
+    print(f"  tpuf SPFresh build: {tpuf_idx['index_s']}s ({tpuf_idx['index_s']/60:.2f} min)")
+    tpuf = {**tpuf_up, "spfresh_index_s": tpuf_idx["index_s"], "spfresh_poll_rows": tpuf_idx["poll_rows"]}
 
     qc = make_qdrant()
     await qc.create_collection(
@@ -640,6 +682,8 @@ async def phase_upload_dbpedia(run_dir, state, args):
     r = {"tpuf": tpuf, "qdrant": qt, "batch": BATCH_SIZE}
     mark_done(run_dir, state, "upload_dbpedia", r)
     report_upload("DBpedia 100K×1536", r)
+    tpuf_total = tpuf_up["total_s"] + tpuf_idx["index_s"]
+    print(f"  tpuf total (upload+SPFresh): {tpuf_total/60:.2f} min  vs qdrant {qt['total_s']/60:.2f} min")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
