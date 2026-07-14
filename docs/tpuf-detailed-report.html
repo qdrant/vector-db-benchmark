@@ -525,6 +525,48 @@ canvas {
   * { transition: none !important; animation: none !important; }
   html { scroll-behavior: auto; }
 }
+
+/* ── Interactive plot component ───────────────────────────────── */
+.iplot { margin: 20px 0; }
+.iplot-bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; margin: 0 2px 12px;
+}
+.iplot-bar label {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--text-2); display: inline-flex; align-items: center; gap: 8px;
+}
+.iplot-bar select {
+  font-family: var(--font-mono); font-size: 13px; padding: 6px 10px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--surface); color: var(--text); cursor: pointer;
+}
+.iplot-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; font-family: var(--font-mono); font-size: 12px; }
+.iplot-legend .grp { display: inline-flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
+.iplot-legend .lab { color: var(--text-2); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+.iplot-legend .eng {
+  cursor: pointer; user-select: none; border-radius: 5px; padding: 2px 6px;
+  transition: opacity 0.12s; display: inline-flex; align-items: center; gap: 7px;
+}
+.iplot-legend .eng.off { opacity: 0.32; text-decoration: line-through; }
+.iplot-legend .sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.iplot-panel {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px 8px 6px; margin: 12px 0;
+}
+.iplot-panel .pt {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+  color: var(--text); margin: 0 0 2px 14px;
+}
+.iplot-panel .ps { font-size: 11px; color: var(--text-2); margin: 0 0 4px 14px; }
+.iplot-panel svg { display: block; width: 100%; height: auto; }
+.iplot .mk { cursor: pointer; }
+.iplot .mk:hover { opacity: 0.85; }
+#iplot-tip {
+  position: fixed; z-index: 80; pointer-events: none; background: var(--code-bg); color: #fff;
+  font-family: var(--font-mono); font-size: 11.5px; line-height: 1.5; padding: 8px 11px;
+  border-radius: 8px; opacity: 0; transition: opacity 0.08s; box-shadow: 0 6px 20px rgba(0,0,0,0.22); max-width: 260px;
+}
+#iplot-tip b { font-weight: 600; }
 </style>
 </head>
 <body>
@@ -681,6 +723,40 @@ canvas {
         <p>The cleanest apples-to-apples comparison: large-scale unfiltered ANN on OpenAI-style 1536-dim embeddings. Both engines achieve comparable recall (tpuf 98.51% / Qdrant 98.36%); the difference is latency and cost structure.</p>
       </div>
 
+      <!-- Interactive metric explorer (leads the section; tables below) -->
+      <div class="iplot" id="iplot-dbpedia">
+        <div class="iplot-bar">
+          <label>metric
+            <select class="iplot-metric">
+              <optgroup label="query (↑/↓ better)">
+                <option value="qps">QPS — throughput ↑</option>
+                <option value="rmean">read mean latency ↓</option>
+                <option value="rp99">read p99 latency ↓</option>
+                <option value="srv50">server p50 latency ↓</option>
+                <option value="srv99">server p99 latency ↓</option>
+                <option value="billed">billed GB / query ↓</option>
+                <option value="recall">recall ↑</option>
+              </optgroup>
+              <optgroup label="write / build (↑/↓ better)">
+                <option value="wps">WPS — insert throughput ↑</option>
+                <option value="up">upload time ↓</option>
+                <option value="idx">index build time ↓</option>
+                <option value="total" selected>total upload + index ↓</option>
+                <option value="wp50">write p50 latency ↓</option>
+                <option value="wp99">write p99 latency ↓</option>
+                <option value="store">stored size ↓</option>
+              </optgroup>
+            </select>
+          </label>
+          <div class="iplot-legend"></div>
+        </div>
+        <div class="iplot-panel">
+          <div class="pt">DBpedia 100K × 1536 · unfiltered ANN</div>
+          <div class="ps">Bars = one config. Hover for detail; click an engine to toggle. Lighter extension = measured range (e.g. SPFresh 25–268s across 5 runs).</div>
+          <svg class="iplot-svg" viewBox="0 0 900 300" role="img" aria-label="DBpedia interactive metric chart"></svg>
+        </div>
+      </div>
+
       <h3>4.1 &mdash; Single-Concurrency Baseline (p=1)</h3>
       <div class="table-wrap">
         <table>
@@ -695,16 +771,30 @@ canvas {
           </tbody>
         </table>
       </div>
-      <div class="chart-block">
-        <div class="chart-title">DBpedia Latency Distribution &mdash; p=1 (Total vs Server)</div>
-        <div class="chart-sub">Mean / p99 total latency and server latency in milliseconds. Lower is better.</div>
-        <canvas id="c-dbpedia-lat" width="560" height="280" aria-label="Grouped bar chart showing turbopuffer and Qdrant total and server latencies: tpuf total mean 15.9ms server 10ms; Qdrant total mean 6.9ms server 1.9ms"></canvas>
-      </div>
       <div class="callout">
         <strong>Full-dataset scan per query:</strong> tpuf reports 0.615 GB scanned per DBpedia query &mdash; essentially the entire dataset (0.614 GB raw) &mdash; and invoices at the 1.28 GB per-query minimum (§4.3). Cost scales linearly with data size &times; QPS once above that floor. Qdrant server p99 = 2.5ms (1.3&times; p50); tpuf server p99 = 40ms (4&times; p50).
       </div>
 
       <h3>4.2 &mdash; Fixed-QPS Sweep</h3>
+      <div class="iplot" id="iplot-qps">
+        <div class="iplot-bar">
+          <label>metric
+            <select class="iplot-metric">
+              <option value="p50" selected>p50 latency ↓</option>
+              <option value="p99">p99 latency ↓</option>
+              <option value="srv50">server p50 latency ↓</option>
+              <option value="srv99">server p99 latency ↓</option>
+              <option value="cost">monthly cost ↓</option>
+            </select>
+          </label>
+          <div class="iplot-legend"></div>
+        </div>
+        <div class="iplot-panel">
+          <div class="pt">DBpedia · latency &amp; cost vs offered QPS</div>
+          <div class="ps">Lines sweep target QPS (log x, log y). tpuf latency is roughly QPS-independent; cost crosses Qdrant's flat $26.10 near ~8 QPS. Hover a point; click an engine to toggle.</div>
+          <svg class="iplot-svg" viewBox="0 0 900 320" role="img" aria-label="DBpedia latency and cost vs QPS sweep"></svg>
+        </div>
+      </div>
       <div class="table-wrap">
         <table>
           <thead>
@@ -722,16 +812,6 @@ canvas {
             <tr><td>50</td><td>15.2ms</td><td>42.7ms</td><td>10ms</td><td>35ms</td><td>$165.99</td><td class="win">7.3ms</td><td class="win">10.7ms</td><td class="win">1.9ms</td><td class="win">2.5ms</td><td class="win">$26.10</td></tr>
           </tbody>
         </table>
-      </div>
-      <div class="chart-block">
-        <div class="chart-title">Fixed-QPS Latency &mdash; Mean &amp; p99</div>
-        <div class="chart-sub">p50 &amp; p99 milliseconds vs. target QPS. turbopuffer latency is roughly QPS-independent.</div>
-        <canvas id="c-qps-lat" width="560" height="240" aria-label="Line chart: turbopuffer and Qdrant mean and p99 latency across 1, 5, 10, 20, 50 QPS"></canvas>
-      </div>
-      <div class="chart-block">
-        <div class="chart-title">Monthly Cost vs QPS &mdash; With Break-Even</div>
-        <div class="chart-sub">turbopuffer scales linearly with queries; Qdrant is flat. Break-even ~8 QPS for this dataset.</div>
-        <canvas id="c-cost" width="560" height="260" aria-label="Line chart with filled area: turbopuffer cost rises from $3.42 to $165.99; Qdrant flat at $26.10. Crossover highlighted at ~8 QPS."></canvas>
       </div>
       <div class="callout neutral">
         Qdrant server p99 stays at 2.5ms from 1&rarr;50 QPS &mdash; the single node has ample headroom. tpuf server p99 is 25&ndash;46ms (flat at higher floor).
@@ -777,6 +857,25 @@ canvas {
         <p>Filtered vector search is where architecture choices have the sharpest consequences. SPFresh (turbopuffer) post-filters: it traverses centroids first, then discards non-matching vectors. Qdrant integrates the filter directly into HNSW traversal, preserving effective graph structure.</p>
       </div>
 
+      <div class="iplot" id="iplot-hm-conc">
+        <div class="iplot-bar">
+          <label>metric
+            <select class="iplot-metric">
+              <option value="rpst" selected>total RPS — throughput ↑</option>
+              <option value="rpsw">RPS / worker ↑</option>
+              <option value="p50">read p50 latency ↓</option>
+              <option value="p99">read p99 latency ↓</option>
+            </select>
+          </label>
+          <div class="iplot-legend"></div>
+        </div>
+        <div class="iplot-panel">
+          <div class="pt">H&amp;M filtered · vs client concurrency (p = 1 / 8 / 32)</div>
+          <div class="ps">Log x, log y. Qdrant leads single-stream; at p=32 its 2-CPU node saturates while tpuf autoscales. Hover a point; click an engine to toggle.</div>
+          <svg class="iplot-svg" viewBox="0 0 900 320" role="img" aria-label="H&M filtered search vs concurrency"></svg>
+        </div>
+      </div>
+
       <h3>5.1 &mdash; turbopuffer (serverless, hot NVMe cache)</h3>
       <div class="table-wrap">
         <table>
@@ -808,11 +907,6 @@ canvas {
       <div class="callout tpuf">
         <strong>Cold-start penalty (prior measurement):</strong> tpuf cold p99 = 1,891ms (server_p99 = 1,777ms — 94% server-side S3 fetches). Hot cache (NVMe, above) p99 = 50ms — a 38&times; improvement once centroids are cached. Qdrant has no cold-start: HNSW lives in RAM permanently.
       </div>
-      <div class="chart-block">
-        <div class="chart-title">H&amp;M p99 Latency &mdash; Server vs Network Breakdown</div>
-        <div class="chart-sub">Stacked bars: server-side (NVMe/S3) + network. Qdrant always warm (HNSW in RAM).</div>
-        <canvas id="c-hm-p99" width="480" height="300" aria-label="Bar chart: tpuf hot p99 50ms; tpuf cold p99 1891ms; Qdrant p=1 p99 9.9ms"></canvas>
-      </div>
       <div class="callout tpuf">
         <strong>Why recall drops under filtering:</strong> SPFresh post-filters after centroid traversal &mdash; vectors matching the filter may not be in the traversed centroid regions at all. Qdrant's filter-aware HNSW traversal constrains the graph walk to matching nodes, preserving recall. The ~7% gap (89.14% vs 95.85%) is not tunable on turbopuffer.
       </div>
@@ -824,6 +918,24 @@ canvas {
         <div class="section-eyebrow">&sect;6</div>
         <h2>Multi-Tenant Search</h2>
         <p>100 tenants, ~10,000 vectors each (1M total). At this per-tenant scale, both engines achieve 100% recall &mdash; the index structures have negligible approximation error over 10K vectors. Throughput tells the real story.</p>
+      </div>
+      <div class="iplot" id="iplot-mt-conc">
+        <div class="iplot-bar">
+          <label>metric
+            <select class="iplot-metric">
+              <option value="rpst" selected>total RPS — throughput ↑</option>
+              <option value="rpsw">RPS / worker ↑</option>
+              <option value="p50">p50 latency ↓</option>
+              <option value="p99">p99 latency ↓</option>
+            </select>
+          </label>
+          <div class="iplot-legend"></div>
+        </div>
+        <div class="iplot-panel">
+          <div class="pt">Multi-tenant (100 × 10K) · vs client concurrency (p = 1 / 8 / 32)</div>
+          <div class="ps">Log x, log y. Both hit 100% recall here. Qdrant's single 2-CPU node leads until it saturates past p=8; tpuf autoscales and overtakes on total throughput at p=32. Hover a point; click an engine to toggle.</div>
+          <svg class="iplot-svg" viewBox="0 0 900 320" role="img" aria-label="Multi-tenant throughput and latency vs concurrency"></svg>
+        </div>
       </div>
       <div class="table-wrap">
         <table>
@@ -839,11 +951,6 @@ canvas {
             <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>32</td><td>9.5</td><td>304</td><td>74.5ms</td><td>444.8ms</td><td>—</td><td>—</td><td>—</td><td>100%</td></tr>
           </tbody>
         </table>
-      </div>
-      <div class="chart-block">
-        <div class="chart-title">Multi-Tenant RPS vs Concurrency</div>
-        <div class="chart-sub">Per-worker RPS (1/mean latency) at p=1, p=8, p=32 &mdash; see table for wall-clock totals. Qdrant leads at low concurrency; tpuf crossover at p=32.</div>
-        <canvas id="c-mt-rps" width="560" height="280" aria-label="Line chart: tpuf 33.5/43.7/16.8 RPS vs Qdrant 184.6/46.9/9.5 RPS at p=1/8/32, crossover at p=32"></canvas>
       </div>
       <div class="callout neutral">
         <strong>Why 100% recall?</strong> With ~10,000 vectors per tenant, both HNSW (Qdrant: <code>m=0, payload_m=16</code> builds per-tenant sub-graphs) and SPFresh centroid structures (tpuf) have negligible approximation error &mdash; the per-tenant index is small enough for near-exhaustive traversal. The multi-tenant comparison is purely a throughput and cost question, not a recall quality question.
@@ -863,10 +970,22 @@ canvas {
         <h2>Recall Summary</h2>
         <p>Recall numbers remain stable across all tested concurrency levels (p=1, p=8, p=32) &mdash; the recall values here reflect p=1 baselines.</p>
       </div>
-      <div class="chart-block">
-        <div class="chart-title">Recall by Scenario</div>
-        <div class="chart-sub">Higher is better. Dashed line at 95% marks a common quality threshold.</div>
-        <canvas id="c-recall" width="560" height="200" aria-label="Grouped horizontal bars: unfiltered tpuf 98.51% vs Qdrant 98.36%, filtered tpuf 89.14% vs Qdrant 95.85%, multi-tenant both 100%"></canvas>
+      <div class="iplot" id="iplot-recall">
+        <div class="iplot-bar">
+          <label>scenario
+            <select class="iplot-metric">
+              <option value="filtered" selected>H&amp;M — filtered (k=25)</option>
+              <option value="unfiltered">DBpedia — unfiltered (k=10)</option>
+              <option value="mt">Multi-tenant (10K/tenant)</option>
+            </select>
+          </label>
+          <div class="iplot-legend"></div>
+        </div>
+        <div class="iplot-panel">
+          <div class="pt">Recall @ k — higher is better (domain zoomed to 80–100%)</div>
+          <div class="ps">Qdrant's filter-integrated HNSW holds 95.85% on filtered search; tpuf's post-filter SPFresh drops to 89.14% and can't be tuned up. Unfiltered and multi-tenant are near-parity. Hover for exact values.</div>
+          <svg class="iplot-svg" viewBox="0 0 900 200" role="img" aria-label="Recall by scenario"></svg>
+        </div>
       </div>
       <div class="callout tpuf">
         <strong>The ~7% recall gap on filtered search is structural, not tunable.</strong> SPFresh's post-filter architecture cannot be configured to match Qdrant's filter-integrated HNSW. If your workload involves selective attribute filtering, this gap is permanent.
@@ -889,20 +1008,22 @@ canvas {
         <canvas id="c-warmup" width="600" height="260" aria-label="Line chart: first query ~893ms, rapid decay with periodic spikes, converges near 43ms by query 30"></canvas>
       </div>
 
-      <h3>8.2 &mdash; Core Count / Concurrency Sweep</h3>
-      <p>RPS as a function of client concurrency. Pinned 1-replica hits a ~370 RPS ceiling around p=8&ndash;16, consistent with 8 NVMe reader cores. Serverless accesses shared compute and scales further.</p>
-      <div class="chart-block">
-        <div class="chart-title">RPS vs Concurrency &mdash; Pinned 1r vs Serverless</div>
-        <div class="chart-sub">DBpedia unfiltered. X-axis: concurrency level (1, 2, 4, 8, 16, 32, 64).</div>
-        <canvas id="c-cores" width="600" height="260" aria-label="Line chart: pinned 1r peaks ~370 RPS at p=16; serverless continues to ~507 RPS at p=64"></canvas>
-      </div>
-
-      <h3>8.3 &mdash; Pinned 4-Replica Sweep</h3>
-      <p>Four replicas deliver roughly 4&times; peak RPS compared to 1-replica, peaking ~473 RPS at p=16. Sub-linear RPS growth at p&gt;16 indicates NVMe bandwidth saturation.</p>
-      <div class="chart-block">
-        <div class="chart-title">Pinned 4-Replica: RPS vs Concurrency</div>
-        <div class="chart-sub">Peak at p=16, then sub-linear &mdash; NVMe bandwidth bottleneck.</div>
-        <canvas id="c-4r" width="560" height="240" aria-label="Line chart: peaks at 473 RPS at p=16, then plateaus/declines at higher concurrency"></canvas>
+      <h3>8.2 &mdash; RPS vs Concurrency (pinned 1r / serverless / 4-replica)</h3>
+      <p>Aggregate RPS as client concurrency scales. Pinned 1-replica hits a ~370 RPS ceiling around p=8&ndash;16 (≈8 NVMe reader cores); serverless taps shared compute and scales further (~507 RPS); 4 replicas roughly quadruple peak throughput to ~473 RPS at p=16, then go sub-linear as NVMe bandwidth saturates.</p>
+      <div class="iplot" id="iplot-cores">
+        <div class="iplot-bar">
+          <label>metric
+            <select class="iplot-metric">
+              <option value="rps" selected>aggregate RPS ↑</option>
+            </select>
+          </label>
+          <div class="iplot-legend"></div>
+        </div>
+        <div class="iplot-panel">
+          <div class="pt">DBpedia unfiltered · RPS vs client concurrency (1 → 128)</div>
+          <div class="ps">Log x, log y. Click a series to toggle. Pinned-1r plateaus at the single-node NVMe ceiling; serverless scales past it; 4 replicas lift the ceiling ~4× but saturate on NVMe bandwidth, not CPU.</div>
+          <svg class="iplot-svg" viewBox="0 0 900 320" role="img" aria-label="RPS vs concurrency for pinned-1r, serverless, and 4-replica"></svg>
+        </div>
       </div>
 
       <h3>8.4 &mdash; Replica Boot Time</h3>
@@ -2729,6 +2850,228 @@ document.addEventListener('DOMContentLoaded', function() {
   for (var i = 0; i < links.length; i++) {
     links[i].addEventListener('click', closeSidebar);
   }
+})();
+</script>
+<div id="iplot-tip"></div>
+<script>
+/* ── Interactive plot components ───────────────────────────────────
+   Three reusable SVG renderers sharing one tooltip:
+     • initBarExplorer — per-config metric bars (metric <select>, engine
+       toggle). A value may be a number, a [lo,hi] range (lighter
+       extension), or undefined (row skipped).
+     • initSweep — metric vs a swept x (QPS / concurrency), log-log,
+       one line per series, series toggle.
+     • initRecall — recall bars per scenario, domain zoomed to 80–100%.  */
+(function(){
+  const gv = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const CO = { tpuf: gv('--tpuf'), qdrant: gv('--qdrant') };
+  const GRID = gv('--border'), MUT = gv('--text-2'), INK = gv('--text');
+  const ENGINES = [['turbopuffer','tpuf'], ['Qdrant','qdrant']];
+  const tip = document.getElementById('iplot-tip');
+  const lo = v => Array.isArray(v) ? v[0] : v;
+  const hi = v => Array.isArray(v) ? v[1] : v;
+  const has = v => v !== undefined && v !== null;
+  const kfmt = v => v >= 1000 ? (v/1000).toFixed(1)+'K' : (''+v);
+
+  function wireTip(svg){
+    svg.addEventListener('mouseover', e => { const gg=e.target.closest('.mk'); if(!gg) return;
+      const p = gg.dataset.tip.split('||');
+      tip.innerHTML = `<b>${p[0]}</b><br>${p[1]}<br>${p[2]}`; tip.style.opacity=1; });
+    svg.addEventListener('mousemove', e => { tip.style.left=Math.min(e.clientX+14, innerWidth-270)+'px'; tip.style.top=(e.clientY+14)+'px'; });
+    svg.addEventListener('mouseout', e => { if(e.target.closest('.mk')) tip.style.opacity=0; });
+  }
+  function logticks(lo,hi){ const out=[]; for(let k=Math.floor(Math.log10(lo)); k<=Math.ceil(Math.log10(hi)); k++) for(const b of [1,2,5]){ const v=b*10**k; if(v>=lo*0.95 && v<=hi*1.05) out.push(v); } return out; }
+  const gfmt = v => v>=1000 ? (v/1000).toFixed(1)+'K' : v>=100 ? Math.round(v) : v>=10 ? v.toFixed(0) : v.toFixed(1);
+
+  /* ═══ DBpedia bar explorer ═══ */
+  const DBPEDIA = [
+    { n:'tpuf serverless', e:'tpuf',
+      qps:57.1, rmean:15.9, rp99:47.1, srv50:10, srv99:40, billed:0.615, recall:98.51,
+      wps:[624,657], up:161, idx:[25,268], total:[186,438], wp50:192, wp99:352, store:0.615 },
+    { n:'tpuf pinned-1r', e:'tpuf',
+      wps:633, up:156, wp50:188, wp99:295, store:0.615 },
+    { n:'Qdrant concurrent', e:'qdrant',
+      qps:143.2, rmean:6.9, rp99:8.4, srv50:1.9, srv99:2.5, recall:98.36,
+      wps:417, up:234, idx:0, total:234, wp50:294, wp99:365, store:0.614 },
+    { n:'Qdrant deferred', e:'qdrant',
+      wps:423, up:234, idx:84, total:318, wp50:291, wp99:349, store:0.614 },
+  ];
+  const MET = {
+    qps:   { lab:'QPS — queries/s (↑ better)', unit:'', fmt:v=>v>=100?Math.round(v):v.toFixed(1) },
+    rmean: { lab:'read mean latency ms (↓ better)', unit:' ms', fmt:v=>v.toFixed(1) },
+    rp99:  { lab:'read p99 latency ms (↓ better)', unit:' ms', fmt:v=>v.toFixed(1) },
+    srv50: { lab:'server p50 latency ms (↓ better)', unit:' ms', fmt:v=>v.toFixed(1) },
+    srv99: { lab:'server p99 latency ms (↓ better)', unit:' ms', fmt:v=>v.toFixed(0) },
+    billed:{ lab:'billed GB per query (↓ better)', unit:' GB', fmt:v=>v.toFixed(3) },
+    recall:{ lab:'recall (↑ better)', unit:'%', fmt:v=>v.toFixed(2), dom:[95,100] },
+    wps:   { lab:'insert throughput vec/s (↑ better)', unit:'', fmt:kfmt },
+    up:    { lab:'upload time — upsert only s (↓ better)', unit:' s', fmt:v=>Math.round(v) },
+    idx:   { lab:'index build time s (↓ better)', unit:' s', fmt:v=>Math.round(v) },
+    total: { lab:'total upload + index s (↓ better)', unit:' s', fmt:v=>Math.round(v) },
+    wp50:  { lab:'write batch p50 latency ms (↓ better)', unit:' ms', fmt:v=>Math.round(v) },
+    wp99:  { lab:'write batch p99 latency ms (↓ better)', unit:' ms', fmt:v=>Math.round(v) },
+    store: { lab:'stored size GB (↓ better)', unit:' GB', fmt:v=>v.toFixed(3) },
+  };
+
+  function initBarExplorer(root, data){
+    const svg = root.querySelector('.iplot-svg'), sel = root.querySelector('.iplot-metric'), legendEl = root.querySelector('.iplot-legend');
+    const hidden = new Set(); let metric = sel.value;
+    legendEl.innerHTML = '<span class="lab">engine</span>' + ENGINES.map(([n,e]) =>
+      `<span class="eng" data-e="${e}"><span class="sw" style="background:${CO[e]}"></span>${n}</span>`).join('');
+    legendEl.querySelectorAll('.eng').forEach(el => el.addEventListener('click', () => {
+      const e = el.dataset.e; hidden.has(e) ? hidden.delete(e) : hidden.add(e);
+      el.classList.toggle('off', hidden.has(e)); draw(); }));
+    const W=900, H=300, m={t:10, r:86, l:142, b:30}, pw=W-m.l-m.r, ph=H-m.t-m.b;
+    function draw(){
+      const M = MET[metric];
+      const rows = data.filter(d => !hidden.has(d.e) && has(d[metric]));
+      if(!rows.length){ svg.innerHTML = `<text x="${W/2}" y="${H/2}" text-anchor="middle" font-size="13" fill="${MUT}" font-family="var(--font-mono)">no data for this metric</text>`; return; }
+      const dmax = Math.max(...rows.map(d => hi(d[metric])));
+      const dom = M.dom ? [M.dom[0], M.dom[1]] : [0, dmax*1.08];
+      const span = dom[1]-dom[0] || 1;
+      const xS = v => m.l + Math.max(0,(v-dom[0]))/span*pw;
+      const step = ph/rows.length, bh = Math.min(30, step*0.6);
+      let g = `<text transform="translate(14 ${m.t+ph/2}) rotate(-90)" text-anchor="middle" font-size="12" fill="${INK}">${M.lab}</text>`;
+      [0,0.25,0.5,0.75,1].forEach(f => { const v=dom[0]+span*f, x=m.l+f*pw;
+        g += `<line x1="${x}" y1="${m.t}" x2="${x}" y2="${m.t+ph}" stroke="${GRID}"/>`+
+             `<text x="${x}" y="${m.t+ph+16}" text-anchor="middle" font-size="10.5" fill="${MUT}" font-family="var(--font-mono)">${M.fmt(v)}</text>`; });
+      rows.forEach((d,i) => {
+        const val=d[metric], c=CO[d.e], y=m.t+i*step+(step-bh)/2;
+        const xlo=xS(lo(val)), xhi=xS(hi(val)), wlo=Math.max(xlo-m.l,1);
+        const range = Array.isArray(val);
+        const label = range ? `${M.fmt(lo(val))}–${M.fmt(hi(val))}${M.unit}` : `${M.fmt(val)}${M.unit}`;
+        g += `<g class="mk" data-tip="${d.n}||${M.lab.split(' (')[0]}||${label}">`;
+        g += `<rect x="${m.l}" y="${y}" width="${wlo}" height="${bh}" rx="2" fill="${c}" fill-opacity="0.9"/>`;
+        if(range && xhi>xlo) g += `<rect x="${xlo}" y="${y}" width="${xhi-xlo}" height="${bh}" rx="2" fill="${c}" fill-opacity="0.32"/>`;
+        g += `</g>`;
+        g += `<text x="${m.l-8}" y="${y+bh/2+3.5}" text-anchor="end" font-size="11" fill="${INK}" font-family="var(--font-mono)">${d.n}</text>`;
+        g += `<text x="${xhi+6}" y="${y+bh/2+3.5}" font-size="10.5" fill="${MUT}" font-family="var(--font-mono)">${label}</text>`;
+      });
+      svg.innerHTML = g;
+    }
+    wireTip(svg);
+    sel.addEventListener('change', e => { metric=e.target.value; draw(); });
+    draw();
+  }
+
+  /* ═══ Sweep line renderer (metric vs swept x, log-log) ═══
+     cfg = { xlabel, mets:{key:{lab,unit,fmt}},
+             series:[{name,color,xs:[...],data:{key:[y...]}}] } */
+  function initSweep(root, cfg){
+    const svg = root.querySelector('.iplot-svg'), sel = root.querySelector('.iplot-metric'), legendEl = root.querySelector('.iplot-legend');
+    const hidden = new Set(); let metric = sel.value;
+    legendEl.innerHTML = '<span class="lab">series</span>' + cfg.series.map(s =>
+      `<span class="eng" data-n="${s.name}"><span class="sw" style="background:${s.color}"></span>${s.name}</span>`).join('');
+    legendEl.querySelectorAll('.eng').forEach(el => el.addEventListener('click', () => {
+      const n = el.dataset.n; hidden.has(n) ? hidden.delete(n) : hidden.add(n);
+      el.classList.toggle('off', hidden.has(n)); draw(); }));
+    const W=900, H=320, m={t:14, r:74, l:64, b:40}, pw=W-m.l-m.r, ph=H-m.t-m.b;
+    function draw(){
+      const M = cfg.mets[metric];
+      const vis = cfg.series.filter(s => !hidden.has(s.name) && s.data[metric]);
+      if(!vis.length){ svg.innerHTML = `<text x="${W/2}" y="${H/2}" text-anchor="middle" font-size="13" fill="${MUT}" font-family="var(--font-mono)">no data</text>`; return; }
+      let xs=[], ys=[];
+      vis.forEach(s => s.xs.forEach((x,i)=>{ xs.push(x); ys.push(s.data[metric][i]); }));
+      const xmin=Math.min(...xs), xmax=Math.max(...xs), ymin=Math.min(...ys), ymax=Math.max(...ys);
+      const lx0=Math.log10(xmin), lx1=Math.log10(xmax)||1;
+      const ly0=Math.log10(ymin*0.7), ly1=Math.log10(ymax*1.4);
+      const xS = x => m.l + (lx1===lx0?0.5:(Math.log10(x)-lx0)/(lx1-lx0))*pw;
+      const yS = v => m.t + (1-(Math.log10(v)-ly0)/(ly1-ly0))*ph;
+      const fmt = M.fmt || gfmt;
+      let g = `<text transform="translate(15 ${m.t+ph/2}) rotate(-90)" text-anchor="middle" font-size="12" fill="${INK}">${M.lab}</text>`;
+      logticks(ymin*0.7, ymax*1.4).forEach(v => { const y=yS(v);
+        g += `<line x1="${m.l}" y1="${y}" x2="${m.l+pw}" y2="${y}" stroke="${GRID}"/>`+
+             `<text x="${m.l-8}" y="${y+3.5}" text-anchor="end" font-size="10.5" fill="${MUT}" font-family="var(--font-mono)">${v>=1000?v/1000+'K':v}</text>`; });
+      const xticks=[...new Set(xs)].sort((a,b)=>a-b);
+      xticks.forEach(x => { const px=xS(x);
+        g += `<line x1="${px}" y1="${m.t}" x2="${px}" y2="${m.t+ph}" stroke="${GRID}"/>`+
+             `<text x="${px}" y="${m.t+ph+18}" text-anchor="middle" font-size="10.5" fill="${MUT}" font-family="var(--font-mono)">${x}</text>`; });
+      g += `<text x="${m.l+pw/2}" y="${H-4}" text-anchor="middle" font-size="12" fill="${INK}">${cfg.xlabel}</text>`;
+      vis.forEach(s => { const c=s.color, ptp=s.xs.map((x,i)=>[xS(x), yS(s.data[metric][i])]);
+        g += `<path d="M${ptp.map(p=>`${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' L')}" fill="none" stroke="${c}" stroke-width="2" stroke-opacity="0.6"/>`;
+        s.xs.forEach((x,i) => { const px=xS(x), py=yS(s.data[metric][i]);
+          g += `<g class="mk" data-tip="${s.name}||${cfg.xlabel.split(' ')[0]}=${x}||${M.lab.split(' (')[0]}: ${fmt(s.data[metric][i])}${M.unit||''}"><circle cx="${px}" cy="${py}" r="5" fill="${c}"/></g>`; });
+        const lastp = ptp[ptp.length-1], nearRight = lastp[0] > m.l+pw-80;
+        g += `<text x="${nearRight ? lastp[0]-8 : lastp[0]+8}" y="${lastp[1]-8}" text-anchor="${nearRight?'end':'start'}" font-size="10.5" fill="${c}" font-family="var(--font-mono)">${s.name}</text>`; });
+      svg.innerHTML = g;
+    }
+    wireTip(svg);
+    sel.addEventListener('change', e => { metric=e.target.value; draw(); });
+    draw();
+  }
+
+  /* ═══ Recall bars per scenario (zoomed 80–100%) ═══ */
+  const RECALL = {
+    filtered:   [ {n:'turbopuffer', e:'tpuf', v:89.14}, {n:'Qdrant', e:'qdrant', v:95.85} ],
+    unfiltered: [ {n:'turbopuffer', e:'tpuf', v:98.51}, {n:'Qdrant', e:'qdrant', v:98.36} ],
+    mt:         [ {n:'turbopuffer', e:'tpuf', v:100}, {n:'Qdrant', e:'qdrant', v:100} ],
+  };
+  function initRecall(root){
+    const svg = root.querySelector('.iplot-svg'), sel = root.querySelector('.iplot-metric'), legendEl = root.querySelector('.iplot-legend');
+    legendEl.innerHTML = '<span class="lab">engine</span>' + ENGINES.map(([n,e]) =>
+      `<span class="eng" style="cursor:default"><span class="sw" style="background:${CO[e]}"></span>${n}</span>`).join('');
+    const W=900, H=200, m={t:10, r:66, l:120, b:28}, pw=W-m.l-m.r, ph=H-m.t-m.b, dom=[80,100], span=20;
+    function draw(){
+      const rows = RECALL[sel.value];
+      const xS = v => m.l + Math.max(0,(v-dom[0]))/span*pw;
+      const step = ph/rows.length, bh = Math.min(34, step*0.5);
+      let g = `<text transform="translate(14 ${m.t+ph/2}) rotate(-90)" text-anchor="middle" font-size="12" fill="${INK}">recall % (↑ better)</text>`;
+      [80,85,90,95,100].forEach(v => { const x=xS(v);
+        g += `<line x1="${x}" y1="${m.t}" x2="${x}" y2="${m.t+ph}" stroke="${GRID}"/>`+
+             `<text x="${x}" y="${m.t+ph+16}" text-anchor="middle" font-size="10.5" fill="${MUT}" font-family="var(--font-mono)">${v}</text>`; });
+      // 95% quality threshold marker
+      const xt=xS(95); g += `<line x1="${xt}" y1="${m.t}" x2="${xt}" y2="${m.t+ph}" stroke="${MUT}" stroke-dasharray="4 3" stroke-opacity="0.6"/>`;
+      rows.forEach((d,i) => { const c=CO[d.e], y=m.t+i*step+(step-bh)/2, w=Math.max(xS(d.v)-m.l,1);
+        g += `<g class="mk" data-tip="${d.n}||recall||${d.v.toFixed(2)}%">`+
+             `<rect x="${m.l}" y="${y}" width="${w}" height="${bh}" rx="2" fill="${c}" fill-opacity="0.9"/></g>`;
+        g += `<text x="${m.l-8}" y="${y+bh/2+3.5}" text-anchor="end" font-size="11" fill="${INK}" font-family="var(--font-mono)">${d.n}</text>`;
+        g += `<text x="${m.l+w+6}" y="${y+bh/2+3.5}" font-size="10.5" fill="${MUT}" font-family="var(--font-mono)">${d.v.toFixed(2)}%</text>`; });
+      svg.innerHTML = g;
+    }
+    wireTip(svg);
+    sel.addEventListener('change', draw);
+    draw();
+  }
+
+  /* ═══ Sweep data + configs ═══ */
+  const LAT = { p50:{lab:'p50 latency ms (↓ better)',unit:' ms'}, p99:{lab:'p99 latency ms (↓ better)',unit:' ms'},
+                srv50:{lab:'server p50 latency ms (↓ better)',unit:' ms'}, srv99:{lab:'server p99 latency ms (↓ better)',unit:' ms'},
+                cost:{lab:'monthly cost (↓ better)',unit:'',fmt:v=>'$'+(v>=100?Math.round(v):v.toFixed(2))},
+                rpst:{lab:'total RPS — throughput (↑ better)',unit:''}, rpsw:{lab:'RPS per worker (↑ better)',unit:''},
+                rps:{lab:'aggregate RPS (↑ better)',unit:''} };
+
+  const SWEEPS = {
+    'iplot-qps': { xlabel:'target QPS →', mets:LAT, series:[
+      { name:'turbopuffer', color:CO.tpuf, xs:[1,5,10,20,50], data:{
+        p50:[21.4,15.5,15.9,15.7,15.2], p99:[56.3,33.8,41.3,44.7,42.7],
+        srv50:[15,10,10,10,10], srv99:[46,25,35,38,35], cost:[3.42,16.69,33.28,66.46,165.99] } },
+      { name:'Qdrant', color:CO.qdrant, xs:[1,5,10,20,50], data:{
+        p50:[7.9,7.7,7.4,7.6,7.3], p99:[22.2,14.6,12.2,13.0,10.7],
+        srv50:[2.0,2.0,2.0,1.9,1.9], srv99:[2.7,2.5,2.5,2.5,2.5], cost:[26.10,26.10,26.10,26.10,26.10] } },
+    ]},
+    'iplot-hm-conc': { xlabel:'client concurrency (p) →', mets:LAT, series:[
+      { name:'turbopuffer', color:CO.tpuf, xs:[1,8,32], data:{
+        rpst:[47,336,410], rpsw:[47.4,42.0,12.8], p50:[19.8,22.3,67.5], p99:[50.0,41.9,394.3] } },
+      { name:'Qdrant', color:CO.qdrant, xs:[1,8,32], data:{
+        rpst:[150,340,266], rpsw:[149.6,42.5,8.3], p50:[6.6,20.0,87.0], p99:[9.9,69.0,517.2] } },
+    ]},
+    'iplot-mt-conc': { xlabel:'client concurrency (p) →', mets:LAT, series:[
+      { name:'turbopuffer', color:CO.tpuf, xs:[1,8,32], data:{
+        rpst:[34,350,538], rpsw:[33.5,43.7,16.8], p50:[24.0,21.7,55.3], p99:[119.6,54.9,207] } },
+      { name:'Qdrant', color:CO.qdrant, xs:[1,8,32], data:{
+        rpst:[185,375,304], rpsw:[184.6,46.9,9.5], p50:[5.3,17.3,74.5], p99:[9.7,96.8,444.8] } },
+    ]},
+    'iplot-cores': { xlabel:'concurrency →', mets:LAT, series:[
+      { name:'serverless', color:CO.tpuf, xs:[1,2,4,8,16,32,64], data:{ rps:[57.5,116.7,210.1,429.0,494.5,454.9,506.8] } },
+      { name:'pinned-1r', color:'#7C3AED', xs:[1,2,4,8,16,32,64], data:{ rps:[57.9,120.3,228.1,348.3,371.8,341.8,379.3] } },
+      { name:'pinned-4r', color:'#0D9488', xs:[1,4,8,16,32,64,128], data:{ rps:[58.3,230.4,405.5,472.9,429.0,450.5,405.7] } },
+    ]},
+  };
+
+  /* ═══ Init ═══ */
+  const db = document.getElementById('iplot-dbpedia'); if(db) initBarExplorer(db, DBPEDIA);
+  const rc = document.getElementById('iplot-recall'); if(rc) initRecall(rc);
+  Object.keys(SWEEPS).forEach(id => { const el=document.getElementById(id); if(el) initSweep(el, SWEEPS[id]); });
 })();
 </script>
 </body>
