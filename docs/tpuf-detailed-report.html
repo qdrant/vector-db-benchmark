@@ -771,6 +771,27 @@ canvas {
         <summary>tpuf writes 50–60% faster, but SPFresh build time (25–268s) decides the DBpedia race</summary>
         <div class="fold-body">, but SPFresh builds the centroid index asynchronously on shared background indexers, and its duration depends on indexer availability at the time of upload. Across 5 DBpedia re-runs, SPFresh completed in 25s, 36s, 61s, 183s, and 268s — putting tpuf total at 3.1–7.3 min. Qdrant&rsquo;s consistent 3.9 min falls inside that range: tpuf wins when indexers are available, Qdrant wins when they are not. H&amp;M measured 60s SPFresh (4.1 min total) and beat Qdrant (8.4 min) — though with only one H&amp;M trial, the SPFresh variance seen on DBpedia (25&ndash;268s) means the margin could narrow to ~0.8 min on a slow indexer draw. Building the index <em>after</em> upload (5.3 min DBpedia, 9.1 min H&amp;M) is slower than building it <em>during</em> upload (3.9 min, 8.4 min) &mdash; so Qdrant's default index-during-upload is optimal here, and the bulk-load recipe (disable indexing, then reindex) does not help at this scale.</div>
       </details>
+
+      <h3>3.1 &mdash; Write Throughput vs Concurrency (fresh, measured)</h3>
+      <div class="iplot" id="iplot-write-conc">
+        <div class="iplot-bar">
+          <label>metric
+            <select class="iplot-metric">
+              <option value="wps" selected>write throughput WPS ↑</option>
+              <option value="blat">batch latency p50–p99 ↓</option>
+            </select>
+          </label>
+          <div class="iplot-legend"></div>
+        </div>
+        <div class="iplot-panel">
+          <div class="pt">DBpedia &mdash; sustained write throughput as client write-concurrency rises (1 &rarr; 16)</div>
+          <div class="ps">Each point is a fresh 10K-vector write burst at a fixed number of concurrent writer tasks. <strong>turbopuffer scales with concurrency</strong> (430 &rarr; 1237 WPS) because writes are group-committed to S3 and fan out; <strong>Qdrant Cloud stays flat at ~87&ndash;91 WPS</strong> regardless of concurrency &mdash; added writers just queue, so its batch latency grows nearly linearly (1.4s at p=1 &rarr; 19.8s at p=16). Switch the metric to see the batch-latency divergence. Log&ndash;log axes; hover a point.</div>
+          <svg class="iplot-svg" viewBox="0 0 900 320" role="img" aria-label="Write throughput and batch latency vs write concurrency, tpuf vs Qdrant"></svg>
+        </div>
+      </div>
+      <div class="callout">
+        turbopuffer&rsquo;s write path scales on both datasets tested &mdash; H&amp;M tpuf climbs 366 &rarr; 919 WPS over the same p=1&rarr;16 range, corroborating DBpedia&rsquo;s 430 &rarr; 1237. Qdrant Cloud&rsquo;s write ceiling (~90 WPS on this node) is a sustained-ingest bottleneck: to load faster you scale the cluster, not the client.
+      </div>
     </section>
 
     <!-- §4 -->
@@ -1735,6 +1756,15 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
       { name:'Qdrant', color:CO.qdrant, xs:[1,8,32], data:{
         rpst:[185,375,304], rpsw:[184.6,46.9,9.5], p50:[5.3,17.3,74.5], p99:[9.7,96.8,444.8] } },
     ]},
+    'iplot-write-conc': { xlabel:'write concurrency →', xlog:true, xticks:[1,2,4,8,16], mets:{
+        wps:{lab:'write throughput · WPS (↑ better)',unit:'',fam:'wps'},
+        blat:{lab:'batch latency · p50–p99 ms (↓ better)',unit:' ms',band:['bp50','bp99'],fam:'wlat'} },
+      series:[
+        { name:'DBpedia · turbopuffer', color:CO.tpuf, xs:[1,2,4,8,16], data:{
+          wps:[430.4,670.2,969.9,1023.0,1236.6], bp50:[228.6,258.7,311.2,408.1,791.5], bp99:[1288.4,4030.9,3842.3,5296.5,4740.4] } },
+        { name:'DBpedia · Qdrant', color:CO.qdrant, xs:[1,2,4,8,16], data:{
+          wps:[86.6,88.3,90.5,90.3,90.9], bp50:[1433.9,2748.5,5348.0,10645.7,19825.3], bp99:[2409.0,6868.1,9023.4,17438.8,31475.4] } },
+      ]},
   };
 
   /* ═══ §3 upload (all datasets) ═══ */
