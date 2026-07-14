@@ -183,30 +183,6 @@ body {
   margin-bottom: 24px;
   line-height: 1.6;
 }
-.hero-canvas-wrap {
-  position: relative;
-}
-.hero-canvas-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text-2);
-  margin-bottom: 6px;
-  letter-spacing: 0.06em;
-}
-#hero-canvas {
-  display: block;
-  width: 100%;
-  max-width: 640px;
-  height: 100px;
-  border-radius: 4px;
-  background: var(--code-bg);
-}
-.hero-canvas-caption {
-  font-size: 11px;
-  color: var(--text-2);
-  margin-top: 6px;
-  font-style: italic;
-}
 .hero-pills {
   display: flex;
   gap: 8px;
@@ -657,11 +633,6 @@ canvas {
         Three datasets, four concurrency levels, upload throughput, filtered search, multi-tenant isolation,
         and cost modeling &mdash; from a single EC2 host in aws-us-west-2, same region as both services.
       </p>
-      <div class="hero-canvas-wrap">
-        <div class="hero-canvas-label">turbopuffer cold-start warmup &middot; first 120 queries &middot; H&amp;M 4-replica pinned</div>
-        <canvas id="hero-canvas" width="640" height="100" aria-label="Cold-start latency warmup curve: queries start near 900ms and converge to ~43ms after 30 queries"></canvas>
-        <div class="hero-canvas-caption">Latency converges from ~893ms &#8594; ~43ms as the NVMe cache warms. Each spike is a cold centroid region touched for the first time.</div>
-      </div>
       <div class="hero-pills">
         <span class="pill pill-tpuf"><span>&#9679;</span> turbopuffer</span>
         <span class="pill pill-qdrant"><span>&#9679;</span> Qdrant Cloud</span>
@@ -1536,143 +1507,6 @@ function drawLegend(ctx, x, y, items) {
   }
 }
 
-// ── Hero cold-warmup animation ────────────────────────────────
-(function() {
-  var canvas = document.getElementById('hero-canvas');
-  if (!canvas) return;
-
-  var rawData = [
-    [0,892.9],[1,351.2],[2,279.0],[3,67.2],[4,173.8],[5,96.8],[6,212.5],[7,268.8],
-    [8,260.3],[9,118.1],[10,253.8],[11,43.4],[12,174.7],[13,251.0],[14,50.7],[15,45.0],
-    [16,55.8],[17,50.5],[18,45.0],[19,250.7],[20,45.9],[21,48.9],[22,44.2],[23,44.9],
-    [24,250.7],[25,45.5],[26,44.8],[27,44.5],[28,44.3],[29,44.1],[30,44.0],[35,44.1],
-    [40,43.8],[50,43.5],[60,43.3],[80,43.1],[100,43.0],[119,42.9]
-  ];
-
-  // Expand to 120 dense points by interpolation
-  var full = [];
-  for (var i = 0; i < rawData.length - 1; i++) {
-    var x0 = rawData[i][0], y0 = rawData[i][1];
-    var x1 = rawData[i+1][0], y1 = rawData[i+1][1];
-    var steps = x1 - x0;
-    for (var s = 0; s < steps; s++) {
-      full.push(y0 + (y1 - y0) * (s / steps));
-    }
-  }
-  full.push(rawData[rawData.length - 1][1]);
-  var N = full.length;
-
-  var r = window.devicePixelRatio || 1;
-  var W = canvas.offsetWidth || 640;
-  var H = 100;
-  canvas.width  = W * r;
-  canvas.height = H * r;
-  canvas.style.width  = W + 'px';
-  canvas.style.height = H + 'px';
-  var ctx = canvas.getContext('2d');
-  ctx.scale(r, r);
-
-  var PAD = { t: 8, r: 12, b: 20, l: 48 };
-  var maxV = 900;
-  var pW = W - PAD.l - PAD.r;
-  var pH = H - PAD.t - PAD.b;
-
-  function px(i) { return PAD.l + (i / (N - 1)) * pW; }
-  function py(v) { return PAD.t + pH - Math.min(v, maxV) / maxV * pH; }
-
-  var drawn = 0;
-  var totalMs = 2200;
-  var startT = null;
-
-  function draw(t) {
-    if (!startT) startT = t;
-    var elapsed = t - startT;
-    drawn = Math.min(N, Math.floor((elapsed / totalMs) * N));
-
-    ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = C.codebg;
-    ctx.fillRect(0, 0, W, H);
-
-    // Grid lines and labels
-    ctx.strokeStyle = 'rgba(148,163,184,0.15)';
-    ctx.lineWidth = 0.5;
-    var gridVals = [0, 200, 400, 600, 800];
-    for (var gi = 0; gi < gridVals.length; gi++) {
-      var gv = gridVals[gi];
-      var gy = py(gv);
-      ctx.beginPath(); ctx.moveTo(PAD.l, gy); ctx.lineTo(W - PAD.r, gy); ctx.stroke();
-      ctx.fillStyle = 'rgba(148,163,184,0.5)';
-      ctx.font = '9px monospace';
-      ctx.textAlign = 'right';
-      ctx.fillText(gv + 'ms', PAD.l - 4, gy + 3);
-    }
-
-    // Steady-state dashed line
-    ctx.setLineDash([3, 3]);
-    ctx.strokeStyle = 'rgba(234,88,12,0.35)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(PAD.l, py(43));
-    ctx.lineTo(W - PAD.r, py(43));
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // X axis labels
-    var xTicks = [0, 20, 40, 60, 80, 100, 119];
-    for (var xi = 0; xi < xTicks.length; xi++) {
-      ctx.fillStyle = 'rgba(148,163,184,0.5)';
-      ctx.font = '9px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText(String(xTicks[xi]), px(xTicks[xi]), H - PAD.b + 12);
-    }
-    ctx.fillStyle = 'rgba(148,163,184,0.5)';
-    ctx.font = '8px monospace';
-    ctx.textAlign = 'left';
-    ctx.fillText('query #', PAD.l, H - 4);
-
-    if (drawn < 2) {
-      if (drawn < N) requestAnimationFrame(draw);
-      return;
-    }
-
-    // Fill gradient
-    var grad = ctx.createLinearGradient(0, PAD.t, 0, H - PAD.b);
-    grad.addColorStop(0, 'rgba(234,88,12,0.25)');
-    grad.addColorStop(1, 'rgba(234,88,12,0)');
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.moveTo(px(0), H - PAD.b);
-    ctx.lineTo(px(0), py(full[0]));
-    for (var di = 1; di < drawn; di++) ctx.lineTo(px(di), py(full[di]));
-    ctx.lineTo(px(drawn - 1), H - PAD.b);
-    ctx.closePath();
-    ctx.fill();
-
-    // Signal line
-    ctx.strokeStyle = C.tpuf2;
-    ctx.lineWidth = 1.5;
-    ctx.lineJoin = 'round';
-    ctx.beginPath();
-    ctx.moveTo(px(0), py(full[0]));
-    for (var li = 1; li < drawn; li++) ctx.lineTo(px(li), py(full[li]));
-    ctx.stroke();
-
-    if (drawn < N) requestAnimationFrame(draw);
-  }
-
-  // Only animate when visible
-  if (typeof IntersectionObserver !== 'undefined') {
-    var obs = new IntersectionObserver(function(entries) {
-      if (entries[0].isIntersecting) {
-        obs.disconnect();
-        requestAnimationFrame(draw);
-      }
-    });
-    obs.observe(canvas);
-  } else {
-    requestAnimationFrame(draw);
-  }
-})();
 
 // ── All static charts — run after DOM ready ───────────────────
 document.addEventListener('DOMContentLoaded', function() {
