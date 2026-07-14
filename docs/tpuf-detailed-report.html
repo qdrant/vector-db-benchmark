@@ -970,14 +970,13 @@ canvas {
             <select class="iplot-metric">
               <option value="lat" selected>search latency ↓</option>
               <option value="srv">internal search latency ↓</option>
-              <option value="cost">monthly cost ↓</option>
             </select>
           </label>
           <div class="iplot-legend"></div>
         </div>
         <div class="iplot-panel">
-          <div class="pt">DBpedia · latency &amp; cost vs offered QPS</div>
-          <div class="ps">Lines sweep target QPS (log x, log y). tpuf latency is roughly QPS-independent; cost crosses Qdrant's flat $26.10 near ~8 QPS. Hover a point; click an engine to toggle.</div>
+          <div class="pt">DBpedia · latency vs offered QPS</div>
+          <div class="ps">Lines sweep target QPS (log x, log y). tpuf latency is roughly QPS-independent; Qdrant stays low throughout. Cost vs QPS is in §4.2 (break-even ~8 QPS). Hover a point; click an engine to toggle.</div>
           <svg class="iplot-svg" viewBox="0 0 900 320" role="img" aria-label="DBpedia latency and cost vs QPS sweep"></svg>
         </div>
       </div>
@@ -1791,19 +1790,16 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
 
   /* ═══ Sweep data + configs ═══ */
   const LAT = { lat:{lab:'search latency · p50–p99 ms (↓ better)',unit:' ms',band:['p50','p99'],fam:'lat'},
-                srv:{lab:'internal search latency · p50–p99 ms (↓ better)',unit:' ms',band:['srv50','srv99'],fam:'lat'},
-                cost:{lab:'monthly cost (↓ better)',unit:'',fmt:v=>'$'+(v>=100?Math.round(v):v.toFixed(2))},
-                rpst:{lab:'total RPS — throughput (↑ better)',unit:'',fam:'rps'}, rpsw:{lab:'RPS per worker (↑ better)',unit:'',fam:'rps'},
-                rps:{lab:'aggregate RPS (↑ better)',unit:'',fam:'rps'} };
+                srv:{lab:'internal search latency · p50–p99 ms (↓ better)',unit:' ms',band:['srv50','srv99'],fam:'lat'} };
 
   const SWEEPS = {
     'iplot-qps': { xlabel:'target QPS →', mets:LAT, series:[
       { name:'turbopuffer', color:CO.tpuf, xs:[1,5,10,20,50], data:{
         p50:[21.4,15.5,15.9,15.7,15.2], p99:[56.3,33.8,41.3,44.7,42.7],
-        srv50:[15,10,10,10,10], srv99:[46,25,35,38,35], cost:[3.42,16.69,33.28,66.46,165.99] } },
+        srv50:[15,10,10,10,10], srv99:[46,25,35,38,35] } },
       { name:'Qdrant', color:CO.qdrant, xs:[1,5,10,20,50], data:{
         p50:[7.9,7.7,7.4,7.6,7.3], p99:[22.2,14.6,12.2,13.0,10.7],
-        srv50:[2.0,2.0,2.0,1.9,1.9], srv99:[2.7,2.5,2.5,2.5,2.5], cost:[26.10,26.10,26.10,26.10,26.10] } },
+        srv50:[2.0,2.0,2.0,1.9,1.9], srv99:[2.7,2.5,2.5,2.5,2.5] } },
     ]},
     /* §5 H&M / §6 MT per-concurrency sweeps removed — superseded by the unified
        §4 dual-axis frontier (measured rps_measured, all datasets). Raw data lives
