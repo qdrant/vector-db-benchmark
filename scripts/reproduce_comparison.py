@@ -308,6 +308,17 @@ def make_qdrant():
 
 # ── Upload helpers ─────────────────────────────────────────────────────────────
 
+TS_MAX = 500  # cap timeseries samples per phase to keep result JSON small
+
+def _ts(cols, rows):
+    """Compact per-request/per-batch timeseries, uniformly downsampled to <=TS_MAX rows.
+    Consumed by the report's timeseries mode (latency/WPS/recall over wall-clock)."""
+    if len(rows) > TS_MAX:
+        step = len(rows) / TS_MAX
+        rows = [rows[int(i * step)] for i in range(TS_MAX)]
+    return {"cols": cols, "rows": rows}
+
+
 def _upload_stats(total, batch_lats, t_total):
     batch_lats_arr = np.array(batch_lats)
     wps = round(total / t_total, 1)
@@ -331,6 +342,7 @@ async def tpuf_upload(ns, ids, vectors, extra_cols=None, _return_raw_lats=False)
     batch_lats = []
     server_ms_list = []
     billable_bytes = 0
+    ts_rows = []
     for start in range(0, total, BATCH_SIZE):
         end = min(start + BATCH_SIZE, total)
         cols = {"id": ids[start:end], "vector": vectors[start:end].tolist()}
@@ -339,7 +351,9 @@ async def tpuf_upload(ns, ids, vectors, extra_cols=None, _return_raw_lats=False)
                 cols[k] = v[start:end]
         bt = time.perf_counter()
         resp = await ns.write(upsert_columns=cols, distance_metric="cosine_distance")
-        batch_lats.append(time.perf_counter() - bt)
+        bl = time.perf_counter() - bt
+        batch_lats.append(bl)
+        ts_rows.append([round(time.perf_counter() - t0, 2), round(bl * 1000, 1), end])
         if resp.performance:
             server_ms_list.append(resp.performance.server_total_ms)
         if resp.billing:
@@ -347,6 +361,7 @@ async def tpuf_upload(ns, ids, vectors, extra_cols=None, _return_raw_lats=False)
         if (start // BATCH_SIZE) % 20 == 0:
             print(f"    tpuf {end}/{total}", flush=True)
     s = _upload_stats(total, batch_lats, time.perf_counter() - t0)
+    s["timeseries"] = _ts(["t_s", "batch_ms", "vectors"], ts_rows)
     if server_ms_list:
         arr = np.array(server_ms_list)
         s["server_p50_ms"] = round(float(np.percentile(arr, 50)), 1)
@@ -394,6 +409,7 @@ async def qdrant_upload(qc, collection, vectors, ids, payloads=None):
     t0 = time.perf_counter()
     batch_lats = []
     server_ms_list = []
+    ts_rows = []
     for start in range(0, total, BATCH_SIZE):
         end = min(start + BATCH_SIZE, total)
         points_dicts = [
@@ -403,7 +419,9 @@ async def qdrant_upload(qc, collection, vectors, ids, payloads=None):
         ]
         bt = time.perf_counter()
         server_ms = await qdrant_upsert_timed(collection, points_dicts)
-        batch_lats.append(time.perf_counter() - bt)
+        bl = time.perf_counter() - bt
+        batch_lats.append(bl)
+        ts_rows.append([round(time.perf_counter() - t0, 2), round(bl * 1000, 1), end])
         server_ms_list.append(server_ms)
         if (start // BATCH_SIZE) % 20 == 0:
             print(f"    qdrant {end}/{total}", flush=True)
@@ -419,6 +437,7 @@ async def qdrant_upload(qc, collection, vectors, ids, payloads=None):
     s = _upload_stats(total, batch_lats, t_upsert)
     s["index_s"] = round(t_total - t_upsert, 1)
     s["total_s"] = round(t_total, 1)
+    s["timeseries"] = _ts(["t_s", "batch_ms", "vectors"], ts_rows)
     if server_ms_list:
         arr = np.array(server_ms_list)
         s["server_p50_ms"] = round(float(np.percentile(arr, 50)), 1)
@@ -435,6 +454,7 @@ async def qdrant_upload_only(qc, collection, vectors, ids, payloads=None):
     t0 = time.perf_counter()
     batch_lats = []
     server_ms_list = []
+    ts_rows = []
     for start in range(0, total, BATCH_SIZE):
         end = min(start + BATCH_SIZE, total)
         points_dicts = [
@@ -444,12 +464,15 @@ async def qdrant_upload_only(qc, collection, vectors, ids, payloads=None):
         ]
         bt = time.perf_counter()
         server_ms = await qdrant_upsert_timed(collection, points_dicts)
-        batch_lats.append(time.perf_counter() - bt)
+        bl = time.perf_counter() - bt
+        batch_lats.append(bl)
+        ts_rows.append([round(time.perf_counter() - t0, 2), round(bl * 1000, 1), end])
         server_ms_list.append(server_ms)
         if (start // BATCH_SIZE) % 20 == 0:
             print(f"    qdrant {end}/{total}", flush=True)
     upsert_s = time.perf_counter() - t0
     s = _upload_stats(total, batch_lats, upsert_s)
+    s["timeseries"] = _ts(["t_s", "batch_ms", "vectors"], ts_rows)
     if server_ms_list:
         arr = np.array(server_ms_list)
         s["server_p50_ms"] = round(float(np.percentile(arr, 50)), 1)
@@ -563,7 +586,9 @@ async def run_search(query_fn, tests, concurrency, n=N_SEARCH, collect_perf=Fals
     returned  = [None] * n
     tpuf_perf_rows   = []
     qdrant_server_ms = []
+    ts_rows = []          # per-query [t_s, lat_ms, server_ms] for timeseries mode
     n_errors = 0
+    t_run0 = time.perf_counter()
 
     async def one(i, t):
         nonlocal n_errors
@@ -571,16 +596,22 @@ async def run_search(query_fn, tests, concurrency, n=N_SEARCH, collect_perf=Fals
             t0 = time.perf_counter()
             try:
                 result = await query_fn(t["query"], t.get("conditions") or {})
-                latencies.append(time.perf_counter() - t0)
+                lat = time.perf_counter() - t0
+                latencies.append(lat)
+                srv = None
                 if isinstance(result, tuple):
                     ids, meta = result
                     returned[i] = ids
                     if collect_perf and meta and isinstance(meta, dict):
                         tpuf_perf_rows.append(meta)
+                        srv = meta.get("server_total_ms")
                     elif meta is not None and isinstance(meta, (int, float)):
                         qdrant_server_ms.append(meta)
+                        srv = meta
                 else:
                     returned[i] = result
+                ts_rows.append([round(t0 - t_run0, 3), round(lat * 1000, 2),
+                                round(srv, 2) if srv is not None else None])
             except Exception as e:
                 n_errors += 1
                 returned[i] = None  # None means error; [] means 0 results (valid)
@@ -589,6 +620,9 @@ async def run_search(query_fn, tests, concurrency, n=N_SEARCH, collect_perf=Fals
 
     s = stats(latencies)
     s["n_errors"] = n_errors
+    if ts_rows:
+        ts_rows.sort(key=lambda r: r[0])
+        s["timeseries"] = _ts(["t_s", "lat_ms", "server_ms"], ts_rows)
     valid_indices = [i for i in range(n) if returned[i] is not None]
     if valid_indices:
         recalls = [recall_at_k(returned[i], tests[i % len(tests)]["closest_ids"]) for i in valid_indices]
