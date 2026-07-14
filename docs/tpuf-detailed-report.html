@@ -2596,20 +2596,22 @@ document.addEventListener('DOMContentLoaded', function() {
     { n:'Qdrant deferred', e:'qdrant',
       wps:423, up:234, idx:84, total:318, wp50:291, wp99:349, store:0.614 },
   ];
+  // fam = shared-scale family: metrics with the same fam use one fixed
+  // domain within a plot, so toggling among them never rescales the axis.
   const MET = {
     qps:   { lab:'QPS — queries/s (↑ better)', unit:'', fmt:v=>v>=100?Math.round(v):v.toFixed(1) },
-    rmean: { lab:'read mean latency ms (↓ better)', unit:' ms', fmt:v=>v.toFixed(1) },
-    rp99:  { lab:'read p99 latency ms (↓ better)', unit:' ms', fmt:v=>v.toFixed(1) },
-    srv50: { lab:'server p50 latency ms (↓ better)', unit:' ms', fmt:v=>v.toFixed(1) },
-    srv99: { lab:'server p99 latency ms (↓ better)', unit:' ms', fmt:v=>v.toFixed(0) },
+    rmean: { lab:'read mean latency ms (↓ better)', unit:' ms', fmt:v=>v.toFixed(1), fam:'rlat' },
+    rp99:  { lab:'read p99 latency ms (↓ better)', unit:' ms', fmt:v=>v.toFixed(1), fam:'rlat' },
+    srv50: { lab:'server p50 latency ms (↓ better)', unit:' ms', fmt:v=>v.toFixed(1), fam:'rlat' },
+    srv99: { lab:'server p99 latency ms (↓ better)', unit:' ms', fmt:v=>v.toFixed(0), fam:'rlat' },
     billed:{ lab:'billed GB per query (↓ better)', unit:' GB', fmt:v=>v.toFixed(3) },
     recall:{ lab:'recall (↑ better)', unit:'%', fmt:v=>v.toFixed(2), dom:[95,100] },
     wps:   { lab:'insert throughput vec/s (↑ better)', unit:'', fmt:kfmt },
-    up:    { lab:'upload time — upsert only s (↓ better)', unit:' s', fmt:v=>Math.round(v) },
-    idx:   { lab:'index build time s (↓ better)', unit:' s', fmt:v=>Math.round(v) },
-    total: { lab:'total upload + index s (↓ better)', unit:' s', fmt:v=>Math.round(v) },
-    wp50:  { lab:'write batch p50 latency ms (↓ better)', unit:' ms', fmt:v=>Math.round(v) },
-    wp99:  { lab:'write batch p99 latency ms (↓ better)', unit:' ms', fmt:v=>Math.round(v) },
+    up:    { lab:'upload time — upsert only s (↓ better)', unit:' s', fmt:v=>Math.round(v), fam:'time' },
+    idx:   { lab:'index build time s (↓ better)', unit:' s', fmt:v=>Math.round(v), fam:'time' },
+    total: { lab:'total upload + index s (↓ better)', unit:' s', fmt:v=>Math.round(v), fam:'time' },
+    wp50:  { lab:'write batch p50 latency ms (↓ better)', unit:' ms', fmt:v=>Math.round(v), fam:'wlat' },
+    wp99:  { lab:'write batch p99 latency ms (↓ better)', unit:' ms', fmt:v=>Math.round(v), fam:'wlat' },
     store: { lab:'stored size GB (↓ better)', unit:' GB', fmt:v=>v.toFixed(3) },
   };
 
@@ -2624,19 +2626,25 @@ document.addEventListener('DOMContentLoaded', function() {
       el.classList.toggle('off', hidden.has(e)); draw(); }));
     const vb = svg.viewBox.baseVal, W=vb.width||900, H=vb.height||300;
     const m={t:10, r:86, l:opts.lm||142, b:30}, pw=W-m.l-m.r, ph=H-m.t-m.b;
+    // per-family max over ALL data (fixed scale within a family)
+    const famMax = {};
+    Object.keys(MET).forEach(k => { const f=MET[k].fam; if(!f) return;
+      data.forEach(d => { if(has(d[k])) famMax[f]=Math.max(famMax[f]||0, hi(d[k])); }); });
     function draw(){
       const M = MET[metric];
       const rows = data.filter(d => !hidden.has(d.e) && has(d[metric]));
       if(!rows.length){ svg.innerHTML = `<text x="${W/2}" y="${H/2}" text-anchor="middle" font-size="13" fill="${MUT}" font-family="var(--font-mono)">no data for this metric</text>`; return; }
-      const dmax = Math.max(...rows.map(d => hi(d[metric])));
-      const dom = M.dom ? [M.dom[0], M.dom[1]] : [0, dmax*1.08];
+      const top = M.fam ? famMax[M.fam] : Math.max(...rows.map(d => hi(d[metric])));
+      const dom = M.dom ? [M.dom[0], M.dom[1]] : [0, top*1.08];
       const span = dom[1]-dom[0] || 1;
+      // consistent axis-tick formatter so a shared family domain always reads identically
+      const tf = dom[1]>=100 ? (v=>Math.round(v)) : dom[1]>=1 ? (v=>v.toFixed(1)) : (v=>v.toFixed(3));
       const xS = v => m.l + Math.max(0,(v-dom[0]))/span*pw;
       const step = ph/rows.length, bh = Math.min(30, step*0.6);
       let g = `<text transform="translate(14 ${m.t+ph/2}) rotate(-90)" text-anchor="middle" font-size="12" fill="${INK}">${M.lab}</text>`;
       [0,0.25,0.5,0.75,1].forEach(f => { const v=dom[0]+span*f, x=m.l+f*pw;
         g += `<line x1="${x}" y1="${m.t}" x2="${x}" y2="${m.t+ph}" stroke="${GRID}"/>`+
-             `<text x="${x}" y="${m.t+ph+16}" text-anchor="middle" font-size="10.5" fill="${MUT}" font-family="var(--font-mono)">${M.fmt(v)}</text>`; });
+             `<text x="${x}" y="${m.t+ph+16}" text-anchor="middle" font-size="10.5" fill="${MUT}" font-family="var(--font-mono)">${tf(v)}</text>`; });
       rows.forEach((d,i) => {
         const val=d[metric], c=CO[d.e], y=m.t+i*step+(step-bh)/2;
         const xlo=xS(lo(val)), xhi=xS(hi(val)), wlo=Math.max(xlo-m.l,1);
@@ -2672,8 +2680,12 @@ document.addEventListener('DOMContentLoaded', function() {
       const M = cfg.mets[metric];
       const vis = cfg.series.filter(s => !hidden.has(s.name) && s.data[metric]);
       if(!vis.length){ svg.innerHTML = `<text x="${W/2}" y="${H/2}" text-anchor="middle" font-size="13" fill="${MUT}" font-family="var(--font-mono)">no data</text>`; return; }
+      // x from visible series of this metric; y domain spans the whole family
+      // (across all series) so toggling within a family keeps the scale fixed.
+      const famKeys = M.fam ? Object.keys(cfg.mets).filter(k => cfg.mets[k].fam===M.fam) : [metric];
       let xs=[], ys=[];
-      vis.forEach(s => s.xs.forEach((x,i)=>{ xs.push(x); ys.push(s.data[metric][i]); }));
+      vis.forEach(s => s.xs.forEach(x => xs.push(x)));
+      cfg.series.forEach(s => famKeys.forEach(k => { if(s.data[k]) ys.push(...s.data[k]); }));
       const xmin=Math.min(...xs), xmax=Math.max(...xs), ymin=Math.min(...ys), ymax=Math.max(...ys);
       const lx0=Math.log10(xmin), lx1=Math.log10(xmax)||1;
       const ly0=Math.log10(ymin*0.7), ly1=Math.log10(ymax*1.4);
@@ -2786,11 +2798,11 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   /* ═══ Sweep data + configs ═══ */
-  const LAT = { p50:{lab:'p50 latency ms (↓ better)',unit:' ms'}, p99:{lab:'p99 latency ms (↓ better)',unit:' ms'},
-                srv50:{lab:'server p50 latency ms (↓ better)',unit:' ms'}, srv99:{lab:'server p99 latency ms (↓ better)',unit:' ms'},
+  const LAT = { p50:{lab:'p50 latency ms (↓ better)',unit:' ms',fam:'lat'}, p99:{lab:'p99 latency ms (↓ better)',unit:' ms',fam:'lat'},
+                srv50:{lab:'server p50 latency ms (↓ better)',unit:' ms',fam:'lat'}, srv99:{lab:'server p99 latency ms (↓ better)',unit:' ms',fam:'lat'},
                 cost:{lab:'monthly cost (↓ better)',unit:'',fmt:v=>'$'+(v>=100?Math.round(v):v.toFixed(2))},
-                rpst:{lab:'total RPS — throughput (↑ better)',unit:''}, rpsw:{lab:'RPS per worker (↑ better)',unit:''},
-                rps:{lab:'aggregate RPS (↑ better)',unit:''} };
+                rpst:{lab:'total RPS — throughput (↑ better)',unit:'',fam:'rps'}, rpsw:{lab:'RPS per worker (↑ better)',unit:'',fam:'rps'},
+                rps:{lab:'aggregate RPS (↑ better)',unit:'',fam:'rps'} };
 
   const SWEEPS = {
     'iplot-qps': { xlabel:'target QPS →', mets:LAT, series:[
