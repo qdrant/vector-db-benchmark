@@ -1377,7 +1377,7 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
   function wireTip(svg){
     svg.addEventListener('mouseover', e => { const gg=e.target.closest('.mk'); if(!gg) return;
       const p = gg.dataset.tip.split('||');
-      tip.innerHTML = `<b>${p[0]}</b><br>${p[1]}<br>${p[2]}`; tip.style.opacity=1; });
+      tip.innerHTML = `<b>${p[0]}</b>` + p.slice(1).map(x=>`<br>${x}`).join(''); tip.style.opacity=1; });
     svg.addEventListener('mousemove', e => { tip.style.left=Math.min(e.clientX+14, innerWidth-270)+'px'; tip.style.top=(e.clientY+14)+'px'; });
     svg.addEventListener('mouseout', e => { if(e.target.closest('.mk')) tip.style.opacity=0; });
   }
@@ -1895,7 +1895,7 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
       const fmt=v=>metric==='cost'?('$'+(v>=100?Math.round(v):v.toFixed(2))+'/mo'):('$'+v.toFixed(2)+'/Mq');
       // measured p50/p99 search latency at that offered QPS (fixed-QPS sweep)
       const latAt=(eng,q)=>{ const L=d.lat; if(!L) return ''; const i=L.qps.indexOf(q);
-        return i<0 ? '' : ` · p50 ${L[eng].p50[i]}ms / p99 ${L[eng].p99[i]}ms`; };
+        return i<0 ? '' : `||p50 ${L[eng].p50[i]}ms||p99 ${L[eng].p99[i]}ms`; };
       d.lat.qps.forEach(q=>{ if(q<QPS[0]||q>QPS[QPS.length-1])return; const x=xS(q);
         g+=`<g class="mk" data-tip="turbopuffer||${q} QPS||${fmt(valTp(q))}${latAt('tpuf',q)}"><circle cx="${x}" cy="${yS(valTp(q))}" r="4.5" fill="${CO.tpuf}"/></g>`+
            `<g class="mk" data-tip="Qdrant||${q} QPS||${fmt(valQd(q))}${latAt('qdrant',q)}"><circle cx="${x}" cy="${yS(valQd(q))}" r="4.5" fill="${CO.qdrant}"/></g>`;});
