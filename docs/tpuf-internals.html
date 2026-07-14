@@ -1490,10 +1490,10 @@ document.addEventListener('DOMContentLoaded', function() {
       logticks(ymin*0.7, ymax*1.4).forEach(v => { const y=yS(v);
         g += `<line x1="${m.l}" y1="${y}" x2="${m.l+pw}" y2="${y}" stroke="${GRID}"/>`+
              `<text x="${m.l-8}" y="${y+3.5}" text-anchor="end" font-size="10.5" fill="${MUT}" font-family="var(--font-mono)">${v>=1000?v/1000+'K':v}</text>`; });
-      const xticks=[...new Set(xs)].sort((a,b)=>a-b);
+      const xticks = cfg.xticks ? cfg.xticks : cfg.xlog ? logticks(xmin*0.95, xmax*1.05) : [...new Set(xs)].sort((a,b)=>a-b);
       xticks.forEach(x => { const px=xS(x);
         g += `<line x1="${px}" y1="${m.t}" x2="${px}" y2="${m.t+ph}" stroke="${GRID}"/>`+
-             `<text x="${px}" y="${m.t+ph+18}" text-anchor="middle" font-size="10.5" fill="${MUT}" font-family="var(--font-mono)">${x}</text>`; });
+             `<text x="${px}" y="${m.t+ph+18}" text-anchor="middle" font-size="10.5" fill="${MUT}" font-family="var(--font-mono)">${x>=1000?x/1000+'K':x}</text>`; });
       g += `<text x="${m.l+pw/2}" y="${H-4}" text-anchor="middle" font-size="12" fill="${INK}">${cfg.xlabel}</text>`;
       vis.forEach(s => { const c=s.color;
         // band metric: median line follows loKey (p50); shaded area spans loKey→hiKey (p50→p99)
@@ -1507,7 +1507,8 @@ document.addEventListener('DOMContentLoaded', function() {
         g += `<path d="M${ptp.map(p=>`${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' L')}" fill="none" stroke="${c}" stroke-width="2" stroke-opacity="0.6"/>`;
         s.xs.forEach((x,i) => { const px=xS(x), py=yS(s.data[loK][i]);
           const tipv = M.band ? `p50: ${fmt(s.data[loK][i])}${M.unit||''} · p99: ${fmt(s.data[hiK][i])}${M.unit||''}` : `${M.lab.split(' (')[0]}: ${fmt(s.data[loK][i])}${M.unit||''}`;
-          g += `<g class="mk" data-tip="${s.name}||${cfg.xlabel.split(' ')[0]}=${x}||${tipv}"><circle cx="${px}" cy="${py}" r="5" fill="${c}"/></g>`; });
+          const xlab = s.plabels ? s.plabels[i] : `${cfg.xlabel.split(' ')[0]}=${x}`;
+          g += `<g class="mk" data-tip="${s.name}||${xlab}||${tipv}"><circle cx="${px}" cy="${py}" r="5" fill="${c}"/></g>`; });
         const lastp = ptp[ptp.length-1], nearRight = lastp[0] > m.l+pw-80;
         g += `<text x="${nearRight ? lastp[0]-8 : lastp[0]+8}" y="${lastp[1]-8}" text-anchor="${nearRight?'end':'start'}" font-size="10.5" fill="${c}" font-family="var(--font-mono)">${s.name}</text>`; });
       svg.innerHTML = g;
