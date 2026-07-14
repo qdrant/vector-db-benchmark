@@ -557,6 +557,19 @@ canvas {
 .iplot-view button + button { border-left: 1px solid var(--border); }
 .iplot-view button.on { background: var(--tpuf); color: #fff; }
 .iplot.table-mode .iplot-metric-label, .iplot.table-mode .iplot-dataset-label, .iplot.table-mode .iplot-xaxis-label, .iplot.table-mode .iplot-legend { display: none; }
+
+/* ── Section-level dataset picker (§4 Search) ── */
+.ds-picker { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 18px; }
+.ds-picker-lab { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-2); margin-right: 4px; }
+.ds-btn {
+  font-family: var(--font-mono); font-size: 13px; padding: 6px 14px;
+  border: 1px solid var(--border); border-radius: 6px; background: transparent;
+  color: var(--text); cursor: pointer; transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.ds-btn:hover { border-color: var(--tpuf); }
+.ds-btn.on { background: var(--tpuf); color: #fff; border-color: var(--tpuf); }
+.iplot-bar label.hidden-ds, .hidden-ds { display: none !important; }
+#iplot-frontier .iplot-dataset, #iplot-cost .iplot-dataset { display: none; }
 .iplot-tablewrap { overflow-x: auto; }
 .iplot-tablewrap table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .iplot-tablewrap thead th {
@@ -610,14 +623,12 @@ canvas {
         <li><a href="#s1" class="active"><span class="nav-node">1</span>What is tpuf?</a></li>
         <li><a href="#s2"><span class="nav-node">2</span>Test Setup</a></li>
         <li><a href="#s3"><span class="nav-node">3</span>Upload</a></li>
-        <li><a href="#s4"><span class="nav-node">4</span>DBpedia Search</a></li>
-        <li><a href="#s5"><span class="nav-node">5</span>H&amp;M Filtered</a></li>
-        <li><a href="#s6"><span class="nav-node">6</span>Multi-Tenant</a></li>
-        <li><a href="#s7"><span class="nav-node">7</span>Recall</a></li>
-        <li><a href="#s8"><span class="nav-node">8</span>tpuf Internals</a></li>
-        <li><a href="#s9"><span class="nav-node">9</span>Pinned Cost</a></li>
-        <li><a href="#s10"><span class="nav-node">10</span>Summary</a></li>
-        <li><a href="#s11"><span class="nav-node">11</span>Strategy</a></li>
+        <li><a href="#s4"><span class="nav-node">4</span>Search</a></li>
+        <li><a href="#s7"><span class="nav-node">5</span>Recall</a></li>
+        <li><a href="#s8"><span class="nav-node">6</span>tpuf Internals</a></li>
+        <li><a href="#s9"><span class="nav-node">7</span>Pinned Cost</a></li>
+        <li><a href="#s10"><span class="nav-node">8</span>Summary</a></li>
+        <li><a href="#s11"><span class="nav-node">9</span>Strategy</a></li>
       </ul>
     </nav>
   </aside>
@@ -798,10 +809,20 @@ canvas {
     <section class="section" id="s4">
       <div class="section-header">
         <div class="section-eyebrow">&sect;4</div>
-        <h2>DBpedia &mdash; Unfiltered Search</h2>
-        <p>The cleanest apples-to-apples comparison: large-scale unfiltered ANN on OpenAI-style 1536-dim embeddings. Both engines achieve comparable recall (tpuf 98.51% / Qdrant 98.36%); the difference is latency and cost structure.</p>
+        <h2>Search</h2>
+        <p>Search performance across all three datasets &mdash; DBpedia (unfiltered), H&amp;M (filtered), and Multi-tenant &mdash; comparing latency, throughput, recall, and cost. Pick a dataset (or All) to focus.</p>
       </div>
 
+      <div class="ds-picker" id="search-ds-picker" role="group" aria-label="dataset">
+        <span class="ds-picker-lab">dataset</span>
+        <button type="button" class="ds-btn on" data-ds="all">All</button>
+        <button type="button" class="ds-btn" data-ds="dbpedia">DBpedia</button>
+        <button type="button" class="ds-btn" data-ds="hm">H&amp;M</button>
+        <button type="button" class="ds-btn" data-ds="mt">Multi-tenant</button>
+      </div>
+
+      <!-- Group A: DBpedia bar explorer + detail table + foldout -->
+      <div class="ds-group" data-ds="dbpedia">
       <!-- Interactive metric explorer (leads the section; tables below) -->
       <div class="iplot" id="iplot-dbpedia">
         <div class="iplot-bar">
@@ -850,12 +871,13 @@ canvas {
         <summary>Every DBpedia query scans the whole dataset; tpuf bills the 1.28 GB per-query minimum</summary>
         <div class="fold-body">tpuf reports 0.615 GB scanned per DBpedia query &mdash; essentially the entire dataset (0.614 GB raw) &mdash; and invoices at the 1.28 GB per-query minimum (§4.2). Cost scales linearly with data size &times; QPS once above that floor. Qdrant server p99 = 2.5ms (1.3&times; p50); tpuf server p99 = 40ms (4&times; p50).</div>
       </details>
+      </div><!-- /ds-group dbpedia (Group A) -->
 
       <h3>Latency &amp; Throughput vs Concurrency (fresh, measured — all three datasets)</h3>
-      <p>Uncontended concurrency sweep (p=1&rarr;32) using <em>measured</em> throughput (completed queries &divide; wall-clock, not <code>p&times;1/mean</code>), consistent across all six dataset&times;engine runs. Latency and throughput share one x-axis (concurrency) on dual y-axes. Switch datasets with the selector.</p>
+      <p>Uncontended concurrency sweep (p=1&rarr;32) using <em>measured</em> throughput (completed queries &divide; wall-clock, not <code>p&times;1/mean</code>), consistent across all six dataset&times;engine runs. Latency and throughput share one x-axis (concurrency) on dual y-axes. Switch datasets with the picker above.</p>
       <div class="iplot" id="iplot-frontier">
         <div class="iplot-bar">
-          <label>dataset
+          <label class="hidden-ds">dataset
             <select class="iplot-dataset">
               <option value="dbpedia" selected>DBpedia 100K×1536</option>
               <option value="hm">H&amp;M 105K×2048</option>
@@ -878,6 +900,8 @@ canvas {
         </div>
       </div>
 
+      <!-- Group B: DBpedia per-query latency over the run -->
+      <div class="ds-group" data-ds="dbpedia">
       <h3>Search Latency Over the Run &mdash; Per Query</h3>
       <p>Every query's latency across the run (all 500 sampled of 1,000) &mdash; the within-run behaviour the aggregate p50/p99 hide.</p>
       <div class="iplot" id="iplot-searchts">
@@ -903,7 +927,10 @@ canvas {
           <svg class="iplot-svg" viewBox="0 0 900 320" role="img" aria-label="Per-query search latency over the run"></svg>
         </div>
       </div>
+      </div><!-- /ds-group dbpedia (Group B) -->
 
+      <!-- Group C: DBpedia fixed-QPS sweep -->
+      <div class="ds-group" data-ds="dbpedia">
       <h3>4.1 &mdash; Fixed-QPS Sweep</h3>
       <div class="iplot" id="iplot-qps">
         <div class="iplot-bar">
@@ -943,6 +970,7 @@ canvas {
       <div class="callout neutral">
         Qdrant server p99 stays at 2.5ms from 1&rarr;50 QPS &mdash; the single node has ample headroom. tpuf server p99 is 25&ndash;46ms (flat at higher floor).
       </div>
+      </div><!-- /ds-group dbpedia (Group C) -->
 
       <h3>4.2 &mdash; Cost Model by Dataset Scale</h3>
       <p>turbopuffer charges three components independently; Qdrant charges a flat monthly cluster fee.</p>
@@ -963,7 +991,7 @@ canvas {
       <h4 style="margin:22px 0 2px;">Break-even &mdash; cost vs sustained query load (our three measured datasets)</h4>
       <div class="iplot" id="iplot-cost">
         <div class="iplot-bar">
-          <label>dataset
+          <label class="hidden-ds">dataset
             <select class="iplot-dataset">
               <option value="dbpedia" selected>DBpedia 100K×1536</option>
               <option value="hm">H&amp;M 105K×2048</option>
@@ -1006,77 +1034,68 @@ canvas {
           </div>
         </div>
       </details>
+
+      <!-- H&M subsection (moved from former §5) -->
+      <div class="ds-group" data-ds="hm">
+        <h3>H&amp;M &mdash; Filtered Search</h3>
+        <p>Filtered vector search is where architecture choices have the sharpest consequences. SPFresh (turbopuffer) post-filters: it traverses centroids first, then discards non-matching vectors. Qdrant integrates the filter directly into HNSW traversal, preserving effective graph structure. Latency &amp; throughput vs concurrency live in the frontier explorer above (select <em>H&amp;M</em>); below is the detail it doesn&rsquo;t show &mdash; recall, per-query billing, and internal (server-side) latency.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Engine</th><th>Recall (filtered)</th><th>Billed GB / query</th><th>Internal (server) p50</th><th>Internal p99</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="chip-tpuf"></span>tpuf serverless</td><td>89.14%</td><td>0.872 GB (billed at 1.28 floor)</td><td>14–15ms</td><td>29–44ms</td></tr>
+              <tr><td><span class="chip-qdrant"></span>Qdrant HNSW</td><td class="win">95.85%</td><td>unlimited (flat fee)</td><td class="win">1.1ms</td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:11px;color:var(--text-2);margin:6px 2px 0;font-style:italic;">Internal latency = engine-reported server-side time (excludes network); ranges span p=1→32. Recall &amp; billed-GB are concurrency-independent.</p>
+
+        <div class="callout tpuf">
+          <strong>Cold-start penalty (prior measurement):</strong> tpuf cold p99 = 1,891ms (server_p99 = 1,777ms — 94% server-side S3 fetches). Hot cache (NVMe) p99 ≈ 50ms — a 38&times; improvement once centroids are cached. Qdrant has no cold-start: HNSW lives in RAM permanently.
+        </div>
+        <details class="foldout tpuf">
+          <summary>Why filtered recall drops — SPFresh post-filters; Qdrant filters inside HNSW traversal</summary>
+          <div class="fold-body">SPFresh post-filters after centroid traversal &mdash; vectors matching the filter may not be in the traversed centroid regions at all. Qdrant's filter-aware HNSW traversal constrains the graph walk to matching nodes, preserving recall. The ~7% gap (89.14% vs 95.85%) is not tunable on turbopuffer.</div>
+        </details>
+      </div><!-- /ds-group hm -->
+
+      <!-- Multi-tenant subsection (moved from former §6) -->
+      <div class="ds-group" data-ds="mt">
+        <h3>Multi-tenant Search</h3>
+        <p>100 tenants, ~10,000 vectors each (1M total). At this per-tenant scale, both engines achieve 100% recall &mdash; the index structures have negligible approximation error over 10K vectors. Throughput tells the real story. Latency &amp; throughput vs concurrency live in the frontier explorer above (select <em>Multi-tenant</em>); both engines hit 100% recall here, so the detail below is billing and internal latency.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Engine</th><th>Recall</th><th>Billed GB / query</th><th>Internal (server) p50</th><th>Internal p99</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>100%</td><td>0.256 GB (former 256 MB floor; now 1.28 GB)</td><td>15–19ms</td><td>29–114ms</td></tr>
+              <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>100%</td><td>unlimited (flat fee)</td><td>—</td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:11px;color:var(--text-2);margin:6px 2px 0;font-style:italic;">Internal latency = engine-reported server-side time; ranges span p=1→32. Qdrant multi-tenant internal latency was not separately captured.</p>
+        <details class="foldout neutral">
+          <summary>Why both engines hit 100% recall at ~10K vectors per tenant</summary>
+          <div class="fold-body">With ~10,000 vectors per tenant, both HNSW (Qdrant: <code>m=0, payload_m=16</code> builds per-tenant sub-graphs) and SPFresh centroid structures (tpuf) have negligible approximation error &mdash; the per-tenant index is small enough for near-exhaustive traversal. The multi-tenant comparison is purely a throughput and cost question, not a recall quality question.</div>
+        </details>
+        <details class="foldout neutral">
+          <summary>p=32 crossover — tpuf autoscales past Qdrant's saturated 2-CPU node</summary>
+          <div class="fold-body">On the fresh measured sweep (single client), tpuf overtakes the single-node Qdrant from p=8 onward — <strong>~91 vs ~69 RPS at p=8, ~94 vs ~57 at p=32</strong> — because Qdrant&rsquo;s 2-CPU node saturates past p=4 (measured throughput falls 84&rarr;57 RPS while its p99 climbs to ~2.2s). tpuf autoscales horizontally and keeps gaining. This is a node-sizing issue: a larger Qdrant instance would raise its ceiling. See the frontier explorer above (select Multi-tenant) for the full curves.</div>
+        </details>
+        <details class="foldout tpuf">
+          <summary>The 0.256 GB/query is tpuf's former billing floor, not scan overhead (now 1.28 GB)</summary>
+          <div class="fold-body">tpuf reported 0.256 GB billed per MT query vs ~0.031 GB raw vector data per namespace (10K &times; 768-dim &times; 4B). The 0.256 GB is not scan overhead &mdash; it exactly matches turbopuffer&rsquo;s former 256 MB per-query billing minimum. That floor was raised to <strong>1.28 GB per query</strong> in Feb 2026 (see §4.2), so small namespaces bill 5&times; more per query today than this measured value.</div>
+        </details>
+      </div><!-- /ds-group mt -->
     </section>
 
-    <!-- §5 -->
-    <section class="section" id="s5">
-      <div class="section-header">
-        <div class="section-eyebrow tpuf-eye">&sect;5</div>
-        <h2>H&amp;M &mdash; Filtered Search</h2>
-        <p>Filtered vector search is where architecture choices have the sharpest consequences. SPFresh (turbopuffer) post-filters: it traverses centroids first, then discards non-matching vectors. Qdrant integrates the filter directly into HNSW traversal, preserving effective graph structure.</p>
-      </div>
-
-      <p style="color:var(--text-2);font-size:13.5px;">Latency &amp; throughput vs concurrency for H&amp;M lives in the <a href="#s4">unified explorer above</a> (select <em>H&amp;M</em>). Below is the section-specific detail the frontier doesn&rsquo;t show &mdash; recall, per-query billing, and internal (server-side) latency.</p>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Engine</th><th>Recall (filtered)</th><th>Billed GB / query</th><th>Internal (server) p50</th><th>Internal p99</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><span class="chip-tpuf"></span>tpuf serverless</td><td>89.14%</td><td>0.872 GB (billed at 1.28 floor)</td><td>14–15ms</td><td>29–44ms</td></tr>
-            <tr><td><span class="chip-qdrant"></span>Qdrant HNSW</td><td class="win">95.85%</td><td>unlimited (flat fee)</td><td class="win">1.1ms</td><td>—</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p style="font-size:11px;color:var(--text-2);margin:6px 2px 0;font-style:italic;">Internal latency = engine-reported server-side time (excludes network); ranges span p=1→32. Recall &amp; billed-GB are concurrency-independent.</p>
-
-      <div class="callout tpuf">
-        <strong>Cold-start penalty (prior measurement):</strong> tpuf cold p99 = 1,891ms (server_p99 = 1,777ms — 94% server-side S3 fetches). Hot cache (NVMe) p99 ≈ 50ms — a 38&times; improvement once centroids are cached. Qdrant has no cold-start: HNSW lives in RAM permanently.
-      </div>
-      <details class="foldout tpuf">
-        <summary>Why filtered recall drops — SPFresh post-filters; Qdrant filters inside HNSW traversal</summary>
-        <div class="fold-body">SPFresh post-filters after centroid traversal &mdash; vectors matching the filter may not be in the traversed centroid regions at all. Qdrant's filter-aware HNSW traversal constrains the graph walk to matching nodes, preserving recall. The ~7% gap (89.14% vs 95.85%) is not tunable on turbopuffer.</div>
-      </details>
-    </section>
-
-    <!-- §6 -->
-    <section class="section" id="s6">
-      <div class="section-header">
-        <div class="section-eyebrow">&sect;6</div>
-        <h2>Multi-Tenant Search</h2>
-        <p>100 tenants, ~10,000 vectors each (1M total). At this per-tenant scale, both engines achieve 100% recall &mdash; the index structures have negligible approximation error over 10K vectors. Throughput tells the real story.</p>
-      </div>
-      <p style="color:var(--text-2);font-size:13.5px;">Latency &amp; throughput vs concurrency for multi-tenant lives in the <a href="#s4">unified explorer above</a> (select <em>Multi-tenant</em>). Both engines hit 100% recall at this per-tenant scale, so the section-specific detail is billing and internal latency:</p>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Engine</th><th>Recall</th><th>Billed GB / query</th><th>Internal (server) p50</th><th>Internal p99</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>100%</td><td>0.256 GB (former 256 MB floor; now 1.28 GB)</td><td>15–19ms</td><td>29–114ms</td></tr>
-            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>100%</td><td>unlimited (flat fee)</td><td>—</td><td>—</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p style="font-size:11px;color:var(--text-2);margin:6px 2px 0;font-style:italic;">Internal latency = engine-reported server-side time; ranges span p=1→32. Qdrant multi-tenant internal latency was not separately captured.</p>
-      <details class="foldout neutral">
-        <summary>Why both engines hit 100% recall at ~10K vectors per tenant</summary>
-        <div class="fold-body">With ~10,000 vectors per tenant, both HNSW (Qdrant: <code>m=0, payload_m=16</code> builds per-tenant sub-graphs) and SPFresh centroid structures (tpuf) have negligible approximation error &mdash; the per-tenant index is small enough for near-exhaustive traversal. The multi-tenant comparison is purely a throughput and cost question, not a recall quality question.</div>
-      </details>
-      <details class="foldout neutral">
-        <summary>p=32 crossover — tpuf autoscales past Qdrant's saturated 2-CPU node</summary>
-        <div class="fold-body">On the fresh measured sweep (single client), tpuf overtakes the single-node Qdrant from p=8 onward — <strong>~91 vs ~69 RPS at p=8, ~94 vs ~57 at p=32</strong> — because Qdrant&rsquo;s 2-CPU node saturates past p=4 (measured throughput falls 84&rarr;57 RPS while its p99 climbs to ~2.2s). tpuf autoscales horizontally and keeps gaining. This is a node-sizing issue: a larger Qdrant instance would raise its ceiling. See the unified explorer in §4 (select Multi-tenant) for the full curves.</div>
-      </details>
-      <details class="foldout tpuf">
-        <summary>The 0.256 GB/query is tpuf's former billing floor, not scan overhead (now 1.28 GB)</summary>
-        <div class="fold-body">tpuf reported 0.256 GB billed per MT query vs ~0.031 GB raw vector data per namespace (10K &times; 768-dim &times; 4B). The 0.256 GB is not scan overhead &mdash; it exactly matches turbopuffer&rsquo;s former 256 MB per-query billing minimum. That floor was raised to <strong>1.28 GB per query</strong> in Feb 2026 (see §4.2), so small namespaces bill 5&times; more per query today than this measured value.</div>
-      </details>
-    </section>
-
-    <!-- §7 -->
+    <!-- §5 (id kept as s7 — anchor stable) -->
     <section class="section" id="s7">
       <div class="section-header">
-        <div class="section-eyebrow">&sect;7</div>
+        <div class="section-eyebrow">&sect;5</div>
         <h2>Recall Summary</h2>
         <p>Recall numbers remain stable across all tested concurrency levels (p=1, p=8, p=32) &mdash; the recall values here reflect p=1 baselines.</p>
       </div>
@@ -1102,20 +1121,20 @@ canvas {
       </div>
     </section>
 
-    <!-- §8 -->
+    <!-- §6 (id kept as s8 — anchor stable) -->
     <section class="section" id="s8">
       <div class="section-header">
-        <div class="section-eyebrow tpuf-eye">&sect;8</div>
+        <div class="section-eyebrow tpuf-eye">&sect;6</div>
         <h2>Internals &amp; Deep Dives</h2>
       </div>
       <p>Operational deep-dives &mdash; cold-start warmup, replica boot, pinned vs serverless scaling &amp; writes, serverless noisy-neighbor contention, concurrent write-read dynamics, and Qdrant disk mode &mdash; live in a companion report to keep this one focused.</p>
       <p style="margin-top:16px;"><a href="tpuf-internals.html" style="display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--tpuf);background:var(--tpuf-bg);border:1px solid var(--tpuf);border-radius:var(--radius);padding:8px 14px;text-decoration:none;">Open the Internals &amp; Deep Dives companion &rarr;</a></p>
     </section>
 
-    <!-- §9 -->
+    <!-- §7 (id kept as s9 — anchor stable) -->
     <section class="section" id="s9">
       <div class="section-header">
-        <div class="section-eyebrow tpuf-eye">&sect;9</div>
+        <div class="section-eyebrow tpuf-eye">&sect;7</div>
         <h2>Pinned Mode: Billing Economics</h2>
         <p>Pinned mode keeps a turbopuffer namespace resident on dedicated hardware, eliminating serverless cold-start variance for any query type. The tradeoff is economic: pinned billing applies a 64 GB floor regardless of actual data size, making it prohibitively expensive for small datasets.</p>
       </div>
@@ -1147,7 +1166,7 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
             <tr><td>67M&times;1536 (large scale)</td><td>~200 GB</td><td>200 GB</td><td>$1,934</td><td>$7,738</td><td>~$700</td><td>11&times; more</td></tr>
           </tbody>
         </table>
-        <div style="font-size:11px;color:var(--text-2);margin-top:8px;font-style:italic;">Why three different GB figures appear in this report: <strong>Actual GB</strong> above is f16 storage (2 bytes/dim), which storage and pinned billing use &mdash; e.g. DBpedia 0.31 GB. Writes and per-query scans are billed at f32 (4 bytes/dim) &mdash; the 0.615 GB &ldquo;Stored&rdquo; (§3) and &ldquo;Billed GB/q&rdquo; (§4&ndash;§6) figures. Same dataset, two precisions.</div>
+        <div style="font-size:11px;color:var(--text-2);margin-top:8px;font-style:italic;">Why three different GB figures appear in this report: <strong>Actual GB</strong> above is f16 storage (2 bytes/dim), which storage and pinned billing use &mdash; e.g. DBpedia 0.31 GB. Writes and per-query scans are billed at f32 (4 bytes/dim) &mdash; the 0.615 GB &ldquo;Stored&rdquo; (§3) and &ldquo;Billed GB/q&rdquo; (§4) figures. Same dataset, two precisions.</div>
       </div>
 
       <details class="foldout tpuf">
@@ -1169,10 +1188,10 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
       </div>
     </section>
 
-    <!-- §10 -->
+    <!-- §8 (id kept as s10 — anchor stable) -->
     <section class="section" id="s10">
       <div class="section-header">
-        <div class="section-eyebrow">&sect;10</div>
+        <div class="section-eyebrow">&sect;8</div>
         <h2>Summary Comparison</h2>
       </div>
       <div class="table-wrap">
@@ -1241,10 +1260,10 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
       </div>
     </section>
 
-    <!-- §11 -->
+    <!-- §9 (id kept as s11 — anchor stable) -->
     <section class="section" id="s11">
       <div class="section-header">
-        <div class="section-eyebrow">&sect;11</div>
+        <div class="section-eyebrow">&sect;9</div>
         <h2>Strategic Implications</h2>
         <p>These results point to specific architectural decisions rather than a simple winner. The right choice is a function of your QPS profile, filter selectivity, tenant concurrency pattern, dataset size, and tolerance for cold-start latency.</p>
       </div>
@@ -1346,7 +1365,9 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
   // pull the section's .table-wrap(s) whose first <th> matches, remove the
   // originals, return their combined HTML (preserves every column verbatim)
   function grabTables(root, firstThLabels){
-    const sec = root.closest('section'); if(!sec) return '';
+    // Scope to the enclosing .ds-group when present (so the §4 Search dataset
+    // groups don't cross-grab each other's "Engine" tables); else the section.
+    const sec = root.closest('.ds-group') || root.closest('section'); if(!sec) return '';
     let html='';
     [...sec.querySelectorAll('.table-wrap')].forEach(tw => {
       const th = tw.querySelector('th');
@@ -1902,5 +1923,24 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
       let h='<table><thead><tr><th>concurrency</th><th>'+dot('tpuf')+'tpuf p50 / p99</th><th>'+dot('qdrant')+'Qdrant p50 / p99</th></tr></thead><tbody>';
       rows.forEach(r=>{ h+=`<tr><td>${r[0]}</td><td>${r[1]} / ${r[2]}ms</td><td>${r[3]} / ${r[4]}ms</td></tr>`; });
       return h+'</tbody></table>'; }); }
+
+  /* Section-level dataset picker for §4 Search */
+  (function(){
+    const picker=document.getElementById('search-ds-picker'); if(!picker) return;
+    const btns=[...picker.querySelectorAll('.ds-btn')];
+    function apply(v){
+      // show/hide dataset groups: "all" shows every group; a single dataset shows only that group + shared plots
+      document.querySelectorAll('#s4 .ds-group').forEach(g=>{
+        g.style.display = (v==='all' || g.dataset.ds===v) ? '' : 'none';
+      });
+      // drive the shared plots that carry a per-plot dataset <select> (frontier, cost)
+      const tgt = (v==='all') ? 'dbpedia' : v;   // frontier/cost stay single-dataset; default to dbpedia under All
+      ['iplot-frontier','iplot-cost'].forEach(id=>{ const el=document.getElementById(id); if(!el)return;
+        const ds=el.querySelector('.iplot-dataset'); if(ds && ds.value!==tgt){ ds.value=tgt; ds.dispatchEvent(new Event('change')); } });
+      btns.forEach(b=>b.classList.toggle('on', b.dataset.ds===v));
+    }
+    btns.forEach(b=>b.addEventListener('click',()=>apply(b.dataset.ds)));
+    apply('all');
+  })();
 })();
 </script>
