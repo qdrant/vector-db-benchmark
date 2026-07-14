@@ -497,5 +497,248 @@
       ],
       "write": []
     }
+  },
+  "fixed_qps": {
+    "hm/fixed_qps/tpuf": {
+      "source_run": "reproduce-2026-07-14T12-22-28",
+      "results": {
+        "qps1": {
+          "n": 120,
+          "rps": 18.6,
+          "mean_ms": 53.8,
+          "p50_ms": 26.5,
+          "p90_ms": 61.2,
+          "p95_ms": 73.4,
+          "p99_ms": 735.1,
+          "server_p50_ms": 16.0,
+          "server_p99_ms": 67.2
+        },
+        "qps5": {
+          "n": 600,
+          "rps": 32.1,
+          "mean_ms": 31.1,
+          "p50_ms": 21.3,
+          "p90_ms": 58.5,
+          "p95_ms": 59.2,
+          "p99_ms": 80.9,
+          "server_p50_ms": 11.0,
+          "server_p99_ms": 30.0
+        },
+        "qps10": {
+          "n": 1200,
+          "rps": 32.6,
+          "mean_ms": 30.7,
+          "p50_ms": 20.9,
+          "p90_ms": 54.9,
+          "p95_ms": 56.1,
+          "p99_ms": 81.2,
+          "server_p50_ms": 11.0,
+          "server_p99_ms": 40.0
+        },
+        "qps20": {
+          "n": 2400,
+          "rps": 31.5,
+          "mean_ms": 31.7,
+          "p50_ms": 20.2,
+          "p90_ms": 60.7,
+          "p95_ms": 67.7,
+          "p99_ms": 85.0,
+          "server_p50_ms": 11.0,
+          "server_p99_ms": 46.0
+        },
+        "qps50": {
+          "n": 6000,
+          "rps": 29.3,
+          "mean_ms": 34.1,
+          "p50_ms": 18.9,
+          "p90_ms": 71.7,
+          "p95_ms": 76.7,
+          "p99_ms": 89.1,
+          "server_p50_ms": 11.0,
+          "server_p99_ms": 41.0
+        }
+      }
+    },
+    "hm/fixed_qps/qdrant": {
+      "source_run": "reproduce-2026-07-14T12-22-28",
+      "results": {
+        "qps1": {
+          "n": 120,
+          "rps": 51.6,
+          "mean_ms": 19.4,
+          "p50_ms": 9.2,
+          "p90_ms": 43.6,
+          "p95_ms": 44.6,
+          "p99_ms": 46.1,
+          "server_p50_ms": 1.3,
+          "server_p99_ms": 3.0
+        },
+        "qps5": {
+          "n": 600,
+          "rps": 65.8,
+          "mean_ms": 15.2,
+          "p50_ms": 8.4,
+          "p90_ms": 41.3,
+          "p95_ms": 42.2,
+          "p99_ms": 44.2,
+          "server_p50_ms": 1.2,
+          "server_p99_ms": 3.0
+        },
+        "qps10": {
+          "n": 1200,
+          "rps": 90.7,
+          "mean_ms": 11.0,
+          "p50_ms": 8.1,
+          "p90_ms": 16.3,
+          "p95_ms": 36.9,
+          "p99_ms": 52.6,
+          "server_p50_ms": 1.1,
+          "server_p99_ms": 3.0
+        },
+        "qps20": {
+          "n": 2400,
+          "rps": 64.9,
+          "mean_ms": 15.4,
+          "p50_ms": 8.3,
+          "p90_ms": 45.5,
+          "p95_ms": 49.6,
+          "p99_ms": 57.9,
+          "server_p50_ms": 1.1,
+          "server_p99_ms": 2.9
+        },
+        "qps50": {
+          "n": 6000,
+          "rps": 30.7,
+          "mean_ms": 32.5,
+          "p50_ms": 11.2,
+          "p90_ms": 52.9,
+          "p95_ms": 84.3,
+          "p99_ms": 524.9,
+          "server_p50_ms": 1.1,
+          "server_p99_ms": 3.0
+        }
+      }
+    },
+    "mt/fixed_qps/tpuf": {
+      "source_run": "reproduce-2026-07-14T12-22-28",
+      "results": {
+        "qps1": {
+          "n": 120,
+          "rps": 13.0,
+          "mean_ms": 76.8,
+          "p50_ms": 72.6,
+          "p90_ms": 137.7,
+          "p95_ms": 140.0,
+          "p99_ms": 164.0,
+          "server_p50_ms": 54.0,
+          "server_p99_ms": 134.2
+        },
+        "qps5": {
+          "n": 600,
+          "rps": 20.6,
+          "mean_ms": 48.5,
+          "p50_ms": 56.6,
+          "p90_ms": 61.7,
+          "p95_ms": 81.5,
+          "p99_ms": 136.6,
+          "server_p50_ms": 23.0,
+          "server_p99_ms": 76.0
+        },
+        "qps10": {
+          "n": 1200,
+          "rps": 24.5,
+          "mean_ms": 40.7,
+          "p50_ms": 31.9,
+          "p90_ms": 61.8,
+          "p95_ms": 75.1,
+          "p99_ms": 81.8,
+          "server_p50_ms": 22.0,
+          "server_p99_ms": 50.0
+        },
+        "qps20": {
+          "n": 2400,
+          "rps": 23.5,
+          "mean_ms": 42.5,
+          "p50_ms": 32.8,
+          "p90_ms": 70.4,
+          "p95_ms": 75.7,
+          "p99_ms": 86.0,
+          "server_p50_ms": 21.0,
+          "server_p99_ms": 47.0
+        },
+        "qps50": {
+          "n": 6000,
+          "rps": 16.7,
+          "mean_ms": 59.9,
+          "p50_ms": 70.0,
+          "p90_ms": 79.4,
+          "p95_ms": 83.2,
+          "p99_ms": 157.1,
+          "server_p50_ms": 19.0,
+          "server_p99_ms": 45.0
+        }
+      }
+    },
+    "mt/fixed_qps/qdrant": {
+      "source_run": "reproduce-2026-07-14T12-22-28",
+      "results": {
+        "qps1": {
+          "n": 120,
+          "rps": 82.4,
+          "mean_ms": 12.1,
+          "p50_ms": 7.1,
+          "p90_ms": 33.2,
+          "p95_ms": 35.7,
+          "p99_ms": 64.9,
+          "server_p50_ms": 0.7,
+          "server_p99_ms": 0.8
+        },
+        "qps5": {
+          "n": 600,
+          "rps": 101.3,
+          "mean_ms": 9.9,
+          "p50_ms": 6.8,
+          "p90_ms": 25.9,
+          "p95_ms": 32.2,
+          "p99_ms": 34.4,
+          "server_p50_ms": 0.7,
+          "server_p99_ms": 0.8
+        },
+        "qps10": {
+          "n": 1200,
+          "rps": 74.2,
+          "mean_ms": 13.5,
+          "p50_ms": 6.9,
+          "p90_ms": 46.0,
+          "p95_ms": 47.0,
+          "p99_ms": 49.5,
+          "server_p50_ms": 0.7,
+          "server_p99_ms": 0.8
+        },
+        "qps20": {
+          "n": 2400,
+          "rps": 64.4,
+          "mean_ms": 15.5,
+          "p50_ms": 7.1,
+          "p90_ms": 45.4,
+          "p95_ms": 49.7,
+          "p99_ms": 85.9,
+          "server_p50_ms": 0.6,
+          "server_p99_ms": 0.7
+        },
+        "qps50": {
+          "n": 6000,
+          "rps": 7.8,
+          "mean_ms": 128.5,
+          "p50_ms": 10.5,
+          "p90_ms": 417.1,
+          "p95_ms": 795.4,
+          "p99_ms": 1669.2,
+          "server_p50_ms": 0.6,
+          "server_p99_ms": 1.0
+        }
+      }
+    },
+    "_note": "Fixed-QPS sweep: latency/RPS at offered QPS 1/5/10/20/50. Feeds the p50/p99-on-hover in the \u00a74.2 cost plot. DBpedia fixed-QPS from an older run (p50/p99 embedded in the report)."
   }
 }
