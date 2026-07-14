@@ -589,7 +589,7 @@ canvas {
 .ds-btn:hover { border-color: var(--tpuf); }
 .ds-btn.on { background: var(--tpuf); color: #fff; border-color: var(--tpuf); }
 .iplot-bar label.hidden-ds, .hidden-ds { display: none !important; }
-#iplot-frontier .iplot-dataset, #iplot-cost .iplot-dataset { display: none; }
+#iplot-frontier .iplot-dataset, #iplot-cost .iplot-dataset, #iplot-qps .iplot-dataset { display: none; }
 .iplot-tablewrap { overflow-x: auto; }
 .iplot-tablewrap table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .iplot-tablewrap thead th {
@@ -947,11 +947,17 @@ canvas {
       </div>
       </div><!-- /ds-group dbpedia (Group B) -->
 
-      <!-- Group C: DBpedia fixed-QPS sweep -->
-      <div class="ds-group" data-ds="dbpedia">
+      <!-- Fixed-QPS sweep: shared, dataset-driven (driven by §4 picker) -->
       <h3>4.1 &mdash; Fixed-QPS Sweep</h3>
       <div class="iplot" id="iplot-qps">
         <div class="iplot-bar">
+          <label class="hidden-ds">dataset
+            <select class="iplot-dataset">
+              <option value="dbpedia" selected>DBpedia 100K×1536</option>
+              <option value="hm">H&amp;M 105K×2048</option>
+              <option value="mt">Multi-tenant 1M×768</option>
+            </select>
+          </label>
           <label>metric
             <select class="iplot-metric">
               <option value="lat" selected>search latency ↓</option>
@@ -961,33 +967,14 @@ canvas {
           <div class="iplot-legend"></div>
         </div>
         <div class="iplot-panel">
-          <div class="pt">DBpedia · latency vs offered QPS</div>
+          <div class="pt">DBpedia 100K×1536 · latency vs offered QPS</div>
           <div class="ps">Lines sweep target QPS (log x, log y). tpuf latency is roughly QPS-independent; Qdrant stays low throughout. Cost vs QPS is in §4.2 (break-even ~8 QPS). Hover a point; click an engine to toggle.</div>
           <svg class="iplot-svg" viewBox="0 0 900 320" role="img" aria-label="DBpedia latency and cost vs QPS sweep"></svg>
         </div>
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>QPS</th>
-              <th>tpuf p50</th><th>tpuf p99</th><th>tpuf srv_p50</th><th>tpuf srv_p99</th><th>tpuf $/mo</th>
-              <th>qdrant p50</th><th>qdrant p99</th><th>qdrant srv_p50</th><th>qdrant srv_p99</th><th>qdrant $/mo</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>1</td><td>21.4ms</td><td>56.3ms</td><td>15ms</td><td>46ms</td><td class="win">$3.42</td><td class="win">7.9ms</td><td>22.2ms</td><td class="win">2.0ms</td><td class="win">2.7ms</td><td>$26.10</td></tr>
-            <tr><td>5</td><td>15.5ms</td><td>33.8ms</td><td>10ms</td><td>25ms</td><td class="win">$16.69</td><td class="win">7.7ms</td><td>14.6ms</td><td class="win">2.0ms</td><td class="win">2.5ms</td><td>$26.10</td></tr>
-            <tr><td>10</td><td>15.9ms</td><td>41.3ms</td><td>10ms</td><td>35ms</td><td>$33.28</td><td class="win">7.4ms</td><td class="win">12.2ms</td><td class="win">2.0ms</td><td class="win">2.5ms</td><td class="win">$26.10</td></tr>
-            <tr><td>20</td><td>15.7ms</td><td>44.7ms</td><td>10ms</td><td>38ms</td><td>$66.46</td><td class="win">7.6ms</td><td class="win">13.0ms</td><td class="win">1.9ms</td><td class="win">2.5ms</td><td class="win">$26.10</td></tr>
-            <tr><td>50</td><td>15.2ms</td><td>42.7ms</td><td>10ms</td><td>35ms</td><td>$165.99</td><td class="win">7.3ms</td><td class="win">10.7ms</td><td class="win">1.9ms</td><td class="win">2.5ms</td><td class="win">$26.10</td></tr>
-          </tbody>
-        </table>
-      </div>
       <div class="callout neutral">
-        Qdrant server p99 stays at 2.5ms from 1&rarr;50 QPS &mdash; the single node has ample headroom. tpuf server p99 is 25&ndash;46ms (flat at higher floor).
+        Switch the metric to <em>internal search latency</em> to compare engine-side processing time (excludes network). Qdrant's server-side latency stays low and flat across offered QPS; tpuf's sits at a higher floor.
       </div>
-      </div><!-- /ds-group dbpedia (Group C) -->
 
       <h3>4.2 &mdash; Cost Model by Dataset Scale</h3>
       <p>turbopuffer charges three components independently; Qdrant charges a flat monthly cluster fee.</p>
@@ -1411,9 +1398,10 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
     }));
   }
   // generated tables for plots that never had an original (recall §7, cores §8.2)
-  function sweepTable(cfg){
-    const xs=[...new Set(cfg.series.flatMap(s=>s.xs))].sort((a,b)=>a-b);
-    const cols=[]; cfg.series.forEach(s => Object.keys(cfg.mets).forEach(k => { if(s.data[k]) cols.push([s,k]); }));
+  function sweepTable(cfg, dsKey){
+    const series = cfg.ds ? cfg.ds[dsKey].series : cfg.series;
+    const xs=[...new Set(series.flatMap(s=>s.xs))].sort((a,b)=>a-b);
+    const cols=[]; series.forEach(s => Object.keys(cfg.mets).forEach(k => { if(s.data[k]) cols.push([s,k]); }));
     let h='<table><thead><tr><th>'+cfg.xlabel.replace(/\s*→\s*$/,'')+'</th>'+
       cols.map(([s,k])=>`<th>${cdot(s.color)}${s.name} · ${k}</th>`).join('')+'</tr></thead><tbody>';
     xs.forEach(x => { h+=`<tr><td>${x}</td>`+cols.map(([s,k])=>{ const i=s.xs.indexOf(x); return `<td>${i>=0?fmtCell(s.data[k][i],cfg.mets[k]):'—'}</td>`; }).join('')+'</tr>'; });
@@ -1579,18 +1567,21 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
              series:[{name,color,xs:[...],data:{key:[y...]}}] } */
   function initSweep(root, cfg){
     const svg = root.querySelector('.iplot-svg'), sel = root.querySelector('.iplot-metric'), legendEl = root.querySelector('.iplot-legend');
+    const dsSel = root.querySelector('.iplot-dataset'); const seriesOf = () => cfg.ds ? cfg.ds[dsSel.value].series : cfg.series;
     const hidden = new Set(); let metric = sel.value;
-    legendEl.innerHTML = '<span class="lab">series</span>' + cfg.series.map(s =>
-      `<span class="eng" data-n="${s.name}"><span class="sw" style="background:${s.color}"></span>${s.name}</span>`).join('');
-    legendEl.querySelectorAll('.eng').forEach(el => el.addEventListener('click', () => {
-      const n = el.dataset.n; hidden.has(n) ? hidden.delete(n) : hidden.add(n);
-      el.classList.toggle('off', hidden.has(n)); draw(); }));
+    function buildLegend(){
+      legendEl.innerHTML = '<span class="lab">series</span>' + seriesOf().map(s =>
+        `<span class="eng${hidden.has(s.name)?' off':''}" data-n="${s.name}"><span class="sw" style="background:${s.color}"></span>${s.name}</span>`).join('');
+      legendEl.querySelectorAll('.eng').forEach(el => el.addEventListener('click', () => {
+        const n = el.dataset.n; hidden.has(n) ? hidden.delete(n) : hidden.add(n);
+        el.classList.toggle('off', hidden.has(n)); draw(); }));
+    }
     const W=900, H=320, m={t:14, r:74, l:64, b:40}, pw=W-m.l-m.r, ph=H-m.t-m.b;
     function draw(){
       const M = cfg.mets[metric];
       // a band metric has no direct data key; it draws from its [loKey, hiKey]
       const hasM = s => M.band ? (s.data[M.band[0]] && s.data[M.band[1]]) : s.data[metric];
-      const vis = cfg.series.filter(s => !hidden.has(s.name) && hasM(s));
+      const vis = seriesOf().filter(s => !hidden.has(s.name) && hasM(s));
       if(!vis.length){ svg.innerHTML = `<text x="${W/2}" y="${H/2}" text-anchor="middle" font-size="13" fill="${MUT}" font-family="var(--font-mono)">no data</text>`; return; }
       // x from visible series of this metric; y domain spans the whole family
       // (across all series) so toggling within a family keeps the scale fixed.
@@ -1599,7 +1590,7 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
       const dataKeys = k => cfg.mets[k].band || [k];
       let xs=[], ys=[];
       vis.forEach(s => s.xs.forEach(x => xs.push(x)));
-      cfg.series.forEach(s => famKeys.forEach(k => dataKeys(k).forEach(dk => { if(s.data[dk]) ys.push(...s.data[dk]); })));
+      seriesOf().forEach(s => famKeys.forEach(k => dataKeys(k).forEach(dk => { if(s.data[dk]) ys.push(...s.data[dk]); })));
       const xmin=Math.min(...xs), xmax=Math.max(...xs), ymin=Math.min(...ys), ymax=Math.max(...ys);
       const lx0=Math.log10(xmin), lx1=Math.log10(xmax)||1;
       const ly0=Math.log10(ymin*0.7), ly1=Math.log10(ymax*1.4);
@@ -1635,7 +1626,8 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
     }
     wireTip(svg);
     sel.addEventListener('change', e => { metric=e.target.value; draw(); });
-    draw();
+    if(dsSel) dsSel.addEventListener('change', ()=>{ buildLegend(); const pt=root.querySelector('.pt'); if(pt && cfg.ds) pt.textContent = cfg.ds[dsSel.value].lab + ' · latency vs offered QPS'; draw(); const tw=root.querySelector('.iplot-tablewrap'); if(tw && tw.style.display!=='none' && cfg.tableFn) tw.innerHTML = cfg.tableFn(dsSel.value); });
+    buildLegend(); draw();
   }
 
   /* ═══ Recall bars per scenario (zoomed 80–100%) ═══ */
@@ -1779,14 +1771,17 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
                 srv:{lab:'internal search latency · p50–p99 ms (↓ better)',unit:' ms',band:['srv50','srv99'],fam:'lat'} };
 
   const SWEEPS = {
-    'iplot-qps': { xlabel:'target QPS →', mets:LAT, series:[
-      { name:'turbopuffer', color:CO.tpuf, xs:[1,5,10,20,50], data:{
-        p50:[21.4,15.5,15.9,15.7,15.2], p99:[56.3,33.8,41.3,44.7,42.7],
-        srv50:[15,10,10,10,10], srv99:[46,25,35,38,35] } },
-      { name:'Qdrant', color:CO.qdrant, xs:[1,5,10,20,50], data:{
-        p50:[7.9,7.7,7.4,7.6,7.3], p99:[22.2,14.6,12.2,13.0,10.7],
-        srv50:[2.0,2.0,2.0,1.9,1.9], srv99:[2.7,2.5,2.5,2.5,2.5] } },
-    ]},
+    'iplot-qps': { xlabel:'offered QPS →', mets:LAT, tableFn:(ds)=>sweepTable(SWEEPS['iplot-qps'], ds), ds:{
+      dbpedia:{ lab:'DBpedia 100K×1536', series:[
+        { name:'turbopuffer', color:CO.tpuf, xs:[1,5,10,20,50], data:{ p50:[21.4,15.5,15.9,15.7,15.2], p99:[56.3,33.8,41.3,44.7,42.7], srv50:[15,10,10,10,10], srv99:[46,25,35,38,35] } },
+        { name:'Qdrant', color:CO.qdrant, xs:[1,5,10,20,50], data:{ p50:[7.9,7.7,7.4,7.6,7.3], p99:[22.2,14.6,12.2,13.0,10.7], srv50:[2.0,2.0,2.0,1.9,1.9], srv99:[2.7,2.5,2.5,2.5,2.5] } } ]},
+      hm:{ lab:'H&M 105K×2048', series:[
+        { name:'turbopuffer', color:CO.tpuf, xs:[1,5,10,20,50], data:{ p50:[26.5,21.3,20.9,20.2,18.9], p99:[735.1,80.9,81.2,85.0,89.1], srv50:[16,11,11,11,11], srv99:[67.2,30,40,46,41] } },
+        { name:'Qdrant', color:CO.qdrant, xs:[1,5,10,20,50], data:{ p50:[9.2,8.4,8.1,8.3,11.2], p99:[46.1,44.2,52.6,57.9,524.9], srv50:[1.3,1.2,1.1,1.1,1.1], srv99:[3.0,3.0,3.0,2.9,3.0] } } ]},
+      mt:{ lab:'Multi-tenant 1M×768', series:[
+        { name:'turbopuffer', color:CO.tpuf, xs:[1,5,10,20,50], data:{ p50:[72.6,56.6,31.9,32.8,70.0], p99:[164.0,136.6,81.8,86.0,157.1], srv50:[54,23,22,21,19], srv99:[134.2,76,50,47,45] } },
+        { name:'Qdrant', color:CO.qdrant, xs:[1,5,10,20,50], data:{ p50:[7.1,6.8,6.9,7.1,10.5], p99:[64.9,34.4,49.5,85.9,1669.2], srv50:[0.7,0.7,0.7,0.6,0.6], srv99:[0.8,0.8,0.8,0.7,1.0] } } ]},
+    }},
     /* §5 H&M / §6 MT per-concurrency sweeps removed — superseded by the unified
        §4 dual-axis frontier (measured rps_measured, all datasets). Raw data lives
        in the committed results/reproduce-<ts> state.json files. */
@@ -1896,10 +1891,10 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
   const up = document.getElementById('iplot-upload'); if(up){ initBarExplorer(up, UPLOAD, {lm:300}); mountView(up, grabTables(up, ['Dataset'])); }
   const db = document.getElementById('iplot-dbpedia'); if(db){ initBarExplorer(db, DBPEDIA, {lm:212}); mountView(db, grabTables(db, ['Engine'])); }
   const rc = document.getElementById('iplot-recall'); if(rc){ initRecall(rc); mountView(rc, () => recallTable(RECALL)); }
-  const tableFor = { 'iplot-qps':['QPS'] };
+  const tableFor = {};
   Object.keys(SWEEPS).forEach(id => { const el=document.getElementById(id); if(!el) return;
     initSweep(el, SWEEPS[id]);
-    mountView(el, tableFor[id] ? grabTables(el, tableFor[id]) : (() => sweepTable(SWEEPS[id]))); });
+    mountView(el, tableFor[id] ? grabTables(el, tableFor[id]) : (() => sweepTable(SWEEPS[id], el.querySelector('.iplot-dataset') ? el.querySelector('.iplot-dataset').value : undefined))); });
   const cst = document.getElementById('iplot-cost'); if(cst){ initCost(cst); mountView(cst, () => costTable()); }
 
   /* ═══ DBpedia latency + throughput vs concurrency (fresh measured sweep, p=1→32) ═══ */
@@ -1955,7 +1950,7 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
       });
       // drive the shared plots that carry a per-plot dataset <select> (frontier, cost)
       const tgt = (v==='all') ? 'dbpedia' : v;   // frontier/cost stay single-dataset; default to dbpedia under All
-      ['iplot-frontier','iplot-cost'].forEach(id=>{ const el=document.getElementById(id); if(!el)return;
+      ['iplot-frontier','iplot-cost','iplot-qps'].forEach(id=>{ const el=document.getElementById(id); if(!el)return;
         const ds=el.querySelector('.iplot-dataset'); if(ds && ds.value!==tgt){ ds.value=tgt; ds.dispatchEvent(new Event('change')); } });
       btns.forEach(b=>b.classList.toggle('on', b.dataset.ds===v));
     }
