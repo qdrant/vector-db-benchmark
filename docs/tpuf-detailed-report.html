@@ -579,7 +579,10 @@ canvas {
 .iplot.table-mode .iplot-metric-label, .iplot.table-mode .iplot-dataset-label, .iplot.table-mode .iplot-xaxis-label, .iplot.table-mode .iplot-legend { display: none; }
 
 /* ── Section-level dataset picker (§4 Search) ── */
-.ds-picker { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 18px; }
+.ds-picker { display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  position: sticky; top: 0; z-index: 20;
+  background: var(--ground); padding: 12px 0 10px; margin-bottom: 8px;
+  border-bottom: 1px solid var(--border); }
 .ds-picker-lab { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-2); margin-right: 4px; }
 .ds-btn {
   font-family: var(--font-mono); font-size: 13px; padding: 6px 14px;
