@@ -1039,7 +1039,7 @@ canvas {
         </div>
         <div class="iplot-panel">
           <div class="pt">tpuf usage-priced (floored at $16/mo) vs Qdrant flat cluster fee</div>
-          <div class="ps">tpuf = <code>max($16, storage + $1.28/M·queries)</code> — flat at the $16 floor until ~4.8 QPS, then linear. Qdrant = flat monthly cluster fee (assumed <strong>$26.10 for all three pending a real Qdrant calculator</strong> — MT's 3.2 GB likely needs a bigger tier, which would raise its line). Curves are computed from measured billed-GB/query; the crossover marker is where they meet. Log–log; hover a point.</div>
+          <div class="ps">tpuf = <code>max($16, storage + $1.28/M·queries)</code> — flat at the $16 floor until ~4.8 QPS, then linear. Qdrant = flat monthly cluster fee (assumed <strong>$26.10 for all three pending a real Qdrant calculator</strong> — MT's 3.2 GB likely needs a bigger tier, which would raise its line). Curves are computed from measured billed-GB/query; the crossover marker is where they meet. Log–log; hover a point for cost plus the measured p50/p99 search latency at that offered QPS (fixed-QPS sweep).</div>
           <svg class="iplot-svg" viewBox="0 0 900 320" role="img" aria-label="Monthly cost vs sustained QPS, tpuf vs Qdrant, per dataset"></svg>
         </div>
       </div>
@@ -1846,9 +1846,12 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
     tpuf: { commitment:16, storagePerGB:0.33, queryPerGB:1e-6 /* $0.001/TB */, floorGB:1.28 },
     secMo: 2.592e6,  // 30-day month
     ds: {
-      dbpedia: { lab:'DBpedia 100K×1536',   scanGB:0.615, storeGB:0.307, qdrant:26.10, qdPeak:79.7, qdSlo:79.7 },
-      hm:      { lab:'H&M 105K×2048',        scanGB:0.872, storeGB:0.430, qdrant:26.10, qdPeak:72.7, qdSlo:72.7 },
-      mt:      { lab:'Multi-tenant 1M×768',  scanGB:0.256, storeGB:1.536, qdrant:26.10, qdPeak:83.8, qdSlo:83.8 },
+      dbpedia: { lab:'DBpedia 100K×1536',   scanGB:0.615, storeGB:0.307, qdrant:26.10, qdPeak:79.7, qdSlo:79.7,
+        lat:{ qps:[1,5,10,20,50], tpuf:{p50:[21.4,15.5,15.9,15.7,15.2],p99:[56.3,33.8,41.3,44.7,42.7]}, qdrant:{p50:[7.9,7.7,7.4,7.6,7.3],p99:[22.2,14.6,12.2,13.0,10.7]} } },
+      hm:      { lab:'H&M 105K×2048',        scanGB:0.872, storeGB:0.430, qdrant:26.10, qdPeak:72.7, qdSlo:72.7,
+        lat:{ qps:[1,5,10,20,50], tpuf:{p50:[26.5,21.3,20.9,20.2,18.9],p99:[735.1,80.9,81.2,85.0,89.1]}, qdrant:{p50:[9.2,8.4,8.1,8.3,11.2],p99:[46.1,44.2,52.6,57.9,524.9]} } },
+      mt:      { lab:'Multi-tenant 1M×768',  scanGB:0.256, storeGB:1.536, qdrant:26.10, qdPeak:83.8, qdSlo:83.8,
+        lat:{ qps:[1,5,10,20,50], tpuf:{p50:[72.6,56.6,31.9,32.8,70.0],p99:[164.0,136.6,81.8,86.0,157.1]}, qdrant:{p50:[7.1,6.8,6.9,7.1,10.5],p99:[64.9,34.4,49.5,85.9,1669.2]} } },
     }
   };
   const tpufBilledGB = d => Math.max(d.scanGB, COST.tpuf.floorGB);
@@ -1890,9 +1893,12 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
       const path=(arr,c)=>`<path d="M${QPS.map((q,i)=>`${xS(q).toFixed(1)} ${yS(arr[i]).toFixed(1)}`).join(' L')}" fill="none" stroke="${c}" stroke-width="2" stroke-opacity="0.8"/>`;
       g+=path(qd,CO.qdrant)+path(tp,CO.tpuf);
       const fmt=v=>metric==='cost'?('$'+(v>=100?Math.round(v):v.toFixed(2))+'/mo'):('$'+v.toFixed(2)+'/Mq');
-      [1,2,5,10,20,50].forEach(q=>{ if(q<QPS[0]||q>QPS[QPS.length-1])return; const x=xS(q);
-        g+=`<g class="mk" data-tip="turbopuffer||${q} QPS||${fmt(valTp(q))}"><circle cx="${x}" cy="${yS(valTp(q))}" r="4.5" fill="${CO.tpuf}"/></g>`+
-           `<g class="mk" data-tip="Qdrant||${q} QPS||${fmt(valQd(q))}"><circle cx="${x}" cy="${yS(valQd(q))}" r="4.5" fill="${CO.qdrant}"/></g>`;});
+      // measured p50/p99 search latency at that offered QPS (fixed-QPS sweep)
+      const latAt=(eng,q)=>{ const L=d.lat; if(!L) return ''; const i=L.qps.indexOf(q);
+        return i<0 ? '' : ` · p50 ${L[eng].p50[i]}ms / p99 ${L[eng].p99[i]}ms`; };
+      d.lat.qps.forEach(q=>{ if(q<QPS[0]||q>QPS[QPS.length-1])return; const x=xS(q);
+        g+=`<g class="mk" data-tip="turbopuffer||${q} QPS||${fmt(valTp(q))}${latAt('tpuf',q)}"><circle cx="${x}" cy="${yS(valTp(q))}" r="4.5" fill="${CO.tpuf}"/></g>`+
+           `<g class="mk" data-tip="Qdrant||${q} QPS||${fmt(valQd(q))}${latAt('qdrant',q)}"><circle cx="${x}" cy="${yS(valQd(q))}" r="4.5" fill="${CO.qdrant}"/></g>`;});
       g+=`<text x="${m.l+pw-4}" y="${yS(tp[tp.length-1])-8}" text-anchor="end" font-size="10.5" fill="${CO.tpuf}" font-family="var(--font-mono)">turbopuffer</text>`+
          `<text x="${m.l+pw-4}" y="${yS(qd[qd.length-1])+14}" text-anchor="end" font-size="10.5" fill="${CO.qdrant}" font-family="var(--font-mono)">Qdrant</text>`;
       svg.innerHTML=g;
