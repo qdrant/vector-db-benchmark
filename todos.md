@@ -42,8 +42,13 @@ Target architecture (inspired by edge bench):
 - [x] Reusable initBarExplorer / initSweep / initRecall SVG components, shared tooltip.
 - [ ] REMAINING canvases → interactive: §3 upload-timeline, §8.1 warmup curve,
       §8.7 contention, §8.9 write-read (4 charts, time-series), §8.10 disk cold/warm.
+- [x] §3 upload-timeline → bar explorer; §8.9 write-read (4 canvases) → one
+      interactive time-series (metric toggle: latency/recall/exhaustive-scan).
+- [x] Shared axis scales for same-family metrics (read-lat, write-lat, time, rps).
+- [x] Folded 15 verbose callouts into <details> disclosures (page 19.4k→17.3k px);
+      deleted §3 pinning-write duplicate. Short callouts kept inline.
 - [ ] Remove dead canvas draw JS (old functions no-op via setupCanvas guard but bloat file).
-- [ ] Demote 25 callouts to one tight footnote per section; delete overlap.
+- [ ] Optional: §8.1 warmup, §8.7 contention, §8.10 disk still on canvas (left per plan).
 - [ ] Reconsider hero: currently showcases pinned-4r warmup, a config §9 calls
       "strictly worse."
 - [ ] Theme-awareness + charset (edge bench served without UTF-8 shows mojibake).
