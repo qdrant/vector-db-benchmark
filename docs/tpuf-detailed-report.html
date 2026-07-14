@@ -626,6 +626,19 @@ canvas {
   border-radius: 8px; opacity: 0; transition: opacity 0.08s; box-shadow: 0 6px 20px rgba(0,0,0,0.22); max-width: 260px;
 }
 #iplot-tip b { font-weight: 600; }
+/* ── TL;DR verdict block ─────────────────────────────────────── */
+.verdict { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px 24px; margin: 4px 0 44px; }
+.verdict-h { font-family: var(--font-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-2); margin: 0 0 6px; font-weight: 600; }
+.verdict-lead { font-size: 15px; line-height: 1.55; margin: 0 0 18px; color: var(--text); }
+.verdict-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+@media (max-width: 720px) { .verdict-cols { grid-template-columns: 1fr; gap: 16px; } }
+.verdict-col h4 { font-family: var(--font-mono); font-size: 13px; margin: 0 0 9px; display: flex; align-items: center; gap: 7px; }
+.verdict-col h4 span { font-size: 10px; }
+.verdict-col.tp h4 { color: var(--tpuf); } .verdict-col.qd h4 { color: var(--qdrant); }
+.verdict-col ul { margin: 0; padding-left: 18px; font-size: 13.5px; line-height: 1.55; color: var(--text); }
+.verdict-col li { margin-bottom: 6px; }
+.verdict-foot { margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--border); font-size: 13px; color: var(--text-2); }
+.verdict-foot b { color: var(--text); } .verdict-foot a { color: var(--tpuf); }
 </style>
 </head>
 <body>
@@ -674,6 +687,32 @@ canvas {
         <span class="pill pill-neutral">100K&ndash;105K vectors</span>
         <span class="pill pill-neutral">768&ndash;2048 dims</span>
       </div>
+    </div>
+
+    <div class="verdict">
+      <div class="verdict-h">TL;DR — who wins, when</div>
+      <p class="verdict-lead">No universal winner: the choice is a function of your <strong>query load, filter selectivity, and tenancy</strong>. Both engines reach ~80 RPS from a single client here; the real differences are recall, latency floor, write scaling, and cost <em>shape</em>.</p>
+      <div class="verdict-cols">
+        <div class="verdict-col tp">
+          <h4><span>&#9679;</span> Choose turbopuffer when</h4>
+          <ul>
+            <li>Traffic is <strong>bursty, low-QPS, or idle-heavy</strong> — usage pricing (+$16/mo floor) beats an always-on node below ~9 QPS (DBpedia/H&amp;M) or ~25 QPS (multi-tenant).</li>
+            <li>You run <strong>many mostly-idle tenants</strong> — serverless scales to zero.</li>
+            <li><strong>Write/ingest throughput</strong> matters — tpuf scales 430&rarr;1237 WPS vs Qdrant&rsquo;s flat ~90.</li>
+            <li>Unfiltered or multi-tenant recall (near-parity) is sufficient.</li>
+          </ul>
+        </div>
+        <div class="verdict-col qd">
+          <h4><span>&#9679;</span> Choose Qdrant Cloud when</h4>
+          <ul>
+            <li><strong>Filtered-search recall</strong> is critical — 95.85% vs tpuf&rsquo;s structural, un-tunable 89.14%.</li>
+            <li>You need a <strong>low, predictable latency floor</strong> — ~2ms server, no cold-start (tpuf floors ~10ms and can cold-start to ~1.9s).</li>
+            <li>Load is <strong>steady and above the break-even</strong> — a fixed node is cheaper per query at scale.</li>
+            <li>You want <strong>recall tunability</strong> (ef, quantization) or dedicated isolation.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="verdict-foot"><b>Cost crossover:</b> tpuf is cheaper below ~9 QPS (DBpedia/H&amp;M) / ~25 QPS (multi-tenant); above that Qdrant&rsquo;s flat node wins (full model in §4.2). Three cost lenses: <a href="tpuf-pricing-calculator.html">tpuf usage</a> · <a href="qdrant-cost-calculator.html">Qdrant managed</a> · <a href="napkin-cost-calculator.html">raw hardware</a>.</div>
     </div>
 
     <!-- §1 -->
