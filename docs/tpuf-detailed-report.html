@@ -762,7 +762,7 @@ canvas {
         </div>
         <div class="iplot-panel">
           <div class="pt">Upload across all three datasets · time to fully-indexed state</div>
-          <div class="ps">Bars = one config. In <em>total upload + index</em> the bar stacks upsert (solid) + index build (lighter) — hover each segment; a faint tail on the index segment is the measured range (e.g. SPFresh 25–268s across 5 DBpedia runs). Multi-tenant is 1M vectors (10× the others) and tpuf WPS there is aggregate across 100 parallel namespaces. Click an engine to toggle.</div>
+          <div class="ps">Bars = one config. In <em>total upload + index</em> the bar stacks upsert (solid) + index build (lighter) — hover each segment. Select <em>index build time</em> to see SPFresh&rsquo;s measured variance (25–268s across 5 DBpedia runs) as <strong>two bars — min and max</strong>, like the p50/p99 latency metrics. Multi-tenant is 1M vectors (10× the others) and tpuf WPS there is aggregate across 100 parallel namespaces. Click an engine to toggle.</div>
           <svg class="iplot-svg" viewBox="0 0 900 380" role="img" aria-label="Upload time and throughput across datasets"></svg>
         </div>
       </div>
@@ -881,7 +881,7 @@ canvas {
         </div>
         <div class="iplot-panel">
           <div class="pt">DBpedia 100K × 1536 · unfiltered ANN</div>
-          <div class="ps">Bars = one config. Hover for detail; click an engine to toggle. Lighter extension = measured range (e.g. SPFresh 25–268s across 5 runs).</div>
+          <div class="ps">Bars = one config. Hover for detail; click an engine to toggle. A measured range (e.g. SPFresh index build 25–268s across 5 runs) shows as two bars — min and max.</div>
           <svg class="iplot-svg" viewBox="0 0 900 300" role="img" aria-label="DBpedia interactive metric chart"></svg>
         </div>
       </div>
@@ -1560,16 +1560,23 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
           g += `<text x="${xS(vB)+6}" y="${yB+bh2/2+3.5}" font-size="9.5" fill="${MUT}" font-family="var(--font-mono)">${tB} ${f(vB)}${M.unit}</text>`;
           return;
         }
-        const val=bandVal(d, M), y=m.t+i*step+(step-bh)/2;
-        const xlo=xS(lo(val)), xhi=xS(hi(val)), wlo=Math.max(xlo-m.l,1);
-        const range = Array.isArray(val);
-        const label = range ? `${f(lo(val))}–${f(hi(val))}${M.unit}` : `${f(val)}${M.unit}`;
+        const val=bandVal(d, M);
+        if(Array.isArray(val)){  // measured range → two adjacent bars (min / max), like p50/p99
+          const vLo=lo(val), vHi=hi(val);
+          const bh2=Math.max((bh-3)/2,4), yA=m.t+i*step+(step-bh)/2, yB=yA+bh2+3;
+          g += `<g class="mk" data-tip="${d.n}||${M.lab.split(' (')[0]}||min ${f(vLo)}${M.unit} · max ${f(vHi)}${M.unit}">`;
+          g += `<rect x="${m.l}" y="${yA}" width="${Math.max(xS(vLo)-m.l,1)}" height="${bh2}" rx="2" fill="${c}" fill-opacity="0.9"/>`;
+          g += `<rect x="${m.l}" y="${yB}" width="${Math.max(xS(vHi)-m.l,1)}" height="${bh2}" rx="2" fill="${c}" fill-opacity="0.42"/></g>`;
+          g += `<text x="${m.l-8}" y="${m.t+i*step+step/2+3.5}" text-anchor="end" font-size="11" fill="${INK}" font-family="var(--font-mono)">${d.n}</text>`;
+          g += `<text x="${xS(vLo)+6}" y="${yA+bh2/2+3.5}" font-size="9.5" fill="${MUT}" font-family="var(--font-mono)">min ${f(vLo)}${M.unit}</text>`;
+          g += `<text x="${xS(vHi)+6}" y="${yB+bh2/2+3.5}" font-size="9.5" fill="${MUT}" font-family="var(--font-mono)">max ${f(vHi)}${M.unit}</text>`;
+          return;
+        }
+        const y=m.t+i*step+(step-bh)/2, xv=xS(val), label=`${f(val)}${M.unit}`;
         g += `<g class="mk" data-tip="${d.n}||${M.lab.split(' (')[0]}||${label}">`;
-        g += `<rect x="${m.l}" y="${y}" width="${wlo}" height="${bh}" rx="2" fill="${c}" fill-opacity="0.9"/>`;
-        if(range && xhi>xlo) g += `<rect x="${xlo}" y="${y}" width="${xhi-xlo}" height="${bh}" rx="2" fill="${c}" fill-opacity="0.32"/>`;
-        g += `</g>`;
+        g += `<rect x="${m.l}" y="${y}" width="${Math.max(xv-m.l,1)}" height="${bh}" rx="2" fill="${c}" fill-opacity="0.9"/></g>`;
         g += `<text x="${m.l-8}" y="${y+bh/2+3.5}" text-anchor="end" font-size="11" fill="${INK}" font-family="var(--font-mono)">${d.n}</text>`;
-        g += `<text x="${xhi+6}" y="${y+bh/2+3.5}" font-size="10.5" fill="${MUT}" font-family="var(--font-mono)">${label}</text>`;
+        g += `<text x="${xv+6}" y="${y+bh/2+3.5}" font-size="10.5" fill="${MUT}" font-family="var(--font-mono)">${label}</text>`;
       });
       svg.innerHTML = g;
     }
