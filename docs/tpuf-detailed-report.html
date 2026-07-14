@@ -526,6 +526,30 @@ canvas {
   html { scroll-behavior: auto; }
 }
 
+/* ── Foldable callout (details/summary) ──────────────────────── */
+.foldout {
+  border-left: 3px solid var(--qdrant);
+  background: var(--qdrant-bg);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  margin: 12px 0; font-size: 13px; color: var(--text); line-height: 1.6;
+}
+.foldout.tpuf { border-left-color: var(--tpuf); background: var(--tpuf-bg); }
+.foldout.neutral { border-left-color: var(--hair-strong, var(--border)); background: var(--ground); }
+.foldout.warning { border-left-color: #D97706; background: #FEF3C7; }
+.foldout > summary {
+  cursor: pointer; padding: 10px 16px; font-weight: 600; color: var(--text);
+  list-style: none; display: flex; gap: 9px; align-items: baseline;
+}
+.foldout > summary::-webkit-details-marker { display: none; }
+.foldout > summary::marker { content: ''; }
+.foldout > summary::before {
+  content: '▸'; color: var(--text-2); font-size: 10px; flex-shrink: 0;
+}
+.foldout[open] > summary::before { content: '▾'; }
+.foldout[open] > summary { border-bottom: 1px solid rgba(0,0,0,0.05); }
+.foldout .fold-body { padding: 10px 16px 12px 37px; }
+.foldout .fold-body strong { color: var(--text); }
+
 /* ── Interactive plot component ───────────────────────────────── */
 .iplot { margin: 20px 0; }
 .iplot-bar {
@@ -718,19 +742,20 @@ canvas {
         </table>
       </div>
       <div style="font-size:11px;color:var(--text-2);margin:8px 2px 0;font-style:italic;">‡ Total time = upsert + index build (end-to-end until fully indexed). For H&amp;M Qdrant concurrent: 5.5 min upsert + 2.8 min HNSW = 8.4 min. For DBpedia: 3.9 min upsert, HNSW built concurrently so extra wait ≈ 0s.<br>† Index wait = additional time after last upsert batch until fully indexed. 0s means HNSW finished within the upsert window. turbopuffer SPFresh builds asynchronously after writes commit to S3 WAL — 60s for H&amp;M 105K×2048d.<br>†† DBpedia tpuf SPFresh varied across 5 repeated runs (25s, 36s, 61s, 183s, 268s) depending on shared indexer availability; the 61s trial used an earlier query-based completion signal and is less precise than the other four (index-status polling). Total wall-clock ranges 3.1–7.3 min accordingly. Pinned-1r SPFresh was not measured separately — writes take the same S3 WAL path in both modes, so the same range likely applies (upload alone = 2.6 min).<br>* MT tpuf WPS is aggregate wall-clock throughput across 10 concurrent namespace uploads. Per-namespace WPS ≈ 624.</div>
-      <div class="callout">
-        The multi-tenant dataset is <strong>1M vectors total</strong> (100 tenants &times; 10K each) &mdash; 10&times; more data than DBpedia. Qdrant uploads all 1M sequentially in batches to one collection (<code>payload_m=16</code>, <code>is_tenant=True</code>), building per-tenant HNSW sub-graphs in the background. turbopuffer uploads 100 namespaces in <strong>parallel</strong> (asyncio.gather, semaphore=10 concurrent), so its 2.4 min wall-clock reflects parallel throughput. Sequential uploads at ~624 WPS per namespace would take <strong>~26.7 min</strong> (100 &times; ~16s) &mdash; parallelism delivers an <strong>~11&times; speedup</strong>. Both engines use the same batch size (128 vectors/batch). The methodology difference (parallel vs sequential) accounts for most of the 8.5&times; wall-clock gap; Qdrant also pays extra for HNSW sub-graph construction at write time.
-      </div>
-      <div class="callout neutral">
-        <strong>Write-time vs query-time:</strong> turbopuffer stores 0.615 GB for DBpedia (&asymp; raw vector size: 100K &times; 1536-dim &times; 4B). Qdrant builds HNSW at write time &mdash; 168s for H&amp;M, ~0s for DBpedia (concurrent), 5.1s for MT sub-graphs. This one-time write cost is the source of Qdrant&rsquo;s 1.9ms query server latency: the index is in RAM, already built. turbopuffer&rsquo;s SPFresh index is built <em>asynchronously</em> after writes commit to the S3 WAL &mdash; writes return immediately (no blocking index phase). SPFresh duration depends on shared indexer availability and varied from 25s to 268s across 5 DBpedia runs. During the SPFresh window, WAL vectors are brute-force scanned per query. Once built, queries use the centroid index from NVMe.
-      </div>
-      <div class="callout neutral">
-        <strong>Pinning does not affect write throughput.</strong> Measured on DBpedia 100K&times;1536: serverless 624 WPS vs pinned-1r 633 WPS &mdash; statistically identical. batch_p99 is slightly lower pinned (295ms vs 352ms), likely from reduced noisy-neighbor contention on a dedicated machine. Writes go directly to S3 WAL in both modes; the pinned replica only serves reads from its NVMe cache. Single-replica tpuf write capacity: <strong>~625 WPS</strong> at batch=128 for 1536-dim vectors.
-      </div>
+      <details class="foldout">
+        <summary>Multi-tenant upload: parallel (tpuf) vs sequential (Qdrant) — methodology drives most of the 8.5× gap</summary>
+        <div class="fold-body">The multi-tenant dataset is <strong>1M vectors total</strong> (100 tenants &times; 10K each) &mdash; 10&times; more data than DBpedia. Qdrant uploads all 1M sequentially in batches to one collection (<code>payload_m=16</code>, <code>is_tenant=True</code>), building per-tenant HNSW sub-graphs in the background. turbopuffer uploads 100 namespaces in <strong>parallel</strong> (asyncio.gather, semaphore=10 concurrent), so its 2.4 min wall-clock reflects parallel throughput. Sequential uploads at ~624 WPS per namespace would take <strong>~26.7 min</strong> (100 &times; ~16s) &mdash; parallelism delivers an <strong>~11&times; speedup</strong>. Both engines use the same batch size (128 vectors/batch). The methodology difference (parallel vs sequential) accounts for most of the 8.5&times; wall-clock gap; Qdrant also pays extra for HNSW sub-graph construction at write time.</div>
+      </details>
+      <details class="foldout neutral">
+        <summary>Write-time vs query-time — Qdrant builds HNSW upfront; tpuf defers indexing to async SPFresh</summary>
+        <div class="fold-body">turbopuffer stores 0.615 GB for DBpedia (&asymp; raw vector size: 100K &times; 1536-dim &times; 4B). Qdrant builds HNSW at write time &mdash; 168s for H&amp;M, ~0s for DBpedia (concurrent), 5.1s for MT sub-graphs. This one-time write cost is the source of Qdrant&rsquo;s 1.9ms query server latency: the index is in RAM, already built. turbopuffer&rsquo;s SPFresh index is built <em>asynchronously</em> after writes commit to the S3 WAL &mdash; writes return immediately (no blocking index phase). SPFresh duration depends on shared indexer availability and varied from 25s to 268s across 5 DBpedia runs. During the SPFresh window, WAL vectors are brute-force scanned per query. Once built, queries use the centroid index from NVMe.</div>
+      </details>
 
-      <div class="callout neutral">
-        <strong>tpuf raw upload WPS (~565–657) is 50–60% faster than Qdrant (~316–417)</strong>, but SPFresh builds the centroid index asynchronously on shared background indexers, and its duration depends on indexer availability at the time of upload. Across 5 DBpedia re-runs, SPFresh completed in 25s, 36s, 61s, 183s, and 268s — putting tpuf total at 3.1–7.3 min. Qdrant&rsquo;s consistent 3.9 min falls inside that range: tpuf wins when indexers are available, Qdrant wins when they are not. H&amp;M measured 60s SPFresh (4.1 min total) and beat Qdrant (8.4 min) — though with only one H&amp;M trial, the SPFresh variance seen on DBpedia (25&ndash;268s) means the margin could narrow to ~0.8 min on a slow indexer draw. The deferred Qdrant experiment confirms concurrent HNSW is optimal: running HNSW <em>after</em> upload (5.3 min DBpedia, 9.1 min H&amp;M) is slower than concurrent (3.9 min, 8.4 min).
-      </div>
+
+      <details class="foldout neutral">
+        <summary>tpuf writes 50–60% faster, but SPFresh build time (25–268s) decides the DBpedia race</summary>
+        <div class="fold-body">, but SPFresh builds the centroid index asynchronously on shared background indexers, and its duration depends on indexer availability at the time of upload. Across 5 DBpedia re-runs, SPFresh completed in 25s, 36s, 61s, 183s, and 268s — putting tpuf total at 3.1–7.3 min. Qdrant&rsquo;s consistent 3.9 min falls inside that range: tpuf wins when indexers are available, Qdrant wins when they are not. H&amp;M measured 60s SPFresh (4.1 min total) and beat Qdrant (8.4 min) — though with only one H&amp;M trial, the SPFresh variance seen on DBpedia (25&ndash;268s) means the margin could narrow to ~0.8 min on a slow indexer draw. The deferred Qdrant experiment confirms concurrent HNSW is optimal: running HNSW <em>after</em> upload (5.3 min DBpedia, 9.1 min H&amp;M) is slower than concurrent (3.9 min, 8.4 min).</div>
+      </details>
     </section>
 
     <!-- §4 -->
@@ -789,9 +814,10 @@ canvas {
           </tbody>
         </table>
       </div>
-      <div class="callout">
-        <strong>Full-dataset scan per query:</strong> tpuf reports 0.615 GB scanned per DBpedia query &mdash; essentially the entire dataset (0.614 GB raw) &mdash; and invoices at the 1.28 GB per-query minimum (§4.3). Cost scales linearly with data size &times; QPS once above that floor. Qdrant server p99 = 2.5ms (1.3&times; p50); tpuf server p99 = 40ms (4&times; p50).
-      </div>
+      <details class="foldout">
+        <summary>Every DBpedia query scans the whole dataset; tpuf bills the 1.28 GB per-query minimum</summary>
+        <div class="fold-body">tpuf reports 0.615 GB scanned per DBpedia query &mdash; essentially the entire dataset (0.614 GB raw) &mdash; and invoices at the 1.28 GB per-query minimum (§4.3). Cost scales linearly with data size &times; QPS once above that floor. Qdrant server p99 = 2.5ms (1.3&times; p50); tpuf server p99 = 40ms (4&times; p50).</div>
+      </details>
 
       <h3>4.2 &mdash; Fixed-QPS Sweep</h3>
       <div class="iplot" id="iplot-qps">
@@ -925,9 +951,10 @@ canvas {
       <div class="callout tpuf">
         <strong>Cold-start penalty (prior measurement):</strong> tpuf cold p99 = 1,891ms (server_p99 = 1,777ms — 94% server-side S3 fetches). Hot cache (NVMe, above) p99 = 50ms — a 38&times; improvement once centroids are cached. Qdrant has no cold-start: HNSW lives in RAM permanently.
       </div>
-      <div class="callout tpuf">
-        <strong>Why recall drops under filtering:</strong> SPFresh post-filters after centroid traversal &mdash; vectors matching the filter may not be in the traversed centroid regions at all. Qdrant's filter-aware HNSW traversal constrains the graph walk to matching nodes, preserving recall. The ~7% gap (89.14% vs 95.85%) is not tunable on turbopuffer.
-      </div>
+      <details class="foldout tpuf">
+        <summary>Why filtered recall drops — SPFresh post-filters; Qdrant filters inside HNSW traversal</summary>
+        <div class="fold-body">SPFresh post-filters after centroid traversal &mdash; vectors matching the filter may not be in the traversed centroid regions at all. Qdrant's filter-aware HNSW traversal constrains the graph walk to matching nodes, preserving recall. The ~7% gap (89.14% vs 95.85%) is not tunable on turbopuffer.</div>
+      </details>
     </section>
 
     <!-- §6 -->
@@ -970,15 +997,18 @@ canvas {
           </tbody>
         </table>
       </div>
-      <div class="callout neutral">
-        <strong>Why 100% recall?</strong> With ~10,000 vectors per tenant, both HNSW (Qdrant: <code>m=0, payload_m=16</code> builds per-tenant sub-graphs) and SPFresh centroid structures (tpuf) have negligible approximation error &mdash; the per-tenant index is small enough for near-exhaustive traversal. The multi-tenant comparison is purely a throughput and cost question, not a recall quality question.
-      </div>
-      <div class="callout neutral">
-        <strong>p=32 autoscaling crossover:</strong> tpuf outperforms the single-node Qdrant at p=32 (~538 vs ~304 total RPS) because Qdrant&rsquo;s 2CPU node saturates past p=8 (total RPS falls 375&rarr;304 while p99 hits 445ms). tpuf autoscales horizontally and keeps gaining. This is a node-sizing issue: a larger Qdrant instance restores the 5&times; advantage at all concurrency levels.
-      </div>
-      <div class="callout tpuf">
-        <strong>Billed GB per MT query:</strong> tpuf reported 0.256 GB billed per MT query vs ~0.031 GB raw vector data per namespace (10K &times; 768-dim &times; 4B). The 0.256 GB is not scan overhead &mdash; it exactly matches turbopuffer&rsquo;s former 256 MB per-query billing minimum. That floor was raised to <strong>1.28 GB per query</strong> in Feb 2026 (see §4.3), so small namespaces bill 5&times; more per query today than this measured value.
-      </div>
+      <details class="foldout neutral">
+        <summary>Why both engines hit 100% recall at ~10K vectors per tenant</summary>
+        <div class="fold-body">With ~10,000 vectors per tenant, both HNSW (Qdrant: <code>m=0, payload_m=16</code> builds per-tenant sub-graphs) and SPFresh centroid structures (tpuf) have negligible approximation error &mdash; the per-tenant index is small enough for near-exhaustive traversal. The multi-tenant comparison is purely a throughput and cost question, not a recall quality question.</div>
+      </details>
+      <details class="foldout neutral">
+        <summary>p=32 crossover — tpuf autoscales past Qdrant's saturated 2-CPU node</summary>
+        <div class="fold-body">tpuf outperforms the single-node Qdrant at p=32 (~538 vs ~304 total RPS) because Qdrant&rsquo;s 2CPU node saturates past p=8 (total RPS falls 375&rarr;304 while p99 hits 445ms). tpuf autoscales horizontally and keeps gaining. This is a node-sizing issue: a larger Qdrant instance restores the 5&times; advantage at all concurrency levels.</div>
+      </details>
+      <details class="foldout tpuf">
+        <summary>The 0.256 GB/query is tpuf's former billing floor, not scan overhead (now 1.28 GB)</summary>
+        <div class="fold-body">tpuf reported 0.256 GB billed per MT query vs ~0.031 GB raw vector data per namespace (10K &times; 768-dim &times; 4B). The 0.256 GB is not scan overhead &mdash; it exactly matches turbopuffer&rsquo;s former 256 MB per-query billing minimum. That floor was raised to <strong>1.28 GB per query</strong> in Feb 2026 (see §4.3), so small namespaces bill 5&times; more per query today than this measured value.</div>
+      </details>
     </section>
 
     <!-- §7 -->
@@ -1078,9 +1108,10 @@ canvas {
 
       <h3>8.6 &mdash; Server-Side Latency Gap</h3>
       <p>Measuring server-reported latency (excluding network round-trip) reveals an architectural floor difference. At steady state on DBpedia (unfiltered), turbopuffer server latency is consistently <strong>~10ms</strong> while Qdrant server latency is <strong>~1.9ms</strong>.</p>
-      <div class="callout tpuf">
-        <strong>Qdrant server latency is 1.9ms (HNSW index in RAM); tpuf server latency floor is 10ms (NVMe centroid traversal). This 5&times; gap is architectural and irreducible regardless of network.</strong> The gap reflects the fundamental storage medium: HNSW traversal on RAM vs. SPFresh centroid reads from NVMe. No configuration on either side can close it.
-      </div>
+      <details class="foldout tpuf">
+        <summary>The ~10ms tpuf vs ~2ms Qdrant server-latency floor is architectural (NVMe vs RAM)</summary>
+        <div class="fold-body">The gap reflects the fundamental storage medium: HNSW traversal on RAM vs. SPFresh centroid reads from NVMe. No configuration on either side can close it.</div>
+      </details>
 
       <h3>8.7 &mdash; Cross-Namespace Contention (Serverless)</h3>
       <p>A high-throughput "aggressor" namespace and a "victim" namespace both sharing the same API key on serverless. The aggressor runs at full blast; we measure what happens to victim latency.</p>
@@ -1104,9 +1135,10 @@ canvas {
           </tbody>
         </table>
       </div>
-      <div class="callout neutral">
-        <strong>Pinning has zero effect on write throughput.</strong> 624 vs 633 WPS is within noise. The slight p99 improvement on pinned (295ms vs 352ms) is consistent with lower noisy-neighbor contention on a dedicated machine &mdash; not a write-path difference. This confirms that turbopuffer writes go directly to the S3 WAL in both modes; the pinned replica only maintains an NVMe read cache and is not involved in the write path at all. Single-replica tpuf write capacity: <strong>~625 WPS</strong> at batch=128 for 1536-dim vectors, independent of deployment mode.
-      </div>
+      <details class="foldout neutral">
+        <summary>Pinning has zero effect on write throughput — writes hit the S3 WAL either way</summary>
+        <div class="fold-body">624 vs 633 WPS is within noise. The slight p99 improvement on pinned (295ms vs 352ms) is consistent with lower noisy-neighbor contention on a dedicated machine &mdash; not a write-path difference. This confirms that turbopuffer writes go directly to the S3 WAL in both modes; the pinned replica only maintains an NVMe read cache and is not involved in the write path at all. Single-replica tpuf write capacity: <strong>~625 WPS</strong> at batch=128 for 1536-dim vectors, independent of deployment mode.</div>
+      </details>
 
       <h3>8.9 &mdash; Concurrent Write-Read Dynamics</h3>
       <p>Both engines were loaded from empty while a reader fired every 500ms, starting at the same moment as the writers — no pre-loading, no index warmup. 100K&times;1536 DBpedia vectors uploaded in ~254s; queries continued for 120s after the last write. Recall uses the same ground-truth queries as all other benchmarks.</p>
@@ -1153,13 +1185,15 @@ canvas {
         </div>
       </div>
 
-      <div class="callout tpuf">
-        <strong>tpuf WAL exhaustive scan explains why recall stays healthy during upload.</strong> Every unindexed vector in the WAL is brute-force scanned on each query (<code>exhaustive_search_count</code> averages 18,056 during upload, max 50,560). This scan rescues recall — without it, freshly uploaded vectors would be invisible to SPFresh. The cost: p99 inflates to 325ms vs 58ms post-upload. The exhaustive scan count trails to zero within ~14s of the last write in this incremental scenario (SPFresh builds continuously during upload, so only the final WAL batch remains at end). A cold full build from an empty namespace took 25&ndash;268s for 100K&times;1536d across 5 runs, depending on shared indexer availability (see §3).
-      </div>
+      <details class="foldout tpuf">
+        <summary>tpuf's WAL brute-force scan keeps recall healthy during upload, at a p99 cost</summary>
+        <div class="fold-body">Every unindexed vector in the WAL is brute-force scanned on each query (<code>exhaustive_search_count</code> averages 18,056 during upload, max 50,560). This scan rescues recall — without it, freshly uploaded vectors would be invisible to SPFresh. The cost: p99 inflates to 325ms vs 58ms post-upload. The exhaustive scan count trails to zero within ~14s of the last write in this incremental scenario (SPFresh builds continuously during upload, so only the final WAL batch remains at end). A cold full build from an empty namespace took 25&ndash;268s for 100K&times;1536d across 5 runs, depending on shared indexer availability (see §3).</div>
+      </details>
 
-      <div class="callout neutral">
-        <strong>Both engines deliver ~49% recall at the upload midpoint</strong> — consistent with the expected value when half the dataset is loaded (neighbors are uniformly distributed, so ~50% of any query's true neighbors are already present). Qdrant's HNSW optimizer stays within 3% of the write front throughout, and its latency improves 2.3&times; once upload completes (18ms &rarr; 7.9ms p50). tpuf's WAL scan preserves recall at the cost of 5.6&times; p99 inflation during upload (58ms &rarr; 325ms).
-      </div>
+      <details class="foldout neutral">
+        <summary>Both engines sit at ~49% recall at the upload midpoint (half the data loaded)</summary>
+        <div class="fold-body">— consistent with the expected value when half the dataset is loaded (neighbors are uniformly distributed, so ~50% of any query's true neighbors are already present). Qdrant's HNSW optimizer stays within 3% of the write front throughout, and its latency improves 2.3&times; once upload completes (18ms &rarr; 7.9ms p50). tpuf's WAL scan preserves recall at the cost of 5.6&times; p99 inflation during upload (58ms &rarr; 325ms).</div>
+      </details>
 
       <h3>8.10 &mdash; Qdrant Disk Mode vs turbopuffer (EBS Cold/Warm)</h3>
       <p>Qdrant supports mmap-based vector storage (<code>on_disk=True</code>) where vectors and/or the HNSW graph are served from disk on demand. We benchmarked two configurations against turbopuffer using DBpedia 100K&times;1536 on Qdrant Cloud (AWS us-west-2, 64 GB RAM, EBS storage) with clean state after each upload. <em>disk-vec</em>: vectors on EBS, HNSW graph in RAM. <em>disk-all</em>: both on EBS.</p>
@@ -1191,13 +1225,15 @@ canvas {
         <canvas id="c-disk-p8" width="560" height="240" style="width:100%;height:240px;display:block"></canvas>
       </div>
 
-      <div class="callout warning">
-        <strong>Cold start on EBS is catastrophic at the tail:</strong> p50 cold is fine (7ms — some pages already in OS cache from the upload process), but p99=1,457ms exposes the EBS random I/O storm when page faults cascade across uncached regions. After ~1,000 warmup queries, the entire 586 MB dataset (100K&times;1536&times;4B) fits in 64 GB page cache and disk mode becomes statistically indistinguishable from pure-RAM mode (7.1ms vs 6.9ms p50, 10.4ms vs 9.4ms p99). The EBS cold/warm gap is real — but only materializes on first access after upload or node restart.
-      </div>
+      <details class="foldout warning">
+        <summary>Qdrant disk-mode cold start is a tail disaster (p99 1,457ms) until the page cache warms</summary>
+        <div class="fold-body">p50 cold is fine (7ms — some pages already in OS cache from the upload process), but p99=1,457ms exposes the EBS random I/O storm when page faults cascade across uncached regions. After ~1,000 warmup queries, the entire 586 MB dataset (100K&times;1536&times;4B) fits in 64 GB page cache and disk mode becomes statistically indistinguishable from pure-RAM mode (7.1ms vs 6.9ms p50, 10.4ms vs 9.4ms p99). The EBS cold/warm gap is real — but only materializes on first access after upload or node restart.</div>
+      </details>
 
-      <div class="callout neutral">
-        <strong>ef=64 is the warm disk sweet spot:</strong> 6.4ms p50 (+7% faster than RAM ef=128 — fewer candidates, fewer potential page faults), 97.4% recall (only &minus;1% from RAM). Putting the HNSW graph on disk too (<em>disk-all</em>) adds no measurable overhead — the graph is &lt;10 MB vs 586 MB of vector payload. At p=8 concurrency all warmed configs converge to 17–21ms p50; tpuf (48.7ms p99) edges out most Qdrant disk configs in tail latency at high concurrency, but loses 2&times; at p=1 steady-state.
-      </div>
+      <details class="foldout neutral">
+        <summary>ef=64 is the warm-disk sweet spot; putting the graph on disk too adds no real overhead</summary>
+        <div class="fold-body">6.4ms p50 (+7% faster than RAM ef=128 — fewer candidates, fewer potential page faults), 97.4% recall (only &minus;1% from RAM). Putting the HNSW graph on disk too (<em>disk-all</em>) adds no measurable overhead — the graph is &lt;10 MB vs 586 MB of vector payload. At p=8 concurrency all warmed configs converge to 17–21ms p50; tpuf (48.7ms p99) edges out most Qdrant disk configs in tail latency at high concurrency, but loses 2&times; at p=1 steady-state.</div>
+      </details>
     </section>
 
     <!-- §9 -->
@@ -1238,9 +1274,10 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
         <div style="font-size:11px;color:var(--text-2);margin-top:8px;font-style:italic;">Why three different GB figures appear in this report: <strong>Actual GB</strong> above is f16 storage (2 bytes/dim), which storage and pinned billing use &mdash; e.g. DBpedia 0.31 GB. Writes and per-query scans are billed at f32 (4 bytes/dim) &mdash; the 0.615 GB &ldquo;Stored&rdquo; (§3) and &ldquo;Billed GB/q&rdquo; (§4&ndash;§6) figures. Same dataset, two precisions.</div>
       </div>
 
-      <div class="callout tpuf">
-        <strong>The 64 GB billing floor dominates everything below ~5 GB.</strong> For the H&amp;M benchmark dataset (0.43 GB actual), pinned 4-replica costs <strong>$2,476/month</strong> &mdash; 95&times; more than Qdrant's $26.10 &mdash; while delivering worse single-stream performance (47.4 vs 149.6 RPS at p=1 &mdash; a latency comparison, not capacity), worse p99 (50ms hot vs 9.9ms), and lower recall (89.14% vs 95.85%). For datasets under ~5 GB, pinning is strictly worse on every dimension: cost, latency, and recall.
-      </div>
+      <details class="foldout tpuf">
+        <summary>The 64 GB pinned billing floor makes sub-5 GB datasets ~95× costlier than Qdrant</summary>
+        <div class="fold-body">For the H&amp;M benchmark dataset (0.43 GB actual), pinned 4-replica costs <strong>$2,476/month</strong> &mdash; 95&times; more than Qdrant's $26.10 &mdash; while delivering worse single-stream performance (47.4 vs 149.6 RPS at p=1 &mdash; a latency comparison, not capacity), worse p99 (50ms hot vs 9.9ms), and lower recall (89.14% vs 95.85%). For datasets under ~5 GB, pinning is strictly worse on every dimension: cost, latency, and recall.</div>
+      </details>
 
       <h3>9.2 &mdash; Break-Even Analysis</h3>
       <p>For pinned 1-replica to match Qdrant's $26.10/month node cost, actual data must exceed <strong>2.7 GB</strong> (so billing escapes the 64 GB floor and the compute cost drops below $26.10). That is approximately:</p>
