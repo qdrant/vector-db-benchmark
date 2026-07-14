@@ -1016,12 +1016,12 @@ canvas {
         </div>
         <div class="iplot-panel">
           <div class="pt">tpuf usage-priced (floored at $16/mo) vs Qdrant flat cluster fee</div>
-          <div class="ps">tpuf = <code>max($16, storage + $1.28/M·queries)</code> — flat at the $16 floor until ~4.8 QPS, then linear. Qdrant = flat monthly cluster fee (assumed <strong>$26.10 for all three pending a real Qdrant calculator</strong> — MT's 3.2 GB likely needs a bigger tier, which would raise its line). Curves are computed from measured billed-GB/query; the crossover marker is where they meet. Log–log; hover a point for cost plus the measured p50/p99 search latency at that offered QPS (fixed-QPS sweep).</div>
+          <div class="ps">tpuf = <code>max($16, storage + $1.28/M·queries)</code> — flat at the $16 floor until ~4.8 QPS, then linear. Qdrant = flat monthly node fee, now sized <strong>per dataset</strong> via the distilled Qdrant calculator (DBpedia &amp; H&amp;M fit a 2 GB <code>gpx1</code> node → $31.18; MT needs an 8 GB <code>mx2</code> → $82.45). Curves are computed from measured billed-GB/query; the crossover marker is where they meet. Log–log; hover a point for cost plus the measured p50/p99 search latency at that offered QPS (fixed-QPS sweep).</div>
           <svg class="iplot-svg" viewBox="0 0 900 320" role="img" aria-label="Monthly cost vs sustained QPS, tpuf vs Qdrant, per dataset"></svg>
         </div>
       </div>
       <div class="callout">
-        <strong>Break-even is ~8 QPS for all three datasets</strong> (identical under the $26.10 assumption, since every dataset scans under tpuf's 1.28 GB floor). As a fraction of Qdrant's <em>measured single-client</em> peak (~73&ndash;84 RPS), that is <strong>~9&ndash;11% utilization</strong> — below it, tpuf's floored pay-per-use wins; above it, Qdrant's flat fee wins. Caveat: that ~80 RPS ceiling is client/network-bound (Qdrant server p99 ≈ 3ms), so a well-parallelised Qdrant deployment pushes the break-even utilization lower still.
+        With <strong>real per-dataset Qdrant node sizing</strong>, the break-even now splits by workload: <strong>DBpedia &amp; H&amp;M cross at ~9.4 QPS</strong> (Qdrant on a $31 2&nbsp;GB node), but <strong>Multi-tenant crosses at ~25 QPS</strong> — its 1M vectors need an $82 8&nbsp;GB node, so tpuf's pay-per-use stays cheaper far longer. As a fraction of Qdrant's <em>measured single-client</em> peak (~73&ndash;84 RPS): break-even is <strong>~12% utilization for DBpedia/H&amp;M but ~30% for MT</strong>. Below it tpuf wins; above it Qdrant's flat fee wins. Caveat: that ~80 RPS ceiling is client/network-bound (Qdrant server p99 ≈ 3ms), so a well-parallelised Qdrant deployment pushes these utilizations lower. Node sizing via the <a href="qdrant-cost-calculator.html">distilled Qdrant calculator</a>.
       </div>
 
       <details class="foldout neutral">
@@ -1827,11 +1827,11 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
     tpuf: { commitment:16, storagePerGB:0.33, queryPerGB:1e-6 /* $0.001/TB */, floorGB:1.28 },
     secMo: 2.592e6,  // 30-day month
     ds: {
-      dbpedia: { lab:'DBpedia 100K×1536',   scanGB:0.615, storeGB:0.307, qdrant:26.10, qdPeak:79.7, qdSlo:79.7,
+      dbpedia: { lab:'DBpedia 100K×1536',   scanGB:0.615, storeGB:0.307, qdrant:31.18, qdNode:'gpx1 · 2 GB', qdPeak:79.7, qdSlo:79.7,
         lat:{ qps:[1,5,10,20,50], tpuf:{p50:[21.4,15.5,15.9,15.7,15.2],p99:[56.3,33.8,41.3,44.7,42.7]}, qdrant:{p50:[7.9,7.7,7.4,7.6,7.3],p99:[22.2,14.6,12.2,13.0,10.7]} } },
-      hm:      { lab:'H&M 105K×2048',        scanGB:0.872, storeGB:0.430, qdrant:26.10, qdPeak:72.7, qdSlo:72.7,
+      hm:      { lab:'H&M 105K×2048',        scanGB:0.872, storeGB:0.430, qdrant:31.18, qdNode:'gpx1 · 2 GB', qdPeak:72.7, qdSlo:72.7,
         lat:{ qps:[1,5,10,20,50], tpuf:{p50:[26.5,21.3,20.9,20.2,18.9],p99:[735.1,80.9,81.2,85.0,89.1]}, qdrant:{p50:[9.2,8.4,8.1,8.3,11.2],p99:[46.1,44.2,52.6,57.9,524.9]} } },
-      mt:      { lab:'Multi-tenant 1M×768',  scanGB:0.256, storeGB:1.536, qdrant:26.10, qdPeak:83.8, qdSlo:83.8,
+      mt:      { lab:'Multi-tenant 1M×768',  scanGB:0.256, storeGB:1.536, qdrant:82.45, qdNode:'mx2 · 8 GB', qdPeak:83.8, qdSlo:83.8,
         lat:{ qps:[1,5,10,20,50], tpuf:{p50:[72.6,56.6,31.9,32.8,70.0],p99:[164.0,136.6,81.8,86.0,157.1]}, qdrant:{p50:[7.1,6.8,6.9,7.1,10.5],p99:[64.9,34.4,49.5,85.9,1669.2]} } },
     }
   };
@@ -1889,10 +1889,10 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
     draw();
   }
   function costTable(){
-    let h='<table><thead><tr><th>Dataset</th><th>tpuf $/1M queries</th><th>Qdrant $/mo</th><th>Break-even QPS</th><th>Break-even util — peak / SLO RPS</th></tr></thead><tbody>';
+    let h='<table><thead><tr><th>Dataset</th><th>tpuf $/1M queries</th><th>Qdrant node</th><th>Qdrant $/mo</th><th>Break-even QPS</th><th>Break-even util — peak / SLO RPS</th></tr></thead><tbody>';
     Object.values(COST.ds).forEach(d=>{ const cx=crossoverQPS(d);
       h+=`<tr><td>${d.lab}</td><td>${cdot(CO.tpuf)}$${(tpufBilledGB(d)*COST.tpuf.queryPerGB*1e6).toFixed(2)}</td>`+
-         `<td>${cdot(CO.qdrant)}$${d.qdrant.toFixed(2)}</td><td>${cx.toFixed(1)} QPS</td>`+
+         `<td>${d.qdNode||'—'}</td><td>${cdot(CO.qdrant)}$${d.qdrant.toFixed(2)}</td><td>${cx.toFixed(1)} QPS</td>`+
          `<td>${(cx/d.qdPeak*100).toFixed(0)}% / ${(cx/d.qdSlo*100).toFixed(0)}%</td></tr>`;});
     return h+'</tbody></table>';
   }
