@@ -225,6 +225,26 @@ body {
   letter-spacing: 0.04em;
   margin-bottom: 4px;
 }
+/* Collapsible reference sections (§1, §2) — distinct from inline .foldout disclosures */
+.section-collapse { border: none; }
+.section-collapse > summary.section-summary {
+  cursor: pointer; list-style: none;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  border-bottom: 1px dashed var(--border);
+}
+.section-collapse > summary.section-summary::-webkit-details-marker { display: none; }
+.section-collapse > summary.section-summary::marker { content: ''; }
+.section-collapse > summary.section-summary::after {
+  content: 'reference · expand ▾'; flex-shrink: 0; white-space: nowrap;
+  font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-2); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px;
+  transition: background 0.12s, color 0.12s;
+}
+.section-collapse > summary.section-summary:hover::after { color: var(--text); border-color: var(--text-2); }
+.section-collapse[open] > summary.section-summary::after { content: 'collapse ▴'; }
+.section-collapse[open] > summary.section-summary { border-bottom-style: solid; }
+.section-collapse:not([open]) > summary.section-summary h2 { color: var(--text-2); }
+.section-collapse > .collapse-body { padding-top: 8px; }
 .section-eyebrow.tpuf-eye { color: var(--tpuf); }
 .section h2 {
   font-family: var(--font-mono);
@@ -655,11 +675,15 @@ canvas {
 
     <!-- §1 -->
     <section class="section" id="s1">
-      <div class="section-header">
-        <div class="section-eyebrow tpuf-eye">&sect;1</div>
-        <h2>What is turbopuffer?</h2>
+      <details class="section-collapse">
+        <summary class="section-header section-summary">
+          <div>
+            <div class="section-eyebrow tpuf-eye">&sect;1</div>
+            <h2>What is turbopuffer?</h2>
+          </div>
+        </summary>
+        <div class="collapse-body">
         <p>turbopuffer is an S3-backed vector database built around SPFresh centroid-based ANN search. It stores the vector index on object storage and uses a local NVMe cache to accelerate repeated queries. It offers two deployment modes &mdash; serverless and pinned &mdash; and deliberately exposes no recall tuning knobs.</p>
-      </div>
       <ul class="prop-list">
         <li><strong>No recall tuning.</strong> Locked at 89.14% recall on filtered search and 98.51% on unfiltered. You cannot trade latency for recall.</li>
         <li><strong>Serverless mode.</strong> Shared compute, scales to zero between queries, inherent noisy-neighbor risk when multiple namespaces share a host.</li>
@@ -668,14 +692,20 @@ canvas {
         <li><strong>SPFresh algorithm.</strong> Centroid-based ANN that post-filters for attribute predicates rather than integrating filters into graph traversal. Leads to measurable recall drops under selective filter conditions.</li>
         <li><strong>Write pipeline &amp; index visibility.</strong> <span>Writes are group-committed (100&ndash;250ms window) and flushed as an append-only WAL entry to S3. Indexing (SPFresh centroid tree) is asynchronous &mdash; new vectors are <em>immediately readable</em> via exhaustive WAL scan before the index is built. There is no write-blocking indexing phase (unlike Qdrant&rsquo;s HNSW build). With strong consistency (default), each query checks S3 for the latest WAL version, adding ~10ms overhead &mdash; this is the architectural source of the 10ms server-side latency floor. Eventual consistency mode skips this check (sub-10ms possible, up to ~1h staleness).</span></li>
       </ul>
+        </div>
+      </details>
     </section>
 
     <!-- §2 -->
     <section class="section" id="s2">
-      <div class="section-header">
-        <div class="section-eyebrow">&sect;2</div>
-        <h2>Test Setup</h2>
-      </div>
+      <details class="section-collapse">
+        <summary class="section-header section-summary">
+          <div>
+            <div class="section-eyebrow">&sect;2</div>
+            <h2>Test Setup</h2>
+          </div>
+        </summary>
+        <div class="collapse-body">
       <div class="table-wrap">
         <table>
           <thead>
@@ -696,6 +726,8 @@ canvas {
       <div class="callout neutral">
         <strong>Infrastructure:</strong> Benchmark client running on a dedicated EC2 instance in <code>aws-us-west-2</code>, the same region as both services. Measured RTT ~2ms. <strong>RPS/worker</strong> = 1/mean latency of a single worker (a latency measure); <strong>~Total RPS</strong> &asymp; p &times; RPS/worker is the wall-clock throughput &mdash; use it for capacity comparisons. Latency is reported two ways: <strong>search latency</strong> is end-to-end as measured by the client (engine processing + network + client overhead), while <strong>internal search latency</strong> is the engine&rsquo;s own internal processing time (no network) &mdash; so it is always the smaller of the two. Recall is measured against exact brute-force ground truth for every query.
       </div>
+        </div>
+      </details>
     </section>
 
     <!-- §3 -->
