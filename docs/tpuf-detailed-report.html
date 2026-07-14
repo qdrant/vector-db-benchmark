@@ -703,8 +703,7 @@ canvas {
               <option value="up">upload time — upsert only ↓</option>
               <option value="idx">index build time ↓</option>
               <option value="wps">WPS — insert throughput ↑</option>
-              <option value="wp50">write p50 latency ↓</option>
-              <option value="wp99">write p99 latency ↓</option>
+              <option value="wlat">write latency ↓</option>
               <option value="store">stored size ↓</option>
             </select>
           </label>
@@ -781,10 +780,8 @@ canvas {
             <select class="iplot-metric">
               <optgroup label="query (↑/↓ better)">
                 <option value="qps">QPS — throughput ↑</option>
-                <option value="rmean">read mean latency ↓</option>
-                <option value="rp99">read p99 latency ↓</option>
-                <option value="srv50">server p50 latency ↓</option>
-                <option value="srv99">server p99 latency ↓</option>
+                <option value="rlat">read latency ↓</option>
+                <option value="slat">server latency ↓</option>
                 <option value="billed">billed GB / query ↓</option>
                 <option value="recall">recall ↑</option>
               </optgroup>
@@ -793,8 +790,7 @@ canvas {
                 <option value="up">upload time ↓</option>
                 <option value="idx">index build time ↓</option>
                 <option value="total" selected>total upload + index ↓</option>
-                <option value="wp50">write p50 latency ↓</option>
-                <option value="wp99">write p99 latency ↓</option>
+                <option value="wlat">write latency ↓</option>
                 <option value="store">stored size ↓</option>
               </optgroup>
             </select>
@@ -831,10 +827,8 @@ canvas {
         <div class="iplot-bar">
           <label>metric
             <select class="iplot-metric">
-              <option value="p50" selected>p50 latency ↓</option>
-              <option value="p99">p99 latency ↓</option>
-              <option value="srv50">server p50 latency ↓</option>
-              <option value="srv99">server p99 latency ↓</option>
+              <option value="lat" selected>latency ↓</option>
+              <option value="srv">server latency ↓</option>
               <option value="cost">monthly cost ↓</option>
             </select>
           </label>
@@ -914,8 +908,7 @@ canvas {
             <select class="iplot-metric">
               <option value="rpst" selected>total RPS — throughput ↑</option>
               <option value="rpsw">RPS / worker ↑</option>
-              <option value="p50">read p50 latency ↓</option>
-              <option value="p99">read p99 latency ↓</option>
+              <option value="lat">latency ↓</option>
             </select>
           </label>
           <div class="iplot-legend"></div>
@@ -975,8 +968,7 @@ canvas {
             <select class="iplot-metric">
               <option value="rpst" selected>total RPS — throughput ↑</option>
               <option value="rpsw">RPS / worker ↑</option>
-              <option value="p50">p50 latency ↓</option>
-              <option value="p99">p99 latency ↓</option>
+              <option value="lat">latency ↓</option>
             </select>
           </label>
           <div class="iplot-legend"></div>
@@ -1361,18 +1353,15 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
   // domain within a plot, so toggling among them never rescales the axis.
   const MET = {
     qps:   { lab:'QPS — queries/s (↑ better)', unit:'', fmt:v=>v>=100?Math.round(v):v.toFixed(1) },
-    rmean: { lab:'read mean latency ms (↓ better)', unit:' ms', fmt:v=>v.toFixed(1), fam:'rlat' },
-    rp99:  { lab:'read p99 latency ms (↓ better)', unit:' ms', fmt:v=>v.toFixed(1), fam:'rlat' },
-    srv50: { lab:'server p50 latency ms (↓ better)', unit:' ms', fmt:v=>v.toFixed(1), fam:'rlat' },
-    srv99: { lab:'server p99 latency ms (↓ better)', unit:' ms', fmt:v=>v.toFixed(0), fam:'rlat' },
+    rlat:  { lab:'read latency mean→p99 ms (↓ better)', unit:' ms', fmt:v=>v.toFixed(1), band:['rmean','rp99'], fam:'rlat' },
+    slat:  { lab:'server latency p50→p99 ms (↓ better)', unit:' ms', fmt:v=>v.toFixed(1), band:['srv50','srv99'], fam:'rlat' },
     billed:{ lab:'billed GB per query (↓ better)', unit:' GB', fmt:v=>v.toFixed(3) },
     recall:{ lab:'recall (↑ better)', unit:'%', fmt:v=>v.toFixed(2), dom:[95,100] },
     wps:   { lab:'insert throughput vec/s (↑ better)', unit:'', fmt:kfmt },
     up:    { lab:'upload time — upsert only s (↓ better)', unit:' s', fmt:v=>Math.round(v), fam:'time' },
     idx:   { lab:'index build time s (↓ better)', unit:' s', fmt:v=>Math.round(v), fam:'time' },
     total: { lab:'total upload + index s (↓ better)', unit:' s', fmt:v=>Math.round(v), fam:'time' },
-    wp50:  { lab:'write batch p50 latency ms (↓ better)', unit:' ms', fmt:v=>Math.round(v), fam:'wlat' },
-    wp99:  { lab:'write batch p99 latency ms (↓ better)', unit:' ms', fmt:v=>Math.round(v), fam:'wlat' },
+    wlat:  { lab:'write batch latency p50→p99 ms (↓ better)', unit:' ms', fmt:v=>Math.round(v), band:['wp50','wp99'], fam:'wlat' },
     store: { lab:'stored size GB (↓ better)', unit:' GB', fmt:v=>v.toFixed(3) },
   };
 
@@ -1388,14 +1377,16 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
     const vb = svg.viewBox.baseVal, W=vb.width||900, H=vb.height||300;
     const m={t:10, r:86, l:opts.lm||142, b:30}, pw=W-m.l-m.r, ph=H-m.t-m.b;
     // per-family max over ALL data (fixed scale within a family)
+    // band metric → value is [row[loKey], row[hiKey]]; family/top use the hi (p99) key
+    const bandVal = (d, M) => M.band ? (has(d[M.band[0]]) && has(d[M.band[1]]) ? [d[M.band[0]], d[M.band[1]]] : undefined) : d[metric];
     const famMax = {};
-    Object.keys(MET).forEach(k => { const f=MET[k].fam; if(!f) return;
-      data.forEach(d => { if(has(d[k])) famMax[f]=Math.max(famMax[f]||0, hi(d[k])); }); });
+    Object.keys(MET).forEach(k => { const f=MET[k].fam; if(!f) return; const b=MET[k].band;
+      data.forEach(d => { const hk = b ? d[b[1]] : d[k]; if(has(hk)) famMax[f]=Math.max(famMax[f]||0, hi(hk)); }); });
     function draw(){
       const M = MET[metric];
-      const rows = data.filter(d => !hidden.has(d.e) && has(d[metric]));
+      const rows = data.filter(d => !hidden.has(d.e) && has(bandVal(d, M)));
       if(!rows.length){ svg.innerHTML = `<text x="${W/2}" y="${H/2}" text-anchor="middle" font-size="13" fill="${MUT}" font-family="var(--font-mono)">no data for this metric</text>`; return; }
-      const top = M.fam ? famMax[M.fam] : Math.max(...rows.map(d => hi(d[metric])));
+      const top = M.fam ? famMax[M.fam] : Math.max(...rows.map(d => hi(bandVal(d, M))));
       const dom = M.dom ? [M.dom[0], M.dom[1]] : [0, top*1.08];
       const span = dom[1]-dom[0] || 1;
       // consistent axis-tick formatter so a shared family domain always reads identically
@@ -1407,7 +1398,7 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
         g += `<line x1="${x}" y1="${m.t}" x2="${x}" y2="${m.t+ph}" stroke="${GRID}"/>`+
              `<text x="${x}" y="${m.t+ph+16}" text-anchor="middle" font-size="10.5" fill="${MUT}" font-family="var(--font-mono)">${tf(v)}</text>`; });
       rows.forEach((d,i) => {
-        const val=d[metric], c=CO[d.e], y=m.t+i*step+(step-bh)/2;
+        const val=bandVal(d, M), c=CO[d.e], y=m.t+i*step+(step-bh)/2;
         const xlo=xS(lo(val)), xhi=xS(hi(val)), wlo=Math.max(xlo-m.l,1);
         const range = Array.isArray(val);
         const label = range ? `${M.fmt(lo(val))}–${M.fmt(hi(val))}${M.unit}` : `${M.fmt(val)}${M.unit}`;
@@ -1439,14 +1430,18 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
     const W=900, H=320, m={t:14, r:74, l:64, b:40}, pw=W-m.l-m.r, ph=H-m.t-m.b;
     function draw(){
       const M = cfg.mets[metric];
-      const vis = cfg.series.filter(s => !hidden.has(s.name) && s.data[metric]);
+      // a band metric has no direct data key; it draws from its [loKey, hiKey]
+      const hasM = s => M.band ? (s.data[M.band[0]] && s.data[M.band[1]]) : s.data[metric];
+      const vis = cfg.series.filter(s => !hidden.has(s.name) && hasM(s));
       if(!vis.length){ svg.innerHTML = `<text x="${W/2}" y="${H/2}" text-anchor="middle" font-size="13" fill="${MUT}" font-family="var(--font-mono)">no data</text>`; return; }
       // x from visible series of this metric; y domain spans the whole family
       // (across all series) so toggling within a family keeps the scale fixed.
+      // band metrics contribute BOTH their keys so the shaded band always fits.
       const famKeys = M.fam ? Object.keys(cfg.mets).filter(k => cfg.mets[k].fam===M.fam) : [metric];
+      const dataKeys = k => cfg.mets[k].band || [k];
       let xs=[], ys=[];
       vis.forEach(s => s.xs.forEach(x => xs.push(x)));
-      cfg.series.forEach(s => famKeys.forEach(k => { if(s.data[k]) ys.push(...s.data[k]); }));
+      cfg.series.forEach(s => famKeys.forEach(k => dataKeys(k).forEach(dk => { if(s.data[dk]) ys.push(...s.data[dk]); })));
       const xmin=Math.min(...xs), xmax=Math.max(...xs), ymin=Math.min(...ys), ymax=Math.max(...ys);
       const lx0=Math.log10(xmin), lx1=Math.log10(xmax)||1;
       const ly0=Math.log10(ymin*0.7), ly1=Math.log10(ymax*1.4);
@@ -1462,10 +1457,19 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
         g += `<line x1="${px}" y1="${m.t}" x2="${px}" y2="${m.t+ph}" stroke="${GRID}"/>`+
              `<text x="${px}" y="${m.t+ph+18}" text-anchor="middle" font-size="10.5" fill="${MUT}" font-family="var(--font-mono)">${x}</text>`; });
       g += `<text x="${m.l+pw/2}" y="${H-4}" text-anchor="middle" font-size="12" fill="${INK}">${cfg.xlabel}</text>`;
-      vis.forEach(s => { const c=s.color, ptp=s.xs.map((x,i)=>[xS(x), yS(s.data[metric][i])]);
+      vis.forEach(s => { const c=s.color;
+        // band metric: median line follows loKey (p50); shaded area spans loKey→hiKey (p50→p99)
+        const loK = M.band ? M.band[0] : metric, hiK = M.band ? M.band[1] : null;
+        const ptp = s.xs.map((x,i)=>[xS(x), yS(s.data[loK][i])]);
+        if(M.band){ // band polygon: forward along p50, backward along p99
+          const bwd = s.xs.map((x,i)=>[xS(x), yS(s.data[hiK][i])]).reverse();
+          const area = ptp.concat(bwd);
+          g += `<path d="M${area.map(p=>`${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' L')}Z" fill="${c}" fill-opacity="0.14" stroke="none"/>`;
+        }
         g += `<path d="M${ptp.map(p=>`${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' L')}" fill="none" stroke="${c}" stroke-width="2" stroke-opacity="0.6"/>`;
-        s.xs.forEach((x,i) => { const px=xS(x), py=yS(s.data[metric][i]);
-          g += `<g class="mk" data-tip="${s.name}||${cfg.xlabel.split(' ')[0]}=${x}||${M.lab.split(' (')[0]}: ${fmt(s.data[metric][i])}${M.unit||''}"><circle cx="${px}" cy="${py}" r="5" fill="${c}"/></g>`; });
+        s.xs.forEach((x,i) => { const px=xS(x), py=yS(s.data[loK][i]);
+          const tipv = M.band ? `p50: ${fmt(s.data[loK][i])}${M.unit||''} · p99: ${fmt(s.data[hiK][i])}${M.unit||''}` : `${M.lab.split(' (')[0]}: ${fmt(s.data[loK][i])}${M.unit||''}`;
+          g += `<g class="mk" data-tip="${s.name}||${cfg.xlabel.split(' ')[0]}=${x}||${tipv}"><circle cx="${px}" cy="${py}" r="5" fill="${c}"/></g>`; });
         const lastp = ptp[ptp.length-1], nearRight = lastp[0] > m.l+pw-80;
         g += `<text x="${nearRight ? lastp[0]-8 : lastp[0]+8}" y="${lastp[1]-8}" text-anchor="${nearRight?'end':'start'}" font-size="10.5" fill="${c}" font-family="var(--font-mono)">${s.name}</text>`; });
       svg.innerHTML = g;
@@ -1563,8 +1567,8 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
   }
 
   /* ═══ Sweep data + configs ═══ */
-  const LAT = { p50:{lab:'p50 latency ms (↓ better)',unit:' ms',fam:'lat'}, p99:{lab:'p99 latency ms (↓ better)',unit:' ms',fam:'lat'},
-                srv50:{lab:'server p50 latency ms (↓ better)',unit:' ms',fam:'lat'}, srv99:{lab:'server p99 latency ms (↓ better)',unit:' ms',fam:'lat'},
+  const LAT = { lat:{lab:'latency p50–p99 ms (↓ better)',unit:' ms',band:['p50','p99'],fam:'lat'},
+                srv:{lab:'server latency p50–p99 ms (↓ better)',unit:' ms',band:['srv50','srv99'],fam:'lat'},
                 cost:{lab:'monthly cost (↓ better)',unit:'',fmt:v=>'$'+(v>=100?Math.round(v):v.toFixed(2))},
                 rpst:{lab:'total RPS — throughput (↑ better)',unit:'',fam:'rps'}, rpsw:{lab:'RPS per worker (↑ better)',unit:'',fam:'rps'},
                 rps:{lab:'aggregate RPS (↑ better)',unit:'',fam:'rps'} };
