@@ -837,6 +837,7 @@ canvas {
           <label>metric
             <select class="iplot-metric">
               <option value="p99" selected>p99 latency ↓</option>
+              <option value="p90">p90 latency ↓</option>
               <option value="p50">p50 latency ↓</option>
             </select>
           </label>
@@ -1771,15 +1772,15 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
 
   /* ═══ DBpedia latency + throughput vs concurrency (fresh measured sweep, p=1→32) ═══ */
   const DUAL = { xs:[1,2,4,8,16,32], xlabel:'client concurrency (p) →', rightLab:'throughput RPS',
-    latMets:{ p99:{lab:'p99 latency ms'}, p50:{lab:'p50 latency ms'} },
+    latMets:{ p99:{lab:'p99 latency ms'}, p90:{lab:'p90 latency ms'}, p50:{lab:'p50 latency ms'} },
     series:[
-      { name:'turbopuffer', color:CO.tpuf, p99:[67,80.6,112.4,152.3,320,1676.9], p50:[18.3,27.3,66.3,78.4,166.6,316.3], rps:[30.6,50.8,68.7,76.7,73.5,80.2] },
-      { name:'Qdrant', color:CO.qdrant, p99:[61.8,69.4,82.1,414,963.5,2624.4], p50:[8.2,11.4,65.2,87.9,232.8,465.1], rps:[50.4,64,79.7,62.8,57.6,49.6] } ]};
+      { name:'turbopuffer', color:CO.tpuf, p99:[67,80.6,112.4,152.3,320,1676.9], p90:[60.6,65.6,77.5,135.6,237.2,385.3], p50:[18.3,27.3,66.3,78.4,166.6,316.3], rps:[30.6,50.8,68.7,76.7,73.5,80.2] },
+      { name:'Qdrant', color:CO.qdrant, p99:[61.8,69.4,82.1,414,963.5,2624.4], p90:[56.2,64.1,74.1,218.7,483.3,1353.6], p50:[8.2,11.4,65.2,87.9,232.8,465.1], rps:[50.4,64,79.7,62.8,57.6,49.6] } ]};
   const fr = document.getElementById('iplot-frontier');
   if(fr){ initDualAxis(fr, DUAL);
     mountView(fr, () => { const P=DUAL.xs;
-      let h='<table><thead><tr><th>p</th>'+DUAL.series.map(s=>`<th>${cdot(s.color)}${s.name} — RPS / p50 / p99</th>`).join('')+'</tr></thead><tbody>';
-      P.forEach((p,i)=>{ h+=`<tr><td>${p}</td>`+DUAL.series.map(s=>`<td>${s.rps[i]} / ${s.p50[i]}ms / ${s.p99[i]}ms</td>`).join('')+'</tr>'; });
+      let h='<table><thead><tr><th>p</th>'+DUAL.series.map(s=>`<th>${cdot(s.color)}${s.name} — RPS / p50 / p90 / p99</th>`).join('')+'</tr></thead><tbody>';
+      P.forEach((p,i)=>{ h+=`<tr><td>${p}</td>`+DUAL.series.map(s=>`<td>${s.rps[i]} / ${s.p50[i]} / ${s.p90[i]} / ${s.p99[i]}ms</td>`).join('')+'</tr>'; });
       return h+'</tbody></table>'; }); }
 
   /* ═══ DBpedia per-query search latency over the run (fresh run, downsampled) ═══ */
