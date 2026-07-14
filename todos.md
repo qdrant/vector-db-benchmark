@@ -50,7 +50,15 @@ Target architecture (inspired by edge bench):
 - [x] Fold tables into plots with a plot/table toggle (originals relocated,
       all columns preserved; orphaned subsection headers removed; §4 renumbered).
 - [x] Removed 12 dead canvas draw IIFEs (source −26 KB); live charts + helpers kept.
-- [ ] Optional: §8.1 warmup, §8.7 contention, §8.10 disk still on canvas (left per plan).
+- [x] Timeseries mode: generalized initTimeSeries (family scales); §8.9 gained
+      server-latency / WAL-staleness / ingest-progress; §8.1 warmup moved to SVG;
+      NEW §3 SPFresh build-progress chart (queue-wait cliff) from poll rows.
+- [x] Per-request logging in reproduce_comparison.py (s["timeseries"]): per-batch
+      upload (WPS/latency over time) + per-query search (latency/server over run).
+      Synced to tpuf-bench. NEXT: rerun benches → wire plot/table/timeseries
+      toggle onto §4/§5/§6 search+upload experiments with the collected data.
+- [ ] fixed_qps_run per-query timeseries (follow-up).
+- [ ] Optional: §8.7 contention, §8.10 disk still on canvas (left per plan).
 - [ ] Reconsider hero: currently showcases pinned-4r warmup, a config §9 calls
       "strictly worse."
 - [ ] Theme-awareness + charset (edge bench served without UTF-8 shows mojibake).
