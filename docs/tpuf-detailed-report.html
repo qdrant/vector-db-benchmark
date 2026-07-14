@@ -683,7 +683,7 @@ canvas {
         </table>
       </div>
       <div class="callout neutral">
-        <strong>Infrastructure:</strong> Benchmark client running on a dedicated EC2 instance in <code>aws-us-west-2</code>, the same region as both services. Measured RTT ~2ms. <strong>RPS/worker</strong> = 1/mean latency of a single worker (a latency measure); <strong>~Total RPS</strong> &asymp; p &times; RPS/worker is the wall-clock throughput &mdash; use it for capacity comparisons. Recall is measured against exact brute-force ground truth for every query.
+        <strong>Infrastructure:</strong> Benchmark client running on a dedicated EC2 instance in <code>aws-us-west-2</code>, the same region as both services. Measured RTT ~2ms. <strong>RPS/worker</strong> = 1/mean latency of a single worker (a latency measure); <strong>~Total RPS</strong> &asymp; p &times; RPS/worker is the wall-clock throughput &mdash; use it for capacity comparisons. Latency is reported two ways: <strong>total latency (client)</strong> is end-to-end as measured by the client (engine processing + network + client overhead), while <strong>engine latency (server-side)</strong> is the engine&rsquo;s own internal processing time (no network) &mdash; so engine latency is always the smaller of the two. Recall is measured against exact brute-force ground truth for every query.
       </div>
     </section>
 
@@ -733,7 +733,7 @@ canvas {
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>Dataset</th><th>Engine</th><th>Time (min)‡</th><th>WPS</th><th>Batch p50</th><th>Batch p99</th><th>Srv p50</th><th>Srv p99</th><th>Index wait†</th><th>Stored GB</th></tr>
+            <tr><th>Dataset</th><th>Engine</th><th>Time (min)‡</th><th>WPS</th><th>Batch p50</th><th>Batch p99</th><th>Engine p50</th><th>Engine p99</th><th>Index wait†</th><th>Stored GB</th></tr>
           </thead>
           <tbody>
             <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-tpuf"></span>tpuf serverless</td><td>3.1–7.3††</td><td>624–657</td><td>192ms</td><td>352ms</td><td>180ms</td><td>341ms</td><td>25–268s (SPFresh††)</td><td>0.615 GB</td></tr>
@@ -780,8 +780,8 @@ canvas {
             <select class="iplot-metric">
               <optgroup label="query (↑/↓ better)">
                 <option value="qps">QPS — throughput ↑</option>
-                <option value="rlat">read latency ↓</option>
-                <option value="slat">server latency ↓</option>
+                <option value="rlat">total latency (client) ↓</option>
+                <option value="slat">engine latency (server-side) ↓</option>
                 <option value="billed">billed GB / query ↓</option>
                 <option value="recall">recall ↑</option>
               </optgroup>
@@ -807,7 +807,7 @@ canvas {
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>Engine</th><th>p</th><th>RPS/worker</th><th>~Total RPS</th><th>Mean</th><th>p99</th><th>Srv p50</th><th>Srv p99</th><th>Billed GB/q</th><th>Recall</th></tr>
+            <tr><th>Engine</th><th>p</th><th>RPS/worker</th><th>~Total RPS</th><th>Mean</th><th>p99</th><th>Engine p50</th><th>Engine p99</th><th>Billed GB/q</th><th>Recall</th></tr>
           </thead>
           <tbody>
             <tr><td><span class="chip-tpuf"></span>tpuf serverless</td><td>1</td><td>57.1</td><td>57</td><td>15.9ms</td><td>47.1ms</td><td>10ms</td><td>40ms</td><td>0.615 GB</td><td>98.51%</td></tr>
@@ -827,8 +827,8 @@ canvas {
         <div class="iplot-bar">
           <label>metric
             <select class="iplot-metric">
-              <option value="lat" selected>latency ↓</option>
-              <option value="srv">server latency ↓</option>
+              <option value="lat" selected>total latency (client) ↓</option>
+              <option value="srv">engine latency (server-side) ↓</option>
               <option value="cost">monthly cost ↓</option>
             </select>
           </label>
@@ -908,7 +908,7 @@ canvas {
             <select class="iplot-metric">
               <option value="rpst" selected>total RPS — throughput ↑</option>
               <option value="rpsw">RPS / worker ↑</option>
-              <option value="lat">latency ↓</option>
+              <option value="lat">total latency (client) ↓</option>
             </select>
           </label>
           <div class="iplot-legend"></div>
@@ -923,7 +923,7 @@ canvas {
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>p</th><th>RPS/worker</th><th>~Total RPS</th><th>Mean</th><th>p50</th><th>p99</th><th>Srv p50</th><th>Srv p99</th><th>Billed GB/q</th><th>Recall</th></tr>
+            <tr><th>p</th><th>RPS/worker</th><th>~Total RPS</th><th>Mean</th><th>p50</th><th>p99</th><th>Engine p50</th><th>Engine p99</th><th>Billed GB/q</th><th>Recall</th></tr>
           </thead>
           <tbody>
             <tr><td>1</td><td>47.4</td><td>47</td><td>21.1ms</td><td>19.8ms</td><td>50.0ms</td><td>14ms</td><td>44ms</td><td>0.872 GB</td><td>89.14%</td></tr>
@@ -936,7 +936,7 @@ canvas {
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>Concurrency</th><th>RPS/worker</th><th>~Total RPS</th><th>Mean</th><th>p50</th><th>p99</th><th>Srv p50</th><th>Recall</th></tr>
+            <tr><th>Concurrency</th><th>RPS/worker</th><th>~Total RPS</th><th>Mean</th><th>p50</th><th>p99</th><th>Engine p50</th><th>Recall</th></tr>
           </thead>
           <tbody>
             <tr><td>p=1</td><td class="win">149.6</td><td>150</td><td class="win">6.7ms</td><td class="win">6.6ms</td><td class="win">9.9ms</td><td class="win">1.1ms</td><td class="win">95.85%</td></tr>
@@ -968,7 +968,7 @@ canvas {
             <select class="iplot-metric">
               <option value="rpst" selected>total RPS — throughput ↑</option>
               <option value="rpsw">RPS / worker ↑</option>
-              <option value="lat">latency ↓</option>
+              <option value="lat">total latency (client) ↓</option>
             </select>
           </label>
           <div class="iplot-legend"></div>
@@ -982,7 +982,7 @@ canvas {
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>Config</th><th>p</th><th>RPS/worker</th><th>~Total RPS</th><th>p50</th><th>p99</th><th>Srv p50</th><th>Srv p99</th><th>Billed GB/q</th><th>Recall</th></tr>
+            <tr><th>Config</th><th>p</th><th>RPS/worker</th><th>~Total RPS</th><th>p50</th><th>p99</th><th>Engine p50</th><th>Engine p99</th><th>Billed GB/q</th><th>Recall</th></tr>
           </thead>
           <tbody>
             <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>1</td><td>33.5</td><td>34</td><td>24.0ms</td><td>119.6ms</td><td>19ms</td><td>114ms</td><td>0.256 GB</td><td>100%</td></tr>
@@ -1353,8 +1353,8 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
   // domain within a plot, so toggling among them never rescales the axis.
   const MET = {
     qps:   { lab:'QPS — queries/s (↑ better)', unit:'', fmt:v=>v>=100?Math.round(v):v.toFixed(1) },
-    rlat:  { lab:'read latency mean→p99 ms (↓ better)', unit:' ms', fmt:v=>v.toFixed(1), band:['rmean','rp99'], fam:'rlat' },
-    slat:  { lab:'server latency p50→p99 ms (↓ better)', unit:' ms', fmt:v=>v.toFixed(1), band:['srv50','srv99'], fam:'rlat' },
+    rlat:  { lab:'total latency (client) · mean→p99 ms (↓ better)', unit:' ms', fmt:v=>v.toFixed(1), band:['rmean','rp99'], fam:'rlat' },
+    slat:  { lab:'engine latency (server-side) · p50→p99 ms (↓ better)', unit:' ms', fmt:v=>v.toFixed(1), band:['srv50','srv99'], fam:'rlat' },
     billed:{ lab:'billed GB per query (↓ better)', unit:' GB', fmt:v=>v.toFixed(3) },
     recall:{ lab:'recall (↑ better)', unit:'%', fmt:v=>v.toFixed(2), dom:[95,100] },
     wps:   { lab:'insert throughput vec/s (↑ better)', unit:'', fmt:kfmt },
@@ -1580,8 +1580,8 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
   }
 
   /* ═══ Sweep data + configs ═══ */
-  const LAT = { lat:{lab:'latency p50–p99 ms (↓ better)',unit:' ms',band:['p50','p99'],fam:'lat'},
-                srv:{lab:'server latency p50–p99 ms (↓ better)',unit:' ms',band:['srv50','srv99'],fam:'lat'},
+  const LAT = { lat:{lab:'total latency (client) · p50–p99 ms (↓ better)',unit:' ms',band:['p50','p99'],fam:'lat'},
+                srv:{lab:'engine latency (server-side) · p50–p99 ms (↓ better)',unit:' ms',band:['srv50','srv99'],fam:'lat'},
                 cost:{lab:'monthly cost (↓ better)',unit:'',fmt:v=>'$'+(v>=100?Math.round(v):v.toFixed(2))},
                 rpst:{lab:'total RPS — throughput (↑ better)',unit:'',fam:'rps'}, rpsw:{lab:'RPS per worker (↑ better)',unit:'',fam:'rps'},
                 rps:{lab:'aggregate RPS (↑ better)',unit:'',fam:'rps'} };
