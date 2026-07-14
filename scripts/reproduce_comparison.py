@@ -318,7 +318,7 @@ def make_qdrant():
 
 # ── Upload helpers ─────────────────────────────────────────────────────────────
 
-TS_MAX = 500  # cap timeseries samples per phase to keep result JSON small
+TS_MAX = 2000  # cap timeseries samples per phase (keeps all ~1000 search queries)
 
 def _ts(cols, rows):
     """Compact per-request/per-batch timeseries, uniformly downsampled to <=TS_MAX rows.

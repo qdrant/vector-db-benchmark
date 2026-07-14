@@ -556,7 +556,7 @@ canvas {
 }
 .iplot-view button + button { border-left: 1px solid var(--border); }
 .iplot-view button.on { background: var(--tpuf); color: #fff; }
-.iplot.table-mode .iplot-metric-label, .iplot.table-mode .iplot-dataset-label, .iplot.table-mode .iplot-legend { display: none; }
+.iplot.table-mode .iplot-metric-label, .iplot.table-mode .iplot-dataset-label, .iplot.table-mode .iplot-xaxis-label, .iplot.table-mode .iplot-legend { display: none; }
 .iplot-tablewrap { overflow-x: auto; }
 .iplot-tablewrap table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .iplot-tablewrap thead th {
@@ -1556,6 +1556,7 @@ document.addEventListener('DOMContentLoaded', function() {
              series:[{name,color,rows,yi,mul}]}} }  (x is always column 0) */
   function initTimeSeries(root, cfg){
     const svg = root.querySelector('.iplot-svg'), sel = root.querySelector('.iplot-metric'), legendEl = root.querySelector('.iplot-legend');
+    const xSelEl = root.querySelector('.iplot-xaxis');   // optional: time vs query-index x-axis
     const hidden = new Set(); let metric = sel.value;
     const allSeries = [...new Map(Object.values(cfg.mets).flatMap(m=>m.series).map(s=>[s.name,s])).values()];
     legendEl.innerHTML = '<span class="lab">engine</span>' + allSeries.map(s =>
@@ -1569,12 +1570,15 @@ document.addEventListener('DOMContentLoaded', function() {
       const vis = M.series.filter(s => !hidden.has(s.name));
       if(!vis.length){ svg.innerHTML=`<text x="${W/2}" y="${H/2}" text-anchor="middle" font-size="13" fill="${MUT}" font-family="var(--font-mono)">no data</text>`; return; }
       const yv = s => s.rows.map(r => r[s.yi]*(s.mul||1));
-      // x from the current metric; y domain spans the whole family (all metrics
-      // sharing M.fam, across all their series) so toggling within a family holds scale
+      // x = wall-clock (col 0) by default, or sampled query-index i when the x-axis
+      // toggle is set to 'index' — aligns engines that finish at different times.
+      const xmode = xSelEl ? xSelEl.value : 'time';
+      const xacc = (r,i) => xmode==='index' ? i : r[0];
+      // y domain spans the whole family (all metrics sharing M.fam) so toggling holds scale
       const famKeys = M.fam ? Object.keys(cfg.mets).filter(k => cfg.mets[k].fam===M.fam) : [metric];
-      let xs=[], ys=[]; vis.forEach(s => s.rows.forEach(r=>xs.push(r[0])));
+      let xs=[], ys=[]; vis.forEach(s => s.rows.forEach((r,i)=>xs.push(xacc(r,i))));
       famKeys.forEach(k => cfg.mets[k].series.forEach(s => ys.push(...yv(s))));
-      const xmax=Math.max(...xs), ymaxRaw=Math.max(...ys), yminRaw=Math.min(...ys.filter(v=>v>0));
+      const xmax=Math.max(...xs)||1, ymaxRaw=Math.max(...ys), yminRaw=Math.min(...ys.filter(v=>v>0));
       const ylog=M.ylog, ly0=Math.log10(Math.max(yminRaw*0.7,0.1)), ly1=Math.log10(ymaxRaw*1.4);
       const ymax = M.ymax || ymaxRaw*1.08;
       const xS = x => m.l + x/xmax*pw;
@@ -1588,20 +1592,21 @@ document.addEventListener('DOMContentLoaded', function() {
       [0,0.25,0.5,0.75,1].forEach(f=>{ const x=m.l+f*pw, v=Math.round(xmax*f);
         g+=`<line x1="${x}" y1="${m.t}" x2="${x}" y2="${m.t+ph}" stroke="${GRID}"/>`+
            `<text x="${x}" y="${m.t+ph+18}" text-anchor="middle" font-size="10.5" fill="${MUT}" font-family="var(--font-mono)">${v}</text>`; });
-      g += `<text x="${m.l+pw/2}" y="${H-4}" text-anchor="middle" font-size="12" fill="${INK}">${cfg.xlabel}</text>`;
-      if(cfg.markerX && cfg.markerX<=xmax){ const mx=xS(cfg.markerX);
+      g += `<text x="${m.l+pw/2}" y="${H-4}" text-anchor="middle" font-size="12" fill="${INK}">${xmode==='index' ? (cfg.xlabelIndex||'query # (sampled) →') : cfg.xlabel}</text>`;
+      if(xmode!=='index' && cfg.markerX && cfg.markerX<=xmax){ const mx=xS(cfg.markerX);
         g+=`<line x1="${mx}" y1="${m.t}" x2="${mx}" y2="${m.t+ph}" stroke="${MUT}" stroke-dasharray="4 3" stroke-opacity="0.7"/>`+
            `<text x="${mx-4}" y="${m.t+11}" text-anchor="end" font-size="10" fill="${MUT}" font-family="var(--font-mono)">${cfg.markerLabel}</text>`; }
-      vis.forEach(s => { const c=s.color, d=s.rows.map(r=>`${xS(r[0]).toFixed(1)} ${yS(r[s.yi]*(s.mul||1)).toFixed(1)}`);
+      vis.forEach(s => { const c=s.color, d=s.rows.map((r,i)=>`${xS(xacc(r,i)).toFixed(1)} ${yS(r[s.yi]*(s.mul||1)).toFixed(1)}`);
         g += `<path d="M${d.join(' L')}" fill="none" stroke="${c}" stroke-width="1.4" stroke-opacity="0.75"/>`;
-        // sparse hover dots (every ~5%)
         const stepN = Math.max(1, Math.floor(s.rows.length/22));
-        s.rows.forEach((r,i)=>{ if(i%stepN) return; const x=xS(r[0]), y=yS(r[s.yi]*(s.mul||1));
-          g+=`<g class="mk" data-tip="${s.name}||t=${r[0].toFixed(0)}s||${M.lab.split(' (')[0]}: ${fmt(r[s.yi]*(s.mul||1))}${M.unit||''}"><circle cx="${x}" cy="${y}" r="4" fill="${c}" fill-opacity="0.9"/></g>`; }); });
+        s.rows.forEach((r,i)=>{ if(i%stepN) return; const x=xS(xacc(r,i)), y=yS(r[s.yi]*(s.mul||1));
+          const xl = xmode==='index' ? `query ~${i}` : `t=${r[0].toFixed(0)}s`;
+          g+=`<g class="mk" data-tip="${s.name}||${xl}||${M.lab.split(' (')[0]}: ${fmt(r[s.yi]*(s.mul||1))}${M.unit||''}"><circle cx="${x}" cy="${y}" r="4" fill="${c}" fill-opacity="0.9"/></g>`; }); });
       svg.innerHTML = g;
     }
     wireTip(svg);
     sel.addEventListener('change', e => { metric=e.target.value; draw(); });
+    if(xSelEl) xSelEl.addEventListener('change', () => draw());
     draw();
   }
 
