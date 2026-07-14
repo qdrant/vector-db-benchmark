@@ -47,7 +47,9 @@ Target architecture (inspired by edge bench):
 - [x] Shared axis scales for same-family metrics (read-lat, write-lat, time, rps).
 - [x] Folded 15 verbose callouts into <details> disclosures (page 19.4k→17.3k px);
       deleted §3 pinning-write duplicate. Short callouts kept inline.
-- [ ] Remove dead canvas draw JS (old functions no-op via setupCanvas guard but bloat file).
+- [x] Fold tables into plots with a plot/table toggle (originals relocated,
+      all columns preserved; orphaned subsection headers removed; §4 renumbered).
+- [x] Removed 12 dead canvas draw IIFEs (source −26 KB); live charts + helpers kept.
 - [ ] Optional: §8.1 warmup, §8.7 contention, §8.10 disk still on canvas (left per plan).
 - [ ] Reconsider hero: currently showcases pinned-4r warmup, a config §9 calls
       "strictly worse."
