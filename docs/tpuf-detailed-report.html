@@ -951,22 +951,54 @@ canvas {
           </tbody>
         </table>
       </div>
-      <p style="font-size:13px;color:var(--text-2);margin-top:4px;">The 1.28 GB minimum is critical: a 308 MB namespace (100K &times; 1536-dim f16) is billed as 1.28 GB per scan query &mdash; a cost floor of <strong>$1.28 per million queries</strong> regardless of actual data size.</p>
-      <div class="table-wrap" style="margin-top:20px;">
-        <table>
-          <thead>
-            <tr><th>Dataset</th><th>tpuf $/1M queries</th><th>Qdrant $/mo</th><th>Break-even QPS</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>100K &times; 1536</td><td>$1.28</td><td>$26.10</td><td>~8 QPS</td></tr>
-            <tr><td>1M &times; 1024</td><td>$2.05</td><td>$68.34</td><td>~13 QPS</td></tr>
-            <tr><td>10M &times; 768</td><td>$15.36</td><td>$410.04</td><td>~10 QPS</td></tr>
-          </tbody>
-        </table>
+      <p style="font-size:13px;color:var(--text-2);margin-top:4px;">The 1.28 GB minimum is critical: a 308 MB namespace (100K &times; 1536-dim f16) is billed as 1.28 GB per scan query &mdash; a cost floor of <strong>$1.28 per million queries</strong> regardless of actual data size. Serverless also has a <strong>$16/mo launch-plan commitment</strong>, so tpuf is not $0 at idle.</p>
+
+      <h4 style="margin:22px 0 2px;">Break-even &mdash; cost vs sustained query load (our three measured datasets)</h4>
+      <div class="iplot" id="iplot-cost">
+        <div class="iplot-bar">
+          <label>dataset
+            <select class="iplot-dataset">
+              <option value="dbpedia" selected>DBpedia 100K×1536</option>
+              <option value="hm">H&amp;M 105K×2048</option>
+              <option value="mt">Multi-tenant 1M×768</option>
+            </select>
+          </label>
+          <label>metric
+            <select class="iplot-metric">
+              <option value="cost" selected>monthly cost ↓</option>
+              <option value="permq">$ per million queries ↓</option>
+            </select>
+          </label>
+          <div class="iplot-legend"></div>
+        </div>
+        <div class="iplot-panel">
+          <div class="pt">tpuf usage-priced (floored at $16/mo) vs Qdrant flat cluster fee</div>
+          <div class="ps">tpuf = <code>max($16, storage + $1.28/M·queries)</code> — flat at the $16 floor until ~4.8 QPS, then linear. Qdrant = flat monthly cluster fee (assumed <strong>$26.10 for all three pending a real Qdrant calculator</strong> — MT's 3.2 GB likely needs a bigger tier, which would raise its line). Curves are computed from measured billed-GB/query; the crossover marker is where they meet. Log–log; hover a point.</div>
+          <svg class="iplot-svg" viewBox="0 0 900 320" role="img" aria-label="Monthly cost vs sustained QPS, tpuf vs Qdrant, per dataset"></svg>
+        </div>
       </div>
       <div class="callout">
-        The break-even point is remarkably stable across dataset scales (~8&ndash;13 QPS). <strong>Below the break-even for your scale, turbopuffer is cheaper.</strong> Above it, Qdrant is cheaper and faster.
+        <strong>Break-even is ~8 QPS for all three datasets</strong> (identical under the $26.10 assumption, since every dataset scans under tpuf's 1.28 GB floor). As a fraction of Qdrant's <em>measured single-client</em> peak (~73&ndash;84 RPS), that is <strong>~9&ndash;11% utilization</strong> — below it, tpuf's floored pay-per-use wins; above it, Qdrant's flat fee wins. Caveat: that ~80 RPS ceiling is client/network-bound (Qdrant server p99 ≈ 3ms), so a well-parallelised Qdrant deployment pushes the break-even utilization lower still.
       </div>
+
+      <details class="foldout neutral">
+        <summary>Projection: how break-even shifts at larger scale (above the 1.28 GB floor)</summary>
+        <div class="fold-body">
+          Once a namespace exceeds the 1.28 GB query floor, tpuf&rsquo;s per-query cost scales with data size while Qdrant&rsquo;s cluster fee scales with RAM &mdash; the break-even stays in a similar ~8&ndash;13 QPS band. Illustrative (not measured here):
+          <div class="table-wrap" style="margin-top:12px;">
+            <table>
+              <thead>
+                <tr><th>Dataset</th><th>tpuf $/1M queries</th><th>Qdrant $/mo</th><th>Break-even QPS</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>100K &times; 1536</td><td>$1.28</td><td>$26.10</td><td>~8 QPS</td></tr>
+                <tr><td>1M &times; 1024</td><td>$2.05</td><td>$68.34</td><td>~13 QPS</td></tr>
+                <tr><td>10M &times; 768</td><td>$15.36</td><td>$410.04</td><td>~10 QPS</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </details>
     </section>
 
     <!-- §5 -->
@@ -1790,6 +1822,78 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
                {name:'DBpedia · 268s', color:'#7C3AED', rows:SPF_268, yi:1},
                {name:'H&M · 58s', color:'#0D9488', rows:SPF_HM, yi:1} ] } }};
 
+  /* ═══ Cost model — break-even vs sustained query load (EXTENDIBLE) ═══
+     tpuf pricing = launch plan (see tpuf-pricing-calculator.html).
+     Qdrant $/mo is a single per-dataset field — swap it when a real Qdrant
+     calculator lands and every curve + the table recompute automatically. */
+  const COST = {
+    tpuf: { commitment:16, storagePerGB:0.33, queryPerGB:1e-6 /* $0.001/TB */, floorGB:1.28 },
+    secMo: 2.592e6,  // 30-day month
+    ds: {
+      dbpedia: { lab:'DBpedia 100K×1536',   scanGB:0.615, storeGB:0.307, qdrant:26.10, qdPeak:79.7, qdSlo:79.7 },
+      hm:      { lab:'H&M 105K×2048',        scanGB:0.872, storeGB:0.430, qdrant:26.10, qdPeak:72.7, qdSlo:72.7 },
+      mt:      { lab:'Multi-tenant 1M×768',  scanGB:0.256, storeGB:1.536, qdrant:26.10, qdPeak:83.8, qdSlo:83.8 },
+    }
+  };
+  const tpufBilledGB = d => Math.max(d.scanGB, COST.tpuf.floorGB);
+  const tpufMonthly  = (d, Q) => Math.max(COST.tpuf.commitment,
+      d.storeGB*COST.tpuf.storagePerGB + Q*tpufBilledGB(d)*COST.tpuf.queryPerGB);
+  const crossoverQPS = d => ((d.qdrant - d.storeGB*COST.tpuf.storagePerGB)
+      / (tpufBilledGB(d)*COST.tpuf.queryPerGB)) / COST.secMo;
+
+  function initCost(root){
+    const svg=root.querySelector('.iplot-svg'), mSel=root.querySelector('.iplot-metric'),
+          dSel=root.querySelector('.iplot-dataset'), legendEl=root.querySelector('.iplot-legend');
+    const W=900,H=320,m={t:14,r:74,l:70,b:40},pw=W-m.l-m.r,ph=H-m.t-m.b;
+    const QPS=[]; for(let i=0;i<=48;i++) QPS.push(0.5*Math.pow(200/0.5, i/48)); // log 0.5→200
+    function draw(){
+      const d=COST.ds[dSel.value], metric=mSel.value;
+      const yLab = metric==='cost' ? 'monthly cost — USD (↓ better)' : '$ per million queries (↓ better)';
+      const valTp = q => { const M=tpufMonthly(d,q*COST.secMo); return metric==='cost'?M:M*1e6/(q*COST.secMo); };
+      const valQd = q => metric==='cost' ? d.qdrant : d.qdrant*1e6/(q*COST.secMo);
+      const tp=QPS.map(valTp), qd=QPS.map(valQd), ys=tp.concat(qd);
+      const ymin=Math.min(...ys), ymax=Math.max(...ys);
+      const lx0=Math.log10(QPS[0]), lx1=Math.log10(QPS[QPS.length-1]);
+      const ly0=Math.log10(ymin*0.7), ly1=Math.log10(ymax*1.4);
+      const xS=q=>m.l+(Math.log10(q)-lx0)/(lx1-lx0)*pw, yS=v=>m.t+(1-(Math.log10(v)-ly0)/(ly1-ly0))*ph;
+      legendEl.innerHTML='<span class="lab">engine</span>'+
+        `<span class="eng"><span class="sw" style="background:${CO.tpuf}"></span>turbopuffer</span>`+
+        `<span class="eng"><span class="sw" style="background:${CO.qdrant}"></span>Qdrant</span>`;
+      let g=`<text transform="translate(16 ${m.t+ph/2}) rotate(-90)" text-anchor="middle" font-size="12" fill="${INK}">${yLab}</text>`;
+      logticks(ymin*0.7, ymax*1.4).forEach(v=>{const y=yS(v); if(y<m.t-1||y>m.t+ph+1)return;
+        g+=`<line x1="${m.l}" y1="${y}" x2="${m.l+pw}" y2="${y}" stroke="${GRID}"/>`+
+           `<text x="${m.l-8}" y="${y+3.5}" text-anchor="end" font-size="10.5" fill="${MUT}" font-family="var(--font-mono)">$${v>=1000?(v/1000)+'K':v>=1?Math.round(v):v.toFixed(2)}</text>`;});
+      [0.5,1,2,5,10,20,50,100,200].forEach(q=>{const x=xS(q);
+        g+=`<line x1="${x}" y1="${m.t}" x2="${x}" y2="${m.t+ph}" stroke="${GRID}"/>`+
+           `<text x="${x}" y="${m.t+ph+18}" text-anchor="middle" font-size="10.5" fill="${MUT}" font-family="var(--font-mono)">${q}</text>`;});
+      g+=`<text x="${m.l+pw/2}" y="${H-4}" text-anchor="middle" font-size="12" fill="${INK}">sustained query load — QPS →</text>`;
+      const cx=crossoverQPS(d);
+      if(cx>QPS[0]&&cx<QPS[QPS.length-1]){const x=xS(cx);
+        g+=`<line x1="${x}" y1="${m.t}" x2="${x}" y2="${m.t+ph}" stroke="${MUT}" stroke-dasharray="4 3"/>`+
+           `<text x="${x+4}" y="${m.t+11}" font-size="10" fill="${MUT}" font-family="var(--font-mono)">break-even ${cx.toFixed(1)} QPS</text>`;}
+      const path=(arr,c)=>`<path d="M${QPS.map((q,i)=>`${xS(q).toFixed(1)} ${yS(arr[i]).toFixed(1)}`).join(' L')}" fill="none" stroke="${c}" stroke-width="2" stroke-opacity="0.8"/>`;
+      g+=path(qd,CO.qdrant)+path(tp,CO.tpuf);
+      const fmt=v=>metric==='cost'?('$'+(v>=100?Math.round(v):v.toFixed(2))+'/mo'):('$'+v.toFixed(2)+'/Mq');
+      [1,2,5,10,20,50].forEach(q=>{ if(q<QPS[0]||q>QPS[QPS.length-1])return; const x=xS(q);
+        g+=`<g class="mk" data-tip="turbopuffer||${q} QPS||${fmt(valTp(q))}"><circle cx="${x}" cy="${yS(valTp(q))}" r="4.5" fill="${CO.tpuf}"/></g>`+
+           `<g class="mk" data-tip="Qdrant||${q} QPS||${fmt(valQd(q))}"><circle cx="${x}" cy="${yS(valQd(q))}" r="4.5" fill="${CO.qdrant}"/></g>`;});
+      g+=`<text x="${m.l+pw-4}" y="${yS(tp[tp.length-1])-8}" text-anchor="end" font-size="10.5" fill="${CO.tpuf}" font-family="var(--font-mono)">turbopuffer</text>`+
+         `<text x="${m.l+pw-4}" y="${yS(qd[qd.length-1])+14}" text-anchor="end" font-size="10.5" fill="${CO.qdrant}" font-family="var(--font-mono)">Qdrant</text>`;
+      svg.innerHTML=g;
+    }
+    wireTip(svg);
+    mSel.addEventListener('change',draw); dSel.addEventListener('change',draw);
+    draw();
+  }
+  function costTable(){
+    let h='<table><thead><tr><th>Dataset</th><th>tpuf $/1M queries</th><th>Qdrant $/mo</th><th>Break-even QPS</th><th>Break-even util — peak / SLO RPS</th></tr></thead><tbody>';
+    Object.values(COST.ds).forEach(d=>{ const cx=crossoverQPS(d);
+      h+=`<tr><td>${d.lab}</td><td>${cdot(CO.tpuf)}$${(tpufBilledGB(d)*COST.tpuf.queryPerGB*1e6).toFixed(2)}</td>`+
+         `<td>${cdot(CO.qdrant)}$${d.qdrant.toFixed(2)}</td><td>${cx.toFixed(1)} QPS</td>`+
+         `<td>${(cx/d.qdPeak*100).toFixed(0)}% / ${(cx/d.qdSlo*100).toFixed(0)}%</td></tr>`;});
+    return h+'</tbody></table>';
+  }
+
   /* ═══ Init ═══ (each plot folds in its original full table, or generates one) */
   const spf = document.getElementById('iplot-spf'); if(spf){ initTimeSeries(spf, SPF); mountView(spf, () => tsTable(SPF, 'seconds')); }
   const up = document.getElementById('iplot-upload'); if(up){ initBarExplorer(up, UPLOAD, {lm:300}); mountView(up, grabTables(up, ['Dataset'])); }
@@ -1799,6 +1903,7 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
   Object.keys(SWEEPS).forEach(id => { const el=document.getElementById(id); if(!el) return;
     initSweep(el, SWEEPS[id]);
     mountView(el, tableFor[id] ? grabTables(el, tableFor[id]) : (() => sweepTable(SWEEPS[id]))); });
+  const cst = document.getElementById('iplot-cost'); if(cst){ initCost(cst); mountView(cst, () => costTable()); }
 
   /* ═══ DBpedia latency + throughput vs concurrency (fresh measured sweep, p=1→32) ═══ */
   const DUAL = { xs:[1,2,4,8,16,32], xlabel:'client concurrency (p) →', rightLab:'throughput RPS',
