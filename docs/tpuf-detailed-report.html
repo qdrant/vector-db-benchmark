@@ -573,6 +573,29 @@ canvas {
 }
 .iplot-legend .eng.off { opacity: 0.32; text-decoration: line-through; }
 .iplot-legend .sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.iplot-view { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; margin-left: auto; }
+.iplot-view button {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; padding: 5px 11px;
+  border: 0; background: var(--surface); color: var(--text-2); cursor: pointer; transition: background 0.12s;
+}
+.iplot-view button + button { border-left: 1px solid var(--border); }
+.iplot-view button.on { background: var(--tpuf); color: #fff; }
+.iplot.table-mode .iplot-metric-label, .iplot.table-mode .iplot-legend { display: none; }
+.iplot-tablewrap { overflow-x: auto; }
+.iplot-tablewrap table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.iplot-tablewrap thead th {
+  background: var(--code-bg); color: var(--code-text); font-family: var(--font-mono);
+  font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 12px;
+  text-align: right; white-space: nowrap; font-weight: 500;
+}
+.iplot-tablewrap thead th:first-child { text-align: left; }
+.iplot-tablewrap tbody tr { border-top: 1px solid var(--border); }
+.iplot-tablewrap tbody tr:nth-child(even) { background: #FAFBFD; }
+.iplot-tablewrap tbody td {
+  padding: 7px 12px; font-family: var(--font-mono); font-size: 12px; color: var(--text);
+  white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums;
+}
+.iplot-tablewrap tbody td:first-child { text-align: left; font-family: var(--font-body); font-size: 13px; }
 .iplot-panel {
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
   padding: 14px 8px 6px; margin: 12px 0;
@@ -800,7 +823,6 @@ canvas {
         </div>
       </div>
 
-      <h3>4.1 &mdash; Single-Concurrency Baseline (p=1)</h3>
       <div class="table-wrap">
         <table>
           <thead>
@@ -816,10 +838,10 @@ canvas {
       </div>
       <details class="foldout">
         <summary>Every DBpedia query scans the whole dataset; tpuf bills the 1.28 GB per-query minimum</summary>
-        <div class="fold-body">tpuf reports 0.615 GB scanned per DBpedia query &mdash; essentially the entire dataset (0.614 GB raw) &mdash; and invoices at the 1.28 GB per-query minimum (§4.3). Cost scales linearly with data size &times; QPS once above that floor. Qdrant server p99 = 2.5ms (1.3&times; p50); tpuf server p99 = 40ms (4&times; p50).</div>
+        <div class="fold-body">tpuf reports 0.615 GB scanned per DBpedia query &mdash; essentially the entire dataset (0.614 GB raw) &mdash; and invoices at the 1.28 GB per-query minimum (§4.2). Cost scales linearly with data size &times; QPS once above that floor. Qdrant server p99 = 2.5ms (1.3&times; p50); tpuf server p99 = 40ms (4&times; p50).</div>
       </details>
 
-      <h3>4.2 &mdash; Fixed-QPS Sweep</h3>
+      <h3>4.1 &mdash; Fixed-QPS Sweep</h3>
       <div class="iplot" id="iplot-qps">
         <div class="iplot-bar">
           <label>metric
@@ -861,7 +883,7 @@ canvas {
         Qdrant server p99 stays at 2.5ms from 1&rarr;50 QPS &mdash; the single node has ample headroom. tpuf server p99 is 25&ndash;46ms (flat at higher floor).
       </div>
 
-      <h3>4.3 &mdash; Cost Model by Dataset Scale</h3>
+      <h3>4.2 &mdash; Cost Model by Dataset Scale</h3>
       <p>turbopuffer charges three components independently; Qdrant charges a flat monthly cluster fee.</p>
       <div class="table-wrap">
         <table>
@@ -920,7 +942,6 @@ canvas {
         </div>
       </div>
 
-      <h3>5.1 &mdash; turbopuffer (serverless, hot NVMe cache)</h3>
       <div class="table-wrap">
         <table>
           <thead>
@@ -934,7 +955,6 @@ canvas {
         </table>
       </div>
 
-      <h3>5.2 &mdash; Qdrant (always warm &mdash; HNSW in RAM)</h3>
       <div class="table-wrap">
         <table>
           <thead>
@@ -1007,7 +1027,7 @@ canvas {
       </details>
       <details class="foldout tpuf">
         <summary>The 0.256 GB/query is tpuf's former billing floor, not scan overhead (now 1.28 GB)</summary>
-        <div class="fold-body">tpuf reported 0.256 GB billed per MT query vs ~0.031 GB raw vector data per namespace (10K &times; 768-dim &times; 4B). The 0.256 GB is not scan overhead &mdash; it exactly matches turbopuffer&rsquo;s former 256 MB per-query billing minimum. That floor was raised to <strong>1.28 GB per query</strong> in Feb 2026 (see §4.3), so small namespaces bill 5&times; more per query today than this measured value.</div>
+        <div class="fold-body">tpuf reported 0.256 GB billed per MT query vs ~0.031 GB raw vector data per namespace (10K &times; 768-dim &times; 4B). The 0.256 GB is not scan overhead &mdash; it exactly matches turbopuffer&rsquo;s former 256 MB per-query billing minimum. That floor was raised to <strong>1.28 GB per query</strong> in Feb 2026 (see §4.2), so small namespaces bill 5&times; more per query today than this measured value.</div>
       </details>
     </section>
 
@@ -2620,6 +2640,60 @@ document.addEventListener('DOMContentLoaded', function() {
   function logticks(lo,hi){ const out=[]; for(let k=Math.floor(Math.log10(lo)); k<=Math.ceil(Math.log10(hi)); k++) for(const b of [1,2,5]){ const v=b*10**k; if(v>=lo*0.95 && v<=hi*1.05) out.push(v); } return out; }
   const gfmt = v => v>=1000 ? (v/1000).toFixed(1)+'K' : v>=100 ? Math.round(v) : v>=10 ? v.toFixed(0) : v.toFixed(1);
 
+  /* ── Plot/table view toggle ──
+     The table view relocates the section's ORIGINAL full tables (all
+     columns preserved — p=8 rows, ~Total RPS, Mean, Billed GB/q, …) so
+     nothing is lost; plots without an original table generate one from
+     the data model. Prose observations stay outside as inline callouts. */
+  const dot = e => e==='tpuf' ? '<span class="chip-tpuf"></span>' : e==='qdrant' ? '<span class="chip-qdrant"></span>' : '';
+  const cdot = c => `<span style="color:${c}">●</span> `;
+  function fmtCell(v, M){ if(v===undefined||v===null) return '—'; const f=M.fmt||gfmt, u=M.unit||'';
+    return Array.isArray(v) ? `${f(v[0])}–${f(v[1])}${u}` : `${f(v)}${u}`; }
+  // pull the section's .table-wrap(s) whose first <th> matches, remove the
+  // originals, return their combined HTML (preserves every column verbatim)
+  function grabTables(root, firstThLabels){
+    const sec = root.closest('section'); if(!sec) return '';
+    let html='';
+    [...sec.querySelectorAll('.table-wrap')].forEach(tw => {
+      const th = tw.querySelector('th');
+      if(th && firstThLabels.includes(th.textContent.trim())){ html += tw.innerHTML; tw.remove(); }
+    });
+    return html;
+  }
+  function mountView(root, source){
+    const bar=root.querySelector('.iplot-bar'), sel=root.querySelector('.iplot-metric');
+    if(sel && sel.closest('label')) sel.closest('label').classList.add('iplot-metric-label');
+    const panel=root.querySelector('.iplot-panel'), svg=root.querySelector('.iplot-svg');
+    const tw=document.createElement('div'); tw.className='iplot-tablewrap'; tw.style.display='none'; panel.appendChild(tw);
+    let html=null; // lazy
+    const view=document.createElement('div'); view.className='iplot-view';
+    view.innerHTML='<button class="on" data-v="plot">▤&nbsp;plot</button><button data-v="table">▦&nbsp;table</button>';
+    bar.appendChild(view);
+    view.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+      const table=b.dataset.v==='table';
+      view.querySelectorAll('button').forEach(x => x.classList.toggle('on', x===b));
+      root.classList.toggle('table-mode', table);
+      svg.style.display = table ? 'none' : 'block';
+      tw.style.display = table ? 'block' : 'none';
+      if(table && html===null){ html = typeof source==='function' ? source() : source; tw.innerHTML = html; }
+    }));
+  }
+  // generated tables for plots that never had an original (recall §7, cores §8.2)
+  function sweepTable(cfg){
+    const xs=[...new Set(cfg.series.flatMap(s=>s.xs))].sort((a,b)=>a-b);
+    const cols=[]; cfg.series.forEach(s => Object.keys(cfg.mets).forEach(k => { if(s.data[k]) cols.push([s,k]); }));
+    let h='<table><thead><tr><th>'+cfg.xlabel.replace(/\s*→\s*$/,'')+'</th>'+
+      cols.map(([s,k])=>`<th>${cdot(s.color)}${s.name} · ${k}</th>`).join('')+'</tr></thead><tbody>';
+    xs.forEach(x => { h+=`<tr><td>${x}</td>`+cols.map(([s,k])=>{ const i=s.xs.indexOf(x); return `<td>${i>=0?fmtCell(s.data[k][i],cfg.mets[k]):'—'}</td>`; }).join('')+'</tr>'; });
+    return h+'</tbody></table>';
+  }
+  function recallTable(R){
+    const rows=[['filtered','H&M — filtered'],['unfiltered','DBpedia — unfiltered'],['mt','Multi-tenant']];
+    let h='<table><thead><tr><th>Scenario</th><th>turbopuffer</th><th>Qdrant</th></tr></thead><tbody>';
+    rows.forEach(([k,lab]) => { const r=R[k]; h+=`<tr><td>${lab}</td><td>${dot('tpuf')}${r[0].v.toFixed(2)}%</td><td>${dot('qdrant')}${r[1].v.toFixed(2)}%</td></tr>`; });
+    return h+'</tbody></table>';
+  }
+
   /* ═══ DBpedia bar explorer ═══ */
   const DBPEDIA = [
     { n:'tpuf serverless', e:'tpuf',
@@ -2896,12 +2970,15 @@ document.addEventListener('DOMContentLoaded', function() {
               {name:'turbopuffer', color:CO.tpuf, rows:RW_TPUF, yi:4} ] },
   }};
 
-  /* ═══ Init ═══ */
-  const rw = document.getElementById('iplot-rw'); if(rw) initTimeSeries(rw, RW);
-  const up = document.getElementById('iplot-upload'); if(up) initBarExplorer(up, UPLOAD, {lm:186});
-  const db = document.getElementById('iplot-dbpedia'); if(db) initBarExplorer(db, DBPEDIA);
-  const rc = document.getElementById('iplot-recall'); if(rc) initRecall(rc);
-  Object.keys(SWEEPS).forEach(id => { const el=document.getElementById(id); if(el) initSweep(el, SWEEPS[id]); });
+  /* ═══ Init ═══ (each plot folds in its original full table, or generates one) */
+  const rw = document.getElementById('iplot-rw'); if(rw){ initTimeSeries(rw, RW); mountView(rw, grabTables(rw, ['Phase'])); }
+  const up = document.getElementById('iplot-upload'); if(up){ initBarExplorer(up, UPLOAD, {lm:186}); mountView(up, grabTables(up, ['Dataset'])); }
+  const db = document.getElementById('iplot-dbpedia'); if(db){ initBarExplorer(db, DBPEDIA); mountView(db, grabTables(db, ['Engine'])); }
+  const rc = document.getElementById('iplot-recall'); if(rc){ initRecall(rc); mountView(rc, () => recallTable(RECALL)); }
+  const tableFor = { 'iplot-qps':['QPS'], 'iplot-hm-conc':['p','Concurrency'], 'iplot-mt-conc':['Config'] };
+  Object.keys(SWEEPS).forEach(id => { const el=document.getElementById(id); if(!el) return;
+    initSweep(el, SWEEPS[id]);
+    mountView(el, tableFor[id] ? grabTables(el, tableFor[id]) : (() => sweepTable(SWEEPS[id]))); });
 })();
 </script>
 </body>
