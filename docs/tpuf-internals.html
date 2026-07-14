@@ -616,6 +616,7 @@ canvas {
         <li><a href="#s7"><span class="nav-node">7</span>Write Throughput</a></li>
         <li><a href="#s8"><span class="nav-node">8</span>Write-Read</a></li>
         <li><a href="#s9"><span class="nav-node">9</span>Qdrant Disk</a></li>
+        <li><a href="#s10"><span class="nav-node">10</span>SPFresh Build</a></li>
       </ul>
     </nav>
   </aside>
@@ -872,6 +873,27 @@ canvas {
         <summary>ef=64 is the warm-disk sweet spot; putting the graph on disk too adds no real overhead</summary>
         <div class="fold-body">6.4ms p50 (+7% faster than RAM ef=128 — fewer candidates, fewer potential page faults), 97.4% recall (only &minus;1% from RAM). Putting the HNSW graph on disk too (<em>disk-all</em>) adds no measurable overhead — the graph is &lt;10 MB vs 586 MB of vector payload. At p=8 concurrency all warmed configs converge to 17–21ms p50; tpuf (48.7ms p99) edges out most Qdrant disk configs in tail latency at high concurrency, but loses 2&times; at p=1 steady-state.</div>
       </details>
+    </section>
+
+    <section class="section" id="s10">
+      <div class="section-header">
+        <div class="section-eyebrow tpuf-eye">&sect;10</div>
+        <h2>SPFresh Build: Queue Wait, Not Gradual</h2>
+      </div>
+      <p>turbopuffer&rsquo;s SPFresh index builds <em>asynchronously</em> after writes commit to the S3 WAL, on shared background indexers. This is the mechanism behind the wide upload-time range seen in the main report (DBpedia 25&ndash;268s across 5 runs): the total time is dominated by how long the namespace waits in the indexer queue, not by the build itself.</p>
+      <div class="iplot" id="iplot-spf">
+        <div class="iplot-bar">
+          <label>metric
+            <select class="iplot-metric"><option value="backlog" selected>unindexed backlog ↓</option></select>
+          </label>
+          <div class="iplot-legend"></div>
+        </div>
+        <div class="iplot-panel">
+          <div class="pt">Why the SPFresh range: post-upload build is a queue wait, not a gradual build</div>
+          <div class="ps">Three uploads. The backlog typically sits flat (waiting for a shared indexer) then drains in one step &mdash; total time is set by <em>when</em> an indexer picks up the namespace, not how long indexing takes. DBpedia's two curves used index-status polling; H&amp;M used the earlier exhaustive-scan signal (approximate, and it shows partial early progress before the final drain). Other DBpedia trials finished at 25s / 36s / 61s. Hover a point.</div>
+          <svg class="iplot-svg" viewBox="0 0 900 300" role="img" aria-label="SPFresh unindexed backlog over time, three trials"></svg>
+        </div>
+      </div>
     </section>
 
   </main>
@@ -1696,6 +1718,15 @@ document.addEventListener('DOMContentLoaded', function() {
   /* ═══ Init (internals plots only) ═══ */
   const rw = document.getElementById('iplot-rw'); if(rw){ initTimeSeries(rw, RW); mountView(rw, grabTables(rw, ['Phase'])); }
   const wm = document.getElementById('iplot-warmup'); if(wm){ initTimeSeries(wm, WARM); mountView(wm, () => tsTable(WARM, 'query #')); }
+  /* SPFresh post-upload build — backlog vs time (moved here from the main report §3) */
+  const SPF_183=[[0,100],[20,100],[41,100],[61,100],[81,100],[102,100],[122,100],[142,100],[163,100],[183,0]];
+  const SPF_268=[[0,100],[30,100],[61,100],[91,100],[122,100],[152,100],[182,100],[213,100],[243,100],[263,100],[268,0]];
+  const SPF_HM=[[1,100],[7,27],[20,27],[33,27],[46,27],[53,27],[58,0]];
+  const SPF={ xlabel:'seconds after last write →', mets:{ backlog:{ lab:'unindexed backlog % (↓ = indexed)', unit:'%', ymax:110, fmt:v=>v.toFixed(0), series:[
+    {name:'DBpedia · 183s', color:CO.tpuf, rows:SPF_183, yi:1},
+    {name:'DBpedia · 268s', color:'#7C3AED', rows:SPF_268, yi:1},
+    {name:'H&M · 58s', color:'#0D9488', rows:SPF_HM, yi:1} ] } }};
+  const spf = document.getElementById('iplot-spf'); if(spf){ initTimeSeries(spf, SPF); mountView(spf, () => tsTable(SPF, 'seconds')); }
   Object.keys(SWEEPS).forEach(id => { const el=document.getElementById(id); if(!el) return;
     initSweep(el, SWEEPS[id]);
     mountView(el, () => sweepTable(SWEEPS[id])); });

@@ -767,20 +767,6 @@ canvas {
         </div>
       </div>
 
-      <div class="iplot" id="iplot-spf">
-        <div class="iplot-bar">
-          <label>metric
-            <select class="iplot-metric"><option value="backlog" selected>unindexed backlog ↓</option></select>
-          </label>
-          <div class="iplot-legend"></div>
-        </div>
-        <div class="iplot-panel">
-          <div class="pt">Why the SPFresh range: post-upload build is a queue wait, not a gradual build</div>
-          <div class="ps">Three uploads. The backlog typically sits flat (waiting for a shared indexer) then drains in one step &mdash; total time is set by <em>when</em> an indexer picks up the namespace, not how long indexing takes. DBpedia's two curves used index-status polling; H&amp;M used the earlier exhaustive-scan signal (approximate, and it shows partial early progress before the final drain). Other DBpedia trials finished at 25s / 36s / 61s. Hover a point.</div>
-          <svg class="iplot-svg" viewBox="0 0 900 300" role="img" aria-label="SPFresh unindexed backlog over time, two trials"></svg>
-        </div>
-      </div>
-
       <div class="table-wrap">
         <table>
           <thead>
@@ -1828,16 +1814,6 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
     { n:'MT 1M · Qdrant', e:'qdrant', total:1230, up:1225, idx:5.1, wps:816, wp50:148, wp99:175, store:3.200 },
   ];
 
-  /* ═══ SPFresh post-upload build — backlog vs time ═══ */
-  const SPF_183 = [[0,100],[20,100],[41,100],[61,100],[81,100],[102,100],[122,100],[142,100],[163,100],[183,0]];
-  const SPF_268 = [[0,100],[30,100],[61,100],[91,100],[122,100],[152,100],[182,100],[213,100],[243,100],[263,100],[268,0]];
-  const SPF_HM  = [[1,100],[7,27],[20,27],[33,27],[46,27],[53,27],[58,0]];
-  const SPF = { xlabel:'seconds after last write →', mets:{
-    backlog: { lab:'unindexed backlog % (↓ = indexed)', unit:'%', ymax:110, fmt:v=>v.toFixed(0), series:[
-               {name:'DBpedia · 183s', color:CO.tpuf, rows:SPF_183, yi:1},
-               {name:'DBpedia · 268s', color:'#7C3AED', rows:SPF_268, yi:1},
-               {name:'H&M · 58s', color:'#0D9488', rows:SPF_HM, yi:1} ] } }};
-
   /* ═══ Cost model — break-even vs sustained query load (EXTENDIBLE) ═══
      tpuf pricing = launch plan (see tpuf-pricing-calculator.html).
      Qdrant $/mo is a single per-dataset field — swap it when a real Qdrant
@@ -1917,7 +1893,6 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
   }
 
   /* ═══ Init ═══ (each plot folds in its original full table, or generates one) */
-  const spf = document.getElementById('iplot-spf'); if(spf){ initTimeSeries(spf, SPF); mountView(spf, () => tsTable(SPF, 'seconds')); }
   const up = document.getElementById('iplot-upload'); if(up){ initBarExplorer(up, UPLOAD, {lm:300}); mountView(up, grabTables(up, ['Dataset'])); }
   const db = document.getElementById('iplot-dbpedia'); if(db){ initBarExplorer(db, DBPEDIA, {lm:212}); mountView(db, grabTables(db, ['Engine'])); }
   const rc = document.getElementById('iplot-recall'); if(rc){ initRecall(rc); mountView(rc, () => recallTable(RECALL)); }
