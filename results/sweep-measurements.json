@@ -1,0 +1,501 @@
+{
+  "_note": "Consolidated raw concurrency-sweep measurements (source of truth for the \u00a74 unified latency+throughput frontier and the \u00a73.1 write-throughput plot in docs/tpuf-detailed-report.html). rps_measured = completed queries / wall-clock (NOT per-worker x concurrency). Collected 2026-07-14 on tpuf-bench, uncontended, single client. Read sweep p=[1,2,4,8,16,32]; write sweep concurrency=[1,2,4,8,16], 10K vectors/level, into a scratch collection (main data untouched).",
+  "sweeps": {
+    "dbpedia/sweep/tpuf": {
+      "status": "done",
+      "at": "2026-07-14T09:06:26",
+      "source_run": "reproduce-2026-07-14T09-02-39",
+      "read": [
+        {
+          "p": 1,
+          "rps_measured": 30.6,
+          "p50_ms": 18.3,
+          "p90_ms": 60.6,
+          "p99_ms": 67.0,
+          "recall_pct": 98.42,
+          "n_errors": 0
+        },
+        {
+          "p": 2,
+          "rps_measured": 50.8,
+          "p50_ms": 27.3,
+          "p90_ms": 65.6,
+          "p99_ms": 80.6,
+          "recall_pct": 98.42,
+          "n_errors": 0
+        },
+        {
+          "p": 4,
+          "rps_measured": 68.7,
+          "p50_ms": 66.3,
+          "p90_ms": 77.5,
+          "p99_ms": 112.4,
+          "recall_pct": 98.42,
+          "n_errors": 0
+        },
+        {
+          "p": 8,
+          "rps_measured": 76.7,
+          "p50_ms": 78.4,
+          "p90_ms": 135.6,
+          "p99_ms": 152.3,
+          "recall_pct": 98.42,
+          "n_errors": 0
+        },
+        {
+          "p": 16,
+          "rps_measured": 73.5,
+          "p50_ms": 166.6,
+          "p90_ms": 237.2,
+          "p99_ms": 320.0,
+          "recall_pct": 98.42,
+          "n_errors": 0
+        },
+        {
+          "p": 32,
+          "rps_measured": 80.2,
+          "p50_ms": 316.3,
+          "p90_ms": 385.3,
+          "p99_ms": 1676.9,
+          "recall_pct": 98.42,
+          "n_errors": 0
+        }
+      ],
+      "write": [
+        {
+          "concurrency": 1,
+          "wps_measured": 430.4,
+          "batch_p50_ms": 228.6,
+          "batch_p99_ms": 1288.4
+        },
+        {
+          "concurrency": 2,
+          "wps_measured": 670.2,
+          "batch_p50_ms": 258.7,
+          "batch_p99_ms": 4030.9
+        },
+        {
+          "concurrency": 4,
+          "wps_measured": 969.9,
+          "batch_p50_ms": 311.2,
+          "batch_p99_ms": 3842.3
+        },
+        {
+          "concurrency": 8,
+          "wps_measured": 1023.0,
+          "batch_p50_ms": 408.1,
+          "batch_p99_ms": 5296.5
+        },
+        {
+          "concurrency": 16,
+          "wps_measured": 1236.6,
+          "batch_p50_ms": 791.5,
+          "batch_p99_ms": 4740.4
+        }
+      ]
+    },
+    "dbpedia/sweep/qdrant": {
+      "status": "done",
+      "at": "2026-07-14T09:17:47",
+      "source_run": "reproduce-2026-07-14T09-02-39",
+      "read": [
+        {
+          "p": 1,
+          "rps_measured": 50.4,
+          "p50_ms": 8.2,
+          "p90_ms": 56.2,
+          "p99_ms": 61.8,
+          "recall_pct": 98.19,
+          "n_errors": 0
+        },
+        {
+          "p": 2,
+          "rps_measured": 64.0,
+          "p50_ms": 11.4,
+          "p90_ms": 64.1,
+          "p99_ms": 69.4,
+          "recall_pct": 98.19,
+          "n_errors": 0
+        },
+        {
+          "p": 4,
+          "rps_measured": 79.7,
+          "p50_ms": 65.2,
+          "p90_ms": 74.1,
+          "p99_ms": 82.1,
+          "recall_pct": 98.19,
+          "n_errors": 0
+        },
+        {
+          "p": 8,
+          "rps_measured": 62.8,
+          "p50_ms": 87.9,
+          "p90_ms": 218.7,
+          "p99_ms": 414.0,
+          "recall_pct": 98.19,
+          "n_errors": 0
+        },
+        {
+          "p": 16,
+          "rps_measured": 57.6,
+          "p50_ms": 232.8,
+          "p90_ms": 483.3,
+          "p99_ms": 963.5,
+          "recall_pct": 98.19,
+          "n_errors": 0
+        },
+        {
+          "p": 32,
+          "rps_measured": 49.6,
+          "p50_ms": 465.1,
+          "p90_ms": 1353.6,
+          "p99_ms": 2624.4,
+          "recall_pct": 98.19,
+          "n_errors": 0
+        }
+      ],
+      "write": [
+        {
+          "concurrency": 1,
+          "wps_measured": 86.6,
+          "batch_p50_ms": 1433.9,
+          "batch_p99_ms": 2409.0
+        },
+        {
+          "concurrency": 2,
+          "wps_measured": 88.3,
+          "batch_p50_ms": 2748.5,
+          "batch_p99_ms": 6868.1
+        },
+        {
+          "concurrency": 4,
+          "wps_measured": 90.5,
+          "batch_p50_ms": 5348.0,
+          "batch_p99_ms": 9023.4
+        },
+        {
+          "concurrency": 8,
+          "wps_measured": 90.3,
+          "batch_p50_ms": 10645.7,
+          "batch_p99_ms": 17438.8
+        },
+        {
+          "concurrency": 16,
+          "wps_measured": 90.9,
+          "batch_p50_ms": 19825.3,
+          "batch_p99_ms": 31475.4
+        }
+      ]
+    },
+    "hm/sweep/tpuf": {
+      "status": "done",
+      "at": "2026-07-14T09:25:37",
+      "source_run": "reproduce-2026-07-14T09-20-08",
+      "read": [
+        {
+          "p": 1,
+          "rps_measured": 25.4,
+          "p50_ms": 27.2,
+          "p90_ms": 62.9,
+          "p99_ms": 80.6,
+          "recall_pct": 89.15,
+          "n_errors": 0
+        },
+        {
+          "p": 2,
+          "rps_measured": 43.2,
+          "p50_ms": 48.2,
+          "p90_ms": 66.4,
+          "p99_ms": 80.6,
+          "recall_pct": 89.16,
+          "n_errors": 0
+        },
+        {
+          "p": 4,
+          "rps_measured": 62.1,
+          "p50_ms": 70.3,
+          "p90_ms": 78.7,
+          "p99_ms": 90.8,
+          "recall_pct": 89.19,
+          "n_errors": 0
+        },
+        {
+          "p": 8,
+          "rps_measured": 76.7,
+          "p50_ms": 78.4,
+          "p90_ms": 138.0,
+          "p99_ms": 152.4,
+          "recall_pct": 89.14,
+          "n_errors": 0
+        },
+        {
+          "p": 16,
+          "rps_measured": 67.3,
+          "p50_ms": 166.2,
+          "p90_ms": 230.7,
+          "p99_ms": 1757.8,
+          "recall_pct": 89.19,
+          "n_errors": 0
+        },
+        {
+          "p": 32,
+          "rps_measured": 76.3,
+          "p50_ms": 331.0,
+          "p90_ms": 401.7,
+          "p99_ms": 1019.3,
+          "recall_pct": 89.16,
+          "n_errors": 0
+        }
+      ],
+      "write": [
+        {
+          "concurrency": 1,
+          "wps_measured": 365.7,
+          "batch_p50_ms": 262.2,
+          "batch_p99_ms": 1446.5
+        },
+        {
+          "concurrency": 2,
+          "wps_measured": 541.0,
+          "batch_p50_ms": 262.5,
+          "batch_p99_ms": 7318.8
+        },
+        {
+          "concurrency": 4,
+          "wps_measured": 781.6,
+          "batch_p50_ms": 328.3,
+          "batch_p99_ms": 5429.2
+        },
+        {
+          "concurrency": 8,
+          "wps_measured": 911.8,
+          "batch_p50_ms": 544.5,
+          "batch_p99_ms": 5238.7
+        },
+        {
+          "concurrency": 16,
+          "wps_measured": 918.6,
+          "batch_p50_ms": 1038.3,
+          "batch_p99_ms": 6275.5
+        }
+      ]
+    },
+    "hm/sweep/qdrant": {
+      "status": "done",
+      "at": "2026-07-14T11:38:27",
+      "source_run": "reproduce-2026-07-14T11-22-50",
+      "read": [
+        {
+          "p": 1,
+          "rps_measured": 50.9,
+          "p50_ms": 8.0,
+          "p90_ms": 56.8,
+          "p99_ms": 62.0,
+          "recall_pct": 95.85,
+          "n_errors": 0
+        },
+        {
+          "p": 2,
+          "rps_measured": 59.8,
+          "p50_ms": 11.4,
+          "p90_ms": 65.6,
+          "p99_ms": 72.2,
+          "recall_pct": 95.85,
+          "n_errors": 0
+        },
+        {
+          "p": 4,
+          "rps_measured": 72.7,
+          "p50_ms": 67.2,
+          "p90_ms": 76.5,
+          "p99_ms": 88.6,
+          "recall_pct": 95.85,
+          "n_errors": 0
+        },
+        {
+          "p": 8,
+          "rps_measured": 59.6,
+          "p50_ms": 93.3,
+          "p90_ms": 232.6,
+          "p99_ms": 456.5,
+          "recall_pct": 95.85,
+          "n_errors": 0
+        },
+        {
+          "p": 16,
+          "rps_measured": 51.9,
+          "p50_ms": 232.7,
+          "p90_ms": 561.6,
+          "p99_ms": 1826.8,
+          "recall_pct": 95.85,
+          "n_errors": 0
+        },
+        {
+          "p": 32,
+          "rps_measured": 51.9,
+          "p50_ms": 407.2,
+          "p90_ms": 1350.6,
+          "p99_ms": 2302.1,
+          "recall_pct": 95.85,
+          "n_errors": 0
+        }
+      ],
+      "write": [
+        {
+          "concurrency": 1,
+          "wps_measured": 65.3,
+          "batch_p50_ms": 1909.6,
+          "batch_p99_ms": 3337.9
+        },
+        {
+          "concurrency": 2,
+          "wps_measured": 66.8,
+          "batch_p50_ms": 3600.0,
+          "batch_p99_ms": 9919.6
+        },
+        {
+          "concurrency": 4,
+          "wps_measured": 69.3,
+          "batch_p50_ms": 6957.0,
+          "batch_p99_ms": 11613.2
+        },
+        {
+          "concurrency": 8,
+          "wps_measured": 66.8,
+          "batch_p50_ms": 14064.6,
+          "batch_p99_ms": 22866.1
+        },
+        {
+          "concurrency": 16,
+          "wps_measured": 69.6,
+          "batch_p50_ms": 27347.6,
+          "batch_p99_ms": 40757.0
+        }
+      ]
+    },
+    "mt/sweep/tpuf": {
+      "status": "done",
+      "at": "2026-07-14T11:42:21",
+      "source_run": "reproduce-2026-07-14T11-38-41",
+      "read": [
+        {
+          "p": 1,
+          "rps_measured": 24.1,
+          "p50_ms": 38.9,
+          "p90_ms": 57.9,
+          "p99_ms": 80.3,
+          "recall_pct": 100.0,
+          "n_errors": 0
+        },
+        {
+          "p": 2,
+          "rps_measured": 42.4,
+          "p50_ms": 49.9,
+          "p90_ms": 72.1,
+          "p99_ms": 86.0,
+          "recall_pct": 100.0,
+          "n_errors": 0
+        },
+        {
+          "p": 4,
+          "rps_measured": 62.4,
+          "p50_ms": 71.1,
+          "p90_ms": 79.1,
+          "p99_ms": 115.7,
+          "recall_pct": 100.0,
+          "n_errors": 0
+        },
+        {
+          "p": 8,
+          "rps_measured": 91.3,
+          "p50_ms": 72.6,
+          "p90_ms": 84.3,
+          "p99_ms": 223.2,
+          "recall_pct": 100.0,
+          "n_errors": 0
+        },
+        {
+          "p": 16,
+          "rps_measured": 94.7,
+          "p50_ms": 149.9,
+          "p90_ms": 165.5,
+          "p99_ms": 230.6,
+          "recall_pct": 100.0,
+          "n_errors": 0
+        },
+        {
+          "p": 32,
+          "rps_measured": 93.9,
+          "p50_ms": 246.7,
+          "p90_ms": 319.7,
+          "p99_ms": 1269.6,
+          "recall_pct": 100.0,
+          "n_errors": 0
+        }
+      ],
+      "write": []
+    },
+    "mt/sweep/qdrant": {
+      "status": "done",
+      "at": "2026-07-14T11:44:17",
+      "source_run": "reproduce-2026-07-14T11-38-41",
+      "read": [
+        {
+          "p": 1,
+          "rps_measured": 56.8,
+          "p50_ms": 6.7,
+          "p90_ms": 55.3,
+          "p99_ms": 60.8,
+          "recall_pct": 100.0,
+          "n_errors": 0
+        },
+        {
+          "p": 2,
+          "rps_measured": 65.7,
+          "p50_ms": 9.8,
+          "p90_ms": 64.7,
+          "p99_ms": 146.0,
+          "recall_pct": 100.0,
+          "n_errors": 0
+        },
+        {
+          "p": 4,
+          "rps_measured": 83.8,
+          "p50_ms": 62.8,
+          "p90_ms": 73.0,
+          "p99_ms": 80.5,
+          "recall_pct": 100.0,
+          "n_errors": 0
+        },
+        {
+          "p": 8,
+          "rps_measured": 69.1,
+          "p50_ms": 84.9,
+          "p90_ms": 172.7,
+          "p99_ms": 331.1,
+          "recall_pct": 100.0,
+          "n_errors": 0
+        },
+        {
+          "p": 16,
+          "rps_measured": 58.2,
+          "p50_ms": 228.6,
+          "p90_ms": 545.8,
+          "p99_ms": 870.8,
+          "recall_pct": 100.0,
+          "n_errors": 0
+        },
+        {
+          "p": 32,
+          "rps_measured": 56.8,
+          "p50_ms": 398.5,
+          "p90_ms": 1132.2,
+          "p99_ms": 2237.5,
+          "recall_pct": 100.0,
+          "n_errors": 0
+        }
+      ],
+      "write": []
+    }
+  }
+}

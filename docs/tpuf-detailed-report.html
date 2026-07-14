@@ -1016,52 +1016,22 @@ canvas {
         <p>Filtered vector search is where architecture choices have the sharpest consequences. SPFresh (turbopuffer) post-filters: it traverses centroids first, then discards non-matching vectors. Qdrant integrates the filter directly into HNSW traversal, preserving effective graph structure.</p>
       </div>
 
-      <div class="iplot" id="iplot-hm-conc">
-        <div class="iplot-bar">
-          <label>metric
-            <select class="iplot-metric">
-              <option value="rpst" selected>total RPS — throughput ↑</option>
-              <option value="rpsw">RPS / worker ↑</option>
-              <option value="lat">search latency ↓</option>
-            </select>
-          </label>
-          <div class="iplot-legend"></div>
-        </div>
-        <div class="iplot-panel">
-          <div class="pt">H&amp;M filtered · vs client concurrency (p = 1 / 8 / 32)</div>
-          <div class="ps">Log x, log y. Qdrant leads single-stream; at p=32 its 2-CPU node saturates while tpuf autoscales. Hover a point; click an engine to toggle.</div>
-          <svg class="iplot-svg" viewBox="0 0 900 320" role="img" aria-label="H&M filtered search vs concurrency"></svg>
-        </div>
-      </div>
-
+      <p style="color:var(--text-2);font-size:13.5px;">Latency &amp; throughput vs concurrency for H&amp;M lives in the <a href="#s4">unified explorer above</a> (select <em>H&amp;M</em>). Below is the section-specific detail the frontier doesn&rsquo;t show &mdash; recall, per-query billing, and internal (server-side) latency.</p>
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>p</th><th>RPS/worker</th><th>~Total RPS</th><th>Mean</th><th>p50</th><th>p99</th><th>Internal p50</th><th>Internal p99</th><th>Billed GB/q</th><th>Recall</th></tr>
+            <tr><th>Engine</th><th>Recall (filtered)</th><th>Billed GB / query</th><th>Internal (server) p50</th><th>Internal p99</th></tr>
           </thead>
           <tbody>
-            <tr><td>1</td><td>47.4</td><td>47</td><td>21.1ms</td><td>19.8ms</td><td>50.0ms</td><td>14ms</td><td>44ms</td><td>0.872 GB</td><td>89.14%</td></tr>
-            <tr><td>8</td><td>42.0</td><td>336</td><td>23.8ms</td><td>22.3ms</td><td>41.9ms</td><td>14ms</td><td>29ms</td><td>0.872 GB</td><td>89.18%</td></tr>
-            <tr><td>32</td><td>12.8</td><td>410</td><td>78.0ms</td><td>67.5ms</td><td>394.3ms</td><td>15ms</td><td>35ms</td><td>0.872 GB</td><td>89.17%</td></tr>
+            <tr><td><span class="chip-tpuf"></span>tpuf serverless</td><td>89.14%</td><td>0.872 GB (billed at 1.28 floor)</td><td>14–15ms</td><td>29–44ms</td></tr>
+            <tr><td><span class="chip-qdrant"></span>Qdrant HNSW</td><td class="win">95.85%</td><td>unlimited (flat fee)</td><td class="win">1.1ms</td><td>—</td></tr>
           </tbody>
         </table>
       </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Concurrency</th><th>RPS/worker</th><th>~Total RPS</th><th>Mean</th><th>p50</th><th>p99</th><th>Internal p50</th><th>Recall</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>p=1</td><td class="win">149.6</td><td>150</td><td class="win">6.7ms</td><td class="win">6.6ms</td><td class="win">9.9ms</td><td class="win">1.1ms</td><td class="win">95.85%</td></tr>
-            <tr><td>p=8</td><td>42.5</td><td>340</td><td>23.5ms</td><td>20.0ms</td><td>69.0ms</td><td>1.1ms</td><td>95.85%</td></tr>
-            <tr><td>p=32</td><td>8.3</td><td>266</td><td>120.1ms</td><td>87.0ms</td><td>517.2ms</td><td>1.1ms</td><td>95.85%</td></tr>
-          </tbody>
-        </table>
-      </div>
+      <p style="font-size:11px;color:var(--text-2);margin:6px 2px 0;font-style:italic;">Internal latency = engine-reported server-side time (excludes network); ranges span p=1→32. Recall &amp; billed-GB are concurrency-independent.</p>
 
       <div class="callout tpuf">
-        <strong>Cold-start penalty (prior measurement):</strong> tpuf cold p99 = 1,891ms (server_p99 = 1,777ms — 94% server-side S3 fetches). Hot cache (NVMe, above) p99 = 50ms — a 38&times; improvement once centroids are cached. Qdrant has no cold-start: HNSW lives in RAM permanently.
+        <strong>Cold-start penalty (prior measurement):</strong> tpuf cold p99 = 1,891ms (server_p99 = 1,777ms — 94% server-side S3 fetches). Hot cache (NVMe) p99 ≈ 50ms — a 38&times; improvement once centroids are cached. Qdrant has no cold-start: HNSW lives in RAM permanently.
       </div>
       <details class="foldout tpuf">
         <summary>Why filtered recall drops — SPFresh post-filters; Qdrant filters inside HNSW traversal</summary>
@@ -1076,45 +1046,26 @@ canvas {
         <h2>Multi-Tenant Search</h2>
         <p>100 tenants, ~10,000 vectors each (1M total). At this per-tenant scale, both engines achieve 100% recall &mdash; the index structures have negligible approximation error over 10K vectors. Throughput tells the real story.</p>
       </div>
-      <div class="iplot" id="iplot-mt-conc">
-        <div class="iplot-bar">
-          <label>metric
-            <select class="iplot-metric">
-              <option value="rpst" selected>total RPS — throughput ↑</option>
-              <option value="rpsw">RPS / worker ↑</option>
-              <option value="lat">search latency ↓</option>
-            </select>
-          </label>
-          <div class="iplot-legend"></div>
-        </div>
-        <div class="iplot-panel">
-          <div class="pt">Multi-tenant (100 × 10K) · vs client concurrency (p = 1 / 8 / 32)</div>
-          <div class="ps">Log x, log y. Both hit 100% recall here. Qdrant's single 2-CPU node leads until it saturates past p=8; tpuf autoscales and overtakes on total throughput at p=32. Hover a point; click an engine to toggle.</div>
-          <svg class="iplot-svg" viewBox="0 0 900 320" role="img" aria-label="Multi-tenant throughput and latency vs concurrency"></svg>
-        </div>
-      </div>
+      <p style="color:var(--text-2);font-size:13.5px;">Latency &amp; throughput vs concurrency for multi-tenant lives in the <a href="#s4">unified explorer above</a> (select <em>Multi-tenant</em>). Both engines hit 100% recall at this per-tenant scale, so the section-specific detail is billing and internal latency:</p>
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>Config</th><th>p</th><th>RPS/worker</th><th>~Total RPS</th><th>p50</th><th>p99</th><th>Internal p50</th><th>Internal p99</th><th>Billed GB/q</th><th>Recall</th></tr>
+            <tr><th>Engine</th><th>Recall</th><th>Billed GB / query</th><th>Internal (server) p50</th><th>Internal p99</th></tr>
           </thead>
           <tbody>
-            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>1</td><td>33.5</td><td>34</td><td>24.0ms</td><td>119.6ms</td><td>19ms</td><td>114ms</td><td>0.256 GB</td><td>100%</td></tr>
-            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>1</td><td class="win">184.6</td><td class="win">185</td><td class="win">5.3ms</td><td class="win">9.7ms</td><td>—</td><td>—</td><td>—</td><td>100%</td></tr>
-            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>8</td><td class="win">43.7</td><td>350</td><td class="win">21.7ms</td><td class="win">54.9ms</td><td>16ms</td><td>41ms</td><td>0.256 GB</td><td>100%</td></tr>
-            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>8</td><td>46.9</td><td class="win">375</td><td>17.3ms</td><td>96.8ms</td><td>—</td><td>—</td><td>—</td><td>100%</td></tr>
-            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>32</td><td class="win">16.8</td><td class="win">538</td><td>55.3ms</td><td>207ms</td><td>15ms</td><td>29ms</td><td>0.256 GB</td><td>100%</td></tr>
-            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>32</td><td>9.5</td><td>304</td><td>74.5ms</td><td>444.8ms</td><td>—</td><td>—</td><td>—</td><td>100%</td></tr>
+            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>100%</td><td>0.256 GB (former 256 MB floor; now 1.28 GB)</td><td>15–19ms</td><td>29–114ms</td></tr>
+            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>100%</td><td>unlimited (flat fee)</td><td>—</td><td>—</td></tr>
           </tbody>
         </table>
       </div>
+      <p style="font-size:11px;color:var(--text-2);margin:6px 2px 0;font-style:italic;">Internal latency = engine-reported server-side time; ranges span p=1→32. Qdrant multi-tenant internal latency was not separately captured.</p>
       <details class="foldout neutral">
         <summary>Why both engines hit 100% recall at ~10K vectors per tenant</summary>
         <div class="fold-body">With ~10,000 vectors per tenant, both HNSW (Qdrant: <code>m=0, payload_m=16</code> builds per-tenant sub-graphs) and SPFresh centroid structures (tpuf) have negligible approximation error &mdash; the per-tenant index is small enough for near-exhaustive traversal. The multi-tenant comparison is purely a throughput and cost question, not a recall quality question.</div>
       </details>
       <details class="foldout neutral">
         <summary>p=32 crossover — tpuf autoscales past Qdrant's saturated 2-CPU node</summary>
-        <div class="fold-body">tpuf outperforms the single-node Qdrant at p=32 (~538 vs ~304 total RPS) because Qdrant&rsquo;s 2CPU node saturates past p=8 (total RPS falls 375&rarr;304 while p99 hits 445ms). tpuf autoscales horizontally and keeps gaining. This is a node-sizing issue: a larger Qdrant instance restores the 5&times; advantage at all concurrency levels.</div>
+        <div class="fold-body">On the fresh measured sweep (single client), tpuf overtakes the single-node Qdrant from p=8 onward — <strong>~91 vs ~69 RPS at p=8, ~94 vs ~57 at p=32</strong> — because Qdrant&rsquo;s 2-CPU node saturates past p=4 (measured throughput falls 84&rarr;57 RPS while its p99 climbs to ~2.2s). tpuf autoscales horizontally and keeps gaining. This is a node-sizing issue: a larger Qdrant instance would raise its ceiling. See the unified explorer in §4 (select Multi-tenant) for the full curves.</div>
       </details>
       <details class="foldout tpuf">
         <summary>The 0.256 GB/query is tpuf's former billing floor, not scan overhead (now 1.28 GB)</summary>
@@ -1790,18 +1741,9 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
         p50:[7.9,7.7,7.4,7.6,7.3], p99:[22.2,14.6,12.2,13.0,10.7],
         srv50:[2.0,2.0,2.0,1.9,1.9], srv99:[2.7,2.5,2.5,2.5,2.5], cost:[26.10,26.10,26.10,26.10,26.10] } },
     ]},
-    'iplot-hm-conc': { xlabel:'client concurrency (p) →', mets:LAT, series:[
-      { name:'turbopuffer', color:CO.tpuf, xs:[1,8,32], data:{
-        rpst:[47,336,410], rpsw:[47.4,42.0,12.8], p50:[19.8,22.3,67.5], p99:[50.0,41.9,394.3] } },
-      { name:'Qdrant', color:CO.qdrant, xs:[1,8,32], data:{
-        rpst:[150,340,266], rpsw:[149.6,42.5,8.3], p50:[6.6,20.0,87.0], p99:[9.9,69.0,517.2] } },
-    ]},
-    'iplot-mt-conc': { xlabel:'client concurrency (p) →', mets:LAT, series:[
-      { name:'turbopuffer', color:CO.tpuf, xs:[1,8,32], data:{
-        rpst:[34,350,538], rpsw:[33.5,43.7,16.8], p50:[24.0,21.7,55.3], p99:[119.6,54.9,207] } },
-      { name:'Qdrant', color:CO.qdrant, xs:[1,8,32], data:{
-        rpst:[185,375,304], rpsw:[184.6,46.9,9.5], p50:[5.3,17.3,74.5], p99:[9.7,96.8,444.8] } },
-    ]},
+    /* §5 H&M / §6 MT per-concurrency sweeps removed — superseded by the unified
+       §4 dual-axis frontier (measured rps_measured, all datasets). Raw data lives
+       in the committed results/reproduce-<ts> state.json files. */
     'iplot-write-conc': { xlabel:'write concurrency →', xlog:true, xticks:[1,2,4,8,16], mets:{
         wps:{lab:'write throughput · WPS (↑ better)',unit:'',fam:'wps'},
         blat:{lab:'batch latency · p50–p99 ms (↓ better)',unit:' ms',band:['bp50','bp99'],fam:'wlat'} },
@@ -1913,7 +1855,7 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
   const up = document.getElementById('iplot-upload'); if(up){ initBarExplorer(up, UPLOAD, {lm:300}); mountView(up, grabTables(up, ['Dataset'])); }
   const db = document.getElementById('iplot-dbpedia'); if(db){ initBarExplorer(db, DBPEDIA, {lm:212}); mountView(db, grabTables(db, ['Engine'])); }
   const rc = document.getElementById('iplot-recall'); if(rc){ initRecall(rc); mountView(rc, () => recallTable(RECALL)); }
-  const tableFor = { 'iplot-qps':['QPS'], 'iplot-hm-conc':['p','Concurrency'], 'iplot-mt-conc':['Config'] };
+  const tableFor = { 'iplot-qps':['QPS'] };
   Object.keys(SWEEPS).forEach(id => { const el=document.getElementById(id); if(!el) return;
     initSweep(el, SWEEPS[id]);
     mountView(el, tableFor[id] ? grabTables(el, tableFor[id]) : (() => sweepTable(SWEEPS[id]))); });
