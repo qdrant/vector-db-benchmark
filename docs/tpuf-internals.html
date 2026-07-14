@@ -1391,11 +1391,24 @@ document.addEventListener('DOMContentLoaded', function() {
       [0,0.25,0.5,0.75,1].forEach(f => { const v=dom[0]+span*f, x=m.l+f*pw;
         g += `<line x1="${x}" y1="${m.t}" x2="${x}" y2="${m.t+ph}" stroke="${GRID}"/>`+
              `<text x="${x}" y="${m.t+ph+16}" text-anchor="middle" font-size="10.5" fill="${MUT}" font-family="var(--font-mono)">${tf(v)}</text>`; });
+      const btag = k => k.endsWith('mean') ? 'mean' : k.endsWith('50') ? 'p50' : k.endsWith('99') ? 'p99' : '';
       rows.forEach((d,i) => {
-        const val=bandVal(d, M), c=CO[d.e], y=m.t+i*step+(step-bh)/2;
+        const c=CO[d.e], f=M.fmt||gfmt;
+        if(M.band){  // two adjacent bars (median + tail), not a fused range
+          const tA=btag(M.band[0]), tB=btag(M.band[1]), vA=d[M.band[0]], vB=d[M.band[1]];
+          const bh2=Math.max((bh-3)/2, 4), yA=m.t+i*step+(step-bh)/2, yB=yA+bh2+3;
+          g += `<g class="mk" data-tip="${d.n}||${M.lab.split(' (')[0]}||${tA} ${f(vA)}${M.unit} · ${tB} ${f(vB)}${M.unit}">`;
+          g += `<rect x="${m.l}" y="${yA}" width="${Math.max(xS(vA)-m.l,1)}" height="${bh2}" rx="2" fill="${c}" fill-opacity="0.9"/>`;
+          g += `<rect x="${m.l}" y="${yB}" width="${Math.max(xS(vB)-m.l,1)}" height="${bh2}" rx="2" fill="${c}" fill-opacity="0.42"/></g>`;
+          g += `<text x="${m.l-8}" y="${m.t+i*step+step/2+3.5}" text-anchor="end" font-size="11" fill="${INK}" font-family="var(--font-mono)">${d.n}</text>`;
+          g += `<text x="${xS(vA)+6}" y="${yA+bh2/2+3.5}" font-size="9.5" fill="${MUT}" font-family="var(--font-mono)">${tA} ${f(vA)}${M.unit}</text>`;
+          g += `<text x="${xS(vB)+6}" y="${yB+bh2/2+3.5}" font-size="9.5" fill="${MUT}" font-family="var(--font-mono)">${tB} ${f(vB)}${M.unit}</text>`;
+          return;
+        }
+        const val=bandVal(d, M), y=m.t+i*step+(step-bh)/2;
         const xlo=xS(lo(val)), xhi=xS(hi(val)), wlo=Math.max(xlo-m.l,1);
         const range = Array.isArray(val);
-        const label = range ? `${M.fmt(lo(val))}–${M.fmt(hi(val))}${M.unit}` : `${M.fmt(val)}${M.unit}`;
+        const label = range ? `${f(lo(val))}–${f(hi(val))}${M.unit}` : `${f(val)}${M.unit}`;
         g += `<g class="mk" data-tip="${d.n}||${M.lab.split(' (')[0]}||${label}">`;
         g += `<rect x="${m.l}" y="${y}" width="${wlo}" height="${bh}" rx="2" fill="${c}" fill-opacity="0.9"/>`;
         if(range && xhi>xlo) g += `<rect x="${xlo}" y="${y}" width="${xhi-xlo}" height="${bh}" rx="2" fill="${c}" fill-opacity="0.32"/>`;
