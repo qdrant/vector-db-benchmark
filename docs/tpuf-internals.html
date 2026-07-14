@@ -1610,6 +1610,43 @@ document.addEventListener('DOMContentLoaded', function() {
     draw();
   }
 
+  /* ═══ Dual-axis: latency (left, log) + throughput (right, linear) vs concurrency ═══
+     cfg = { xs:[…], xlabel, rightLab, latMets:{key:{lab}}, series:[{name,color,p50,p99,rps}] } */
+  function initDualAxis(root, cfg){
+    const svg=root.querySelector('.iplot-svg'), sel=root.querySelector('.iplot-metric'), legendEl=root.querySelector('.iplot-legend');
+    const hidden=new Set(); let latM = sel ? sel.value : Object.keys(cfg.latMets)[0];
+    legendEl.innerHTML='<span class="lab">engine</span>'+cfg.series.map(s=>`<span class="eng" data-n="${s.name}"><span class="sw" style="background:${s.color}"></span>${s.name}</span>`).join('');
+    legendEl.querySelectorAll('.eng').forEach(el=>el.addEventListener('click',()=>{const n=el.dataset.n;hidden.has(n)?hidden.delete(n):hidden.add(n);el.classList.toggle('off',hidden.has(n));draw();}));
+    const W=900,H=340,m={t:16,r:64,l:62,b:42},pw=W-m.l-m.r,ph=H-m.t-m.b;
+    const xs=cfg.xs, l2=Math.log2, xmin=xs[0], xmax=xs[xs.length-1];
+    const xS=x=>m.l+(l2(x)-l2(xmin))/(l2(xmax)-l2(xmin)||1)*pw;
+    function draw(){
+      const vis=cfg.series.filter(s=>!hidden.has(s.name)); const LM=cfg.latMets[latM];
+      const lat=[].concat(...vis.map(s=>s[latM])), lmin=Math.min(...lat), lmax=Math.max(...lat);
+      const ly0=Math.log10(lmin*0.7), ly1=Math.log10(lmax*1.4);
+      const leftYS=v=>m.t+(1-(Math.log10(Math.max(v,0.1))-ly0)/(ly1-ly0))*ph;
+      const rmax=Math.max(...[].concat(...vis.map(s=>s.rps)),1)*1.1, rightYS=v=>m.t+(1-v/rmax)*ph;
+      let g=`<text transform="translate(13 ${m.t+ph/2}) rotate(-90)" text-anchor="middle" font-size="11" fill="${INK}">${LM.lab} — solid</text>`;
+      g+=`<text transform="translate(${W-11} ${m.t+ph/2}) rotate(-90)" text-anchor="middle" font-size="11" fill="${INK}">${cfg.rightLab} — dashed</text>`;
+      logticks(lmin*0.7,lmax*1.4).forEach(v=>{const y=leftYS(v);g+=`<line x1="${m.l}" y1="${y}" x2="${m.l+pw}" y2="${y}" stroke="${GRID}"/>`+`<text x="${m.l-6}" y="${y+3.5}" text-anchor="end" font-size="10" fill="${MUT}" font-family="var(--font-mono)">${v>=1000?v/1000+'K':v}</text>`;});
+      [0,0.25,0.5,0.75,1].forEach(f=>{const y=rightYS(rmax*f);g+=`<text x="${m.l+pw+6}" y="${y+3.5}" text-anchor="start" font-size="10" fill="${MUT}" font-family="var(--font-mono)">${Math.round(rmax*f)}</text>`;});
+      xs.forEach(x=>{const px=xS(x);g+=`<line x1="${px}" y1="${m.t}" x2="${px}" y2="${m.t+ph}" stroke="${GRID}"/>`+`<text x="${px}" y="${m.t+ph+18}" text-anchor="middle" font-size="10.5" fill="${MUT}" font-family="var(--font-mono)">${x}</text>`;});
+      g+=`<text x="${m.l+pw/2}" y="${H-4}" text-anchor="middle" font-size="12" fill="${INK}">${cfg.xlabel}</text>`;
+      vis.forEach(s=>{const c=s.color;
+        const dl=xs.map((x,i)=>`${xS(x).toFixed(1)} ${leftYS(s[latM][i]).toFixed(1)}`);
+        g+=`<path d="M${dl.join(' L')}" fill="none" stroke="${c}" stroke-width="2" stroke-opacity="0.85"/>`;
+        xs.forEach((x,i)=>{g+=`<g class="mk" data-tip="${s.name}||p=${x}||${LM.lab}: ${s[latM][i]} ms"><circle cx="${xS(x)}" cy="${leftYS(s[latM][i])}" r="4" fill="${c}"/></g>`;});
+        const dr=xs.map((x,i)=>`${xS(x).toFixed(1)} ${rightYS(s.rps[i]).toFixed(1)}`);
+        g+=`<path d="M${dr.join(' L')}" fill="none" stroke="${c}" stroke-width="2" stroke-dasharray="5 4" stroke-opacity="0.7"/>`;
+        xs.forEach((x,i)=>{g+=`<g class="mk" data-tip="${s.name}||p=${x}||${cfg.rightLab}: ${s.rps[i]} RPS"><circle cx="${xS(x)}" cy="${rightYS(s.rps[i])}" r="3.5" fill="var(--surface)" stroke="${c}" stroke-width="1.5"/></g>`;});
+      });
+      svg.innerHTML=g;
+    }
+    wireTip(svg);
+    if(sel) sel.addEventListener('change',e=>{latM=e.target.value;draw();});
+    draw();
+  }
+
   /* ═══ Sweep data + configs ═══ */
   const LAT = { p50:{lab:'p50 latency ms (↓ better)',unit:' ms',fam:'lat'}, p99:{lab:'p99 latency ms (↓ better)',unit:' ms',fam:'lat'},
                 srv50:{lab:'server p50 latency ms (↓ better)',unit:' ms',fam:'lat'}, srv99:{lab:'server p99 latency ms (↓ better)',unit:' ms',fam:'lat'},

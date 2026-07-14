@@ -830,8 +830,8 @@ canvas {
         <div class="fold-body">tpuf reports 0.615 GB scanned per DBpedia query &mdash; essentially the entire dataset (0.614 GB raw) &mdash; and invoices at the 1.28 GB per-query minimum (§4.2). Cost scales linearly with data size &times; QPS once above that floor. Qdrant server p99 = 2.5ms (1.3&times; p50); tpuf server p99 = 40ms (4&times; p50).</div>
       </details>
 
-      <h3>Latency vs Throughput &mdash; Concurrency Sweep (fresh, measured)</h3>
-      <p>From an uncontended concurrency sweep (p=1&rarr;32) using <em>measured</em> throughput (completed queries &divide; wall-clock, not <code>p&times;1/mean</code>). Each point is a concurrency level; the connected curve is the reachable latency&harr;throughput frontier.</p>
+      <h3>Latency &amp; Throughput vs Concurrency (fresh, measured)</h3>
+      <p>From an uncontended concurrency sweep (p=1&rarr;32) using <em>measured</em> throughput (completed queries &divide; wall-clock, not <code>p&times;1/mean</code>). Latency and throughput share one x-axis (concurrency) on dual y-axes.</p>
       <div class="iplot" id="iplot-frontier">
         <div class="iplot-bar">
           <label>metric
@@ -843,9 +843,9 @@ canvas {
           <div class="iplot-legend"></div>
         </div>
         <div class="iplot-panel">
-          <div class="pt">DBpedia · latency vs measured throughput (p = 1 → 32)</div>
-          <div class="ps">Log–log; best region is bottom-right (high throughput, low latency). Qdrant's 2-CPU node peaks at p=4 (~80 RPS) then the curve <strong>bends back</strong> — more concurrency yields <em>less</em> throughput and an exploding tail. tpuf holds/climbs (serverless autoscaling). Hover a point for its concurrency level.</div>
-          <svg class="iplot-svg" viewBox="0 0 900 320" role="img" aria-label="DBpedia latency vs throughput frontier"></svg>
+          <div class="pt">DBpedia · latency &amp; throughput vs concurrency (p = 1 → 32)</div>
+          <div class="ps">x = client concurrency. <strong>Solid</strong> = latency (left axis, log); <strong>dashed</strong> = measured throughput (right axis). Qdrant's 2-CPU node peaks at p=4 (~80 RPS) then its throughput <em>declines</em> while its tail explodes; tpuf's throughput holds/climbs (serverless autoscaling) with a gentler latency rise. Hover any point; click an engine to toggle.</div>
+          <svg class="iplot-svg" viewBox="0 0 900 340" role="img" aria-label="DBpedia latency and throughput vs concurrency (dual axis)"></svg>
         </div>
       </div>
 
@@ -1669,6 +1669,43 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
     draw();
   }
 
+  /* ═══ Dual-axis: latency (left, log) + throughput (right, linear) vs concurrency ═══
+     cfg = { xs:[…], xlabel, rightLab, latMets:{key:{lab}}, series:[{name,color,p50,p99,rps}] } */
+  function initDualAxis(root, cfg){
+    const svg=root.querySelector('.iplot-svg'), sel=root.querySelector('.iplot-metric'), legendEl=root.querySelector('.iplot-legend');
+    const hidden=new Set(); let latM = sel ? sel.value : Object.keys(cfg.latMets)[0];
+    legendEl.innerHTML='<span class="lab">engine</span>'+cfg.series.map(s=>`<span class="eng" data-n="${s.name}"><span class="sw" style="background:${s.color}"></span>${s.name}</span>`).join('');
+    legendEl.querySelectorAll('.eng').forEach(el=>el.addEventListener('click',()=>{const n=el.dataset.n;hidden.has(n)?hidden.delete(n):hidden.add(n);el.classList.toggle('off',hidden.has(n));draw();}));
+    const W=900,H=340,m={t:16,r:64,l:62,b:42},pw=W-m.l-m.r,ph=H-m.t-m.b;
+    const xs=cfg.xs, l2=Math.log2, xmin=xs[0], xmax=xs[xs.length-1];
+    const xS=x=>m.l+(l2(x)-l2(xmin))/(l2(xmax)-l2(xmin)||1)*pw;
+    function draw(){
+      const vis=cfg.series.filter(s=>!hidden.has(s.name)); const LM=cfg.latMets[latM];
+      const lat=[].concat(...vis.map(s=>s[latM])), lmin=Math.min(...lat), lmax=Math.max(...lat);
+      const ly0=Math.log10(lmin*0.7), ly1=Math.log10(lmax*1.4);
+      const leftYS=v=>m.t+(1-(Math.log10(Math.max(v,0.1))-ly0)/(ly1-ly0))*ph;
+      const rmax=Math.max(...[].concat(...vis.map(s=>s.rps)),1)*1.1, rightYS=v=>m.t+(1-v/rmax)*ph;
+      let g=`<text transform="translate(13 ${m.t+ph/2}) rotate(-90)" text-anchor="middle" font-size="11" fill="${INK}">${LM.lab} — solid</text>`;
+      g+=`<text transform="translate(${W-11} ${m.t+ph/2}) rotate(-90)" text-anchor="middle" font-size="11" fill="${INK}">${cfg.rightLab} — dashed</text>`;
+      logticks(lmin*0.7,lmax*1.4).forEach(v=>{const y=leftYS(v);g+=`<line x1="${m.l}" y1="${y}" x2="${m.l+pw}" y2="${y}" stroke="${GRID}"/>`+`<text x="${m.l-6}" y="${y+3.5}" text-anchor="end" font-size="10" fill="${MUT}" font-family="var(--font-mono)">${v>=1000?v/1000+'K':v}</text>`;});
+      [0,0.25,0.5,0.75,1].forEach(f=>{const y=rightYS(rmax*f);g+=`<text x="${m.l+pw+6}" y="${y+3.5}" text-anchor="start" font-size="10" fill="${MUT}" font-family="var(--font-mono)">${Math.round(rmax*f)}</text>`;});
+      xs.forEach(x=>{const px=xS(x);g+=`<line x1="${px}" y1="${m.t}" x2="${px}" y2="${m.t+ph}" stroke="${GRID}"/>`+`<text x="${px}" y="${m.t+ph+18}" text-anchor="middle" font-size="10.5" fill="${MUT}" font-family="var(--font-mono)">${x}</text>`;});
+      g+=`<text x="${m.l+pw/2}" y="${H-4}" text-anchor="middle" font-size="12" fill="${INK}">${cfg.xlabel}</text>`;
+      vis.forEach(s=>{const c=s.color;
+        const dl=xs.map((x,i)=>`${xS(x).toFixed(1)} ${leftYS(s[latM][i]).toFixed(1)}`);
+        g+=`<path d="M${dl.join(' L')}" fill="none" stroke="${c}" stroke-width="2" stroke-opacity="0.85"/>`;
+        xs.forEach((x,i)=>{g+=`<g class="mk" data-tip="${s.name}||p=${x}||${LM.lab}: ${s[latM][i]} ms"><circle cx="${xS(x)}" cy="${leftYS(s[latM][i])}" r="4" fill="${c}"/></g>`;});
+        const dr=xs.map((x,i)=>`${xS(x).toFixed(1)} ${rightYS(s.rps[i]).toFixed(1)}`);
+        g+=`<path d="M${dr.join(' L')}" fill="none" stroke="${c}" stroke-width="2" stroke-dasharray="5 4" stroke-opacity="0.7"/>`;
+        xs.forEach((x,i)=>{g+=`<g class="mk" data-tip="${s.name}||p=${x}||${cfg.rightLab}: ${s.rps[i]} RPS"><circle cx="${xS(x)}" cy="${rightYS(s.rps[i])}" r="3.5" fill="var(--surface)" stroke="${c}" stroke-width="1.5"/></g>`;});
+      });
+      svg.innerHTML=g;
+    }
+    wireTip(svg);
+    if(sel) sel.addEventListener('change',e=>{latM=e.target.value;draw();});
+    draw();
+  }
+
   /* ═══ Sweep data + configs ═══ */
   const LAT = { lat:{lab:'search latency · p50–p99 ms (↓ better)',unit:' ms',band:['p50','p99'],fam:'lat'},
                 srv:{lab:'internal search latency · p50–p99 ms (↓ better)',unit:' ms',band:['srv50','srv99'],fam:'lat'},
@@ -1732,22 +1769,17 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
     initSweep(el, SWEEPS[id]);
     mountView(el, tableFor[id] ? grabTables(el, tableFor[id]) : (() => sweepTable(SWEEPS[id]))); });
 
-  /* ═══ DBpedia latency↔throughput frontier (fresh measured sweep, p=1→32) ═══ */
-  const FRONTIER = { xlabel:'measured throughput — RPS (→ better)', xlog:true, xticks:[30,40,50,60,70,80], mets:{
-      p99:{ lab:'p99 latency ms (↓ better)', unit:' ms', fam:'flat' },
-      p50:{ lab:'p50 latency ms (↓ better)', unit:' ms', fam:'flat' } },
+  /* ═══ DBpedia latency + throughput vs concurrency (fresh measured sweep, p=1→32) ═══ */
+  const DUAL = { xs:[1,2,4,8,16,32], xlabel:'client concurrency (p) →', rightLab:'throughput RPS',
+    latMets:{ p99:{lab:'p99 latency ms'}, p50:{lab:'p50 latency ms'} },
     series:[
-      { name:'turbopuffer', color:CO.tpuf, xs:[30.6,50.8,68.7,76.7,73.5,80.2],
-        data:{ p99:[67,80.6,112.4,152.3,320,1676.9], p50:[18.3,27.3,66.3,78.4,166.6,316.3] },
-        plabels:['p=1','p=2','p=4','p=8','p=16','p=32'] },
-      { name:'Qdrant', color:CO.qdrant, xs:[50.4,64,79.7,62.8,57.6,49.6],
-        data:{ p99:[61.8,69.4,82.1,414,963.5,2624.4], p50:[8.2,11.4,65.2,87.9,232.8,465.1] },
-        plabels:['p=1','p=2','p=4','p=8','p=16','p=32'] } ]};
+      { name:'turbopuffer', color:CO.tpuf, p99:[67,80.6,112.4,152.3,320,1676.9], p50:[18.3,27.3,66.3,78.4,166.6,316.3], rps:[30.6,50.8,68.7,76.7,73.5,80.2] },
+      { name:'Qdrant', color:CO.qdrant, p99:[61.8,69.4,82.1,414,963.5,2624.4], p50:[8.2,11.4,65.2,87.9,232.8,465.1], rps:[50.4,64,79.7,62.8,57.6,49.6] } ]};
   const fr = document.getElementById('iplot-frontier');
-  if(fr){ initSweep(fr, FRONTIER);
-    mountView(fr, () => { const P=['p=1','p=2','p=4','p=8','p=16','p=32'];
-      let h='<table><thead><tr><th>concurrency</th>'+FRONTIER.series.map(s=>`<th>${cdot(s.color)}${s.name} — RPS / p50 / p99</th>`).join('')+'</tr></thead><tbody>';
-      P.forEach((p,i)=>{ h+=`<tr><td>${p}</td>`+FRONTIER.series.map(s=>`<td>${s.xs[i]} / ${s.data.p50[i]}ms / ${s.data.p99[i]}ms</td>`).join('')+'</tr>'; });
+  if(fr){ initDualAxis(fr, DUAL);
+    mountView(fr, () => { const P=DUAL.xs;
+      let h='<table><thead><tr><th>p</th>'+DUAL.series.map(s=>`<th>${cdot(s.color)}${s.name} — RPS / p50 / p99</th>`).join('')+'</tr></thead><tbody>';
+      P.forEach((p,i)=>{ h+=`<tr><td>${p}</td>`+DUAL.series.map(s=>`<td>${s.rps[i]} / ${s.p50[i]}ms / ${s.p99[i]}ms</td>`).join('')+'</tr>'; });
       return h+'</tbody></table>'; }); }
 
   /* ═══ DBpedia per-query search latency over the run (fresh run, downsampled) ═══ */
