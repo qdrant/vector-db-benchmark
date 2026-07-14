@@ -62,6 +62,10 @@ N_COLD             = 500
 SEARCH_CONCURRENCY = [1, 8, 32]
 FIXED_QPS_LEVELS   = [1, 5, 10, 20, 50]
 FIXED_QPS_SECS     = 120
+# --op sweep: dense concurrency sweep for the latency↔throughput Pareto frontier
+SWEEP_READ_CONCURRENCY  = [1, 2, 4, 8, 16, 32, 64]
+SWEEP_WRITE_CONCURRENCY = [1, 2, 4, 8, 16, 32]
+SWEEP_WRITE_N           = 20000   # vectors pushed per write-concurrency level
 PINNED_REPLICAS    = 4
 EF_SWEEP_DISK      = [32, 64, 128]
 N_COLD_DISK        = 200
@@ -139,6 +143,7 @@ MATRIX: dict[str, dict[str, list[str]]] = {
     "dbpedia": {
         "upload":      ["tpuf", "tpuf_pinned_1r", "qdrant", "qdrant_deferred"],
         "search":      ["tpuf", "tpuf_pinned_4r", "qdrant"],
+        "sweep":       ["tpuf", "qdrant"],
         "search_cold": ["tpuf_pinned_4r", "qdrant"],
         "fixed_qps":   ["tpuf", "qdrant"],
         "write_read":  ["tpuf", "qdrant"],
@@ -147,6 +152,7 @@ MATRIX: dict[str, dict[str, list[str]]] = {
     "hm": {
         "upload":      ["tpuf", "tpuf_pinned_1r", "qdrant", "qdrant_deferred"],
         "search":      ["tpuf", "tpuf_pinned_4r", "qdrant"],
+        "sweep":       ["tpuf", "qdrant"],
         "search_cold": ["tpuf_pinned_4r", "qdrant"],
         "fixed_qps":   ["tpuf", "qdrant"],
         "write_read":  ["tpuf", "qdrant"],
@@ -154,12 +160,13 @@ MATRIX: dict[str, dict[str, list[str]]] = {
     "mt": {
         "upload":    ["tpuf", "qdrant"],
         "search":    ["tpuf", "qdrant"],
+        "sweep":     ["tpuf", "qdrant"],
         "fixed_qps": ["tpuf", "qdrant"],
         "write_read": ["tpuf", "qdrant"],
     },
 }
 
-OP_ORDER = ["upload", "search", "search_cold", "fixed_qps", "write_read", "disk"]
+OP_ORDER = ["upload", "search", "sweep", "search_cold", "fixed_qps", "write_read", "disk"]
 
 PHASES = (
     ["delete"] +
@@ -484,6 +491,80 @@ async def qdrant_upload_only(qc, collection, vectors, ids, payloads=None):
     return s
 
 
+# ── Concurrent-write helpers (for the write-side concurrency sweep) ─────────────
+# Fire batches with a semaphore of `concurrency` and report the measured
+# aggregate WPS plus per-batch latency percentiles at that concurrency.
+
+async def tpuf_write_at_concurrency(ns, ids, vectors, concurrency, extra_cols=None):
+    sem = asyncio.Semaphore(concurrency)
+    batch_lats = []
+    starts = list(range(0, len(ids), BATCH_SIZE))
+
+    async def one(start):
+        end = min(start + BATCH_SIZE, len(ids))
+        cols = {"id": ids[start:end], "vector": vectors[start:end].tolist()}
+        if extra_cols:
+            for k, v in extra_cols.items():
+                cols[k] = v[start:end]
+        async with sem:
+            bt = time.perf_counter()
+            await ns.write(upsert_columns=cols, distance_metric="cosine_distance")
+            batch_lats.append(time.perf_counter() - bt)
+
+    t0 = time.perf_counter()
+    await asyncio.gather(*[one(s) for s in starts])
+    dur = time.perf_counter() - t0
+    arr = np.array(batch_lats) * 1000
+    return {
+        "concurrency":  concurrency,
+        "wps_measured": round(len(ids) / dur, 1),
+        "batch_p50_ms": round(float(np.percentile(arr, 50)), 1),
+        "batch_p99_ms": round(float(np.percentile(arr, 99)), 1),
+    }
+
+
+async def qdrant_write_at_concurrency(collection, ids, vectors, concurrency, payloads=None):
+    sem = asyncio.Semaphore(concurrency)
+    batch_lats = []
+    starts = list(range(0, len(ids), BATCH_SIZE))
+
+    async def one(start):
+        end = min(start + BATCH_SIZE, len(ids))
+        pts = [
+            {"id": int(ids[start + i]), "vector": vec.tolist(),
+             **({"payload": payloads[start + i]} if payloads else {})}
+            for i, vec in enumerate(vectors[start:end])
+        ]
+        async with sem:
+            bt = time.perf_counter()
+            await qdrant_upsert_timed(collection, pts)
+            batch_lats.append(time.perf_counter() - bt)
+
+    t0 = time.perf_counter()
+    await asyncio.gather(*[one(s) for s in starts])
+    dur = time.perf_counter() - t0
+    arr = np.array(batch_lats) * 1000
+    return {
+        "concurrency":  concurrency,
+        "wps_measured": round(len(ids) / dur, 1),
+        "batch_p50_ms": round(float(np.percentile(arr, 50)), 1),
+        "batch_p99_ms": round(float(np.percentile(arr, 99)), 1),
+    }
+
+
+async def _ensure_qdrant_sweep_col(qc, col, ds):
+    """Create the scratch sweep collection if absent (never deletes existing)."""
+    existing = [c.name for c in (await qc.get_collections()).collections]
+    if col in existing:
+        return
+    await qc.create_collection(
+        collection_name=col,
+        vectors_config=models.VectorParams(size=ds.dims, distance=models.Distance.COSINE),
+        hnsw_config=models.HnswConfigDiff(m=ds.hnsw_m, ef_construct=ds.hnsw_ef),
+        optimizers_config=models.OptimizersConfigDiff(memmap_threshold=10_000_000),
+    )
+
+
 async def qdrant_trigger_and_wait_index(qc, collection, total_vectors, indexing_threshold=20000, poll_interval=2):
     print(f"  Enabling HNSW indexing (indexing_threshold={indexing_threshold})...", flush=True)
     await qc.update_collection(
@@ -617,9 +698,13 @@ async def run_search(query_fn, tests, concurrency, n=N_SEARCH, collect_perf=Fals
                 returned[i] = None  # None means error; [] means 0 results (valid)
 
     await asyncio.gather(*[one(i, tests[i % len(tests)]) for i in range(n)])
+    dur = time.perf_counter() - t_run0
 
     s = stats(latencies)
     s["n_errors"] = n_errors
+    # measured aggregate throughput (completed queries / wall-clock) — captures
+    # saturation, unlike the p×(1/mean) derivation which overstates at the knee
+    s["rps_measured"] = round((n - n_errors) / dur, 1) if dur > 0 else 0.0
     if ts_rows:
         ts_rows.sort(key=lambda r: r[0])
         s["timeseries"] = _ts(["t_s", "lat_ms", "server_ms"], ts_rows)
@@ -962,6 +1047,79 @@ async def op_search(ds: DatasetConfig, active: list[str], run_dir: Path, state: 
             if s:
                 print(f"  │  {v:30s}  {p:>3}  {s.get('rps',0):>7.1f}  {s.get('p50_ms',0):>7.1f}ms  {s.get('p99_ms',0):>7.1f}ms  {s.get('recall_pct','?'):>6}%")
     print(f"  └─")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# OP: sweep  — dense concurrency sweep (read + write) for the Pareto frontier
+# ═══════════════════════════════════════════════════════════════════════════════
+
+async def op_sweep(ds: DatasetConfig, active: list[str], run_dir: Path, state: dict, args):
+    print(f"\n═══ {ds.key}/sweep  variants={active} ═══")
+    vecs  = np.load(ds.path / "vectors.npy")
+    ids   = list(range(len(vecs)))
+    tests = [json.loads(l) for l in open(ds.path / "tests.jsonl")]
+
+    payloads = None
+    extra_cols = None
+    if ds.has_payload and not ds.tenant_field:
+        payloads = [json.loads(l) for l in open(ds.path / "payloads.jsonl")]
+        fmeta    = json.loads((ds.path / "filters.json").read_text())
+        ffields  = [f["name"] for f in fmeta]
+        extra_cols = {f: [p.get(f) for p in payloads] for f in ffields}
+
+    tc = make_tpuf()
+    qc = make_qdrant()
+    ns_cache = {}
+    wn = min(SWEEP_WRITE_N, len(ids))
+
+    for variant in active:
+        if is_variant_done(state, ds.key, "sweep", variant):
+            print(f"  skip {variant} (done)")
+            continue
+        print(f"\n  ── {variant} ──")
+        is_tpuf = variant.startswith("tpuf")
+
+        # READ sweep — against the main populated target (needs a prior upload)
+        if is_tpuf:
+            qfn = _make_tpuf_qfn(tc.namespace(ds.tpuf_ns), ds, ns_cache, tc)
+        else:
+            qfn = _make_qdrant_qfn(qc, ds.qdrant_col, ds)
+        print(f"  warming {N_WARMUP} queries ...", flush=True)
+        await run_search(qfn, tests[:N_WARMUP], concurrency=1)
+        read_rows = []
+        for p in SWEEP_READ_CONCURRENCY:
+            s = await run_search(qfn, tests, concurrency=p, collect_perf=is_tpuf)
+            read_rows.append({"p": p, "rps_measured": s.get("rps_measured"),
+                              "p50_ms": s.get("p50_ms"), "p90_ms": s.get("p90_ms"),
+                              "p99_ms": s.get("p99_ms"), "recall_pct": s.get("recall_pct")})
+            print(f"    read  p={p:<3} rps={s.get('rps_measured'):>7}  "
+                  f"p50={s.get('p50_ms')}ms  p99={s.get('p99_ms')}ms", flush=True)
+
+        # WRITE sweep — dedicated scratch target so the main data is untouched
+        write_rows = []
+        if ds.tenant_field:
+            print("  skip write sweep (MT per-tenant not supported)")
+        else:
+            ec = {k: v[:wn] for k, v in extra_cols.items()} if extra_cols else None
+            if not is_tpuf:
+                await _ensure_qdrant_sweep_col(qc, ds.qdrant_col + "-sweep", ds)
+            for p in SWEEP_WRITE_CONCURRENCY:
+                if is_tpuf:
+                    w = await tpuf_write_at_concurrency(
+                        tc.namespace(ds.tpuf_ns + "-sweep"), ids[:wn], vecs[:wn], p, extra_cols=ec)
+                else:
+                    w = await qdrant_write_at_concurrency(
+                        ds.qdrant_col + "-sweep", ids[:wn], vecs[:wn], p,
+                        payloads=payloads[:wn] if payloads else None)
+                write_rows.append(w)
+                print(f"    write p={p:<3} wps={w['wps_measured']:>7}  "
+                      f"batch_p50={w['batch_p50_ms']}ms  batch_p99={w['batch_p99_ms']}ms", flush=True)
+
+        mark_variant_done(run_dir, state, ds.key, "sweep", variant,
+                          {"read": read_rows, "write": write_rows, "write_n": wn})
+
+    await qc.close()
+    print(f"\n  └─ sweep done: {ds.label}")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1451,6 +1609,7 @@ async def phase_delete(run_dir: Path, state: dict, args):
 OP_FNS = {
     "upload":      op_upload,
     "search":      op_search,
+    "sweep":       op_sweep,
     "search_cold": op_search_cold,
     "fixed_qps":   op_fixed_qps,
     "write_read":  op_write_read,
