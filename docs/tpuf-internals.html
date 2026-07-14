@@ -720,9 +720,9 @@ canvas {
     <section class="section" id="s5">
       <div class="section-header">
         <div class="section-eyebrow tpuf-eye">&sect;5</div>
-        <h2>Engine-Internal Latency Gap</h2>
+        <h2>Internal Search Latency Gap</h2>
       </div>
-      <p>Measuring server-reported latency (excluding network round-trip) reveals an architectural floor difference. At steady state on DBpedia (unfiltered), turbopuffer server latency is consistently <strong>~10ms</strong> while Qdrant server latency is <strong>~1.9ms</strong>.</p>
+      <p>Measuring internal search latency (the engine&rsquo;s own processing, excluding network round-trip) reveals an architectural floor difference. At steady state on DBpedia (unfiltered), turbopuffer internal search latency is consistently <strong>~10ms</strong> while Qdrant is <strong>~1.9ms</strong>.</p>
       <details class="foldout tpuf">
         <summary>The ~10ms tpuf vs ~2ms Qdrant server-latency floor is architectural (NVMe vs RAM)</summary>
         <div class="fold-body">The gap reflects the fundamental storage medium: HNSW traversal on RAM vs. SPFresh centroid reads from NVMe. No configuration on either side can close it.</div>
@@ -801,8 +801,8 @@ canvas {
         <div class="iplot-bar">
           <label>metric
             <select class="iplot-metric">
-              <option value="lat" selected>total latency (client) ↓</option>
-              <option value="srv">engine latency (server-side) ↓</option>
+              <option value="lat" selected>search latency ↓</option>
+              <option value="srv">internal search latency ↓</option>
               <option value="recall">recall ↑</option>
               <option value="exh">WAL exhaustive-scan count (tpuf)</option>
               <option value="stale">WAL staleness — write→read lag (tpuf)</option>
@@ -1594,9 +1594,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
   /* ═══ §8.9 time-series config ═══ */
   const RW = { xlabel:'seconds since start →', markerX:254, markerLabel:'upload complete', mets:{
-    lat:    { lab:'total latency (client) ms (↓ better)', unit:' ms', ylog:true, fam:'tlat', series:[
+    lat:    { lab:'search latency ms (↓ better)', unit:' ms', ylog:true, fam:'tlat', series:[
               {name:'turbopuffer', color:CO.tpuf, rows:RW_TPUF, yi:1}, {name:'Qdrant', color:CO.qdrant, rows:RW_QDRANT, yi:1} ] },
-    srv:    { lab:'engine latency (server-side) ms (↓ better)', unit:' ms', ylog:true, fam:'tlat', series:[
+    srv:    { lab:'internal search latency ms (↓ better)', unit:' ms', ylog:true, fam:'tlat', series:[
               {name:'turbopuffer', color:CO.tpuf, rows:RW_TPUF, yi:2}, {name:'Qdrant', color:CO.qdrant, rows:RW_QDRANT, yi:2} ] },
     recall: { lab:'recall % (↑ better)', unit:'%', ymax:105, fmt:v=>v.toFixed(0), series:[
               {name:'turbopuffer', color:CO.tpuf, rows:RW_TPUF, yi:3, mul:100}, {name:'Qdrant', color:CO.qdrant, rows:RW_QDRANT, yi:3, mul:100} ] },
