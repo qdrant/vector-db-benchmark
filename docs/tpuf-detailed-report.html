@@ -746,6 +746,20 @@ canvas {
         </div>
       </div>
 
+      <div class="iplot" id="iplot-spf">
+        <div class="iplot-bar">
+          <label>metric
+            <select class="iplot-metric"><option value="backlog" selected>unindexed backlog ↓</option></select>
+          </label>
+          <div class="iplot-legend"></div>
+        </div>
+        <div class="iplot-panel">
+          <div class="pt">Why the SPFresh range: post-upload build is a queue wait, not a gradual build</div>
+          <div class="ps">DBpedia, two trials with index-status polling. The backlog sits at 100% (waiting for a shared indexer), then drains in one step &mdash; so total time is set by <em>when</em> an indexer picks up the namespace, not by how long indexing takes. Other trials finished at 25s / 36s / 61s. Hover a point.</div>
+          <svg class="iplot-svg" viewBox="0 0 900 300" role="img" aria-label="SPFresh unindexed backlog over time, two trials"></svg>
+        </div>
+      </div>
+
       <div class="table-wrap">
         <table>
           <thead>
@@ -1070,10 +1084,18 @@ canvas {
 
       <h3>8.1 &mdash; Cold Warmup Curve</h3>
       <p>Query latency for the first 120 queries issued after a cold restart. Each spike beyond query ~5 marks a previously-uncached centroid region being fetched from S3.</p>
-      <div class="chart-block">
-        <div class="chart-title">Per-Query Latency: Cold Start &#8594; Warm</div>
-        <div class="chart-sub">Milliseconds. H&amp;M dataset, pinned 4-replica. Gaps filled by interpolation for display.</div>
-        <canvas id="c-warmup" width="600" height="260" aria-label="Line chart: first query ~893ms, rapid decay with periodic spikes, converges near 43ms by query 30"></canvas>
+      <div class="iplot" id="iplot-warmup">
+        <div class="iplot-bar">
+          <label>metric
+            <select class="iplot-metric"><option value="lat" selected>query latency ↓</option></select>
+          </label>
+          <div class="iplot-legend"></div>
+        </div>
+        <div class="iplot-panel">
+          <div class="pt">Per-query latency: cold start → warm (H&amp;M, pinned 4-replica)</div>
+          <div class="ps">Log y. First query ~893ms; each spike past ~query 5 is a previously-uncached centroid region fetched from S3; converges to ~43ms by ~query 30. Hover a point.</div>
+          <svg class="iplot-svg" viewBox="0 0 900 320" role="img" aria-label="Per-query latency cold to warm"></svg>
+        </div>
       </div>
 
       <h3>8.2 &mdash; RPS vs Concurrency (pinned 1r / serverless / 4-replica)</h3>
@@ -1192,8 +1214,11 @@ canvas {
           <label>metric
             <select class="iplot-metric">
               <option value="lat" selected>read latency ↓</option>
+              <option value="srv">server latency ↓</option>
               <option value="recall">recall ↑</option>
               <option value="exh">WAL exhaustive-scan count (tpuf)</option>
+              <option value="stale">WAL staleness — write→read lag (tpuf)</option>
+              <option value="written">vectors written (ingest progress)</option>
             </select>
           </label>
           <div class="iplot-legend"></div>
@@ -1658,81 +1683,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-  // §8.1 Warmup full chart
-  (function() {
-    var res = setupCanvas('c-warmup');
-    if (!res) return;
-    var ctx = res[0], W = res[1], H = res[2];
-
-    var rawData = [
-      [0,892.9],[1,351.2],[2,279.0],[3,67.2],[4,173.8],[5,96.8],[6,212.5],[7,268.8],
-      [8,260.3],[9,118.1],[10,253.8],[11,43.4],[12,174.7],[13,251.0],[14,50.7],[15,45.0],
-      [16,55.8],[17,50.5],[18,45.0],[19,250.7],[20,45.9],[21,48.9],[22,44.2],[23,44.9],
-      [24,250.7],[25,45.5],[26,44.8],[27,44.5],[28,44.3],[29,44.1],[30,44.0],[35,44.1],
-      [40,43.8],[50,43.5],[60,43.3],[80,43.1],[100,43.0],[119,42.9]
-    ];
-    var full = [];
-    for (var i = 0; i < rawData.length - 1; i++) {
-      var x0 = rawData[i][0], y0 = rawData[i][1];
-      var x1 = rawData[i+1][0], y1 = rawData[i+1][1];
-      var steps = x1 - x0;
-      for (var s = 0; s < steps; s++) full.push(y0 + (y1 - y0) * (s / steps));
-    }
-    full.push(rawData[rawData.length - 1][1]);
-    var N = full.length;
-    var maxV = 950;
-    var pad  = { t: 20, r: 20, b: 40, l: 52 };
-    var pW   = W - pad.l - pad.r;
-    var pH   = H - pad.t - pad.b;
-
-    var yTicks = [0, 200, 400, 600, 800];
-    for (var i = 0; i < yTicks.length; i++) {
-      var v = yTicks[i];
-      var y = pad.t + pH - (v / maxV) * pH;
-      ctx.strokeStyle = C.grid; ctx.lineWidth = 0.5;
-      ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + pW, y); ctx.stroke();
-      ctx.fillStyle = C.text2; ctx.font = '10px monospace'; ctx.textAlign = 'right';
-      ctx.fillText(v + 'ms', pad.l - 4, y + 4);
-    }
-
-    // Steady-state line
-    var ySS = pad.t + pH - (43 / maxV) * pH;
-    ctx.strokeStyle = 'rgba(234,88,12,0.4)'; ctx.setLineDash([4, 3]); ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(pad.l, ySS); ctx.lineTo(pad.l + pW, ySS); ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle = C.tpuf; ctx.font = '10px monospace'; ctx.textAlign = 'left';
-    ctx.fillText('steady-state ~43ms', pad.l + 4, ySS - 5);
-
-    function xp(i) { return pad.l + (i / (N - 1)) * pW; }
-    function yp(v) { return pad.t + pH - Math.min(v, maxV) / maxV * pH; }
-
-    // Fill
-    var g = ctx.createLinearGradient(0, pad.t, 0, pad.t + pH);
-    g.addColorStop(0, 'rgba(234,88,12,0.15)'); g.addColorStop(1, 'rgba(234,88,12,0)');
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.moveTo(xp(0), pad.t + pH);
-    ctx.lineTo(xp(0), yp(full[0]));
-    for (var i = 1; i < N; i++) ctx.lineTo(xp(i), yp(full[i]));
-    ctx.lineTo(xp(N - 1), pad.t + pH);
-    ctx.closePath(); ctx.fill();
-
-    ctx.strokeStyle = C.tpuf2; ctx.lineWidth = 1.5; ctx.lineJoin = 'round';
-    ctx.beginPath();
-    for (var i = 0; i < N; i++) {
-      if (i === 0) ctx.moveTo(xp(i), yp(full[i]));
-      else ctx.lineTo(xp(i), yp(full[i]));
-    }
-    ctx.stroke();
-
-    var xTicks = [0, 20, 40, 60, 80, 100, 119];
-    for (var i = 0; i < xTicks.length; i++) {
-      ctx.fillStyle = C.text2; ctx.font = '10px monospace'; ctx.textAlign = 'center';
-      ctx.fillText(String(xTicks[i]), xp(xTicks[i]), H - pad.b + 14);
-    }
-    ctx.fillStyle = C.text2; ctx.font = '10px monospace'; ctx.textAlign = 'left';
-    ctx.fillText('query #', pad.l, H - 4);
-  })();
 
 
 
@@ -2054,6 +2004,19 @@ document.addEventListener('DOMContentLoaded', function() {
     rows.forEach(([k,lab]) => { const r=R[k]; h+=`<tr><td>${lab}</td><td>${dot('tpuf')}${r[0].v.toFixed(2)}%</td><td>${dot('qdrant')}${r[1].v.toFixed(2)}%</td></tr>`; });
     return h+'</tbody></table>';
   }
+  // generic table for a timeseries cfg (rows = x, cols = series; one table per metric)
+  function tsTable(cfg, xname){
+    let h='';
+    Object.keys(cfg.mets).forEach(mk => { const M=cfg.mets[mk], S=M.series;
+      const xs=[...new Set(S.flatMap(s=>s.rows.map(r=>r[0])))].sort((a,b)=>a-b);
+      if(Object.keys(cfg.mets).length>1) h+=`<div style="font-family:var(--font-mono);font-size:11px;color:var(--text-2);margin:10px 0 2px">${M.lab.split(' (')[0]}</div>`;
+      h+='<table><thead><tr><th>'+xname+'</th>'+S.map(s=>`<th>${cdot(s.color)}${s.name}</th>`).join('')+'</tr></thead><tbody>';
+      xs.forEach(x => { h+=`<tr><td>${x}</td>`+S.map(s=>{ const row=s.rows.find(r=>r[0]===x); if(!row) return '<td>—</td>';
+        const v=row[s.yi]*(s.mul||1); return `<td>${(M.fmt?M.fmt(v):gfmt(v))}${M.unit||''}</td>`; }).join('')+'</tr>'; });
+      h+='</tbody></table>';
+    });
+    return h;
+  }
 
   /* ═══ DBpedia bar explorer ═══ */
   const DBPEDIA = [
@@ -2237,7 +2200,11 @@ document.addEventListener('DOMContentLoaded', function() {
       const vis = M.series.filter(s => !hidden.has(s.name));
       if(!vis.length){ svg.innerHTML=`<text x="${W/2}" y="${H/2}" text-anchor="middle" font-size="13" fill="${MUT}" font-family="var(--font-mono)">no data</text>`; return; }
       const yv = s => s.rows.map(r => r[s.yi]*(s.mul||1));
-      let xs=[], ys=[]; vis.forEach(s=>{ s.rows.forEach(r=>xs.push(r[0])); ys.push(...yv(s)); });
+      // x from the current metric; y domain spans the whole family (all metrics
+      // sharing M.fam, across all their series) so toggling within a family holds scale
+      const famKeys = M.fam ? Object.keys(cfg.mets).filter(k => cfg.mets[k].fam===M.fam) : [metric];
+      let xs=[], ys=[]; vis.forEach(s => s.rows.forEach(r=>xs.push(r[0])));
+      famKeys.forEach(k => cfg.mets[k].series.forEach(s => ys.push(...yv(s))));
       const xmax=Math.max(...xs), ymaxRaw=Math.max(...ys), yminRaw=Math.min(...ys.filter(v=>v>0));
       const ylog=M.ylog, ly0=Math.log10(Math.max(yminRaw*0.7,0.1)), ly1=Math.log10(ymaxRaw*1.4);
       const ymax = M.ymax || ymaxRaw*1.08;
@@ -2323,16 +2290,43 @@ document.addEventListener('DOMContentLoaded', function() {
 
   /* ═══ §8.9 time-series config ═══ */
   const RW = { xlabel:'seconds since start →', markerX:254, markerLabel:'upload complete', mets:{
-    lat:    { lab:'read latency ms (↓ better)', unit:' ms', ylog:true, series:[
+    lat:    { lab:'read latency ms (↓ better)', unit:' ms', ylog:true, fam:'tlat', series:[
               {name:'turbopuffer', color:CO.tpuf, rows:RW_TPUF, yi:1}, {name:'Qdrant', color:CO.qdrant, rows:RW_QDRANT, yi:1} ] },
+    srv:    { lab:'server latency ms (↓ better)', unit:' ms', ylog:true, fam:'tlat', series:[
+              {name:'turbopuffer', color:CO.tpuf, rows:RW_TPUF, yi:2}, {name:'Qdrant', color:CO.qdrant, rows:RW_QDRANT, yi:2} ] },
     recall: { lab:'recall % (↑ better)', unit:'%', ymax:105, fmt:v=>v.toFixed(0), series:[
               {name:'turbopuffer', color:CO.tpuf, rows:RW_TPUF, yi:3, mul:100}, {name:'Qdrant', color:CO.qdrant, rows:RW_QDRANT, yi:3, mul:100} ] },
     exh:    { lab:'WAL exhaustive-scan count (↓)', unit:'', series:[
               {name:'turbopuffer', color:CO.tpuf, rows:RW_TPUF, yi:4} ] },
+    stale:  { lab:'WAL staleness ms — write→read lag', unit:' ms', series:[
+              {name:'turbopuffer', color:CO.tpuf, rows:RW_TPUF, yi:5} ] },
+    written:{ lab:'vectors written (ingest progress)', unit:'', series:[
+              {name:'turbopuffer', color:CO.tpuf, rows:RW_TPUF, yi:6} ] },
   }};
+
+  /* ═══ §8.1 warmup curve (cold → warm, per query) ═══ */
+  const WARMUP = [
+    [0,892.9],[1,351.2],[2,279.0],[3,67.2],[4,173.8],[5,96.8],[6,212.5],[7,268.8],
+    [8,260.3],[9,118.1],[10,253.8],[11,43.4],[12,174.7],[13,251.0],[14,50.7],[15,45.0],
+    [16,55.8],[17,50.5],[18,45.0],[19,250.7],[20,45.9],[21,48.9],[22,44.2],[23,44.9],
+    [24,250.7],[25,45.5],[26,44.8],[27,44.5],[28,44.3],[29,44.1],[30,44.0],[35,44.1],
+    [40,43.8],[50,43.5],[60,43.3],[80,43.1],[100,43.0],[119,42.9] ];
+  const WARM = { xlabel:'query # since cold restart →', mets:{
+    lat: { lab:'query latency ms (↓ better)', unit:' ms', ylog:true, series:[
+           {name:'tpuf pinned-4r', color:CO.tpuf, rows:WARMUP, yi:1} ] } }};
+
+  /* ═══ SPFresh post-upload build — backlog vs time (2 trials w/ index-status polling) ═══ */
+  const SPF_183 = [[0,100],[20,100],[41,100],[61,100],[81,100],[102,100],[122,100],[142,100],[163,100],[183,0]];
+  const SPF_268 = [[0,100],[30,100],[61,100],[91,100],[122,100],[152,100],[182,100],[213,100],[243,100],[263,100],[268,0]];
+  const SPF = { xlabel:'seconds after last write →', mets:{
+    backlog: { lab:'unindexed backlog % (↓ = indexed)', unit:'%', ymax:110, fmt:v=>v.toFixed(0), series:[
+               {name:'build took 183s', color:CO.tpuf, rows:SPF_183, yi:1},
+               {name:'build took 268s', color:'#7C3AED', rows:SPF_268, yi:1} ] } }};
 
   /* ═══ Init ═══ (each plot folds in its original full table, or generates one) */
   const rw = document.getElementById('iplot-rw'); if(rw){ initTimeSeries(rw, RW); mountView(rw, grabTables(rw, ['Phase'])); }
+  const wm = document.getElementById('iplot-warmup'); if(wm){ initTimeSeries(wm, WARM); mountView(wm, () => tsTable(WARM, 'query #')); }
+  const spf = document.getElementById('iplot-spf'); if(spf){ initTimeSeries(spf, SPF); mountView(spf, () => tsTable(SPF, 'seconds')); }
   const up = document.getElementById('iplot-upload'); if(up){ initBarExplorer(up, UPLOAD, {lm:300}); mountView(up, grabTables(up, ['Dataset'])); }
   const db = document.getElementById('iplot-dbpedia'); if(db){ initBarExplorer(db, DBPEDIA, {lm:212}); mountView(db, grabTables(db, ['Engine'])); }
   const rc = document.getElementById('iplot-recall'); if(rc){ initRecall(rc); mountView(rc, () => recallTable(RECALL)); }
