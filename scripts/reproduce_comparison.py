@@ -593,14 +593,16 @@ async def qdrant_trigger_and_wait_index(qc, collection, total_vectors, indexing_
     }
 
 
-async def tpuf_poll_spfresh_index(ns, total_vectors, poll_interval=5):
+async def tpuf_poll_spfresh_index(ns, total_vectors, poll_interval=5, quiet=False):
     """Poll ns.metadata().index until status == 'up-to-date'.
 
     Uses the official index status endpoint rather than query-level
     exhaustive_search_count, which is query-dependent and not a reliable
-    completion signal.
+    completion signal. Pass quiet=True to suppress per-poll logging (used
+    when polling many namespaces concurrently, e.g. multi-tenant).
     """
-    print("  Polling SPFresh build (index.status → up-to-date) ...", flush=True)
+    if not quiet:
+        print("  Polling SPFresh build (index.status → up-to-date) ...", flush=True)
     t0 = time.perf_counter()
     poll_rows = []
     while True:
@@ -609,11 +611,13 @@ async def tpuf_poll_spfresh_index(ns, total_vectors, poll_interval=5):
         idx  = meta.index
         if idx.status == "up-to-date":
             poll_rows.append([t_s, 0])
-            print(f"    t={t_s}s  status=up-to-date", flush=True)
+            if not quiet:
+                print(f"    t={t_s}s  status=up-to-date", flush=True)
             break
         unindexed_bytes = getattr(idx, "unindexed_bytes", -1)
         poll_rows.append([t_s, unindexed_bytes])
-        print(f"    t={t_s}s  status=updating  unindexed_bytes={unindexed_bytes}", flush=True)
+        if not quiet:
+            print(f"    t={t_s}s  status=updating  unindexed_bytes={unindexed_bytes}", flush=True)
         await asyncio.sleep(poll_interval)
     return {"index_s": round(time.perf_counter() - t0, 1), "poll_rows": poll_rows}
 
@@ -850,6 +854,29 @@ async def _mt_tpuf_upload(tc, vecs, payloads, ids, ds: DatasetConfig) -> dict:
         result["batch_p99_ms"] = round(float(np.percentile(arr, 99)), 1)
     if all_billable_gb:
         result["billable_gb"] = round(sum(all_billable_gb), 4)
+
+    # SPFresh build across all tenant namespaces — poll each concurrently and
+    # report the distribution (max = wall-clock until every namespace is indexed).
+    print(f"  Polling SPFresh across {len(tenants)} tenant namespaces ...", flush=True)
+    sem_idx = asyncio.Semaphore(20)
+    per_ns_s: list[float] = []
+    t_idx0 = time.perf_counter()
+
+    async def poll_tenant(tenant_val):
+        async with sem_idx:
+            r = await tpuf_poll_spfresh_index(
+                tc.namespace(f"{ds.tpuf_ns}{tenant_val}"), len(groups[tenant_val]), quiet=True)
+            per_ns_s.append(r["index_s"])
+
+    await asyncio.gather(*[poll_tenant(t) for t in tenants])
+    if per_ns_s:
+        a = np.array(per_ns_s)
+        result["spfresh_index_s"]     = round(time.perf_counter() - t_idx0, 1)  # until all indexed
+        result["spfresh_per_ns_p50_s"] = round(float(np.percentile(a, 50)), 1)
+        result["spfresh_per_ns_p90_s"] = round(float(np.percentile(a, 90)), 1)
+        result["spfresh_per_ns_max_s"] = round(float(a.max()), 1)
+        print(f"  MT SPFresh: all indexed in {result['spfresh_index_s']}s  "
+              f"(per-ns p50={result['spfresh_per_ns_p50_s']}s  max={result['spfresh_per_ns_max_s']}s)", flush=True)
     return result
 
 
