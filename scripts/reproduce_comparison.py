@@ -62,10 +62,13 @@ N_COLD             = 500
 SEARCH_CONCURRENCY = [1, 8, 32]
 FIXED_QPS_LEVELS   = [1, 5, 10, 20, 50]
 FIXED_QPS_SECS     = 120
-# --op sweep: dense concurrency sweep for the latency↔throughput Pareto frontier
-SWEEP_READ_CONCURRENCY  = [1, 2, 4, 8, 16, 32, 64]
-SWEEP_WRITE_CONCURRENCY = [1, 2, 4, 8, 16, 32]
-SWEEP_WRITE_N           = 20000   # vectors pushed per write-concurrency level
+# --op sweep: concurrency sweep for the latency↔throughput Pareto frontier.
+# Capped at p=32: the 2-CPU Qdrant node saturates by ~p=8–16, so p=32 already
+# shows the bend-back; p=64 just drives server/client into overload+timeouts
+# (queue-dominated data, not clean throughput). Write sweep is lighter still.
+SWEEP_READ_CONCURRENCY  = [1, 2, 4, 8, 16, 32]
+SWEEP_WRITE_CONCURRENCY = [1, 2, 4, 8, 16]
+SWEEP_WRITE_N           = 10000   # vectors pushed per write-concurrency level
 PINNED_REPLICAS    = 4
 EF_SWEEP_DISK      = [32, 64, 128]
 N_COLD_DISK        = 200
@@ -1118,9 +1121,10 @@ async def op_sweep(ds: DatasetConfig, active: list[str], run_dir: Path, state: d
             s = await run_search(qfn, tests, concurrency=p, collect_perf=is_tpuf)
             read_rows.append({"p": p, "rps_measured": s.get("rps_measured"),
                               "p50_ms": s.get("p50_ms"), "p90_ms": s.get("p90_ms"),
-                              "p99_ms": s.get("p99_ms"), "recall_pct": s.get("recall_pct")})
+                              "p99_ms": s.get("p99_ms"), "recall_pct": s.get("recall_pct"),
+                              "n_errors": s.get("n_errors")})
             print(f"    read  p={p:<3} rps={s.get('rps_measured'):>7}  "
-                  f"p50={s.get('p50_ms')}ms  p99={s.get('p99_ms')}ms", flush=True)
+                  f"p50={s.get('p50_ms')}ms  p99={s.get('p99_ms')}ms  err={s.get('n_errors')}", flush=True)
 
         # WRITE sweep — dedicated scratch target so the main data is untouched
         write_rows = []
