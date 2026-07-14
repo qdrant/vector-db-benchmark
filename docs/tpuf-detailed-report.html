@@ -711,7 +711,7 @@ canvas {
         </div>
         <div class="iplot-panel">
           <div class="pt">Upload across all three datasets · time to fully-indexed state</div>
-          <div class="ps">Bars = one config. Lighter extension = measured range (SPFresh 186–438s on DBpedia). Multi-tenant is 1M vectors (10× the others) and tpuf WPS there is aggregate across 100 parallel namespaces. Hover for detail; click an engine to toggle.</div>
+          <div class="ps">Bars = one config. In <em>total upload + index</em> the bar stacks upsert (solid) + index build (lighter) — hover each segment; a faint tail on the index segment is the measured range (e.g. SPFresh 25–268s across 5 DBpedia runs). Multi-tenant is 1M vectors (10× the others) and tpuf WPS there is aggregate across 100 parallel namespaces. Click an engine to toggle.</div>
           <svg class="iplot-svg" viewBox="0 0 900 380" role="img" aria-label="Upload time and throughput across datasets"></svg>
         </div>
       </div>
@@ -1360,7 +1360,7 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
     wps:   { lab:'insert throughput vec/s (↑ better)', unit:'', fmt:kfmt },
     up:    { lab:'upload time — upsert only s (↓ better)', unit:' s', fmt:v=>Math.round(v), fam:'time' },
     idx:   { lab:'index build time s (↓ better)', unit:' s', fmt:v=>Math.round(v), fam:'time' },
-    total: { lab:'total upload + index s (↓ better)', unit:' s', fmt:v=>Math.round(v), fam:'time' },
+    total: { lab:'total upload + index s (↓ better)', unit:' s', fmt:v=>Math.round(v), fam:'time', stack:['up','idx'] },
     wlat:  { lab:'write batch latency p50→p99 ms (↓ better)', unit:' ms', fmt:v=>Math.round(v), band:['wp50','wp99'], fam:'wlat' },
     store: { lab:'stored size GB (↓ better)', unit:' GB', fmt:v=>v.toFixed(3) },
   };
@@ -1384,7 +1384,7 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
       data.forEach(d => { const hk = b ? d[b[1]] : d[k]; if(has(hk)) famMax[f]=Math.max(famMax[f]||0, hi(hk)); }); });
     function draw(){
       const M = MET[metric];
-      const rows = data.filter(d => !hidden.has(d.e) && has(bandVal(d, M)));
+      const rows = data.filter(d => !hidden.has(d.e) && (M.stack ? (has(d.total) || has(d[M.stack[0]])) : has(bandVal(d, M))));
       if(!rows.length){ svg.innerHTML = `<text x="${W/2}" y="${H/2}" text-anchor="middle" font-size="13" fill="${MUT}" font-family="var(--font-mono)">no data for this metric</text>`; return; }
       const top = M.fam ? famMax[M.fam] : Math.max(...rows.map(d => hi(bandVal(d, M))));
       const dom = M.dom ? [M.dom[0], M.dom[1]] : [0, top*1.08];
@@ -1400,6 +1400,31 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
       const btag = k => k.endsWith('mean') ? 'mean' : k.endsWith('50') ? 'p50' : k.endsWith('99') ? 'p99' : '';
       rows.forEach((d,i) => {
         const c=CO[d.e], f=M.fmt||gfmt;
+        if(M.stack){  // stacked bar: upsert segment + index segment, each independently hoverable
+          const a=d[M.stack[0]], b=d[M.stack[1]], y=m.t+i*step+(step-bh)/2;
+          if(!has(a)){  // fallback: single total bar (e.g. MT tpuf — no upsert/index split measured)
+            const tv=d.total, xe=xS(hi(tv)), rng=Array.isArray(tv);
+            const lbl = rng ? `${f(lo(tv))}–${f(hi(tv))}${M.unit}` : `${f(tv)}${M.unit}`;
+            g += `<g class="mk" data-tip="${d.n}||total (upload + index)||${lbl}"><rect x="${m.l}" y="${y}" width="${Math.max(xe-m.l,1)}" height="${bh}" rx="2" fill="${c}" fill-opacity="0.9"/></g>`;
+            g += `<text x="${m.l-8}" y="${y+bh/2+3.5}" text-anchor="end" font-size="11" fill="${INK}" font-family="var(--font-mono)">${d.n}</text>`;
+            g += `<text x="${xe+6}" y="${y+bh/2+3.5}" font-size="10.5" fill="${MUT}" font-family="var(--font-mono)">${lbl}</text>`;
+            return;
+          }
+          const xA=xS(a), isR=Array.isArray(b), iLo=has(b)?lo(b):0, iHi=has(b)?hi(b):0;
+          const xBlo=xS(a+iLo), xBhi=xS(a+iHi);
+          g += `<g class="mk" data-tip="${d.n}||upsert (write)||${f(a)}${M.unit}"><rect x="${m.l}" y="${y}" width="${Math.max(xA-m.l,1)}" height="${bh}" rx="1.5" fill="${c}" fill-opacity="0.92"/></g>`;
+          if(has(b)){
+            const iLbl = isR ? `${f(iLo)}–${f(iHi)}${M.unit}` : `${f(b)}${M.unit}`;
+            g += `<g class="mk" data-tip="${d.n}||index build||${iLbl}">`;
+            g += `<rect x="${xA}" y="${y}" width="${Math.max(xBlo-xA,1)}" height="${bh}" rx="1.5" fill="${c}" fill-opacity="0.5"/>`;
+            if(isR && xBhi>xBlo) g += `<rect x="${xBlo}" y="${y}" width="${xBhi-xBlo}" height="${bh}" rx="1.5" fill="${c}" fill-opacity="0.28"/>`;
+            g += `</g>`;
+          }
+          const totLbl = (isR ? `${f(a+iLo)}–${f(a+iHi)}` : `${f(a+iHi)}`)+M.unit;
+          g += `<text x="${m.l-8}" y="${y+bh/2+3.5}" text-anchor="end" font-size="11" fill="${INK}" font-family="var(--font-mono)">${d.n}</text>`;
+          g += `<text x="${xBhi+6}" y="${y+bh/2+3.5}" font-size="10.5" fill="${MUT}" font-family="var(--font-mono)">${totLbl}</text>`;
+          return;
+        }
         if(M.band){  // two adjacent bars (median + tail), not a fused range
           const tA=btag(M.band[0]), tB=btag(M.band[1]), vA=d[M.band[0]], vB=d[M.band[1]];
           const bh2=Math.max((bh-3)/2, 4), yA=m.t+i*step+(step-bh)/2, yB=yA+bh2+3;
