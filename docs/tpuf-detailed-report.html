@@ -556,7 +556,7 @@ canvas {
 }
 .iplot-view button + button { border-left: 1px solid var(--border); }
 .iplot-view button.on { background: var(--tpuf); color: #fff; }
-.iplot.table-mode .iplot-metric-label, .iplot.table-mode .iplot-legend { display: none; }
+.iplot.table-mode .iplot-metric-label, .iplot.table-mode .iplot-dataset-label, .iplot.table-mode .iplot-legend { display: none; }
 .iplot-tablewrap { overflow-x: auto; }
 .iplot-tablewrap table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .iplot-tablewrap thead th {
@@ -697,6 +697,14 @@ canvas {
 
       <div class="iplot" id="iplot-upload">
         <div class="iplot-bar">
+          <label class="iplot-dataset-label">dataset
+            <select class="iplot-dataset">
+              <option value="all" selected>all</option>
+              <option value="dbpedia">DBpedia</option>
+              <option value="hm">H&amp;M</option>
+              <option value="mt">Multi-tenant</option>
+            </select>
+          </label>
           <label>metric
             <select class="iplot-metric">
               <option value="total" selected>total upload + index ↓</option>
@@ -1376,15 +1384,21 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
       el.classList.toggle('off', hidden.has(e)); draw(); }));
     const vb = svg.viewBox.baseVal, W=vb.width||900, H=vb.height||300;
     const m={t:10, r:86, l:opts.lm||142, b:30}, pw=W-m.l-m.r, ph=H-m.t-m.b;
-    // per-family max over ALL data (fixed scale within a family)
+    // optional dataset-focus select (present only on the upload explorer)
+    const dsSelEl = root.querySelector('.iplot-dataset');
+    let dsSel = dsSelEl ? dsSelEl.value : 'all';
+    const dsOf = d => /^DBpedia/.test(d.n) ? 'dbpedia' : /^H&M/.test(d.n) ? 'hm' : 'mt';
+    const dsMatch = d => dsSel === 'all' || dsOf(d) === dsSel;
+    if(dsSelEl) dsSelEl.addEventListener('change', e => { dsSel = e.target.value; draw(); });
     // band metric → value is [row[loKey], row[hiKey]]; family/top use the hi (p99) key
     const bandVal = (d, M) => M.band ? (has(d[M.band[0]]) && has(d[M.band[1]]) ? [d[M.band[0]], d[M.band[1]]] : undefined) : d[metric];
-    const famMax = {};
-    Object.keys(MET).forEach(k => { const f=MET[k].fam; if(!f) return; const b=MET[k].band;
-      data.forEach(d => { const hk = b ? d[b[1]] : d[k]; if(has(hk)) famMax[f]=Math.max(famMax[f]||0, hi(hk)); }); });
     function draw(){
       const M = MET[metric];
-      const rows = data.filter(d => !hidden.has(d.e) && (M.stack ? (has(d.total) || has(d[M.stack[0]])) : has(bandVal(d, M))));
+      // per-family max over the (dataset-filtered) data — fixed scale within a family
+      const famMax = {};
+      Object.keys(MET).forEach(k => { const f=MET[k].fam; if(!f) return; const b=MET[k].band;
+        data.forEach(d => { if(!dsMatch(d)) return; const hk = b ? d[b[1]] : d[k]; if(has(hk)) famMax[f]=Math.max(famMax[f]||0, hi(hk)); }); });
+      const rows = data.filter(d => !hidden.has(d.e) && dsMatch(d) && (M.stack ? (has(d.total) || has(d[M.stack[0]])) : has(bandVal(d, M))));
       if(!rows.length){ svg.innerHTML = `<text x="${W/2}" y="${H/2}" text-anchor="middle" font-size="13" fill="${MUT}" font-family="var(--font-mono)">no data for this metric</text>`; return; }
       const top = M.fam ? famMax[M.fam] : Math.max(...rows.map(d => hi(bandVal(d, M))));
       const dom = M.dom ? [M.dom[0], M.dom[1]] : [0, top*1.08];
