@@ -754,30 +754,30 @@ canvas {
           <tbody>
             <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-tpuf"></span>tpuf serverless</td><td>3.1–7.3††</td><td>624–657</td><td>192ms</td><td>352ms</td><td>180ms</td><td>341ms</td><td>25–268s (SPFresh††)</td><td>0.615 GB</td></tr>
             <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-tpuf"></span>tpuf pinned-1r</td><td>2.6 + SPFresh††</td><td>633</td><td>188ms</td><td>295ms</td><td>176ms</td><td>282ms</td><td>not measured††</td><td>0.615 GB</td></tr>
-            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-qdrant"></span>Qdrant concurrent</td><td class="win">3.9</td><td>417</td><td>294ms</td><td>365ms</td><td>3.3ms</td><td>18.5ms</td><td>0s (concurrent)</td><td>0.614 GB</td></tr>
-            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-qdrant"></span>Qdrant deferred</td><td>5.3</td><td>423</td><td>291ms</td><td>349ms</td><td>3.2ms</td><td>5.6ms</td><td>84s (HNSW)</td><td>0.614 GB</td></tr>
+            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-qdrant"></span>Qdrant · index during upload</td><td class="win">3.9</td><td>417</td><td>294ms</td><td>365ms</td><td>3.3ms</td><td>18.5ms</td><td>0s (during upload)</td><td>0.614 GB</td></tr>
+            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-qdrant"></span>Qdrant · index after upload</td><td>5.3</td><td>423</td><td>291ms</td><td>349ms</td><td>3.2ms</td><td>5.6ms</td><td>84s (HNSW)</td><td>0.614 GB</td></tr>
             <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-tpuf"></span>tpuf serverless</td><td class="win">4.1</td><td>565</td><td>208ms</td><td>335ms</td><td>192ms</td><td>318ms</td><td>60s (SPFresh)</td><td>0.873 GB</td></tr>
-            <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-qdrant"></span>Qdrant concurrent</td><td>8.4</td><td>316</td><td>401ms</td><td>459ms</td><td>—</td><td>—</td><td>168s</td><td>0.926 GB</td></tr>
-            <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-qdrant"></span>Qdrant deferred</td><td>9.1</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>222s (HNSW)</td><td>0.926 GB</td></tr>
+            <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-qdrant"></span>Qdrant · index during upload</td><td>8.4</td><td>316</td><td>401ms</td><td>459ms</td><td>—</td><td>—</td><td>168s</td><td>0.926 GB</td></tr>
+            <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-qdrant"></span>Qdrant · index after upload</td><td>9.1</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>222s (HNSW)</td><td>0.926 GB</td></tr>
             <tr><td>Multi-tenant 1M&times;768</td><td><span class="chip-tpuf"></span>tpuf (100 ns, parallel)</td><td class="win">2.4 (p=10)</td><td>6847*</td><td>207ms</td><td>338ms</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
             <tr><td>Multi-tenant 1M&times;768</td><td><span class="chip-qdrant"></span>Qdrant</td><td>20.5</td><td>816</td><td>148ms</td><td>175ms</td><td>—</td><td>—</td><td>5.1s</td><td>3.200 GB</td></tr>
           </tbody>
         </table>
       </div>
-      <div style="font-size:11px;color:var(--text-2);margin:8px 2px 0;font-style:italic;">‡ Total time = upsert + index build (end-to-end until fully indexed). For H&amp;M Qdrant concurrent: 5.5 min upsert + 2.8 min HNSW = 8.4 min. For DBpedia: 3.9 min upsert, HNSW built concurrently so extra wait ≈ 0s.<br>† Index wait = additional time after last upsert batch until fully indexed. 0s means HNSW finished within the upsert window. turbopuffer SPFresh builds asynchronously after writes commit to S3 WAL — 60s for H&amp;M 105K×2048d.<br>†† DBpedia tpuf SPFresh varied across 5 repeated runs (25s, 36s, 61s, 183s, 268s) depending on shared indexer availability; the 61s trial used an earlier query-based completion signal and is less precise than the other four (index-status polling). Total wall-clock ranges 3.1–7.3 min accordingly. Pinned-1r SPFresh was not measured separately — writes take the same S3 WAL path in both modes, so the same range likely applies (upload alone = 2.6 min).<br>* MT tpuf WPS is aggregate wall-clock throughput across 10 concurrent namespace uploads. Per-namespace WPS ≈ 624.</div>
+      <div style="font-size:11px;color:var(--text-2);margin:8px 2px 0;font-style:italic;">‡ Total time = upsert + index build (end-to-end until fully indexed). For H&amp;M Qdrant index-during-upload: 5.5 min upsert + 2.8 min HNSW = 8.4 min. For DBpedia: 3.9 min upsert, HNSW built during upload so extra wait ≈ 0s.<br>† Index wait = additional time after last upsert batch until fully indexed. 0s means HNSW finished within the upsert window. turbopuffer SPFresh builds asynchronously after writes commit to S3 WAL — 60s for H&amp;M 105K×2048d.<br>†† DBpedia tpuf SPFresh varied across 5 repeated runs (25s, 36s, 61s, 183s, 268s) depending on shared indexer availability; the 61s trial used an earlier query-based completion signal and is less precise than the other four (index-status polling). Total wall-clock ranges 3.1–7.3 min accordingly. Pinned-1r SPFresh was not measured separately — writes take the same S3 WAL path in both modes, so the same range likely applies (upload alone = 2.6 min).<br>* MT tpuf WPS is aggregate wall-clock throughput across 10 concurrent namespace uploads. Per-namespace WPS ≈ 624.</div>
       <details class="foldout">
         <summary>Multi-tenant upload: parallel (tpuf) vs sequential (Qdrant) — methodology drives most of the 8.5× gap</summary>
         <div class="fold-body">The multi-tenant dataset is <strong>1M vectors total</strong> (100 tenants &times; 10K each) &mdash; 10&times; more data than DBpedia. Qdrant uploads all 1M sequentially in batches to one collection (<code>payload_m=16</code>, <code>is_tenant=True</code>), building per-tenant HNSW sub-graphs in the background. turbopuffer uploads 100 namespaces in <strong>parallel</strong> (asyncio.gather, semaphore=10 concurrent), so its 2.4 min wall-clock reflects parallel throughput. Sequential uploads at ~624 WPS per namespace would take <strong>~26.7 min</strong> (100 &times; ~16s) &mdash; parallelism delivers an <strong>~11&times; speedup</strong>. Both engines use the same batch size (128 vectors/batch). The methodology difference (parallel vs sequential) accounts for most of the 8.5&times; wall-clock gap; Qdrant also pays extra for HNSW sub-graph construction at write time.</div>
       </details>
       <details class="foldout neutral">
         <summary>Write-time vs query-time — Qdrant builds HNSW upfront; tpuf defers indexing to async SPFresh</summary>
-        <div class="fold-body">turbopuffer stores 0.615 GB for DBpedia (&asymp; raw vector size: 100K &times; 1536-dim &times; 4B). Qdrant builds HNSW at write time &mdash; 168s for H&amp;M, ~0s for DBpedia (concurrent), 5.1s for MT sub-graphs. This one-time write cost is the source of Qdrant&rsquo;s 1.9ms query server latency: the index is in RAM, already built. turbopuffer&rsquo;s SPFresh index is built <em>asynchronously</em> after writes commit to the S3 WAL &mdash; writes return immediately (no blocking index phase). SPFresh duration depends on shared indexer availability and varied from 25s to 268s across 5 DBpedia runs. During the SPFresh window, WAL vectors are brute-force scanned per query. Once built, queries use the centroid index from NVMe.</div>
+        <div class="fold-body">turbopuffer stores 0.615 GB for DBpedia (&asymp; raw vector size: 100K &times; 1536-dim &times; 4B). Qdrant builds HNSW at write time &mdash; 168s for H&amp;M, ~0s for DBpedia (index during upload), 5.1s for MT sub-graphs. This one-time write cost is the source of Qdrant&rsquo;s 1.9ms query server latency: the index is in RAM, already built. turbopuffer&rsquo;s SPFresh index is built <em>asynchronously</em> after writes commit to the S3 WAL &mdash; writes return immediately (no blocking index phase). SPFresh duration depends on shared indexer availability and varied from 25s to 268s across 5 DBpedia runs. During the SPFresh window, WAL vectors are brute-force scanned per query. Once built, queries use the centroid index from NVMe.</div>
       </details>
 
 
       <details class="foldout neutral">
         <summary>tpuf writes 50–60% faster, but SPFresh build time (25–268s) decides the DBpedia race</summary>
-        <div class="fold-body">, but SPFresh builds the centroid index asynchronously on shared background indexers, and its duration depends on indexer availability at the time of upload. Across 5 DBpedia re-runs, SPFresh completed in 25s, 36s, 61s, 183s, and 268s — putting tpuf total at 3.1–7.3 min. Qdrant&rsquo;s consistent 3.9 min falls inside that range: tpuf wins when indexers are available, Qdrant wins when they are not. H&amp;M measured 60s SPFresh (4.1 min total) and beat Qdrant (8.4 min) — though with only one H&amp;M trial, the SPFresh variance seen on DBpedia (25&ndash;268s) means the margin could narrow to ~0.8 min on a slow indexer draw. The deferred Qdrant experiment confirms concurrent HNSW is optimal: running HNSW <em>after</em> upload (5.3 min DBpedia, 9.1 min H&amp;M) is slower than concurrent (3.9 min, 8.4 min).</div>
+        <div class="fold-body">, but SPFresh builds the centroid index asynchronously on shared background indexers, and its duration depends on indexer availability at the time of upload. Across 5 DBpedia re-runs, SPFresh completed in 25s, 36s, 61s, 183s, and 268s — putting tpuf total at 3.1–7.3 min. Qdrant&rsquo;s consistent 3.9 min falls inside that range: tpuf wins when indexers are available, Qdrant wins when they are not. H&amp;M measured 60s SPFresh (4.1 min total) and beat Qdrant (8.4 min) — though with only one H&amp;M trial, the SPFresh variance seen on DBpedia (25&ndash;268s) means the margin could narrow to ~0.8 min on a slow indexer draw. Building the index <em>after</em> upload (5.3 min DBpedia, 9.1 min H&amp;M) is slower than building it <em>during</em> upload (3.9 min, 8.4 min) &mdash; so Qdrant's default index-during-upload is optimal here, and the bulk-load recipe (disable indexing, then reindex) does not help at this scale.</div>
       </details>
     </section>
 
@@ -2062,10 +2062,10 @@ document.addEventListener('DOMContentLoaded', function() {
       wps:[624,657], up:161, idx:[25,268], total:[186,438], wp50:192, wp99:352, store:0.615 },
     { n:'tpuf pinned-1r', e:'tpuf',
       wps:633, up:156, wp50:188, wp99:295, store:0.615 },
-    { n:'Qdrant concurrent', e:'qdrant',
+    { n:'Qdrant · index during upload', e:'qdrant',
       qps:143.2, rmean:6.9, rp99:8.4, srv50:1.9, srv99:2.5, recall:98.36,
       wps:417, up:234, idx:0, total:234, wp50:294, wp99:365, store:0.614 },
-    { n:'Qdrant deferred', e:'qdrant',
+    { n:'Qdrant · index after upload', e:'qdrant',
       wps:423, up:234, idx:84, total:318, wp50:291, wp99:349, store:0.614 },
   ];
   // fam = shared-scale family: metrics with the same fam use one fixed
@@ -2312,11 +2312,11 @@ document.addEventListener('DOMContentLoaded', function() {
   const UPLOAD = [
     { n:'DBpedia · tpuf serverless', e:'tpuf', total:[186,438], up:161, idx:[25,268], wps:[624,657], wp50:192, wp99:352, store:0.615 },
     { n:'DBpedia · tpuf pinned-1r', e:'tpuf', up:156, wps:633, wp50:188, wp99:295, store:0.615 },
-    { n:'DBpedia · Qdrant concurrent', e:'qdrant', total:234, up:234, idx:0, wps:417, wp50:294, wp99:365, store:0.614 },
-    { n:'DBpedia · Qdrant deferred', e:'qdrant', total:318, up:234, idx:84, wps:423, wp50:291, wp99:349, store:0.614 },
+    { n:'DBpedia · Qdrant · index during upload', e:'qdrant', total:234, up:234, idx:0, wps:417, wp50:294, wp99:365, store:0.614 },
+    { n:'DBpedia · Qdrant · index after upload', e:'qdrant', total:318, up:234, idx:84, wps:423, wp50:291, wp99:349, store:0.614 },
     { n:'H&M · tpuf serverless', e:'tpuf', total:246, up:186, idx:60, wps:565, wp50:208, wp99:335, store:0.873 },
-    { n:'H&M · Qdrant concurrent', e:'qdrant', total:504, up:336, idx:168, wps:316, wp50:401, wp99:459, store:0.926 },
-    { n:'H&M · Qdrant deferred', e:'qdrant', total:546, up:324, idx:222, store:0.926 },
+    { n:'H&M · Qdrant · index during upload', e:'qdrant', total:504, up:336, idx:168, wps:316, wp50:401, wp99:459, store:0.926 },
+    { n:'H&M · Qdrant · index after upload', e:'qdrant', total:546, up:324, idx:222, store:0.926 },
     { n:'MT 1M · tpuf parallel', e:'tpuf', total:144, wps:6847, wp50:207, wp99:338 },
     { n:'MT 1M · Qdrant', e:'qdrant', total:1230, up:1225, idx:5.1, wps:816, wp50:148, wp99:175, store:3.200 },
   ];
@@ -2333,8 +2333,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   /* ═══ Init ═══ (each plot folds in its original full table, or generates one) */
   const rw = document.getElementById('iplot-rw'); if(rw){ initTimeSeries(rw, RW); mountView(rw, grabTables(rw, ['Phase'])); }
-  const up = document.getElementById('iplot-upload'); if(up){ initBarExplorer(up, UPLOAD, {lm:186}); mountView(up, grabTables(up, ['Dataset'])); }
-  const db = document.getElementById('iplot-dbpedia'); if(db){ initBarExplorer(db, DBPEDIA); mountView(db, grabTables(db, ['Engine'])); }
+  const up = document.getElementById('iplot-upload'); if(up){ initBarExplorer(up, UPLOAD, {lm:300}); mountView(up, grabTables(up, ['Dataset'])); }
+  const db = document.getElementById('iplot-dbpedia'); if(db){ initBarExplorer(db, DBPEDIA, {lm:212}); mountView(db, grabTables(db, ['Engine'])); }
   const rc = document.getElementById('iplot-recall'); if(rc){ initRecall(rc); mountView(rc, () => recallTable(RECALL)); }
   const tableFor = { 'iplot-qps':['QPS'], 'iplot-hm-conc':['p','Concurrency'], 'iplot-mt-conc':['Config'] };
   Object.keys(SWEEPS).forEach(id => { const el=document.getElementById(id); if(!el) return;
