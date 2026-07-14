@@ -623,7 +623,7 @@ canvas {
         </table>
       </div>
       <div class="callout neutral">
-        <strong>Infrastructure:</strong> Benchmark client running on a dedicated EC2 instance in <code>aws-us-west-2</code>, the same region as both services. Measured RTT ~2ms. Reported RPS at p=1 equals 1/mean_latency. At p&gt;1, wall-clock throughput &asymp; p &times; stated RPS. Recall is measured against exact brute-force ground truth for every query.
+        <strong>Infrastructure:</strong> Benchmark client running on a dedicated EC2 instance in <code>aws-us-west-2</code>, the same region as both services. Measured RTT ~2ms. <strong>RPS/worker</strong> = 1/mean latency of a single worker (a latency measure); <strong>~Total RPS</strong> &asymp; p &times; RPS/worker is the wall-clock throughput &mdash; use it for capacity comparisons. Recall is measured against exact brute-force ground truth for every query.
       </div>
     </section>
 
@@ -685,13 +685,13 @@ canvas {
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>Engine</th><th>p</th><th>RPS</th><th>Mean</th><th>p99</th><th>Srv p50</th><th>Srv p99</th><th>Billed GB/q</th><th>Recall</th></tr>
+            <tr><th>Engine</th><th>p</th><th>RPS/worker</th><th>~Total RPS</th><th>Mean</th><th>p99</th><th>Srv p50</th><th>Srv p99</th><th>Billed GB/q</th><th>Recall</th></tr>
           </thead>
           <tbody>
-            <tr><td><span class="chip-tpuf"></span>tpuf serverless</td><td>1</td><td>57.1</td><td>15.9ms</td><td>47.1ms</td><td>10ms</td><td>40ms</td><td>0.615 GB</td><td>98.51%</td></tr>
-            <tr><td><span class="chip-tpuf"></span>tpuf serverless</td><td>8</td><td>51.4</td><td>19.4ms</td><td>40.8ms</td><td>10ms</td><td>30ms</td><td>0.615 GB</td><td>98.51%</td></tr>
-            <tr><td><span class="chip-qdrant"></span>Qdrant</td><td>1</td><td class="win">143.2</td><td class="win">6.9ms</td><td class="win">8.4ms</td><td class="win">1.9ms</td><td class="win">2.5ms</td><td>—</td><td class="win">98.36%</td></tr>
-            <tr><td><span class="chip-qdrant"></span>Qdrant</td><td>8</td><td>48.1</td><td>20.8ms</td><td>54.1ms</td><td>2.0ms</td><td>7.3ms</td><td>—</td><td>98.36%</td></tr>
+            <tr><td><span class="chip-tpuf"></span>tpuf serverless</td><td>1</td><td>57.1</td><td>57</td><td>15.9ms</td><td>47.1ms</td><td>10ms</td><td>40ms</td><td>0.615 GB</td><td>98.51%</td></tr>
+            <tr><td><span class="chip-tpuf"></span>tpuf serverless</td><td>8</td><td>51.4</td><td>411</td><td>19.4ms</td><td>40.8ms</td><td>10ms</td><td>30ms</td><td>0.615 GB</td><td>98.51%</td></tr>
+            <tr><td><span class="chip-qdrant"></span>Qdrant</td><td>1</td><td class="win">143.2</td><td>143</td><td class="win">6.9ms</td><td class="win">8.4ms</td><td class="win">1.9ms</td><td class="win">2.5ms</td><td>—</td><td class="win">98.36%</td></tr>
+            <tr><td><span class="chip-qdrant"></span>Qdrant</td><td>8</td><td>48.1</td><td>385</td><td>20.8ms</td><td>54.1ms</td><td>2.0ms</td><td>7.3ms</td><td>—</td><td>98.36%</td></tr>
           </tbody>
         </table>
       </div>
@@ -781,12 +781,12 @@ canvas {
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>p</th><th>RPS</th><th>Mean</th><th>p50</th><th>p99</th><th>Srv p50</th><th>Srv p99</th><th>Billed GB/q</th><th>Recall</th></tr>
+            <tr><th>p</th><th>RPS/worker</th><th>~Total RPS</th><th>Mean</th><th>p50</th><th>p99</th><th>Srv p50</th><th>Srv p99</th><th>Billed GB/q</th><th>Recall</th></tr>
           </thead>
           <tbody>
-            <tr><td>1</td><td>47.4</td><td>21.1ms</td><td>19.8ms</td><td>50.0ms</td><td>14ms</td><td>44ms</td><td>0.872 GB</td><td>89.14%</td></tr>
-            <tr><td>8</td><td>42.0</td><td>23.8ms</td><td>22.3ms</td><td>41.9ms</td><td>14ms</td><td>29ms</td><td>0.872 GB</td><td>89.18%</td></tr>
-            <tr><td>32</td><td>12.8</td><td>78.0ms</td><td>67.5ms</td><td>394.3ms</td><td>15ms</td><td>35ms</td><td>0.872 GB</td><td>89.17%</td></tr>
+            <tr><td>1</td><td>47.4</td><td>47</td><td>21.1ms</td><td>19.8ms</td><td>50.0ms</td><td>14ms</td><td>44ms</td><td>0.872 GB</td><td>89.14%</td></tr>
+            <tr><td>8</td><td>42.0</td><td>336</td><td>23.8ms</td><td>22.3ms</td><td>41.9ms</td><td>14ms</td><td>29ms</td><td>0.872 GB</td><td>89.18%</td></tr>
+            <tr><td>32</td><td>12.8</td><td>410</td><td>78.0ms</td><td>67.5ms</td><td>394.3ms</td><td>15ms</td><td>35ms</td><td>0.872 GB</td><td>89.17%</td></tr>
           </tbody>
         </table>
       </div>
@@ -795,12 +795,12 @@ canvas {
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>Concurrency</th><th>RPS</th><th>Mean</th><th>p50</th><th>p99</th><th>Srv p50</th><th>Recall</th></tr>
+            <tr><th>Concurrency</th><th>RPS/worker</th><th>~Total RPS</th><th>Mean</th><th>p50</th><th>p99</th><th>Srv p50</th><th>Recall</th></tr>
           </thead>
           <tbody>
-            <tr><td>p=1</td><td class="win">149.6</td><td class="win">6.7ms</td><td class="win">6.6ms</td><td class="win">9.9ms</td><td class="win">1.1ms</td><td class="win">95.85%</td></tr>
-            <tr><td>p=8</td><td>42.5</td><td>23.5ms</td><td>20.0ms</td><td>69.0ms</td><td>1.1ms</td><td>95.85%</td></tr>
-            <tr><td>p=32</td><td>8.3</td><td>120.1ms</td><td>87.0ms</td><td>517.2ms</td><td>1.1ms</td><td>95.85%</td></tr>
+            <tr><td>p=1</td><td class="win">149.6</td><td>150</td><td class="win">6.7ms</td><td class="win">6.6ms</td><td class="win">9.9ms</td><td class="win">1.1ms</td><td class="win">95.85%</td></tr>
+            <tr><td>p=8</td><td>42.5</td><td>340</td><td>23.5ms</td><td>20.0ms</td><td>69.0ms</td><td>1.1ms</td><td>95.85%</td></tr>
+            <tr><td>p=32</td><td>8.3</td><td>266</td><td>120.1ms</td><td>87.0ms</td><td>517.2ms</td><td>1.1ms</td><td>95.85%</td></tr>
           </tbody>
         </table>
       </div>
@@ -828,28 +828,28 @@ canvas {
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>Config</th><th>p</th><th>RPS</th><th>p50</th><th>p99</th><th>Srv p50</th><th>Srv p99</th><th>Billed GB/q</th><th>Recall</th></tr>
+            <tr><th>Config</th><th>p</th><th>RPS/worker</th><th>~Total RPS</th><th>p50</th><th>p99</th><th>Srv p50</th><th>Srv p99</th><th>Billed GB/q</th><th>Recall</th></tr>
           </thead>
           <tbody>
-            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>1</td><td>33.5</td><td>24.0ms</td><td>119.6ms</td><td>19ms</td><td>114ms</td><td>0.256 GB</td><td>100%</td></tr>
-            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>1</td><td class="win">184.6</td><td class="win">5.3ms</td><td class="win">9.7ms</td><td>—</td><td>—</td><td>—</td><td>100%</td></tr>
-            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>8</td><td class="win">43.7</td><td class="win">21.7ms</td><td class="win">54.9ms</td><td>16ms</td><td>41ms</td><td>0.256 GB</td><td>100%</td></tr>
-            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>8</td><td>46.9</td><td>17.3ms</td><td>96.8ms</td><td>—</td><td>—</td><td>—</td><td>100%</td></tr>
-            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>32</td><td class="win">16.8</td><td>55.3ms</td><td>207ms</td><td>15ms</td><td>29ms</td><td>0.256 GB</td><td>100%</td></tr>
-            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>32</td><td>9.5</td><td>74.5ms</td><td>444.8ms</td><td>—</td><td>—</td><td>—</td><td>100%</td></tr>
+            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>1</td><td>33.5</td><td>34</td><td>24.0ms</td><td>119.6ms</td><td>19ms</td><td>114ms</td><td>0.256 GB</td><td>100%</td></tr>
+            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>1</td><td class="win">184.6</td><td class="win">185</td><td class="win">5.3ms</td><td class="win">9.7ms</td><td>—</td><td>—</td><td>—</td><td>100%</td></tr>
+            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>8</td><td class="win">43.7</td><td>350</td><td class="win">21.7ms</td><td class="win">54.9ms</td><td>16ms</td><td>41ms</td><td>0.256 GB</td><td>100%</td></tr>
+            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>8</td><td>46.9</td><td class="win">375</td><td>17.3ms</td><td>96.8ms</td><td>—</td><td>—</td><td>—</td><td>100%</td></tr>
+            <tr><td><span class="chip-tpuf"></span>tpuf ns-per-tenant</td><td>32</td><td class="win">16.8</td><td class="win">538</td><td>55.3ms</td><td>207ms</td><td>15ms</td><td>29ms</td><td>0.256 GB</td><td>100%</td></tr>
+            <tr><td><span class="chip-qdrant"></span>Qdrant payload_m16</td><td>32</td><td>9.5</td><td>304</td><td>74.5ms</td><td>444.8ms</td><td>—</td><td>—</td><td>—</td><td>100%</td></tr>
           </tbody>
         </table>
       </div>
       <div class="chart-block">
         <div class="chart-title">Multi-Tenant RPS vs Concurrency</div>
-        <div class="chart-sub">Requests per second at p=1, p=8, p=32. Qdrant leads at low concurrency; tpuf crossover at p=32.</div>
+        <div class="chart-sub">Per-worker RPS (1/mean latency) at p=1, p=8, p=32 &mdash; see table for wall-clock totals. Qdrant leads at low concurrency; tpuf crossover at p=32.</div>
         <canvas id="c-mt-rps" width="560" height="280" aria-label="Line chart: tpuf 33.5/43.7/16.8 RPS vs Qdrant 184.6/46.9/9.5 RPS at p=1/8/32, crossover at p=32"></canvas>
       </div>
       <div class="callout neutral">
         <strong>Why 100% recall?</strong> With ~10,000 vectors per tenant, both HNSW (Qdrant: <code>m=0, payload_m=16</code> builds per-tenant sub-graphs) and SPFresh centroid structures (tpuf) have negligible approximation error &mdash; the per-tenant index is small enough for near-exhaustive traversal. The multi-tenant comparison is purely a throughput and cost question, not a recall quality question.
       </div>
       <div class="callout neutral">
-        <strong>p=32 autoscaling crossover:</strong> tpuf outperforms the single-node Qdrant at p=32 (16.8 vs 9.5 RPS) because Qdrant&rsquo;s 2CPU node saturates (mean latency 5ms&rarr;105ms = 20&times;). tpuf autoscales horizontally. This is a node-sizing issue: a larger Qdrant instance restores the 5&times; advantage at all concurrency levels.
+        <strong>p=32 autoscaling crossover:</strong> tpuf outperforms the single-node Qdrant at p=32 (~538 vs ~304 total RPS) because Qdrant&rsquo;s 2CPU node saturates past p=8 (total RPS falls 375&rarr;304 while p99 hits 445ms). tpuf autoscales horizontally and keeps gaining. This is a node-sizing issue: a larger Qdrant instance restores the 5&times; advantage at all concurrency levels.
       </div>
       <div class="callout tpuf">
         <strong>Billed GB per MT query:</strong> tpuf reported 0.256 GB billed per MT query vs ~0.031 GB raw vector data per namespace (10K &times; 768-dim &times; 4B). The 0.256 GB is not scan overhead &mdash; it exactly matches turbopuffer&rsquo;s former 256 MB per-query billing minimum. That floor was raised to <strong>1.28 GB per query</strong> in Feb 2026 (see §4.3), so small namespaces bill 5&times; more per query today than this measured value.
@@ -1138,7 +1138,8 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
             <tr><td>Latency floor</td><td>~10ms server (NVMe centroid)</td><td class="win">~2ms server (HNSW in RAM)</td></tr>
             <tr><td>Filtered recall</td><td>89.14% (fixed)</td><td class="win">95.85% (tunable)</td></tr>
             <tr><td>Cold-start p99</td><td style="color:#991B1B;background:#FEF2F2;">1,891ms</td><td class="win">None</td></tr>
-            <tr><td>Multi-tenant throughput (p=1)</td><td>33.5 RPS</td><td class="win">184.6 RPS</td></tr>
+            <tr><td>Multi-tenant single-stream (p=1)</td><td>33.5 RPS</td><td class="win">184.6 RPS</td></tr>
+            <tr><td>Multi-tenant peak throughput (p=32)</td><td class="win">~538 RPS (autoscales)</td><td>~304 RPS (2CPU node saturates)</td></tr>
             <tr><td>Idle cost</td><td class="win">~$0</td><td>~$26/mo</td></tr>
             <tr><td>Break-even QPS</td><td></td><td class="win">~8&ndash;13 QPS (scale-dependent)</td></tr>
             <tr><td>Upload speed (total)</td><td class="win">Wins H&amp;M; wins DBpedia when SPFresh fast (3.1 min)</td><td class="win">Wins DBpedia when SPFresh slow (up to 7.3 min)</td></tr>
@@ -1206,7 +1207,7 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
         <li><strong>Pinned mode has a billing floor that dominates small datasets.</strong> For any dataset under ~10 GB, pinned turbopuffer costs 10&ndash;95&times; more than Qdrant Cloud with no performance benefit. Workloads that need consistent low-latency (no cold-start variance) pay this premium regardless of query type.</li>
         <li><strong>Serverless noisy-neighbor is a real operational risk.</strong> A single bursty tenant in serverless mode triples all other tenants' p50 latency. Pinning eliminates this but removes scale-to-zero. Design your tenancy model before choosing serverless.</li>
         <li><strong>Filtered search recall is not tunable on turbopuffer.</strong> If your workload uses selective attribute filters and 89.14% recall is insufficient, Qdrant is the only option. This constraint is architectural, not a configuration gap.</li>
-        <li><strong>Multi-tenant idle SaaS is turbopuffer's strongest case.</strong> If most tenants are mostly idle, scale-to-zero is worth real money. At active-tenant load, Qdrant is 5.5&times; faster (184.6 vs 33.5 RPS) &mdash; the advantage flips completely when tenants are active.</li>
+        <li><strong>Multi-tenant idle SaaS is turbopuffer's strongest case.</strong> If most tenants are mostly idle, scale-to-zero is worth real money. At active-tenant load, Qdrant is 5.5&times; faster per request (184.6 vs 33.5 RPS single-stream) &mdash; though under heavy concurrency (p=32) tpuf&rsquo;s autoscaling out-delivers the saturated 2CPU Qdrant node in total throughput (~538 vs ~304 RPS). Size the Qdrant node to the concurrency you expect.</li>
         <li><strong>Cold-start latency must be part of your SLA calculation.</strong> The 1,891ms p99 cold-start is not a fringe edge case &mdash; it occurs after any restart, any scale-to-zero event in serverless mode. Plan pre-warm queries or accept the SLA window.</li>
       </ol>
     </section>
