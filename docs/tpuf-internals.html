@@ -590,6 +590,10 @@ canvas {
   border-radius: 8px; opacity: 0; transition: opacity 0.08s; box-shadow: 0 6px 20px rgba(0,0,0,0.22); max-width: 260px;
 }
 #iplot-tip b { font-weight: 600; }
+.sidebar-related { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 7px; }
+.sidebar-related .sr-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-2); margin-bottom: 2px; }
+.sidebar-related a { font-size: 12.5px; color: var(--text-2); text-decoration: none; }
+.sidebar-related a:hover { color: var(--tpuf); }
 </style>
 </head>
 <body>
@@ -619,6 +623,13 @@ canvas {
         <li><a href="#s10"><span class="nav-node">10</span>SPFresh Build</a></li>
       </ul>
     </nav>
+    <div class="sidebar-related">
+      <div class="sr-label">Related</div>
+      <a href="tpuf-detailed-report.html">&#8598; Main benchmark report</a>
+      <a href="qdrant-cost-calculator.html">Qdrant calculator &#8599;</a>
+      <a href="napkin-cost-calculator.html">Raw-cost calculator &#8599;</a>
+      <a href="tpuf-pricing-calculator.html">tpuf calculator &#8599;</a>
+    </div>
   </aside>
 
   <main class="main">

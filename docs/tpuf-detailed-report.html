@@ -639,6 +639,10 @@ canvas {
 .verdict-col li { margin-bottom: 6px; }
 .verdict-foot { margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--border); font-size: 13px; color: var(--text-2); }
 .verdict-foot b { color: var(--text); } .verdict-foot a { color: var(--tpuf); }
+.sidebar-related { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 7px; }
+.sidebar-related .sr-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-2); margin-bottom: 2px; }
+.sidebar-related a { font-size: 12.5px; color: var(--text-2); text-decoration: none; }
+.sidebar-related a:hover { color: var(--tpuf); }
 </style>
 </head>
 <body>
@@ -667,6 +671,13 @@ canvas {
         <li><a href="#s11"><span class="nav-node">9</span>Strategy</a></li>
       </ul>
     </nav>
+    <div class="sidebar-related">
+      <div class="sr-label">Related</div>
+      <a href="tpuf-internals.html">Internals &amp; deep-dives &#8599;</a>
+      <a href="qdrant-cost-calculator.html">Qdrant calculator &#8599;</a>
+      <a href="napkin-cost-calculator.html">Raw-cost calculator &#8599;</a>
+      <a href="tpuf-pricing-calculator.html">tpuf calculator &#8599;</a>
+    </div>
   </aside>
 
   <!-- ── Main ── -->
