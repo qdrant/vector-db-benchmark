@@ -404,12 +404,18 @@ async def qdrant_stored_gb(collection_name):
     return None
 
 
-async def qdrant_upsert_timed(collection, points_dicts):
+async def qdrant_upsert_timed(collection, points_dicts, client=None):
+    """Upsert a batch. Pass `client` to reuse a pooled connection (avoids a
+    fresh TCP+TLS handshake per batch); otherwise a throwaway client is used."""
     url = os.environ["QDRANT_CLUSTER_URL"].rstrip("/") + f"/collections/{collection}/points"
     api_key = os.environ.get("QDRANT_API_KEY")
     headers = {"api-key": api_key, "Content-Type": "application/json"} if api_key else {"Content-Type": "application/json"}
-    async with httpx.AsyncClient(timeout=120) as client:
+    if client is not None:
         resp = await client.put(url, json={"points": points_dicts}, headers=headers)
+        resp.raise_for_status()
+        return resp.json().get("time", 0) * 1000
+    async with httpx.AsyncClient(timeout=120) as _c:
+        resp = await _c.put(url, json={"points": points_dicts}, headers=headers)
         resp.raise_for_status()
     return resp.json().get("time", 0) * 1000
 
@@ -530,22 +536,27 @@ async def qdrant_write_at_concurrency(collection, ids, vectors, concurrency, pay
     sem = asyncio.Semaphore(concurrency)
     batch_lats = []
     starts = list(range(0, len(ids), BATCH_SIZE))
+    # One pooled client for the whole level so batches reuse keep-alive
+    # connections instead of a fresh TCP+TLS handshake each (which capped
+    # the low-concurrency end and understated sustained write throughput).
+    limits = httpx.Limits(max_connections=concurrency, max_keepalive_connections=concurrency)
 
-    async def one(start):
-        end = min(start + BATCH_SIZE, len(ids))
-        pts = [
-            {"id": int(ids[start + i]), "vector": vec.tolist(),
-             **({"payload": payloads[start + i]} if payloads else {})}
-            for i, vec in enumerate(vectors[start:end])
-        ]
-        async with sem:
-            bt = time.perf_counter()
-            await qdrant_upsert_timed(collection, pts)
-            batch_lats.append(time.perf_counter() - bt)
+    async with httpx.AsyncClient(timeout=120, limits=limits) as client:
+        async def one(start):
+            end = min(start + BATCH_SIZE, len(ids))
+            pts = [
+                {"id": int(ids[start + i]), "vector": vec.tolist(),
+                 **({"payload": payloads[start + i]} if payloads else {})}
+                for i, vec in enumerate(vectors[start:end])
+            ]
+            async with sem:
+                bt = time.perf_counter()
+                await qdrant_upsert_timed(collection, pts, client=client)
+                batch_lats.append(time.perf_counter() - bt)
 
-    t0 = time.perf_counter()
-    await asyncio.gather(*[one(s) for s in starts])
-    dur = time.perf_counter() - t0
+        t0 = time.perf_counter()
+        await asyncio.gather(*[one(s) for s in starts])
+        dur = time.perf_counter() - t0
     arr = np.array(batch_lats) * 1000
     return {
         "concurrency":  concurrency,
@@ -1279,6 +1290,7 @@ async def op_fixed_qps(ds: DatasetConfig, active: list[str], run_dir: Path, stat
             if srv_ms:
                 arr = np.array(srv_ms)
                 s["server_p50_ms"] = round(float(np.percentile(arr, 50)), 1)
+                s["server_p90_ms"] = round(float(np.percentile(arr, 90)), 1)
                 s["server_p99_ms"] = round(float(np.percentile(arr, 99)), 1)
             results[f"qps{qps}"] = s
             extra = f"→ ${s['monthly_usd']:.2f}/mo" if "monthly_usd" in s else ""
