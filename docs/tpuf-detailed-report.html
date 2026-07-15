@@ -766,7 +766,9 @@ canvas {
         </table>
       </div>
       <div class="callout neutral">
-        <strong>Infrastructure:</strong> Benchmark client running on a dedicated EC2 instance in <code>aws-us-west-2</code>, the same region as both services. Measured RTT ~2ms. <strong>RPS/worker</strong> = 1/mean latency of a single worker (a latency measure); <strong>~Total RPS</strong> &asymp; p &times; RPS/worker is the wall-clock throughput &mdash; use it for capacity comparisons. Latency is reported two ways: <strong>search latency</strong> is end-to-end as measured by the client (engine processing + network + client overhead), while <strong>internal search latency</strong> is the engine&rsquo;s own internal processing time (no network) &mdash; so it is always the smaller of the two. Recall is measured against exact brute-force ground truth for every query.
+        <strong>Environment.</strong> Client: one dedicated EC2 host in <code>aws-us-west-2</code> (same region as both services; measured RTT ~2ms). Engines: turbopuffer serverless (default; pinned 1r/4r where noted) and Qdrant Cloud on a small ~2-vCPU node for search &mdash; the disk-mode deep-dive used a 64&nbsp;GB node (see the internals companion). Recall is measured against exact brute-force ground truth on every query.<br><br>
+        <strong>Trial counts.</strong> Each figure is a <strong>single measured run (n=1) unless stated</strong>; the one multi-run number is DBpedia SPFresh index build (n=5: 25 / 36 / 61 / 183 / 268s). Treat single-shot numbers as indicative, not tight estimates.<br><br>
+        <strong>Metrics.</strong> <strong>search latency</strong> = end-to-end client-side (engine + network + client overhead); <strong>internal search latency</strong> = engine-only processing (no network, always the smaller); <strong>throughput</strong> = <code>rps_measured</code> — completed queries ÷ wall-clock (NOT per-worker × concurrency, which overstates aggregate RPS).
       </div>
         </div>
       </details>
@@ -1100,7 +1102,19 @@ canvas {
         <p style="font-size:11px;color:var(--text-2);margin:6px 2px 0;font-style:italic;">Internal latency = engine-reported server-side time (excludes network); ranges span p=1→32. Recall &amp; billed-GB are concurrency-independent.</p>
 
         <div class="callout tpuf">
-          <strong>Cold-start penalty (prior measurement):</strong> tpuf cold p99 = 1,891ms (server_p99 = 1,777ms — 94% server-side S3 fetches). Hot cache (NVMe) p99 ≈ 50ms — a 38&times; improvement once centroids are cached. Qdrant has no cold-start: HNSW lives in RAM permanently.
+          <strong>Cold-start summary.</strong> turbopuffer fetches centroids from S3 into NVMe after any restart / scale-to-zero; Qdrant keeps HNSW resident in RAM (no cold-start), except in disk mode. All cold-start figures across this report and the companion, in one place:
+        <div class="table-wrap" style="margin-top:10px;">
+          <table>
+            <thead><tr><th>Config</th><th>Cold first query</th><th>Cold p99</th><th>Warm p99</th><th>Converges</th></tr></thead>
+            <tbody>
+              <tr><td><span class="chip-tpuf"></span>tpuf serverless (H&amp;M)</td><td>~600ms</td><td style="color:#991B1B;font-weight:600;">1,891ms</td><td>~50ms</td><td>~30 queries</td></tr>
+              <tr><td><span class="chip-tpuf"></span>tpuf pinned-4r (H&amp;M)</td><td>893ms</td><td>—</td><td>~43ms</td><td>~30 queries</td></tr>
+              <tr><td><span class="chip-qdrant"></span>Qdrant (HNSW in RAM)</td><td class="win">none</td><td class="win">—</td><td class="win">~2ms server</td><td>—</td></tr>
+              <tr><td><span class="chip-qdrant"></span>Qdrant disk mode</td><td>7ms (OS cache)</td><td style="color:#991B1B;font-weight:600;">1,457ms</td><td>~10ms</td><td>~1,000 queries</td></tr>
+            </tbody>
+          </table>
+        </div>
+        Serverless cold p99 is 94% server-side S3 fetch (1,777ms of 1,891ms). Full warmup curves are in the internals companion (§1 cold warmup, §9 disk mode).
         </div>
         <details class="foldout tpuf">
           <summary>Why filtered recall drops — SPFresh post-filters; Qdrant filters inside HNSW traversal</summary>
