@@ -917,7 +917,7 @@ canvas {
             <select class="iplot-metric">
               <optgroup label="query (↑/↓ better)">
                 <option value="qps">QPS — throughput ↑</option>
-                <option value="rlat">search latency ↓</option>
+                <option value="rlat" selected>search latency ↓</option>
                 <option value="slat">internal search latency ↓</option>
                 <option value="billed">billed GB / query ↓</option>
                 <option value="recall">recall ↑</option>
@@ -926,7 +926,7 @@ canvas {
                 <option value="wps">WPS — insert throughput ↑</option>
                 <option value="up">upload time ↓</option>
                 <option value="idx">index build time ↓</option>
-                <option value="total" selected>total upload + index ↓</option>
+                <option value="total">total upload + index ↓</option>
                 <option value="wlat">write latency ↓</option>
                 <option value="store">stored size ↓</option>
               </optgroup>
@@ -939,6 +939,15 @@ canvas {
           <div class="ps">Bars = one config. Hover for detail; click an engine to toggle. A measured range (e.g. SPFresh index build 25–268s across 5 runs) shows as two bars — min and max.</div>
           <svg class="iplot-svg" viewBox="0 0 900 300" role="img" aria-label="DBpedia interactive metric chart"></svg>
         </div>
+      </div>
+
+      <div class="obs">
+        <div class="obs-h">Observations</div>
+        <ul>
+          <li><strong>Recall is near-parity</strong> on unfiltered ANN &mdash; tpuf 98.51% vs Qdrant 98.36%.</li>
+          <li><strong>Qdrant is server-bound at ~2ms; tpuf floors near ~10ms.</strong> Server p99: Qdrant 2.5ms (1.3&times; p50), tpuf 40ms (4&times; p50).</li>
+          <li><strong>Every DBpedia query scans the whole dataset</strong> &mdash; tpuf reports 0.615 GB scanned (essentially the full 0.614 GB) and invoices at the 1.28 GB per-query minimum (§4.2), a floor of <strong>$1.28 per million queries</strong>. Above that floor, cost scales linearly with data size &times; QPS.</li>
+        </ul>
       </div>
 
       <div class="table-wrap">
@@ -954,10 +963,6 @@ canvas {
           </tbody>
         </table>
       </div>
-      <details class="foldout">
-        <summary>Every DBpedia query scans the whole dataset; tpuf bills the 1.28 GB per-query minimum</summary>
-        <div class="fold-body">tpuf reports 0.615 GB scanned per DBpedia query &mdash; essentially the entire dataset (0.614 GB raw) &mdash; and invoices at the 1.28 GB per-query minimum (§4.2). Cost scales linearly with data size &times; QPS once above that floor. Qdrant server p99 = 2.5ms (1.3&times; p50); tpuf server p99 = 40ms (4&times; p50).</div>
-      </details>
       </div><!-- /ds-group dbpedia (Group A) -->
 
       <h3>Latency &amp; Throughput vs Concurrency (fresh, measured — all three datasets)</h3>
@@ -982,9 +987,17 @@ canvas {
         </div>
         <div class="iplot-panel">
           <div class="pt">DBpedia 100K×1536 · latency &amp; throughput vs concurrency (p = 1 → 32)</div>
-          <div class="ps">x = client concurrency. <strong>Solid</strong> = latency (left axis, log); <strong>dashed</strong> = measured throughput (right axis). Across all three datasets Qdrant peaks around p=4 (~73&ndash;84 RPS) then its throughput <em>declines</em> while its tail explodes; tpuf's throughput holds/climbs (serverless autoscaling) with a gentler latency rise. Note this is single-client throughput (network/client-bound near the knee). Hover any point; click an engine to toggle.</div>
+          <div class="ps">x = client concurrency. <strong>Solid</strong> = latency (left axis, log); <strong>dashed</strong> = measured throughput (right axis). Hover any point; click an engine to toggle.</div>
           <svg class="iplot-svg" viewBox="0 0 900 340" role="img" aria-label="DBpedia latency and throughput vs concurrency (dual axis)"></svg>
         </div>
+      </div>
+
+      <div class="obs">
+        <div class="obs-h">Observations</div>
+        <ul>
+          <li><strong>Qdrant peaks around p=4 (~73&ndash;84 RPS), then throughput <em>declines</em> while its tail explodes.</strong> tpuf's throughput holds or climbs (serverless autoscaling) with a gentler latency rise.</li>
+          <li><strong>This is single-client throughput</strong> &mdash; network/client-bound near the knee, so the ~80 RPS ceiling reflects the harness, not a server limit (Qdrant server p99 &asymp; 3ms).</li>
+        </ul>
       </div>
 
       <!-- Per-query latency over the run: shared, dataset-driven (driven by §4 picker) -->
@@ -1016,9 +1029,18 @@ canvas {
         </div>
         <div class="iplot-panel">
           <div class="pt">DBpedia 100K×1536 · per-query search latency over the run</div>
-          <div class="ps">Log y. <strong>x-axis</strong> defaults to query index so both engines align over the same run; switch to wall-clock to see that Qdrant finishes sooner (its curve ends earlier). At p=1 both are steady; at p=32 the tail scatters — turbopuffer stays comparatively clustered while Qdrant&rsquo;s tail spikes higher (dataset-dependent). Click an engine to toggle.</div>
+          <div class="ps">Log y. <strong>x-axis</strong> defaults to query index so both engines align; switch to wall-clock to see Qdrant finish sooner. Click an engine to toggle.</div>
           <svg class="iplot-svg" viewBox="0 0 900 320" role="img" aria-label="Per-query search latency over the run"></svg>
         </div>
+      </div>
+
+      <div class="obs">
+        <div class="obs-h">Observations</div>
+        <ul>
+          <li><strong>At p=1 both engines are steady;</strong> the aggregate p50/p99 tell the whole story.</li>
+          <li><strong>At p=32 the tail scatters</strong> &mdash; turbopuffer stays comparatively clustered while Qdrant&rsquo;s tail spikes higher (dataset-dependent).</li>
+          <li>On wall-clock x-axis, Qdrant&rsquo;s curve ends earlier &mdash; it finishes the same run sooner.</li>
+        </ul>
       </div>
 
       <!-- Fixed-QPS sweep: shared, dataset-driven (driven by §4 picker) -->
@@ -1043,29 +1065,22 @@ canvas {
         </div>
         <div class="iplot-panel">
           <div class="pt">DBpedia 100K×1536 · latency vs offered QPS</div>
-          <div class="ps">Lines sweep target QPS (log x, log y). tpuf latency is roughly QPS-independent; Qdrant stays low throughout. <strong>Estimated network latency</strong> = search latency &minus; internal latency (the client/network/queuing component). Cost vs QPS is in §4.2 (break-even ~8 QPS). Hover a point; click an engine to toggle.</div>
+          <div class="ps">Lines sweep target QPS (log x, log y). Hover a point; click an engine to toggle.</div>
           <svg class="iplot-svg" viewBox="0 0 900 320" role="img" aria-label="DBpedia latency and cost vs QPS sweep"></svg>
         </div>
       </div>
-      <div class="callout neutral">
-        Switch the metric to <em>internal search latency</em> to compare engine-side processing time (excludes network). Qdrant's server-side latency stays low and flat across offered QPS; tpuf's sits at a higher floor.
+
+      <div class="obs">
+        <div class="obs-h">Observations</div>
+        <ul>
+          <li><strong>tpuf latency is roughly QPS-independent; Qdrant stays low throughout.</strong> On the <em>internal search latency</em> metric, Qdrant's server-side time stays low and flat across offered QPS while tpuf sits at a higher floor.</li>
+          <li><strong>Estimated network latency</strong> = search latency &minus; internal latency &mdash; the client/network/queuing component, isolated as its own metric.</li>
+          <li>Cost vs QPS lives in §4.2 (break-even ~9 QPS for DBpedia/H&amp;M).</li>
+        </ul>
       </div>
 
       <h3>4.2 &mdash; Cost Model by Dataset Scale</h3>
-      <p>turbopuffer charges three components independently; Qdrant charges a flat monthly cluster fee.</p>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Component</th><th>turbopuffer</th><th>Qdrant Cloud</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Storage</td><td>$0.33/GB/month (f16: 2 bytes/dim)</td><td>Included</td></tr>
-            <tr><td>Writes</td><td>$2/GB (f32: 4 bytes/dim) + batch discount</td><td>Included</td></tr>
-            <tr><td>Queries</td><td>$0.001/TB scanned, min <strong>1.28 GB/namespace</strong></td><td>Unlimited</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p style="font-size:13px;color:var(--text-2);margin-top:4px;">The 1.28 GB minimum is critical: a 308 MB namespace (100K &times; 1536-dim f16) is billed as 1.28 GB per scan query &mdash; a cost floor of <strong>$1.28 per million queries</strong> regardless of actual data size. Serverless also has a <strong>$16/mo launch-plan commitment</strong>, so tpuf is not $0 at idle.</p>
+      <p>turbopuffer charges three components independently; Qdrant charges a flat monthly cluster fee. Full pricing-component breakdown and larger-scale projection are in the Details at the end of this section.</p>
 
       <h4 style="margin:22px 0 2px;">Break-even &mdash; cost vs sustained query load (our three measured datasets)</h4>
       <div class="iplot" id="iplot-cost">
@@ -1087,18 +1102,37 @@ canvas {
         </div>
         <div class="iplot-panel">
           <div class="pt">tpuf usage-priced (floored at $16/mo) vs Qdrant flat cluster fee</div>
-          <div class="ps">tpuf = <code>max($16, storage + $1.28/M·queries)</code> — flat at the $16 floor until ~4.8 QPS, then linear. Qdrant = flat monthly node fee, now sized <strong>per dataset</strong> via the distilled Qdrant calculator (DBpedia &amp; H&amp;M fit a 2 GB <code>gpx1</code> node → $31.18; MT needs an 8 GB <code>mx2</code> → $82.45). Curves are computed from measured billed-GB/query; the crossover marker is where they meet. Log–log; hover a point for cost plus the measured p50/p99 search latency at that offered QPS (fixed-QPS sweep).</div>
+          <div class="ps">tpuf = <code>max($16, storage + $1.28/M·queries)</code> vs Qdrant's flat per-dataset node fee. Log–log; the crossover marker is where they meet. Hover a point for cost plus measured p50/p99 latency.</div>
           <svg class="iplot-svg" viewBox="0 0 900 320" role="img" aria-label="Monthly cost vs sustained QPS, tpuf vs Qdrant, per dataset"></svg>
         </div>
       </div>
-      <div class="callout">
-        With <strong>real per-dataset Qdrant node sizing</strong>, the break-even now splits by workload: <strong>DBpedia &amp; H&amp;M cross at ~9.4 QPS</strong> (Qdrant on a $31 2&nbsp;GB node), but <strong>Multi-tenant crosses at ~25 QPS</strong> — its 1M vectors need an $82 8&nbsp;GB node, so tpuf's pay-per-use stays cheaper far longer. As a fraction of Qdrant's <em>measured single-client</em> peak (~73&ndash;84 RPS): break-even is <strong>~12% utilization for DBpedia/H&amp;M but ~30% for MT</strong>. Below it tpuf wins; above it Qdrant's flat fee wins. Caveat: that ~80 RPS ceiling is client/network-bound (Qdrant server p99 ≈ 3ms), so a well-parallelised Qdrant deployment pushes these utilizations lower. Node sizing via the <a href="qdrant-cost-calculator.html">distilled Qdrant calculator</a>.
+      <div class="obs">
+        <div class="obs-h">Observations</div>
+        <ul>
+          <li><strong>Break-even splits by workload.</strong> With real per-dataset Qdrant node sizing, <strong>DBpedia &amp; H&amp;M cross at ~9.4 QPS</strong> (Qdrant on a $31 2&nbsp;GB node); <strong>Multi-tenant crosses at ~25 QPS</strong> &mdash; its 1M vectors need an $82 8&nbsp;GB node, so tpuf's pay-per-use stays cheaper far longer.</li>
+          <li><strong>Below break-even tpuf wins; above it Qdrant's flat fee wins.</strong> As a fraction of Qdrant's measured single-client peak (~73&ndash;84 RPS), break-even is ~12% utilization for DBpedia/H&amp;M but ~30% for MT.</li>
+          <li><strong>tpuf floors at ~$16/mo</strong> (launch-plan commitment) &mdash; not $0 at idle. Caveat: the ~80 RPS ceiling is client/network-bound (Qdrant server p99 &asymp; 3ms), so a well-parallelised Qdrant pushes these utilizations lower. Node sizing via the <a href="qdrant-cost-calculator.html">distilled Qdrant calculator</a>.</li>
+        </ul>
       </div>
 
       <details class="foldout neutral">
-        <summary>Projection: how break-even shifts at larger scale (above the 1.28 GB floor)</summary>
+        <summary>Details — pricing components &amp; projections</summary>
         <div class="fold-body">
-          Once a namespace exceeds the 1.28 GB query floor, tpuf&rsquo;s per-query cost scales with data size while Qdrant&rsquo;s node fee scales with RAM &mdash; so the break-even shifts with scale (our three measured datasets already span ~9&ndash;25 QPS). Illustrative projection (Qdrant $ approximate):
+          <p>turbopuffer charges three components independently; Qdrant charges a flat monthly cluster fee.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Component</th><th>turbopuffer</th><th>Qdrant Cloud</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Storage</td><td>$0.33/GB/month (f16: 2 bytes/dim)</td><td>Included</td></tr>
+                <tr><td>Writes</td><td>$2/GB (f32: 4 bytes/dim) + batch discount</td><td>Included</td></tr>
+                <tr><td>Queries</td><td>$0.001/TB scanned, min <strong>1.28 GB/namespace</strong></td><td>Unlimited</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p style="font-size:13px;color:var(--text-2);margin-top:4px;">The 1.28 GB minimum is critical: a 308 MB namespace (100K &times; 1536-dim f16) is billed as 1.28 GB per scan query &mdash; a cost floor of <strong>$1.28 per million queries</strong> regardless of actual data size. Serverless also has a <strong>$16/mo launch-plan commitment</strong>, so tpuf is not $0 at idle.</p>
+          <p style="margin-top:16px;"><strong>Projection: how break-even shifts at larger scale (above the 1.28 GB floor).</strong> Once a namespace exceeds the 1.28 GB query floor, tpuf&rsquo;s per-query cost scales with data size while Qdrant&rsquo;s node fee scales with RAM &mdash; so the break-even shifts with scale (our three measured datasets already span ~9&ndash;25 QPS). Illustrative projection (Qdrant $ approximate):</p>
           <div class="table-wrap" style="margin-top:12px;">
             <table>
               <thead>
@@ -1117,7 +1151,14 @@ canvas {
       <!-- H&M subsection (moved from former §5) -->
       <div class="ds-group" data-ds="hm">
         <h3>H&amp;M &mdash; Filtered Search</h3>
-        <p>Filtered vector search is where architecture choices have the sharpest consequences. SPFresh (turbopuffer) post-filters: it traverses centroids first, then discards non-matching vectors. Qdrant integrates the filter directly into HNSW traversal, preserving effective graph structure. Latency &amp; throughput vs concurrency live in the frontier explorer above (select <em>H&amp;M</em>); below is the detail it doesn&rsquo;t show &mdash; recall, per-query billing, and internal (server-side) latency.</p>
+        <div class="obs">
+          <div class="obs-h">Observations</div>
+          <ul>
+            <li><strong>Filtered search is where the architectures diverge most.</strong> SPFresh (tpuf) post-filters &mdash; traverses centroids first, then discards non-matching vectors; Qdrant integrates the filter directly into HNSW traversal, preserving graph structure.</li>
+            <li><strong>Recall gap is structural:</strong> tpuf 89.14% vs Qdrant 95.85% (not tunable on tpuf). Qdrant internal p50 ~1.1ms vs tpuf 14&ndash;15ms.</li>
+            <li>Latency &amp; throughput vs concurrency live in the frontier explorer above (select <em>H&amp;M</em>); the table below adds recall, per-query billing, and internal latency.</li>
+          </ul>
+        </div>
         <div class="table-wrap">
           <table>
             <thead>
@@ -1155,7 +1196,13 @@ canvas {
       <!-- Multi-tenant subsection (moved from former §6) -->
       <div class="ds-group" data-ds="mt">
         <h3>Multi-tenant Search</h3>
-        <p>100 tenants, ~10,000 vectors each (1M total). At this per-tenant scale, both engines achieve 100% recall &mdash; the index structures have negligible approximation error over 10K vectors. Throughput tells the real story. Latency &amp; throughput vs concurrency live in the frontier explorer above (select <em>Multi-tenant</em>); both engines hit 100% recall here, so the detail below is billing and internal latency.</p>
+        <div class="obs">
+          <div class="obs-h">Observations</div>
+          <ul>
+            <li><strong>Both engines hit 100% recall</strong> at ~10K vectors per tenant (100 tenants, 1M total) &mdash; index structures have negligible approximation error at this scale, so this comparison is about throughput and cost, not recall.</li>
+            <li>Latency &amp; throughput vs concurrency live in the frontier explorer above (select <em>Multi-tenant</em>); the table below adds billing and internal latency.</li>
+          </ul>
+        </div>
         <div class="table-wrap">
           <table>
             <thead>
@@ -1203,12 +1250,16 @@ canvas {
         </div>
         <div class="iplot-panel">
           <div class="pt">Recall @ k — higher is better (domain zoomed to 80–100%)</div>
-          <div class="ps">Qdrant's filter-integrated HNSW holds 95.85% on filtered search; tpuf's post-filter SPFresh drops to 89.14% and can't be tuned up. Unfiltered and multi-tenant are near-parity. Hover for exact values.</div>
+          <div class="ps">Recall @ k by scenario; domain zoomed to 80&ndash;100%. Switch scenario; hover for exact values.</div>
           <svg class="iplot-svg" viewBox="0 0 900 200" role="img" aria-label="Recall by scenario"></svg>
         </div>
       </div>
-      <div class="callout tpuf">
-        <strong>The ~7% recall gap on filtered search is structural, not tunable.</strong> SPFresh's post-filter architecture cannot be configured to match Qdrant's filter-integrated HNSW. If your workload involves selective attribute filtering, this gap is permanent.
+      <div class="obs">
+        <div class="obs-h">Observations</div>
+        <ul>
+          <li><strong>Filtered search: Qdrant 95.85% vs tpuf 89.14% &mdash; a ~7% gap that is structural, not tunable.</strong> SPFresh's post-filter architecture cannot be configured to match Qdrant's filter-integrated HNSW; if your workload uses selective attribute filtering, this gap is permanent.</li>
+          <li><strong>Unfiltered (DBpedia) and multi-tenant are near-parity</strong> &mdash; no meaningful recall difference (multi-tenant is 100% for both).</li>
+        </ul>
       </div>
     </section>
 
@@ -1230,20 +1281,15 @@ canvas {
         <p>Pinned mode keeps a turbopuffer namespace resident on dedicated hardware, eliminating serverless cold-start variance for any query type. The tradeoff is economic: pinned billing applies a 64 GB floor regardless of actual data size, making it prohibitively expensive for small datasets.</p>
       </div>
 
-      <h3>9.1 &mdash; Billing Model</h3>
-      <p>Pinned namespace billing is documented at <a href="https://turbopuffer.com/docs/pinning" target="_blank" rel="noopener">turbopuffer.com/docs/pinning</a>. Two key facts are stated explicitly:</p>
-      <ul style="margin:0.5rem 0 0.75rem 1.5rem;line-height:1.9;">
-        <li><strong>64 GB minimum:</strong> &ldquo;namespaces smaller than 64 GB are billed at 64 GB&rdquo;</li>
-        <li><strong>Rate example:</strong> a 256 GB namespace at 1 replica = <strong>$2,476/month</strong> (storage component)</li>
-      </ul>
-      <p>From these two facts the per-GB-hr rate is derived:</p>
-      <pre style="background:var(--code-bg,#1E293B);color:#E2E8F0;padding:0.85rem 1rem;border-radius:6px;font-size:12px;overflow-x:auto;margin:0.75rem 0;">rate  = $2,476 &divide; (256 GB &times; 730 hr/mo)  =  <strong>$0.01325 / GB-hr</strong>
-
-monthly cost  =  max(actual_gb, 64) &times; replicas &times; 730 &times; $0.01325
-             +  actual_gb &times; $0.33   (storage, billed separately)
-
-floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / replica / mo</strong>
-              64 GB &times; 4r &times; 730 &times; $0.01325  =  <strong>$2,476 / mo</strong>  &larr; matches published 4r example</pre>
+      <div class="obs">
+        <div class="obs-h">Key findings</div>
+        <ul>
+          <li><strong>Pinned bills a 64 GB floor regardless of actual data size</strong> &mdash; <strong>$619/mo at 1 replica, $2,476/mo at 4</strong>, even for the 0.3&ndash;0.9 GB benchmark datasets.</li>
+          <li><strong>~79&times; more than Qdrant</strong> for these sub-1 GB datasets (Qdrant $31.18) &mdash; while delivering worse p99 (50ms hot vs 9.9ms) and lower recall (89.14% vs 95.85%).</li>
+          <li><strong>No cost break-even below 64 GB of actual data</strong> &mdash; pinned is ~8&ndash;20&times; Qdrant at 1 replica, ~30&ndash;80&times; at 4, at any QPS. The serverless ~9&ndash;25 QPS crossover does not apply once pinning is required.</li>
+          <li><strong>Pinning only pays off above ~64 GB</strong> (where billing tracks real data), and even then it&rsquo;s a bet on dedicated NVMe + zero cold-start, not on price.</li>
+        </ul>
+      </div>
 
       <div class="table-wrap">
         <table>
@@ -1260,17 +1306,21 @@ floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / r
         <div style="font-size:11px;color:var(--text-2);margin-top:8px;font-style:italic;">Why three different GB figures appear in this report: <strong>Actual GB</strong> above is f16 storage (2 bytes/dim), which storage and pinned billing use &mdash; e.g. DBpedia 0.31 GB. Writes and per-query scans are billed at f32 (4 bytes/dim) &mdash; the 0.615 GB &ldquo;Stored&rdquo; (§3) and &ldquo;Billed GB/q&rdquo; (§4) figures. Same dataset, two precisions.</div>
       </div>
 
-      <details class="foldout tpuf">
-        <summary>The 64 GB pinned billing floor makes sub-5 GB datasets ~79× costlier than Qdrant</summary>
-        <div class="fold-body">For the H&amp;M benchmark dataset (0.43 GB actual), pinned 4-replica costs <strong>$2,476/month</strong> &mdash; 79&times; more than Qdrant's $31.18 &mdash; while delivering worse single-stream performance (47.4 vs 149.6 RPS at p=1 &mdash; a latency comparison, not capacity), worse p99 (50ms hot vs 9.9ms), and lower recall (89.14% vs 95.85%). For datasets under ~5 GB, pinning is strictly worse on every dimension: cost, latency, and recall.</div>
+      <details class="foldout neutral">
+        <summary>Details — billing-model derivation &amp; break-even</summary>
+        <div class="fold-body">
+          <p><strong>Billing model.</strong> Pinned namespace billing is documented at <a href="https://turbopuffer.com/docs/pinning" target="_blank" rel="noopener">turbopuffer.com/docs/pinning</a>. Two key facts are stated explicitly: a <strong>64 GB minimum</strong> (&ldquo;namespaces smaller than 64 GB are billed at 64 GB&rdquo;), and a <strong>rate example</strong> &mdash; a 256 GB namespace at 1 replica = $2,476/month (storage component). From these the per-GB-hr rate is derived:</p>
+          <pre style="background:var(--code-bg,#1E293B);color:#E2E8F0;padding:0.85rem 1rem;border-radius:6px;font-size:12px;overflow-x:auto;margin:0.75rem 0;">rate  = $2,476 &divide; (256 GB &times; 730 hr/mo)  =  <strong>$0.01325 / GB-hr</strong>
+
+monthly cost  =  max(actual_gb, 64) &times; replicas &times; 730 &times; $0.01325
+             +  actual_gb &times; $0.33   (storage, billed separately)
+
+floor check:  64 GB &times; 1r &times; 730 &times; $0.01325  =  <strong>$619 / replica / mo</strong>
+              64 GB &times; 4r &times; 730 &times; $0.01325  =  <strong>$2,476 / mo</strong>  &larr; matches published 4r example</pre>
+          <p><strong>Sub-5 GB penalty.</strong> For the H&amp;M benchmark dataset (0.43 GB actual), pinned 4-replica costs <strong>$2,476/month</strong> &mdash; 79&times; more than Qdrant's $31.18 &mdash; while delivering worse single-stream performance (47.4 vs 149.6 RPS at p=1 &mdash; a latency comparison, not capacity), worse p99 (50ms hot vs 9.9ms), and lower recall (89.14% vs 95.85%). For datasets under ~5 GB, pinning is strictly worse on every dimension: cost, latency, and recall.</p>
+          <p><strong>Break-even.</strong> Pinned mode bills the <strong>64 GB floor</strong>: even the 0.3&ndash;0.9 GB benchmark datasets cost <code>64 GB &times; 730 hr &times; $0.01325 = $619/mo</code> at 1 replica ($2,476 at 4). Qdrant serves the same datasets for $31&ndash;$82/mo &mdash; so <strong>pinned turbopuffer has no cost break-even below 64 GB of actual data</strong>: it is ~8&ndash;20&times; Qdrant at 1 replica and ~30&ndash;80&times; at 4, at any QPS. The serverless cost crossover (~9&ndash;25 QPS) applies only to serverless mode &mdash; when filtered search or isolation requirements force pinning, that crossover disappears entirely.</p>
+        </div>
       </details>
-
-      <h3>9.2 &mdash; Break-Even Analysis</h3>
-      <p>Pinned mode bills the <strong>64 GB floor</strong>: even the 0.3&ndash;0.9 GB benchmark datasets cost <code>64 GB &times; 730 hr &times; $0.01325 = $619/mo</code> at 1 replica ($2,476 at 4). Qdrant serves the same datasets for $31&ndash;$82/mo &mdash; so <strong>pinned turbopuffer has no cost break-even below 64 GB of actual data</strong>: it is ~8&ndash;20&times; Qdrant at 1 replica and ~30&ndash;80&times; at 4, at any QPS. Pinning only starts to pay off above ~64 GB (where billing tracks real data), and even then it&rsquo;s a bet on dedicated NVMe + zero cold-start, not on price.</p>
-
-      <div class="callout neutral">
-        <strong>The serverless cost crossover (~9&ndash;25 QPS) applies only to serverless mode.</strong> When filtered search or isolation requirements force pinning, that crossover disappears entirely: pinned 1r is $619/mo minimum (64 GB floor) and 4r is $2,476/mo &mdash; both far above Qdrant&rsquo;s $31&ndash;$82 for these datasets, at any QPS.
-      </div>
     </section>
 
     <!-- §8 (id kept as s10 — anchor stable) -->
