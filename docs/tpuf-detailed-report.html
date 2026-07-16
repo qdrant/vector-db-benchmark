@@ -643,6 +643,13 @@ canvas {
 .sidebar-related .sr-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-2); margin-bottom: 2px; }
 .sidebar-related a { font-size: 12.5px; color: var(--text-2); text-decoration: none; }
 .sidebar-related a:hover { color: var(--tpuf); }
+/* ── Observations list (after each plot) ─────────────────────── */
+.obs { margin: 13px 0 30px; }
+.obs .obs-h { font-family: var(--font-mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-2); margin: 0 0 7px; }
+.obs ul { margin: 0; padding-left: 20px; }
+.obs li { margin: 0 0 7px; font-size: 13.5px; line-height: 1.5; color: var(--text); }
+.obs li:last-child { margin-bottom: 0; }
+.obs li strong { font-weight: 600; }
 </style>
 </head>
 <body>
@@ -790,7 +797,6 @@ canvas {
       <div class="section-header">
         <div class="section-eyebrow tpuf-eye">&sect;3</div>
         <h2>Upload Performance</h2>
-        <p>turbopuffer writes directly to S3 at faster raw WPS than Qdrant, but SPFresh builds asynchronously on shared indexers. SPFresh duration varies with indexer availability: across 5 DBpedia runs it ranged 25–268s, putting tpuf total at 3.1–7.3 min. H&amp;M measured 60s (4.1 min). Qdrant&rsquo;s 3.9 min DBpedia falls inside the tpuf range; tpuf won H&amp;M (vs 8.4 min) in the single measured run — but H&amp;M SPFresh has n=1, and DBpedia showed 10&times; SPFresh variance.</p>
       </div>
 
       <div class="iplot" id="iplot-upload">
@@ -817,46 +823,23 @@ canvas {
         </div>
         <div class="iplot-panel">
           <div class="pt">Upload across all three datasets · time to fully-indexed state</div>
-          <div class="ps">Bars = one config. In <em>total upload + index</em> the bar stacks upsert (solid) + index build (lighter) — hover each segment. Select <em>index build time</em> to see SPFresh&rsquo;s measured variance (25–268s across 5 DBpedia runs) as <strong>two bars — min and max</strong>, like the p50/p99 latency metrics. Multi-tenant is 1M vectors (10× the others) and tpuf WPS there is aggregate across 100 parallel namespaces. Click an engine to toggle.</div>
+          <div class="ps"><em>total upload + index</em> stacks upsert (solid) + index build (lighter); <em>index build time</em> shows SPFresh&rsquo;s min/max as two bars. Pick a dataset / metric; click an engine to toggle.</div>
           <svg class="iplot-svg" viewBox="0 0 900 380" role="img" aria-label="Upload time and throughput across datasets"></svg>
         </div>
       </div>
 
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Dataset</th><th>Engine</th><th>Time (min)‡</th><th>WPS</th><th>Batch p50</th><th>Batch p99</th><th>Internal p50</th><th>Internal p99</th><th>Index wait†</th><th>Stored GB</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-tpuf"></span>tpuf serverless</td><td>3.1–7.3††</td><td>624–657</td><td>192ms</td><td>352ms</td><td>180ms</td><td>341ms</td><td>25–268s (SPFresh††)</td><td>0.615 GB</td></tr>
-            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-tpuf"></span>tpuf pinned-1r</td><td>2.6 + SPFresh††</td><td>633</td><td>188ms</td><td>295ms</td><td>176ms</td><td>282ms</td><td>not measured††</td><td>0.615 GB</td></tr>
-            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-qdrant"></span>Qdrant · index during upload</td><td class="win">3.9</td><td>417</td><td>294ms</td><td>365ms</td><td>3.3ms</td><td>18.5ms</td><td>0s (during upload)</td><td>0.614 GB</td></tr>
-            <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-qdrant"></span>Qdrant · index after upload</td><td>5.3</td><td>423</td><td>291ms</td><td>349ms</td><td>3.2ms</td><td>5.6ms</td><td>84s (HNSW)</td><td>0.614 GB</td></tr>
-            <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-tpuf"></span>tpuf serverless</td><td class="win">4.1</td><td>565</td><td>208ms</td><td>335ms</td><td>192ms</td><td>318ms</td><td>60s (SPFresh)</td><td>0.873 GB</td></tr>
-            <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-qdrant"></span>Qdrant · index during upload</td><td>8.4</td><td>316</td><td>401ms</td><td>459ms</td><td>—</td><td>—</td><td>168s</td><td>0.926 GB</td></tr>
-            <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-qdrant"></span>Qdrant · index after upload</td><td>9.1</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>222s (HNSW)</td><td>0.926 GB</td></tr>
-            <tr><td>Multi-tenant 1M&times;768</td><td><span class="chip-tpuf"></span>tpuf (100 ns, parallel)</td><td class="win">2.4 (p=10)</td><td>6847*</td><td>207ms</td><td>338ms</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
-            <tr><td>Multi-tenant 1M&times;768</td><td><span class="chip-qdrant"></span>Qdrant</td><td>20.5</td><td>816</td><td>148ms</td><td>175ms</td><td>—</td><td>—</td><td>5.1s</td><td>3.200 GB</td></tr>
-          </tbody>
-        </table>
+      <div class="obs">
+        <div class="obs-h">Observations</div>
+        <ul>
+          <li><strong>tpuf writes 50–60% faster raw</strong> (565–657 WPS vs Qdrant 316–423), but SPFresh indexing is asynchronous on shared indexers — so <em>total</em> time hinges on indexer availability, not write speed.</li>
+          <li><strong>DBpedia SPFresh ranged 25–268s across 5 runs (10× variance)</strong> → tpuf total 3.1–7.3 min. Qdrant&rsquo;s steady 3.9 min sits inside that range: tpuf wins on a fast indexer draw, loses on a slow one.</li>
+          <li><strong>H&amp;M: tpuf won 4.1 vs 8.4 min</strong> — but n=1, and DBpedia&rsquo;s 10× variance means a slow draw could nearly erase that margin.</li>
+          <li><strong>Multi-tenant: tpuf 2.4 min vs Qdrant 20.5 min</strong> — mostly methodology: tpuf uploads 100 namespaces in parallel, Qdrant loads 1M vectors sequentially (~11× of the gap is parallelism alone).</li>
+          <li><strong>Storage at parity</strong> (~0.6–0.9 GB both). Qdrant builds HNSW at write time (source of its ~2ms query latency); tpuf defers to async SPFresh, so writes return immediately and are readable via WAL scan meanwhile.</li>
+        </ul>
       </div>
-      <div style="font-size:11px;color:var(--text-2);margin:8px 2px 0;font-style:italic;">‡ Total time = upsert + index build (end-to-end until fully indexed). For H&amp;M Qdrant index-during-upload: 5.5 min upsert + 2.8 min HNSW = 8.4 min. For DBpedia: 3.9 min upsert, HNSW built during upload so extra wait ≈ 0s.<br>† Index wait = additional time after last upsert batch until fully indexed. 0s means HNSW finished within the upsert window. turbopuffer SPFresh builds asynchronously after writes commit to S3 WAL — 60s for H&amp;M 105K×2048d.<br>†† DBpedia tpuf SPFresh varied across 5 repeated runs (25s, 36s, 61s, 183s, 268s) depending on shared indexer availability; the 61s trial used an earlier query-based completion signal and is less precise than the other four (index-status polling). Total wall-clock ranges 3.1–7.3 min accordingly. Pinned-1r SPFresh was not measured separately — writes take the same S3 WAL path in both modes, so the same range likely applies (upload alone = 2.6 min).<br>* MT tpuf WPS is aggregate wall-clock throughput across 10 concurrent namespace uploads. Per-namespace WPS ≈ 624.</div>
-      <details class="foldout">
-        <summary>Multi-tenant upload: parallel (tpuf) vs sequential (Qdrant) — methodology drives most of the 8.5× gap</summary>
-        <div class="fold-body">The multi-tenant dataset is <strong>1M vectors total</strong> (100 tenants &times; 10K each) &mdash; 10&times; more data than DBpedia. Qdrant uploads all 1M sequentially in batches to one collection (<code>payload_m=16</code>, <code>is_tenant=True</code>), building per-tenant HNSW sub-graphs in the background. turbopuffer uploads 100 namespaces in <strong>parallel</strong> (asyncio.gather, semaphore=10 concurrent), so its 2.4 min wall-clock reflects parallel throughput. Sequential uploads at ~624 WPS per namespace would take <strong>~26.7 min</strong> (100 &times; ~16s) &mdash; parallelism delivers an <strong>~11&times; speedup</strong>. Both engines use the same batch size (128 vectors/batch). The methodology difference (parallel vs sequential) accounts for most of the 8.5&times; wall-clock gap; Qdrant also pays extra for HNSW sub-graph construction at write time.</div>
-      </details>
-      <details class="foldout neutral">
-        <summary>Write-time vs query-time — Qdrant builds HNSW upfront; tpuf defers indexing to async SPFresh</summary>
-        <div class="fold-body">turbopuffer stores 0.615 GB for DBpedia (&asymp; raw vector size: 100K &times; 1536-dim &times; 4B). Qdrant builds HNSW at write time &mdash; 168s for H&amp;M, ~0s for DBpedia (index during upload), 5.1s for MT sub-graphs. This one-time write cost is the source of Qdrant&rsquo;s 1.9ms internal search latency: the index is in RAM, already built. turbopuffer&rsquo;s SPFresh index is built <em>asynchronously</em> after writes commit to the S3 WAL &mdash; writes return immediately (no blocking index phase). SPFresh duration depends on shared indexer availability and varied from 25s to 268s across 5 DBpedia runs. During the SPFresh window, WAL vectors are brute-force scanned per query. Once built, queries use the centroid index from NVMe.</div>
-      </details>
 
-
-      <details class="foldout neutral">
-        <summary>tpuf writes 50–60% faster, but SPFresh build time (25–268s) decides the DBpedia race</summary>
-        <div class="fold-body">, but SPFresh builds the centroid index asynchronously on shared background indexers, and its duration depends on indexer availability at the time of upload. Across 5 DBpedia re-runs, SPFresh completed in 25s, 36s, 61s, 183s, and 268s — putting tpuf total at 3.1–7.3 min. Qdrant&rsquo;s consistent 3.9 min falls inside that range: tpuf wins when indexers are available, Qdrant wins when they are not. H&amp;M measured 60s SPFresh (4.1 min total) and beat Qdrant (8.4 min) — though with only one H&amp;M trial, the SPFresh variance seen on DBpedia (25&ndash;268s) means the margin could narrow to ~0.8 min on a slow indexer draw. Building the index <em>after</em> upload (5.3 min DBpedia, 9.1 min H&amp;M) is slower than building it <em>during</em> upload (3.9 min, 8.4 min) &mdash; so Qdrant's default index-during-upload is optimal here, and the bulk-load recipe (disable indexing, then reindex) does not help at this scale.</div>
-      </details>
-
-      <h3>3.1 &mdash; Write Throughput vs Concurrency (fresh, measured)</h3>
+      <h3>3.1 &mdash; Write Throughput vs Concurrency</h3>
       <div class="iplot" id="iplot-write-conc">
         <div class="iplot-bar">
           <label>metric
@@ -869,13 +852,44 @@ canvas {
         </div>
         <div class="iplot-panel">
           <div class="pt">DBpedia &mdash; sustained write throughput as client write-concurrency rises (1 &rarr; 16)</div>
-          <div class="ps">Each point is a fresh 10K-vector write burst at a fixed number of concurrent writer tasks. <strong>turbopuffer scales with concurrency</strong> (430 &rarr; 1237 WPS) because writes are group-committed to S3 and fan out; <strong>Qdrant Cloud stays flat at ~87&ndash;91 WPS</strong> regardless of concurrency &mdash; added writers just queue, so its batch latency grows nearly linearly (1.4s at p=1 &rarr; 19.8s at p=16). Switch the metric to see the batch-latency divergence. Log&ndash;log axes; hover a point.</div>
+          <div class="ps">Each point is a fresh 10K-vector burst at a fixed writer concurrency. Log–log; switch the metric for batch latency; hover a point.</div>
           <svg class="iplot-svg" viewBox="0 0 900 320" role="img" aria-label="Write throughput and batch latency vs write concurrency, tpuf vs Qdrant"></svg>
         </div>
       </div>
-      <div class="callout">
-        turbopuffer&rsquo;s write path scales on both datasets tested &mdash; H&amp;M tpuf climbs 366 &rarr; 919 WPS over the same p=1&rarr;16 range, corroborating DBpedia&rsquo;s 430 &rarr; 1237. Qdrant Cloud&rsquo;s write ceiling (~90 WPS on this node) is a sustained-ingest bottleneck: to load faster you scale the cluster, not the client.
+      <div class="obs">
+        <div class="obs-h">Observations</div>
+        <ul>
+          <li><strong>tpuf write throughput scales with concurrency</strong> — 430 → 1237 WPS (p=1→16), because group-committed S3 writes fan out.</li>
+          <li><strong>Qdrant stays flat at ~90 WPS</strong> regardless of concurrency; extra writers just queue, so batch latency grows ~linearly (1.4s → 19.8s at p=16).</li>
+          <li>Corroborated on H&amp;M (tpuf 366 → 919 WPS). Qdrant&rsquo;s ~90 WPS ceiling is a sustained-ingest bottleneck — to load faster, scale the cluster, not the client.</li>
+        </ul>
       </div>
+
+      <details class="foldout neutral">
+        <summary>Details — full per-config upload table &amp; methodology</summary>
+        <div class="fold-body">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Dataset</th><th>Engine</th><th>Time (min)‡</th><th>WPS</th><th>Batch p50</th><th>Batch p99</th><th>Internal p50</th><th>Internal p99</th><th>Index wait†</th><th>Stored GB</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-tpuf"></span>tpuf serverless</td><td>3.1–7.3††</td><td>624–657</td><td>192ms</td><td>352ms</td><td>180ms</td><td>341ms</td><td>25–268s (SPFresh††)</td><td>0.615 GB</td></tr>
+                <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-tpuf"></span>tpuf pinned-1r</td><td>2.6 + SPFresh††</td><td>633</td><td>188ms</td><td>295ms</td><td>176ms</td><td>282ms</td><td>not measured††</td><td>0.615 GB</td></tr>
+                <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-qdrant"></span>Qdrant · index during upload</td><td class="win">3.9</td><td>417</td><td>294ms</td><td>365ms</td><td>3.3ms</td><td>18.5ms</td><td>0s (during upload)</td><td>0.614 GB</td></tr>
+                <tr><td>DBpedia 100K&times;1536</td><td><span class="chip-qdrant"></span>Qdrant · index after upload</td><td>5.3</td><td>423</td><td>291ms</td><td>349ms</td><td>3.2ms</td><td>5.6ms</td><td>84s (HNSW)</td><td>0.614 GB</td></tr>
+                <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-tpuf"></span>tpuf serverless</td><td class="win">4.1</td><td>565</td><td>208ms</td><td>335ms</td><td>192ms</td><td>318ms</td><td>60s (SPFresh)</td><td>0.873 GB</td></tr>
+                <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-qdrant"></span>Qdrant · index during upload</td><td>8.4</td><td>316</td><td>401ms</td><td>459ms</td><td>—</td><td>—</td><td>168s</td><td>0.926 GB</td></tr>
+                <tr><td>H&amp;M 105K&times;2048</td><td><span class="chip-qdrant"></span>Qdrant · index after upload</td><td>9.1</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>222s (HNSW)</td><td>0.926 GB</td></tr>
+                <tr><td>Multi-tenant 1M&times;768</td><td><span class="chip-tpuf"></span>tpuf (100 ns, parallel)</td><td class="win">2.4 (p=10)</td><td>6847*</td><td>207ms</td><td>338ms</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+                <tr><td>Multi-tenant 1M&times;768</td><td><span class="chip-qdrant"></span>Qdrant</td><td>20.5</td><td>816</td><td>148ms</td><td>175ms</td><td>—</td><td>—</td><td>5.1s</td><td>3.200 GB</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p style="font-size:12px;color:var(--text-2);margin-top:12px;">‡ Total = upsert + index build (until fully indexed). †† DBpedia tpuf SPFresh varied across 5 runs (25 / 36 / 61 / 183 / 268s) with shared-indexer availability; the 61s trial used the older query-based signal. Pinned-1r SPFresh not measured separately (same S3 WAL path; upload alone 2.6 min). * MT tpuf WPS is aggregate across 100 parallel namespace uploads (~624 per namespace).</p>
+          <p style="font-size:12px;color:var(--text-2);margin-top:8px;"><strong>Multi-tenant methodology:</strong> MT is 1M vectors (100 tenants × 10K). tpuf uploads the 100 namespaces in parallel (semaphore=10); Qdrant loads all 1M sequentially into one collection (<code>payload_m=16</code>). Sequential at ~624 WPS/ns would take ~26.7 min, so parallelism is ~11× of the 8.5× wall-clock gap. <strong>Write- vs query-time indexing:</strong> Qdrant builds HNSW at write time (its ~2ms query latency comes from the already-resident index); tpuf commits to the S3 WAL and builds SPFresh asynchronously afterward — writes return immediately and are brute-force readable meanwhile.</p>
+        </div>
+      </details>
     </section>
 
     <!-- §4 -->
