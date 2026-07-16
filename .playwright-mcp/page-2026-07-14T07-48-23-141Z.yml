@@ -1,0 +1,412 @@
+- generic [ref=f19e2]:
+  - complementary "Internals navigation" [ref=f19e3]:
+    - generic [ref=f19e4]:
+      - strong [ref=f19e5]: Internals & Deep Dives
+      - text: turbopuffer vs Qdrant
+    - navigation [ref=f19e6]:
+      - list [ref=f19e7]:
+        - listitem [ref=f19e8]:
+          - link "← Main report" [ref=f19e9] [cursor=pointer]:
+            - /url: tpuf-detailed-report.html
+            - generic [ref=f19e10]: ←
+            - text: Main report
+        - listitem [ref=f19e11]:
+          - link "1 Cold Warmup" [ref=f19e12] [cursor=pointer]:
+            - /url: "#s1"
+            - generic [ref=f19e13]: "1"
+            - text: Cold Warmup
+        - listitem [ref=f19e14]:
+          - link "2 RPS vs Concurrency" [ref=f19e15] [cursor=pointer]:
+            - /url: "#s2"
+            - generic [ref=f19e16]: "2"
+            - text: RPS vs Concurrency
+        - listitem [ref=f19e17]:
+          - link "3 Replica Boot" [ref=f19e18] [cursor=pointer]:
+            - /url: "#s3"
+            - generic [ref=f19e19]: "3"
+            - text: Replica Boot
+        - listitem [ref=f19e20]:
+          - link "4 hint_cache_warm" [ref=f19e21] [cursor=pointer]:
+            - /url: "#s4"
+            - generic [ref=f19e22]: "4"
+            - text: hint_cache_warm
+        - listitem [ref=f19e23]:
+          - link "5 Server-Latency Gap" [ref=f19e24] [cursor=pointer]:
+            - /url: "#s5"
+            - generic [ref=f19e25]: "5"
+            - text: Server-Latency Gap
+        - listitem [ref=f19e26]:
+          - link "6 Contention" [ref=f19e27] [cursor=pointer]:
+            - /url: "#s6"
+            - generic [ref=f19e28]: "6"
+            - text: Contention
+        - listitem [ref=f19e29]:
+          - link "7 Write Throughput" [ref=f19e30] [cursor=pointer]:
+            - /url: "#s7"
+            - generic [ref=f19e31]: "7"
+            - text: Write Throughput
+        - listitem [ref=f19e32]:
+          - link "8 Write-Read" [ref=f19e33] [cursor=pointer]:
+            - /url: "#s8"
+            - generic [ref=f19e34]: "8"
+            - text: Write-Read
+        - listitem [ref=f19e35]:
+          - link "9 Qdrant Disk" [ref=f19e36] [cursor=pointer]:
+            - /url: "#s9"
+            - generic [ref=f19e37]: "9"
+            - text: Qdrant Disk
+  - main [ref=f19e38]:
+    - generic [ref=f19e39]:
+      - generic [ref=f19e40]: Companion · Internals & Deep Dives
+      - heading "turbopuffer Internals & Deep Dives" [level=1] [ref=f19e41]
+      - paragraph [ref=f19e42]: Nine operational deep-dives into how turbopuffer behaves under the hood — cold-start, replica boot, scaling, contention, concurrent writes — and how Qdrant disk mode compares.
+      - paragraph [ref=f19e43]:
+        - link "← Main benchmark report" [ref=f19e44] [cursor=pointer]:
+          - /url: tpuf-detailed-report.html
+    - generic [ref=f19e45]:
+      - text: "Nine experiments that reveal how turbopuffer behaves under the hood and how it compares to Qdrant disk mode. Key findings: (1) SPFresh does lazy per-centroid NVMe caching — ~75 sequential queries to reach stable warm latency, no global pre-fetch. (2) A single pinned replica saturates at ~6–8 CPU cores; serverless outperforms it at p≥8. (3) Correctly-warmed 4-replica pinned peaks at 473 RPS — NVMe bandwidth, not CPU, is the ceiling. (4) A pinned replica takes ~80s to become"
+      - code [ref=f19e46]: ready
+      - text: and is still cold after that — first query hits ~600ms. (5)
+      - code [ref=f19e47]: hint_cache_warm
+      - text: "used inline is 13× worse than default — it is for pre-warming, not per-query prefix. (6) All namespaces under one API key share one physical machine in serverless mode; a bursty tenant degrades all others ~3×. (7) Pinning has zero effect on write throughput (624 vs 633 WPS). (8) During concurrent writes, tpuf's WAL exhaustive scan rescues recall at the cost of 1.8× higher p99 — latency normalises within seconds of indexing completing. (9) Qdrant disk mode has bimodal behavior: p99=1,457ms cold (EBS random I/O storm) vs p99=10ms warm — once 586 MB fits in OS page cache the disk-mode penalty disappears entirely."
+    - generic [ref=f19e48]:
+      - generic [ref=f19e49]:
+        - generic [ref=f19e50]: §1
+        - heading "Cold Warmup Curve" [level=2] [ref=f19e51]
+      - paragraph [ref=f19e52]: Query latency for the first 120 queries issued after a cold restart. Each spike beyond query ~5 marks a previously-uncached centroid region being fetched from S3.
+      - generic [ref=f19e53]:
+        - generic [ref=f19e54]:
+          - generic [ref=f19e55]:
+            - text: metric
+            - combobox "metric" [ref=f19e56] [cursor=pointer]:
+              - option "query latency ↓" [selected]
+          - generic [ref=f19e57]:
+            - generic [ref=f19e58]: engine
+            - generic [ref=f19e59] [cursor=pointer]: tpuf pinned-4r
+          - generic [ref=f19e61]:
+            - button "▤ plot" [ref=f19e62] [cursor=pointer]
+            - button "▦ table" [ref=f19e63] [cursor=pointer]
+        - generic [ref=f19e64]:
+          - generic [ref=f19e65]: "Per-query latency: cold start → warm (H&M, pinned 4-replica)"
+          - generic [ref=f19e66]: Log y. First query ~893ms; each spike past ~query 5 is a previously-uncached centroid region fetched from S3; converges to ~43ms by ~query 30. Hover a point.
+          - img "Per-query latency cold to warm" [ref=f19e67]:
+            - generic [ref=f19e68]: query latency ms (↓ better)
+            - generic [ref=f19e69]: "50"
+            - generic [ref=f19e70]: "100"
+            - generic [ref=f19e71]: "200"
+            - generic [ref=f19e72]: "500"
+            - generic [ref=f19e73]: 1K
+            - generic [ref=f19e74]: "0"
+            - generic [ref=f19e75]: "30"
+            - generic [ref=f19e76]: "60"
+            - generic [ref=f19e77]: "89"
+            - generic [ref=f19e78]: "119"
+            - generic [ref=f19e79]: "query # since cold restart →"
+    - generic [ref=f19e157]:
+      - generic [ref=f19e158]:
+        - generic [ref=f19e159]: §2
+        - heading "RPS vs Concurrency (pinned 1r / serverless / 4-replica)" [level=2] [ref=f19e160]
+      - paragraph [ref=f19e161]: Aggregate RPS as client concurrency scales. Pinned 1-replica hits a ~370 RPS ceiling around p=8–16 (≈8 NVMe reader cores); serverless taps shared compute and scales further (~507 RPS); 4 replicas roughly quadruple peak throughput to ~473 RPS at p=16, then go sub-linear as NVMe bandwidth saturates.
+      - generic [ref=f19e162]:
+        - generic [ref=f19e163]:
+          - generic [ref=f19e164]:
+            - text: metric
+            - combobox "metric" [ref=f19e165] [cursor=pointer]:
+              - option "aggregate RPS ↑" [selected]
+          - generic [ref=f19e166]:
+            - generic [ref=f19e167]: series
+            - generic [ref=f19e168] [cursor=pointer]: serverless
+            - generic [ref=f19e170] [cursor=pointer]: pinned-1r
+            - generic [ref=f19e172] [cursor=pointer]: pinned-4r
+          - generic [ref=f19e174]:
+            - button "▤ plot" [ref=f19e175] [cursor=pointer]
+            - button "▦ table" [ref=f19e176] [cursor=pointer]
+        - generic [ref=f19e177]:
+          - generic [ref=f19e178]: DBpedia unfiltered · RPS vs client concurrency (1 → 128)
+          - generic [ref=f19e179]: Log x, log y. Click a series to toggle. Pinned-1r plateaus at the single-node NVMe ceiling; serverless scales past it; 4 replicas lift the ceiling ~4× but saturate on NVMe bandwidth, not CPU.
+          - img "RPS vs concurrency for pinned-1r, serverless, and 4-replica" [ref=f19e180]:
+            - generic [ref=f19e181]: aggregate RPS (↑ better)
+            - generic [ref=f19e182]: "50"
+            - generic [ref=f19e183]: "100"
+            - generic [ref=f19e184]: "200"
+            - generic [ref=f19e185]: "500"
+            - generic [ref=f19e186]: "1"
+            - generic [ref=f19e187]: "2"
+            - generic [ref=f19e188]: "4"
+            - generic [ref=f19e189]: "8"
+            - generic [ref=f19e190]: "16"
+            - generic [ref=f19e191]: "32"
+            - generic [ref=f19e192]: "64"
+            - generic [ref=f19e193]: "128"
+            - generic [ref=f19e194]: concurrency →
+            - generic [ref=f19e210]: serverless
+            - generic [ref=f19e226]: pinned-1r
+            - generic [ref=f19e242]: pinned-4r
+    - generic [ref=f19e243]:
+      - generic [ref=f19e244]:
+        - generic [ref=f19e245]: §3
+        - heading "Replica Boot Time" [level=2] [ref=f19e246]
+      - paragraph [ref=f19e247]:
+        - text: How long does it take to go from "pin namespace" to "serving warm traffic"? We called
+        - code [ref=f19e248]: "update_metadata(pinning={\"replicas\": 1})"
+        - text: and polled
+        - code [ref=f19e249]: ns.metadata()
+        - text: every 5 seconds until ready, then immediately issued queries.
+      - table [ref=f19e251]:
+        - rowgroup [ref=f19e252]:
+          - row [ref=f19e253]:
+            - columnheader "Step" [ref=f19e254]
+            - columnheader "Duration" [ref=f19e255]
+        - rowgroup [ref=f19e256]:
+          - row [ref=f19e257]:
+            - cell [ref=f19e258]:
+              - code [ref=f19e259]: ready_replicas
+              - text: 0/1 → 1/1
+            - cell [ref=f19e260]:
+              - strong [ref=f19e261]: ~80 seconds
+              - text: (16 polls × 5s)
+          - row [ref=f19e262]:
+            - cell [ref=f19e263]:
+              - text: First query after
+              - code [ref=f19e264]: ready_replicas=1
+            - cell [ref=f19e265]:
+              - strong [ref=f19e266]: ~617ms
+              - text: — NVMe still cold
+          - row [ref=f19e267]:
+            - cell "Rolling warm state (<20ms mean)" [ref=f19e268]
+            - cell "~11 sequential queries (~2 seconds)" [ref=f19e269]
+          - row [ref=f19e270]:
+            - cell [ref=f19e271]:
+              - strong [ref=f19e272]: "Total: pin → warm serving"
+            - cell [ref=f19e273]:
+              - strong [ref=f19e274]: ~90–100 seconds
+      - generic [ref=f19e275]:
+        - code [ref=f19e276]: ready_replicas=N
+        - text: means the compute node is running —
+        - strong [ref=f19e277]: not
+        - text: that NVMe is populated. Any deployment runbook that sends traffic immediately after
+        - code [ref=f19e278]: ready_replicas
+        - text: confirmation will hit cold latency spikes on the first 10–15 queries (~600ms each). A warmup pass of ~75 sequential queries is required before serving production traffic.
+    - generic [ref=f19e279]:
+      - generic [ref=f19e280]:
+        - generic [ref=f19e281]: §4
+        - heading [level=2] [ref=f19e282]:
+          - code [ref=f19e283]: hint_cache_warm
+          - text: Behavior
+      - paragraph [ref=f19e284]:
+        - text: turbopuffer exposes a
+        - code [ref=f19e285]: hint_cache_warm
+        - text: API for pre-warming a namespace before a burst. We measured the effect of using it inline (calling the hint, then immediately querying) at p=8 on DBpedia.
+      - table [ref=f19e287]:
+        - rowgroup [ref=f19e288]:
+          - row [ref=f19e289]:
+            - columnheader "Config" [ref=f19e290]
+            - columnheader "RPS" [ref=f19e291]
+            - columnheader "Mean latency" [ref=f19e292]
+        - rowgroup [ref=f19e293]:
+          - row [ref=f19e294]:
+            - cell "Default serverless p=8" [ref=f19e295]
+            - cell [ref=f19e296]:
+              - strong [ref=f19e297]: 224 RPS
+            - cell "22.9ms" [ref=f19e298]
+          - row [ref=f19e299]:
+            - cell [ref=f19e300]:
+              - code [ref=f19e301]: hint_cache_warm
+              - text: inline p=8
+            - cell "17 RPS" [ref=f19e302]
+            - cell "459ms" [ref=f19e303]
+      - generic [ref=f19e304]:
+        - strong [ref=f19e305]:
+          - code [ref=f19e306]: hint_cache_warm
+          - text: used inline is 13× worse than default serverless.
+        - text: The cache-warm RPC is a synchronous call adding ~400ms overhead before each query. It is designed for pre-warming a cold namespace before a burst (send the hint, wait, then serve) — not as a per-query prefix. Using it inline inverts its intended effect entirely.
+    - generic [ref=f19e307]:
+      - generic [ref=f19e308]:
+        - generic [ref=f19e309]: §5
+        - heading "Server-Side Latency Gap" [level=2] [ref=f19e310]
+      - paragraph [ref=f19e311]:
+        - text: Measuring server-reported latency (excluding network round-trip) reveals an architectural floor difference. At steady state on DBpedia (unfiltered), turbopuffer server latency is consistently
+        - strong [ref=f19e312]: ~10ms
+        - text: while Qdrant server latency is
+        - strong [ref=f19e313]: ~1.9ms
+        - text: .
+      - group [ref=f19e314]:
+        - generic "▸ The ~10ms tpuf vs ~2ms Qdrant server-latency floor is architectural (NVMe vs RAM)" [ref=f19e315] [cursor=pointer]
+    - generic [ref=f19e316]:
+      - generic [ref=f19e317]:
+        - generic [ref=f19e318]: §6
+        - heading "Cross-Namespace Contention (Serverless)" [level=2] [ref=f19e319]
+      - paragraph [ref=f19e320]: A high-throughput "aggressor" namespace and a "victim" namespace both sharing the same API key on serverless. The aggressor runs at full blast; we measure what happens to victim latency.
+      - generic [ref=f19e321]:
+        - generic [ref=f19e322]: Victim p50 Latency — Baseline vs Under Aggressor Load
+        - generic [ref=f19e323]: Serverless co-locates all API-key namespaces on one host. Pinning provides machine isolation.
+        - 'generic "Grouped bar chart: serverless baseline 14.9ms becomes 52.8ms under aggressor. Pinned baseline 16.3ms becomes 19.5ms." [ref=f19e324]'
+      - generic [ref=f19e325]:
+        - strong [ref=f19e326]: "Serverless noisy-neighbor:"
+        - text: a bursty tenant triples victim latency (14.9ms → 52.8ms, +255%). Pinning reduces this to a 20% variance (16.3ms → 19.5ms). If your workload includes any bursty tenants in serverless mode, all other tenants under the same API key are affected.
+    - generic [ref=f19e327]:
+      - generic [ref=f19e328]:
+        - generic [ref=f19e329]: §7
+        - 'heading "Write Throughput: Serverless vs Pinned" [level=2] [ref=f19e330]'
+      - paragraph [ref=f19e331]: Does pinning a namespace affect write performance? We uploaded DBpedia 100K×1536 twice — once serverless, once to a pinned-1r namespace — using identical batch size and client configuration.
+      - table [ref=f19e333]:
+        - rowgroup [ref=f19e334]:
+          - row [ref=f19e335]:
+            - columnheader "Mode" [ref=f19e336]
+            - columnheader "WPS" [ref=f19e337]
+            - columnheader "batch_p50" [ref=f19e338]
+            - columnheader "batch_p99" [ref=f19e339]
+            - columnheader "server_p50" [ref=f19e340]
+            - columnheader "server_p99" [ref=f19e341]
+        - rowgroup [ref=f19e342]:
+          - row [ref=f19e343]:
+            - cell "Serverless" [ref=f19e344]
+            - cell "624" [ref=f19e345]
+            - cell "192ms" [ref=f19e346]
+            - cell "352ms" [ref=f19e347]
+            - cell "180ms" [ref=f19e348]
+            - cell "341ms" [ref=f19e349]
+          - row [ref=f19e350]:
+            - cell "Pinned-1r" [ref=f19e351]
+            - cell "633" [ref=f19e352]
+            - cell "188ms" [ref=f19e353]
+            - cell "295ms" [ref=f19e354]
+            - cell "176ms" [ref=f19e355]
+            - cell "282ms" [ref=f19e356]
+      - group [ref=f19e357]:
+        - generic "▸ Pinning has zero effect on write throughput — writes hit the S3 WAL either way" [ref=f19e358] [cursor=pointer]
+    - generic [ref=f19e359]:
+      - generic [ref=f19e360]:
+        - generic [ref=f19e361]: §8
+        - heading "Concurrent Write-Read Dynamics" [level=2] [ref=f19e362]
+      - paragraph [ref=f19e363]: Both engines were loaded from empty while a reader fired every 500ms, starting at the same moment as the writers — no pre-loading, no index warmup. 100K×1536 DBpedia vectors uploaded in ~254s; queries continued for 120s after the last write. Recall uses the same ground-truth queries as all other benchmarks.
+      - generic [ref=f19e364]:
+        - generic [ref=f19e365]:
+          - generic [ref=f19e366]:
+            - text: metric
+            - combobox "metric" [ref=f19e367] [cursor=pointer]:
+              - option "read latency ↓" [selected]
+              - option "server latency ↓"
+              - option "recall ↑"
+              - option "WAL exhaustive-scan count (tpuf)"
+              - option "WAL staleness — write→read lag (tpuf)"
+              - option "vectors written (ingest progress)"
+          - generic [ref=f19e368]:
+            - generic [ref=f19e369]: engine
+            - generic [ref=f19e370] [cursor=pointer]: turbopuffer
+            - generic [ref=f19e372] [cursor=pointer]: Qdrant
+          - generic [ref=f19e374]:
+            - button "▤ plot" [ref=f19e375] [cursor=pointer]
+            - button "▦ table" [ref=f19e376] [cursor=pointer]
+        - generic [ref=f19e377]:
+          - generic [ref=f19e378]: DBpedia loaded from empty · every query plotted over wall-clock time
+          - generic [ref=f19e379]: Both engines start empty; a reader fires every 500ms. Dashed line = upload complete (~254s). Recall climbs to ~99%; tpuf's WAL brute-force scan (toggle "exhaustive") keeps recall healthy at the cost of p99 spikes until SPFresh catches up. Hover a point; click an engine to toggle.
+          - img "Read latency, recall, and exhaustive-scan count over time during concurrent upload" [ref=f19e380]:
+            - generic [ref=f19e381]: read latency ms (↓ better)
+            - generic [ref=f19e382]: "0.5"
+            - generic [ref=f19e383]: "1.0"
+            - generic [ref=f19e384]: "2.0"
+            - generic [ref=f19e385]: "5.0"
+            - generic [ref=f19e386]: "10"
+            - generic [ref=f19e387]: "20"
+            - generic [ref=f19e388]: "50"
+            - generic [ref=f19e389]: "100"
+            - generic [ref=f19e390]: "200"
+            - generic [ref=f19e391]: "500"
+            - generic [ref=f19e392]: 1K
+            - generic [ref=f19e393]: "0"
+            - generic [ref=f19e394]: "94"
+            - generic [ref=f19e395]: "187"
+            - generic [ref=f19e396]: "281"
+            - generic [ref=f19e397]: "374"
+            - generic [ref=f19e398]: seconds since start →
+            - generic [ref=f19e399]: upload complete
+      - group [ref=f19e494]:
+        - generic "▸ tpuf's WAL brute-force scan keeps recall healthy during upload, at a p99 cost" [ref=f19e495] [cursor=pointer]
+      - group [ref=f19e496]:
+        - generic "▸ Both engines sit at ~49% recall at the upload midpoint (half the data loaded)" [ref=f19e497] [cursor=pointer]
+    - generic [ref=f19e498]:
+      - generic [ref=f19e499]:
+        - generic [ref=f19e500]: §9
+        - heading "Qdrant Disk Mode vs turbopuffer (EBS Cold/Warm)" [level=2] [ref=f19e501]
+      - paragraph [ref=f19e502]:
+        - text: Qdrant supports mmap-based vector storage (
+        - code [ref=f19e503]: on_disk=True
+        - text: ) where vectors and/or the HNSW graph are served from disk on demand. We benchmarked two configurations against turbopuffer using DBpedia 100K×1536 on Qdrant Cloud (AWS us-west-2, 64 GB RAM, EBS storage) with clean state after each upload.
+        - emphasis [ref=f19e504]: disk-vec
+        - text: ": vectors on EBS, HNSW graph in RAM."
+        - emphasis [ref=f19e505]: disk-all
+        - text: ": both on EBS."
+      - table [ref=f19e507]:
+        - rowgroup [ref=f19e508]:
+          - row [ref=f19e509]:
+            - columnheader "Config" [ref=f19e510]
+            - columnheader "State" [ref=f19e511]
+            - columnheader "ef" [ref=f19e512]
+            - columnheader "p50 (ms)" [ref=f19e513]
+            - columnheader "p90 (ms)" [ref=f19e514]
+            - columnheader "p99 (ms)" [ref=f19e515]
+            - columnheader "Recall" [ref=f19e516]
+        - rowgroup [ref=f19e517]:
+          - row [ref=f19e518]:
+            - cell "Qdrant disk-vec" [ref=f19e519]
+            - cell "Cold" [ref=f19e520]
+            - cell "128" [ref=f19e521]
+            - cell "7.2" [ref=f19e522]
+            - cell "68.9" [ref=f19e523]
+            - cell "1,457" [ref=f19e524]
+            - cell "98.3%" [ref=f19e525]
+          - row [ref=f19e526]:
+            - cell "Qdrant disk-all" [ref=f19e527]
+            - cell "Cold" [ref=f19e528]
+            - cell "128" [ref=f19e529]
+            - cell "7.1" [ref=f19e530]
+            - cell "72.8" [ref=f19e531]
+            - cell "1,403" [ref=f19e532]
+            - cell "98.1%" [ref=f19e533]
+          - row [ref=f19e534]:
+            - cell "Qdrant disk-vec" [ref=f19e535]
+            - cell "Warm" [ref=f19e536]
+            - cell "32" [ref=f19e537]
+            - cell "5.8" [ref=f19e538]
+            - cell "6.4" [ref=f19e539]
+            - cell "8.8" [ref=f19e540]
+            - cell "93.5%" [ref=f19e541]
+          - row [ref=f19e542]:
+            - cell "Qdrant disk-vec" [ref=f19e543]
+            - cell "Warm" [ref=f19e544]
+            - cell "64" [ref=f19e545]
+            - cell "6.4" [ref=f19e546]
+            - cell "7.1" [ref=f19e547]
+            - cell "9.9" [ref=f19e548]
+            - cell "97.4%" [ref=f19e549]
+          - row [ref=f19e550]:
+            - cell "Qdrant disk-vec" [ref=f19e551]
+            - cell "Warm" [ref=f19e552]
+            - cell "128" [ref=f19e553]
+            - cell "7.1" [ref=f19e554]
+            - cell "7.8" [ref=f19e555]
+            - cell "10.4" [ref=f19e556]
+            - cell "98.8%" [ref=f19e557]
+          - row [ref=f19e558]:
+            - cell "Qdrant RAM" [ref=f19e559]
+            - cell "Always warm" [ref=f19e560]
+            - cell "128" [ref=f19e561]
+            - cell "6.9" [ref=f19e562]
+            - cell "7.5" [ref=f19e563]
+            - cell "9.4" [ref=f19e564]
+            - cell "98.4%" [ref=f19e565]
+          - row [ref=f19e566]:
+            - cell "turbopuffer" [ref=f19e567]
+            - cell "Cache-hot" [ref=f19e568]
+            - cell "—" [ref=f19e569]
+            - cell "15.2" [ref=f19e570]
+            - cell "17.7" [ref=f19e571]
+            - cell "40.8" [ref=f19e572]
+            - cell "98.5%" [ref=f19e573]
+      - generic [ref=f19e574]: "p99 Latency: Cold Start vs Warm (p=1, concurrency=1)"
+      - generic [ref=f19e577]: Warm Latency — p=8 Concurrency (recall annotated above bars)
+      - group [ref=f19e580]:
+        - generic "▸ Qdrant disk-mode cold start is a tail disaster (p99 1,457ms) until the page cache warms" [ref=f19e581] [cursor=pointer]
+      - group [ref=f19e582]:
+        - generic "▸ ef=64 is the warm-disk sweet spot; putting the graph on disk too adds no real overhead" [ref=f19e583] [cursor=pointer]

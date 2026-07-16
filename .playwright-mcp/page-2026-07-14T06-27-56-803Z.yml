@@ -1,0 +1,970 @@
+- generic [ref=f11e2]:
+  - complementary "Report navigation" [ref=f11e3]:
+    - generic [ref=f11e4]:
+      - strong [ref=f11e5]: Benchmark Report
+      - text: turbopuffer vs Qdrant
+    - navigation [ref=f11e6]:
+      - list [ref=f11e7]:
+        - listitem [ref=f11e8]:
+          - link "1 What is tpuf?" [ref=f11e9] [cursor=pointer]:
+            - /url: "#s1"
+            - generic [ref=f11e10]: "1"
+            - text: What is tpuf?
+        - listitem [ref=f11e11]:
+          - link "2 Test Setup" [ref=f11e12] [cursor=pointer]:
+            - /url: "#s2"
+            - generic [ref=f11e13]: "2"
+            - text: Test Setup
+        - listitem [ref=f11e14]:
+          - link "3 Upload" [ref=f11e15] [cursor=pointer]:
+            - /url: "#s3"
+            - generic [ref=f11e16]: "3"
+            - text: Upload
+        - listitem [ref=f11e17]:
+          - link "4 DBpedia Search" [ref=f11e18] [cursor=pointer]:
+            - /url: "#s4"
+            - generic [ref=f11e19]: "4"
+            - text: DBpedia Search
+        - listitem [ref=f11e20]:
+          - link "5 H&M Filtered" [ref=f11e21] [cursor=pointer]:
+            - /url: "#s5"
+            - generic [ref=f11e22]: "5"
+            - text: H&M Filtered
+        - listitem [ref=f11e23]:
+          - link "6 Multi-Tenant" [ref=f11e24] [cursor=pointer]:
+            - /url: "#s6"
+            - generic [ref=f11e25]: "6"
+            - text: Multi-Tenant
+        - listitem [ref=f11e26]:
+          - link "7 Recall" [ref=f11e27] [cursor=pointer]:
+            - /url: "#s7"
+            - generic [ref=f11e28]: "7"
+            - text: Recall
+        - listitem [ref=f11e29]:
+          - link "8 tpuf Internals" [ref=f11e30] [cursor=pointer]:
+            - /url: "#s8"
+            - generic [ref=f11e31]: "8"
+            - text: tpuf Internals
+        - listitem [ref=f11e32]:
+          - link "9 Pinned Cost" [ref=f11e33] [cursor=pointer]:
+            - /url: "#s9"
+            - generic [ref=f11e34]: "9"
+            - text: Pinned Cost
+        - listitem [ref=f11e35]:
+          - link "10 Summary" [ref=f11e36] [cursor=pointer]:
+            - /url: "#s10"
+            - generic [ref=f11e37]: "10"
+            - text: Summary
+        - listitem [ref=f11e38]:
+          - link "11 Strategy" [ref=f11e39] [cursor=pointer]:
+            - /url: "#s11"
+            - generic [ref=f11e40]: "11"
+            - text: Strategy
+  - main [ref=f11e41]:
+    - generic [ref=f11e42]:
+      - generic [ref=f11e43]: Vector Database Benchmark · 2026
+      - heading "turbopuffer vs Qdrant Cloud Detailed Benchmark Report" [level=1] [ref=f11e44]: turbopuffer vs Qdrant CloudDetailed Benchmark Report
+      - paragraph [ref=f11e45]: Three datasets, four concurrency levels, upload throughput, filtered search, multi-tenant isolation, and cost modeling — from a single EC2 host in aws-us-west-2, same region as both services.
+      - generic [ref=f11e46]:
+        - generic [ref=f11e47]: turbopuffer cold-start warmup · first 120 queries · H&M 4-replica pinned
+        - 'generic "Cold-start latency warmup curve: queries start near 900ms and converge to ~43ms after 30 queries" [ref=f11e48]'
+        - generic [ref=f11e49]: Latency converges from ~893ms → ~43ms as the NVMe cache warms. Each spike is a cold centroid region touched for the first time.
+      - generic [ref=f11e50]:
+        - generic [ref=f11e51]:
+          - generic [ref=f11e52]: ●
+          - text: turbopuffer
+        - generic [ref=f11e53]:
+          - generic [ref=f11e54]: ●
+          - text: Qdrant Cloud
+        - generic [ref=f11e55]: aws-us-west-2
+        - generic [ref=f11e56]: 100K–105K vectors
+        - generic [ref=f11e57]: 768–2048 dims
+    - generic [ref=f11e58]:
+      - generic [ref=f11e59]:
+        - generic [ref=f11e60]: §1
+        - heading "What is turbopuffer?" [level=2] [ref=f11e61]
+        - paragraph [ref=f11e62]: turbopuffer is an S3-backed vector database built around SPFresh centroid-based ANN search. It stores the vector index on object storage and uses a local NVMe cache to accelerate repeated queries. It offers two deployment modes — serverless and pinned — and deliberately exposes no recall tuning knobs.
+      - list [ref=f11e63]:
+        - listitem [ref=f11e64]:
+          - text: ▸
+          - strong [ref=f11e65]: No recall tuning.
+          - text: Locked at 89.14% recall on filtered search and 98.51% on unfiltered. You cannot trade latency for recall.
+        - listitem [ref=f11e66]:
+          - text: ▸
+          - strong [ref=f11e67]: Serverless mode.
+          - text: Shared compute, scales to zero between queries, inherent noisy-neighbor risk when multiple namespaces share a host.
+        - listitem [ref=f11e68]:
+          - text: ▸
+          - strong [ref=f11e69]: Pinned mode.
+          - text: Dedicated NVMe, fixed replicas, full machine isolation. Eliminates noisy-neighbor contention but removes scale-to-zero savings.
+        - listitem [ref=f11e70]:
+          - text: ▸
+          - strong [ref=f11e71]: Cold-start penalty.
+          - text: "After any restart, the first queries must fetch index data from S3 before NVMe is warm. Penalty: 100–1500ms on first queries, converging to steady-state after ~30 requests."
+        - listitem [ref=f11e72]:
+          - text: ▸
+          - strong [ref=f11e73]: SPFresh algorithm.
+          - text: Centroid-based ANN that post-filters for attribute predicates rather than integrating filters into graph traversal. Leads to measurable recall drops under selective filter conditions.
+        - listitem [ref=f11e74]:
+          - text: ▸
+          - strong [ref=f11e75]: Write pipeline & index visibility.
+          - text: Writes are group-committed (100–250ms window) and flushed as an append-only WAL entry to S3. Indexing (SPFresh centroid tree) is asynchronous — new vectors are
+          - emphasis [ref=f11e76]: immediately readable
+          - text: via exhaustive WAL scan before the index is built. There is no write-blocking indexing phase (unlike Qdrant’s HNSW build). With strong consistency (default), each query checks S3 for the latest WAL version, adding ~10ms overhead — this is the architectural source of the 10ms server-side latency floor. Eventual consistency mode skips this check (sub-10ms possible, up to ~1h staleness).
+    - generic [ref=f11e77]:
+      - generic [ref=f11e78]:
+        - generic [ref=f11e79]: §2
+        - heading "Test Setup" [level=2] [ref=f11e80]
+      - table [ref=f11e82]:
+        - rowgroup [ref=f11e83]:
+          - row [ref=f11e84]:
+            - columnheader "Dataset" [ref=f11e85]
+            - columnheader "Vectors" [ref=f11e86]
+            - columnheader "Dimensions" [ref=f11e87]
+            - columnheader "Scenario" [ref=f11e88]
+        - rowgroup [ref=f11e89]:
+          - row [ref=f11e90]:
+            - cell "DBpedia" [ref=f11e91]
+            - cell "100K" [ref=f11e92]
+            - cell "1,536" [ref=f11e93]
+            - cell "Unfiltered ANN search" [ref=f11e94]
+          - row [ref=f11e95]:
+            - cell "H&M" [ref=f11e96]
+            - cell "105K" [ref=f11e97]
+            - cell "2,048" [ref=f11e98]
+            - cell "Filtered search (fashion attributes)" [ref=f11e99]
+          - row [ref=f11e100]:
+            - cell "Random-768" [ref=f11e101]
+            - cell "1M" [ref=f11e102]
+            - cell "768" [ref=f11e103]
+            - cell "Multi-tenant (100 tenants × 10K vectors each)" [ref=f11e104]
+      - generic [ref=f11e105]:
+        - strong [ref=f11e106]: "Infrastructure:"
+        - text: Benchmark client running on a dedicated EC2 instance in
+        - code [ref=f11e107]: aws-us-west-2
+        - text: ", the same region as both services. Measured RTT ~2ms."
+        - strong [ref=f11e108]: RPS/worker
+        - text: = 1/mean latency of a single worker (a latency measure);
+        - strong [ref=f11e109]: ~Total RPS
+        - text: ≈ p × RPS/worker is the wall-clock throughput — use it for capacity comparisons. Recall is measured against exact brute-force ground truth for every query.
+    - generic [ref=f11e110]:
+      - generic [ref=f11e111]:
+        - generic [ref=f11e112]: §3
+        - heading "Upload Performance" [level=2] [ref=f11e113]
+        - paragraph [ref=f11e114]: "turbopuffer writes directly to S3 at faster raw WPS than Qdrant, but SPFresh builds asynchronously on shared indexers. SPFresh duration varies with indexer availability: across 5 DBpedia runs it ranged 25–268s, putting tpuf total at 3.1–7.3 min. H&M measured 60s (4.1 min). Qdrant’s 3.9 min DBpedia falls inside the tpuf range; tpuf won H&M (vs 8.4 min) in the single measured run — but H&M SPFresh has n=1, and DBpedia showed 10× SPFresh variance."
+      - generic [ref=f11e115]:
+        - generic [ref=f11e116]:
+          - generic [ref=f11e117]:
+            - text: metric
+            - combobox "metric" [ref=f11e118] [cursor=pointer]:
+              - option "total upload + index ↓" [selected]
+              - option "upload time — upsert only ↓"
+              - option "index build time ↓"
+              - option "WPS — insert throughput ↑"
+              - option "write p50 latency ↓"
+              - option "write p99 latency ↓"
+              - option "stored size ↓"
+          - generic [ref=f11e119]:
+            - generic [ref=f11e120]: engine
+            - generic [ref=f11e121] [cursor=pointer]: turbopuffer
+            - generic [ref=f11e123] [cursor=pointer]: Qdrant
+          - generic [ref=f11e125]:
+            - button "▤ plot" [ref=f11e126] [cursor=pointer]
+            - button "▦ table" [ref=f11e127] [cursor=pointer]
+        - generic [ref=f11e128]:
+          - generic [ref=f11e129]: Upload across all three datasets · time to fully-indexed state
+          - generic [ref=f11e130]: Bars = one config. Lighter extension = measured range (SPFresh 186–438s on DBpedia). Multi-tenant is 1M vectors (10× the others) and tpuf WPS there is aggregate across 100 parallel namespaces. Hover for detail; click an engine to toggle.
+          - img "Upload time and throughput across datasets" [ref=f11e131]:
+            - generic [ref=f11e132]: total upload + index s (↓ better)
+            - generic [ref=f11e133]: "0"
+            - generic [ref=f11e134]: "332"
+            - generic [ref=f11e135]: "664"
+            - generic [ref=f11e136]: "996"
+            - generic [ref=f11e137]: "1328"
+            - generic [ref=f11e141]: DBpedia · tpuf serverless
+            - generic [ref=f11e142]: 186–438 s
+            - generic [ref=f11e145]: DBpedia · Qdrant concurrent
+            - generic [ref=f11e146]: 234 s
+            - generic [ref=f11e149]: DBpedia · Qdrant deferred
+            - generic [ref=f11e150]: 318 s
+            - generic [ref=f11e153]: H&M · tpuf serverless
+            - generic [ref=f11e154]: 246 s
+            - generic [ref=f11e157]: H&M · Qdrant concurrent
+            - generic [ref=f11e158]: 504 s
+            - generic [ref=f11e161]: H&M · Qdrant deferred
+            - generic [ref=f11e162]: 546 s
+            - generic [ref=f11e165]: MT 1M · tpuf parallel
+            - generic [ref=f11e166]: 144 s
+            - generic [ref=f11e169]: MT 1M · Qdrant
+            - generic [ref=f11e170]: 1230 s
+      - generic [ref=f11e171]: "‡ Total time = upsert + index build (end-to-end until fully indexed). For H&M Qdrant concurrent: 5.5 min upsert + 2.8 min HNSW = 8.4 min. For DBpedia: 3.9 min upsert, HNSW built concurrently so extra wait ≈ 0s.† Index wait = additional time after last upsert batch until fully indexed. 0s means HNSW finished within the upsert window. turbopuffer SPFresh builds asynchronously after writes commit to S3 WAL — 60s for H&M 105K×2048d.†† DBpedia tpuf SPFresh varied across 5 repeated runs (25s, 36s, 61s, 183s, 268s) depending on shared indexer availability; the 61s trial used an earlier query-based completion signal and is less precise than the other four (index-status polling). Total wall-clock ranges 3.1–7.3 min accordingly. Pinned-1r SPFresh was not measured separately — writes take the same S3 WAL path in both modes, so the same range likely applies (upload alone = 2.6 min).* MT tpuf WPS is aggregate wall-clock throughput across 10 concurrent namespace uploads. Per-namespace WPS ≈ 624."
+      - group [ref=f11e172]:
+        - 'generic "▸ Multi-tenant upload: parallel (tpuf) vs sequential (Qdrant) — methodology drives most of the 8.5× gap" [ref=f11e173] [cursor=pointer]'
+      - group [ref=f11e174]:
+        - generic "▸ Write-time vs query-time — Qdrant builds HNSW upfront; tpuf defers indexing to async SPFresh" [ref=f11e175] [cursor=pointer]
+      - group [ref=f11e176]:
+        - generic "▸ tpuf writes 50–60% faster, but SPFresh build time (25–268s) decides the DBpedia race" [ref=f11e177] [cursor=pointer]
+    - generic [ref=f11e178]:
+      - generic [ref=f11e179]:
+        - generic [ref=f11e180]: §4
+        - heading "DBpedia — Unfiltered Search" [level=2] [ref=f11e181]
+        - paragraph [ref=f11e182]: "The cleanest apples-to-apples comparison: large-scale unfiltered ANN on OpenAI-style 1536-dim embeddings. Both engines achieve comparable recall (tpuf 98.51% / Qdrant 98.36%); the difference is latency and cost structure."
+      - generic [ref=f11e183]:
+        - generic [ref=f11e184]:
+          - generic [ref=f11e185]:
+            - text: metric
+            - combobox "metric" [ref=f11e186] [cursor=pointer]:
+              - option "QPS — throughput ↑"
+              - option "read mean latency ↓"
+              - option "read p99 latency ↓"
+              - option "server p50 latency ↓"
+              - option "server p99 latency ↓"
+              - option "billed GB / query ↓"
+              - option "recall ↑"
+              - option "WPS — insert throughput ↑"
+              - option "upload time ↓"
+              - option "index build time ↓"
+              - option "total upload + index ↓" [selected]
+              - option "write p50 latency ↓"
+              - option "write p99 latency ↓"
+              - option "stored size ↓"
+          - generic [ref=f11e187]:
+            - generic [ref=f11e188]: engine
+            - generic [ref=f11e189] [cursor=pointer]: turbopuffer
+            - generic [ref=f11e191] [cursor=pointer]: Qdrant
+          - generic [ref=f11e193]:
+            - button "▤ plot" [ref=f11e194] [cursor=pointer]
+            - button "▦ table" [ref=f11e195] [cursor=pointer]
+        - generic [ref=f11e196]:
+          - generic [ref=f11e197]: DBpedia 100K × 1536 · unfiltered ANN
+          - generic [ref=f11e198]: Bars = one config. Hover for detail; click an engine to toggle. Lighter extension = measured range (e.g. SPFresh 25–268s across 5 runs).
+          - img "DBpedia interactive metric chart" [ref=f11e199]:
+            - generic [ref=f11e200]: total upload + index s (↓ better)
+            - generic [ref=f11e201]: "0"
+            - generic [ref=f11e202]: "118"
+            - generic [ref=f11e203]: "237"
+            - generic [ref=f11e204]: "355"
+            - generic [ref=f11e205]: "473"
+            - generic [ref=f11e209]: tpuf serverless
+            - generic [ref=f11e210]: 186–438 s
+            - generic [ref=f11e213]: Qdrant concurrent
+            - generic [ref=f11e214]: 234 s
+            - generic [ref=f11e217]: Qdrant deferred
+            - generic [ref=f11e218]: 318 s
+      - heading "4.1 — Single-Concurrency Baseline (p=1)" [level=3] [ref=f11e219]
+      - group [ref=f11e220]:
+        - generic "▸ Every DBpedia query scans the whole dataset; tpuf bills the 1.28 GB per-query minimum" [ref=f11e221] [cursor=pointer]
+      - heading "4.2 — Fixed-QPS Sweep" [level=3] [ref=f11e222]
+      - generic [ref=f11e223]:
+        - generic [ref=f11e224]:
+          - generic [ref=f11e225]:
+            - text: metric
+            - combobox "metric" [ref=f11e226] [cursor=pointer]:
+              - option "p50 latency ↓" [selected]
+              - option "p99 latency ↓"
+              - option "server p50 latency ↓"
+              - option "server p99 latency ↓"
+              - option "monthly cost ↓"
+          - generic [ref=f11e227]:
+            - generic [ref=f11e228]: series
+            - generic [ref=f11e229] [cursor=pointer]: turbopuffer
+            - generic [ref=f11e231] [cursor=pointer]: Qdrant
+          - generic [ref=f11e233]:
+            - button "▤ plot" [ref=f11e234] [cursor=pointer]
+            - button "▦ table" [ref=f11e235] [cursor=pointer]
+        - generic [ref=f11e236]:
+          - generic [ref=f11e237]: DBpedia · latency & cost vs offered QPS
+          - generic [ref=f11e238]: Lines sweep target QPS (log x, log y). tpuf latency is roughly QPS-independent; cost crosses Qdrant's flat $26.10 near ~8 QPS. Hover a point; click an engine to toggle.
+          - img "DBpedia latency and cost vs QPS sweep" [ref=f11e239]:
+            - generic [ref=f11e240]: p50 latency ms (↓ better)
+            - generic [ref=f11e241]: "2"
+            - generic [ref=f11e242]: "5"
+            - generic [ref=f11e243]: "10"
+            - generic [ref=f11e244]: "20"
+            - generic [ref=f11e245]: "50"
+            - generic [ref=f11e246]: "1"
+            - generic [ref=f11e247]: "5"
+            - generic [ref=f11e248]: "10"
+            - generic [ref=f11e249]: "20"
+            - generic [ref=f11e250]: "50"
+            - generic [ref=f11e251]: target QPS →
+            - generic [ref=f11e263]: turbopuffer
+            - generic [ref=f11e275]: Qdrant
+      - generic [ref=f11e276]: Qdrant server p99 stays at 2.5ms from 1→50 QPS — the single node has ample headroom. tpuf server p99 is 25–46ms (flat at higher floor).
+      - heading "4.3 — Cost Model by Dataset Scale" [level=3] [ref=f11e277]
+      - paragraph [ref=f11e278]: turbopuffer charges three components independently; Qdrant charges a flat monthly cluster fee.
+      - table [ref=f11e280]:
+        - rowgroup [ref=f11e281]:
+          - row [ref=f11e282]:
+            - columnheader "Component" [ref=f11e283]
+            - columnheader "turbopuffer" [ref=f11e284]
+            - columnheader "Qdrant Cloud" [ref=f11e285]
+        - rowgroup [ref=f11e286]:
+          - row [ref=f11e287]:
+            - cell "Storage" [ref=f11e288]
+            - 'cell "$0.33/GB/month (f16: 2 bytes/dim)" [ref=f11e289]'
+            - cell "Included" [ref=f11e290]
+          - row [ref=f11e291]:
+            - cell "Writes" [ref=f11e292]
+            - 'cell "$2/GB (f32: 4 bytes/dim) + batch discount" [ref=f11e293]'
+            - cell "Included" [ref=f11e294]
+          - row [ref=f11e295]:
+            - cell "Queries" [ref=f11e296]
+            - cell [ref=f11e297]:
+              - text: $0.001/TB scanned, min
+              - strong [ref=f11e298]: 1.28 GB/namespace
+            - cell "Unlimited" [ref=f11e299]
+      - paragraph [ref=f11e300]:
+        - text: "The 1.28 GB minimum is critical: a 308 MB namespace (100K × 1536-dim f16) is billed as 1.28 GB per scan query — a cost floor of"
+        - strong [ref=f11e301]: $1.28 per million queries
+        - text: regardless of actual data size.
+      - table [ref=f11e303]:
+        - rowgroup [ref=f11e304]:
+          - row [ref=f11e305]:
+            - columnheader "Dataset" [ref=f11e306]
+            - columnheader "tpuf $/1M queries" [ref=f11e307]
+            - columnheader "Qdrant $/mo" [ref=f11e308]
+            - columnheader "Break-even QPS" [ref=f11e309]
+        - rowgroup [ref=f11e310]:
+          - row [ref=f11e311]:
+            - cell "100K × 1536" [ref=f11e312]
+            - cell "$1.28" [ref=f11e313]
+            - cell "$26.10" [ref=f11e314]
+            - cell "~8 QPS" [ref=f11e315]
+          - row [ref=f11e316]:
+            - cell "1M × 1024" [ref=f11e317]
+            - cell "$2.05" [ref=f11e318]
+            - cell "$68.34" [ref=f11e319]
+            - cell "~13 QPS" [ref=f11e320]
+          - row [ref=f11e321]:
+            - cell "10M × 768" [ref=f11e322]
+            - cell "$15.36" [ref=f11e323]
+            - cell "$410.04" [ref=f11e324]
+            - cell "~10 QPS" [ref=f11e325]
+      - generic [ref=f11e326]:
+        - text: The break-even point is remarkably stable across dataset scales (~8–13 QPS).
+        - strong [ref=f11e327]: Below the break-even for your scale, turbopuffer is cheaper.
+        - text: Above it, Qdrant is cheaper and faster.
+    - generic [ref=f11e328]:
+      - generic [ref=f11e329]:
+        - generic [ref=f11e330]: §5
+        - heading "H&M — Filtered Search" [level=2] [ref=f11e331]
+        - paragraph [ref=f11e332]: "Filtered vector search is where architecture choices have the sharpest consequences. SPFresh (turbopuffer) post-filters: it traverses centroids first, then discards non-matching vectors. Qdrant integrates the filter directly into HNSW traversal, preserving effective graph structure."
+      - generic [ref=f11e333]:
+        - generic [ref=f11e334]:
+          - generic [ref=f11e335]:
+            - text: metric
+            - combobox "metric" [ref=f11e336] [cursor=pointer]:
+              - option "total RPS — throughput ↑" [selected]
+              - option "RPS / worker ↑"
+              - option "read p50 latency ↓"
+              - option "read p99 latency ↓"
+          - generic [ref=f11e337]:
+            - generic [ref=f11e338]: series
+            - generic [ref=f11e339] [cursor=pointer]: turbopuffer
+            - generic [ref=f11e341] [cursor=pointer]: Qdrant
+          - generic [ref=f11e343]:
+            - button "▤ plot" [ref=f11e344] [cursor=pointer]
+            - button "▦ table" [ref=f11e345] [cursor=pointer]
+        - generic [ref=f11e346]:
+          - generic [ref=f11e347]: H&M filtered · vs client concurrency (p = 1 / 8 / 32)
+          - generic [ref=f11e348]: Log x, log y. Qdrant leads single-stream; at p=32 its 2-CPU node saturates while tpuf autoscales. Hover a point; click an engine to toggle.
+          - img "H&M filtered search vs concurrency" [ref=f11e349]:
+            - generic [ref=f11e350]: total RPS — throughput (↑ better)
+            - generic [ref=f11e351]: "10"
+            - generic [ref=f11e352]: "20"
+            - generic [ref=f11e353]: "50"
+            - generic [ref=f11e354]: "100"
+            - generic [ref=f11e355]: "200"
+            - generic [ref=f11e356]: "500"
+            - generic [ref=f11e357]: "1"
+            - generic [ref=f11e358]: "8"
+            - generic [ref=f11e359]: "32"
+            - generic [ref=f11e360]: client concurrency (p) →
+            - generic [ref=f11e368]: turbopuffer
+            - generic [ref=f11e376]: Qdrant
+      - heading "5.1 — turbopuffer (serverless, hot NVMe cache)" [level=3] [ref=f11e377]
+      - heading "5.2 — Qdrant (always warm — HNSW in RAM)" [level=3] [ref=f11e378]
+      - generic [ref=f11e379]:
+        - strong [ref=f11e380]: "Cold-start penalty (prior measurement):"
+        - text: "tpuf cold p99 = 1,891ms (server_p99 = 1,777ms — 94% server-side S3 fetches). Hot cache (NVMe, above) p99 = 50ms — a 38× improvement once centroids are cached. Qdrant has no cold-start: HNSW lives in RAM permanently."
+      - group [ref=f11e381]:
+        - generic "▸ Why filtered recall drops — SPFresh post-filters; Qdrant filters inside HNSW traversal" [ref=f11e382] [cursor=pointer]
+    - generic [ref=f11e383]:
+      - generic [ref=f11e384]:
+        - generic [ref=f11e385]: §6
+        - heading "Multi-Tenant Search" [level=2] [ref=f11e386]
+        - paragraph [ref=f11e387]: 100 tenants, ~10,000 vectors each (1M total). At this per-tenant scale, both engines achieve 100% recall — the index structures have negligible approximation error over 10K vectors. Throughput tells the real story.
+      - generic [ref=f11e388]:
+        - generic [ref=f11e389]:
+          - generic [ref=f11e390]:
+            - text: metric
+            - combobox "metric" [ref=f11e391] [cursor=pointer]:
+              - option "total RPS — throughput ↑" [selected]
+              - option "RPS / worker ↑"
+              - option "p50 latency ↓"
+              - option "p99 latency ↓"
+          - generic [ref=f11e392]:
+            - generic [ref=f11e393]: series
+            - generic [ref=f11e394] [cursor=pointer]: turbopuffer
+            - generic [ref=f11e396] [cursor=pointer]: Qdrant
+          - generic [ref=f11e398]:
+            - button "▤ plot" [ref=f11e399] [cursor=pointer]
+            - button "▦ table" [ref=f11e400] [cursor=pointer]
+        - generic [ref=f11e401]:
+          - generic [ref=f11e402]: Multi-tenant (100 × 10K) · vs client concurrency (p = 1 / 8 / 32)
+          - generic [ref=f11e403]: Log x, log y. Both hit 100% recall here. Qdrant's single 2-CPU node leads until it saturates past p=8; tpuf autoscales and overtakes on total throughput at p=32. Hover a point; click an engine to toggle.
+          - img "Multi-tenant throughput and latency vs concurrency" [ref=f11e404]:
+            - generic [ref=f11e405]: total RPS — throughput (↑ better)
+            - generic [ref=f11e406]: "10"
+            - generic [ref=f11e407]: "20"
+            - generic [ref=f11e408]: "50"
+            - generic [ref=f11e409]: "100"
+            - generic [ref=f11e410]: "200"
+            - generic [ref=f11e411]: "500"
+            - generic [ref=f11e412]: "1"
+            - generic [ref=f11e413]: "8"
+            - generic [ref=f11e414]: "32"
+            - generic [ref=f11e415]: client concurrency (p) →
+            - generic [ref=f11e423]: turbopuffer
+            - generic [ref=f11e431]: Qdrant
+      - group [ref=f11e432]:
+        - generic "▸ Why both engines hit 100% recall at ~10K vectors per tenant" [ref=f11e433] [cursor=pointer]
+      - group [ref=f11e434]:
+        - generic "▸ p=32 crossover — tpuf autoscales past Qdrant's saturated 2-CPU node" [ref=f11e435] [cursor=pointer]
+      - group [ref=f11e436]:
+        - generic "▸ The 0.256 GB/query is tpuf's former billing floor, not scan overhead (now 1.28 GB)" [ref=f11e437] [cursor=pointer]
+    - generic [ref=f11e438]:
+      - generic [ref=f11e439]:
+        - generic [ref=f11e440]: §7
+        - heading "Recall Summary" [level=2] [ref=f11e441]
+        - paragraph [ref=f11e442]: Recall numbers remain stable across all tested concurrency levels (p=1, p=8, p=32) — the recall values here reflect p=1 baselines.
+      - generic [ref=f11e443]:
+        - generic [ref=f11e444]:
+          - generic [ref=f11e445]:
+            - text: scenario
+            - combobox "scenario" [ref=f11e446] [cursor=pointer]:
+              - option "H&M — filtered (k=25)" [selected]
+              - option "DBpedia — unfiltered (k=10)"
+              - option "Multi-tenant (10K/tenant)"
+          - generic [ref=f11e447]:
+            - generic [ref=f11e448]: engine
+            - generic [ref=f11e449]: turbopuffer
+            - generic [ref=f11e451]: Qdrant
+          - generic [ref=f11e453]:
+            - button "▤ plot" [ref=f11e454] [cursor=pointer]
+            - button "▦ table" [ref=f11e455] [cursor=pointer]
+        - generic [ref=f11e456]:
+          - generic [ref=f11e457]: Recall @ k — higher is better (domain zoomed to 80–100%)
+          - generic [ref=f11e458]: Qdrant's filter-integrated HNSW holds 95.85% on filtered search; tpuf's post-filter SPFresh drops to 89.14% and can't be tuned up. Unfiltered and multi-tenant are near-parity. Hover for exact values.
+          - img "Recall by scenario" [ref=f11e459]:
+            - generic [ref=f11e460]: recall % (↑ better)
+            - generic [ref=f11e461]: "80"
+            - generic [ref=f11e462]: "85"
+            - generic [ref=f11e463]: "90"
+            - generic [ref=f11e464]: "95"
+            - generic [ref=f11e465]: "100"
+            - generic [ref=f11e468]: turbopuffer
+            - generic [ref=f11e469]: 89.14%
+            - generic [ref=f11e472]: Qdrant
+            - generic [ref=f11e473]: 95.85%
+      - generic [ref=f11e474]:
+        - strong [ref=f11e475]: The ~7% recall gap on filtered search is structural, not tunable.
+        - text: SPFresh's post-filter architecture cannot be configured to match Qdrant's filter-integrated HNSW. If your workload involves selective attribute filtering, this gap is permanent.
+    - generic [ref=f11e476]:
+      - generic [ref=f11e477]:
+        - generic [ref=f11e478]: §8
+        - heading "turbopuffer Internals" [level=2] [ref=f11e479]
+        - paragraph [ref=f11e480]:
+          - text: "Nine experiments that reveal how turbopuffer behaves under the hood and how it compares to Qdrant disk mode. Key findings: (1) SPFresh does lazy per-centroid NVMe caching — ~75 sequential queries to reach stable warm latency, no global pre-fetch. (2) A single pinned replica saturates at ~6–8 CPU cores; serverless outperforms it at p≥8. (3) Correctly-warmed 4-replica pinned peaks at 473 RPS — NVMe bandwidth, not CPU, is the ceiling. (4) A pinned replica takes ~80s to become"
+          - code [ref=f11e481]: ready
+          - text: and is still cold after that — first query hits ~600ms. (5)
+          - code [ref=f11e482]: hint_cache_warm
+          - text: "used inline is 13× worse than default — it is for pre-warming, not per-query prefix. (6) All namespaces under one API key share one physical machine in serverless mode; a bursty tenant degrades all others ~3×. (7) Pinning has zero effect on write throughput (624 vs 633 WPS). (8) During concurrent writes, tpuf's WAL exhaustive scan rescues recall at the cost of 1.8× higher p99 — latency normalises within seconds of indexing completing. (9) Qdrant disk mode has bimodal behavior: p99=1,457ms cold (EBS random I/O storm) vs p99=10ms warm — once 586 MB fits in OS page cache the disk-mode penalty disappears entirely."
+      - heading "8.1 — Cold Warmup Curve" [level=3] [ref=f11e483]
+      - paragraph [ref=f11e484]: Query latency for the first 120 queries issued after a cold restart. Each spike beyond query ~5 marks a previously-uncached centroid region being fetched from S3.
+      - generic [ref=f11e485]:
+        - generic [ref=f11e486]: "Per-Query Latency: Cold Start → Warm"
+        - generic [ref=f11e487]: Milliseconds. H&M dataset, pinned 4-replica. Gaps filled by interpolation for display.
+        - 'generic "Line chart: first query ~893ms, rapid decay with periodic spikes, converges near 43ms by query 30" [ref=f11e488]'
+      - heading "8.2 — RPS vs Concurrency (pinned 1r / serverless / 4-replica)" [level=3] [ref=f11e489]
+      - paragraph [ref=f11e490]: Aggregate RPS as client concurrency scales. Pinned 1-replica hits a ~370 RPS ceiling around p=8–16 (≈8 NVMe reader cores); serverless taps shared compute and scales further (~507 RPS); 4 replicas roughly quadruple peak throughput to ~473 RPS at p=16, then go sub-linear as NVMe bandwidth saturates.
+      - generic [ref=f11e491]:
+        - generic [ref=f11e492]:
+          - generic [ref=f11e493]:
+            - text: metric
+            - combobox "metric" [ref=f11e494] [cursor=pointer]:
+              - option "aggregate RPS ↑" [selected]
+          - generic [ref=f11e495]:
+            - generic [ref=f11e496]: series
+            - generic [ref=f11e497] [cursor=pointer]: serverless
+            - generic [ref=f11e499] [cursor=pointer]: pinned-1r
+            - generic [ref=f11e501] [cursor=pointer]: pinned-4r
+          - generic [ref=f11e503]:
+            - button "▤ plot" [ref=f11e504] [cursor=pointer]
+            - button "▦ table" [ref=f11e505] [cursor=pointer]
+        - generic [ref=f11e506]:
+          - generic [ref=f11e507]: DBpedia unfiltered · RPS vs client concurrency (1 → 128)
+          - generic [ref=f11e508]: Log x, log y. Click a series to toggle. Pinned-1r plateaus at the single-node NVMe ceiling; serverless scales past it; 4 replicas lift the ceiling ~4× but saturate on NVMe bandwidth, not CPU.
+          - img "RPS vs concurrency for pinned-1r, serverless, and 4-replica" [ref=f11e509]:
+            - generic [ref=f11e510]: aggregate RPS (↑ better)
+            - generic [ref=f11e511]: "50"
+            - generic [ref=f11e512]: "100"
+            - generic [ref=f11e513]: "200"
+            - generic [ref=f11e514]: "500"
+            - generic [ref=f11e515]: "1"
+            - generic [ref=f11e516]: "2"
+            - generic [ref=f11e517]: "4"
+            - generic [ref=f11e518]: "8"
+            - generic [ref=f11e519]: "16"
+            - generic [ref=f11e520]: "32"
+            - generic [ref=f11e521]: "64"
+            - generic [ref=f11e522]: "128"
+            - generic [ref=f11e523]: concurrency →
+            - generic [ref=f11e539]: serverless
+            - generic [ref=f11e555]: pinned-1r
+            - generic [ref=f11e571]: pinned-4r
+      - heading "8.4 — Replica Boot Time" [level=3] [ref=f11e572]
+      - paragraph [ref=f11e573]:
+        - text: How long does it take to go from "pin namespace" to "serving warm traffic"? We called
+        - code [ref=f11e574]: "update_metadata(pinning={\"replicas\": 1})"
+        - text: and polled
+        - code [ref=f11e575]: ns.metadata()
+        - text: every 5 seconds until ready, then immediately issued queries.
+      - table [ref=f11e577]:
+        - rowgroup [ref=f11e578]:
+          - row [ref=f11e579]:
+            - columnheader "Step" [ref=f11e580]
+            - columnheader "Duration" [ref=f11e581]
+        - rowgroup [ref=f11e582]:
+          - row [ref=f11e583]:
+            - cell [ref=f11e584]:
+              - code [ref=f11e585]: ready_replicas
+              - text: 0/1 → 1/1
+            - cell [ref=f11e586]:
+              - strong [ref=f11e587]: ~80 seconds
+              - text: (16 polls × 5s)
+          - row [ref=f11e588]:
+            - cell [ref=f11e589]:
+              - text: First query after
+              - code [ref=f11e590]: ready_replicas=1
+            - cell [ref=f11e591]:
+              - strong [ref=f11e592]: ~617ms
+              - text: — NVMe still cold
+          - row [ref=f11e593]:
+            - cell "Rolling warm state (<20ms mean)" [ref=f11e594]
+            - cell "~11 sequential queries (~2 seconds)" [ref=f11e595]
+          - row [ref=f11e596]:
+            - cell [ref=f11e597]:
+              - strong [ref=f11e598]: "Total: pin → warm serving"
+            - cell [ref=f11e599]:
+              - strong [ref=f11e600]: ~90–100 seconds
+      - generic [ref=f11e601]:
+        - code [ref=f11e602]: ready_replicas=N
+        - text: means the compute node is running —
+        - strong [ref=f11e603]: not
+        - text: that NVMe is populated. Any deployment runbook that sends traffic immediately after
+        - code [ref=f11e604]: ready_replicas
+        - text: confirmation will hit cold latency spikes on the first 10–15 queries (~600ms each). A warmup pass of ~75 sequential queries is required before serving production traffic.
+      - heading [level=3] [ref=f11e605]:
+        - text: 8.5 —
+        - code [ref=f11e606]: hint_cache_warm
+        - text: Behavior
+      - paragraph [ref=f11e607]:
+        - text: turbopuffer exposes a
+        - code [ref=f11e608]: hint_cache_warm
+        - text: API for pre-warming a namespace before a burst. We measured the effect of using it inline (calling the hint, then immediately querying) at p=8 on DBpedia.
+      - table [ref=f11e610]:
+        - rowgroup [ref=f11e611]:
+          - row [ref=f11e612]:
+            - columnheader "Config" [ref=f11e613]
+            - columnheader "RPS" [ref=f11e614]
+            - columnheader "Mean latency" [ref=f11e615]
+        - rowgroup [ref=f11e616]:
+          - row [ref=f11e617]:
+            - cell "Default serverless p=8" [ref=f11e618]
+            - cell [ref=f11e619]:
+              - strong [ref=f11e620]: 224 RPS
+            - cell "22.9ms" [ref=f11e621]
+          - row [ref=f11e622]:
+            - cell [ref=f11e623]:
+              - code [ref=f11e624]: hint_cache_warm
+              - text: inline p=8
+            - cell "17 RPS" [ref=f11e625]
+            - cell "459ms" [ref=f11e626]
+      - generic [ref=f11e627]:
+        - strong [ref=f11e628]:
+          - code [ref=f11e629]: hint_cache_warm
+          - text: used inline is 13× worse than default serverless.
+        - text: The cache-warm RPC is a synchronous call adding ~400ms overhead before each query. It is designed for pre-warming a cold namespace before a burst (send the hint, wait, then serve) — not as a per-query prefix. Using it inline inverts its intended effect entirely.
+      - heading "8.6 — Server-Side Latency Gap" [level=3] [ref=f11e630]
+      - paragraph [ref=f11e631]:
+        - text: Measuring server-reported latency (excluding network round-trip) reveals an architectural floor difference. At steady state on DBpedia (unfiltered), turbopuffer server latency is consistently
+        - strong [ref=f11e632]: ~10ms
+        - text: while Qdrant server latency is
+        - strong [ref=f11e633]: ~1.9ms
+        - text: .
+      - group [ref=f11e634]:
+        - generic "▸ The ~10ms tpuf vs ~2ms Qdrant server-latency floor is architectural (NVMe vs RAM)" [ref=f11e635] [cursor=pointer]
+      - heading "8.7 — Cross-Namespace Contention (Serverless)" [level=3] [ref=f11e636]
+      - paragraph [ref=f11e637]: A high-throughput "aggressor" namespace and a "victim" namespace both sharing the same API key on serverless. The aggressor runs at full blast; we measure what happens to victim latency.
+      - generic [ref=f11e638]:
+        - generic [ref=f11e639]: Victim p50 Latency — Baseline vs Under Aggressor Load
+        - generic [ref=f11e640]: Serverless co-locates all API-key namespaces on one host. Pinning provides machine isolation.
+        - 'generic "Grouped bar chart: serverless baseline 14.9ms becomes 52.8ms under aggressor. Pinned baseline 16.3ms becomes 19.5ms." [ref=f11e641]'
+      - generic [ref=f11e642]:
+        - strong [ref=f11e643]: "Serverless noisy-neighbor:"
+        - text: a bursty tenant triples victim latency (14.9ms → 52.8ms, +255%). Pinning reduces this to a 20% variance (16.3ms → 19.5ms). If your workload includes any bursty tenants in serverless mode, all other tenants under the same API key are affected.
+      - 'heading "8.8 — Write Throughput: Serverless vs Pinned" [level=3] [ref=f11e644]'
+      - paragraph [ref=f11e645]: Does pinning a namespace affect write performance? We uploaded DBpedia 100K×1536 twice — once serverless, once to a pinned-1r namespace — using identical batch size and client configuration.
+      - table [ref=f11e647]:
+        - rowgroup [ref=f11e648]:
+          - row [ref=f11e649]:
+            - columnheader "Mode" [ref=f11e650]
+            - columnheader "WPS" [ref=f11e651]
+            - columnheader "batch_p50" [ref=f11e652]
+            - columnheader "batch_p99" [ref=f11e653]
+            - columnheader "server_p50" [ref=f11e654]
+            - columnheader "server_p99" [ref=f11e655]
+        - rowgroup [ref=f11e656]:
+          - row [ref=f11e657]:
+            - cell "Serverless" [ref=f11e658]
+            - cell "624" [ref=f11e659]
+            - cell "192ms" [ref=f11e660]
+            - cell "352ms" [ref=f11e661]
+            - cell "180ms" [ref=f11e662]
+            - cell "341ms" [ref=f11e663]
+          - row [ref=f11e664]:
+            - cell "Pinned-1r" [ref=f11e665]
+            - cell "633" [ref=f11e666]
+            - cell "188ms" [ref=f11e667]
+            - cell "295ms" [ref=f11e668]
+            - cell "176ms" [ref=f11e669]
+            - cell "282ms" [ref=f11e670]
+      - group [ref=f11e671]:
+        - generic "▸ Pinning has zero effect on write throughput — writes hit the S3 WAL either way" [ref=f11e672] [cursor=pointer]
+      - heading "8.9 — Concurrent Write-Read Dynamics" [level=3] [ref=f11e673]
+      - paragraph [ref=f11e674]: Both engines were loaded from empty while a reader fired every 500ms, starting at the same moment as the writers — no pre-loading, no index warmup. 100K×1536 DBpedia vectors uploaded in ~254s; queries continued for 120s after the last write. Recall uses the same ground-truth queries as all other benchmarks.
+      - generic [ref=f11e675]:
+        - generic [ref=f11e676]:
+          - generic [ref=f11e677]:
+            - text: metric
+            - combobox "metric" [ref=f11e678] [cursor=pointer]:
+              - option "read latency ↓" [selected]
+              - option "recall ↑"
+              - option "WAL exhaustive-scan count (tpuf)"
+          - generic [ref=f11e679]:
+            - generic [ref=f11e680]: engine
+            - generic [ref=f11e681] [cursor=pointer]: turbopuffer
+            - generic [ref=f11e683] [cursor=pointer]: Qdrant
+          - generic [ref=f11e685]:
+            - button "▤ plot" [ref=f11e686] [cursor=pointer]
+            - button "▦ table" [ref=f11e687] [cursor=pointer]
+        - generic [ref=f11e688]:
+          - generic [ref=f11e689]: DBpedia loaded from empty · every query plotted over wall-clock time
+          - generic [ref=f11e690]: Both engines start empty; a reader fires every 500ms. Dashed line = upload complete (~254s). Recall climbs to ~99%; tpuf's WAL brute-force scan (toggle "exhaustive") keeps recall healthy at the cost of p99 spikes until SPFresh catches up. Hover a point; click an engine to toggle.
+          - img "Read latency, recall, and exhaustive-scan count over time during concurrent upload" [ref=f11e691]:
+            - generic [ref=f11e692]: read latency ms (↓ better)
+            - generic [ref=f11e693]: "5.0"
+            - generic [ref=f11e694]: "10"
+            - generic [ref=f11e695]: "20"
+            - generic [ref=f11e696]: "50"
+            - generic [ref=f11e697]: "100"
+            - generic [ref=f11e698]: "200"
+            - generic [ref=f11e699]: "500"
+            - generic [ref=f11e700]: 1K
+            - generic [ref=f11e701]: "0"
+            - generic [ref=f11e702]: "94"
+            - generic [ref=f11e703]: "187"
+            - generic [ref=f11e704]: "281"
+            - generic [ref=f11e705]: "374"
+            - generic [ref=f11e706]: seconds since start →
+            - generic [ref=f11e707]: upload complete
+      - group [ref=f11e802]:
+        - generic "▸ tpuf's WAL brute-force scan keeps recall healthy during upload, at a p99 cost" [ref=f11e803] [cursor=pointer]
+      - group [ref=f11e804]:
+        - generic "▸ Both engines sit at ~49% recall at the upload midpoint (half the data loaded)" [ref=f11e805] [cursor=pointer]
+      - heading "8.10 — Qdrant Disk Mode vs turbopuffer (EBS Cold/Warm)" [level=3] [ref=f11e806]
+      - paragraph [ref=f11e807]:
+        - text: Qdrant supports mmap-based vector storage (
+        - code [ref=f11e808]: on_disk=True
+        - text: ) where vectors and/or the HNSW graph are served from disk on demand. We benchmarked two configurations against turbopuffer using DBpedia 100K×1536 on Qdrant Cloud (AWS us-west-2, 64 GB RAM, EBS storage) with clean state after each upload.
+        - emphasis [ref=f11e809]: disk-vec
+        - text: ": vectors on EBS, HNSW graph in RAM."
+        - emphasis [ref=f11e810]: disk-all
+        - text: ": both on EBS."
+      - table [ref=f11e812]:
+        - rowgroup [ref=f11e813]:
+          - row [ref=f11e814]:
+            - columnheader "Config" [ref=f11e815]
+            - columnheader "State" [ref=f11e816]
+            - columnheader "ef" [ref=f11e817]
+            - columnheader "p50 (ms)" [ref=f11e818]
+            - columnheader "p90 (ms)" [ref=f11e819]
+            - columnheader "p99 (ms)" [ref=f11e820]
+            - columnheader "Recall" [ref=f11e821]
+        - rowgroup [ref=f11e822]:
+          - row [ref=f11e823]:
+            - cell "Qdrant disk-vec" [ref=f11e824]
+            - cell "Cold" [ref=f11e825]
+            - cell "128" [ref=f11e826]
+            - cell "7.2" [ref=f11e827]
+            - cell "68.9" [ref=f11e828]
+            - cell "1,457" [ref=f11e829]
+            - cell "98.3%" [ref=f11e830]
+          - row [ref=f11e831]:
+            - cell "Qdrant disk-all" [ref=f11e832]
+            - cell "Cold" [ref=f11e833]
+            - cell "128" [ref=f11e834]
+            - cell "7.1" [ref=f11e835]
+            - cell "72.8" [ref=f11e836]
+            - cell "1,403" [ref=f11e837]
+            - cell "98.1%" [ref=f11e838]
+          - row [ref=f11e839]:
+            - cell "Qdrant disk-vec" [ref=f11e840]
+            - cell "Warm" [ref=f11e841]
+            - cell "32" [ref=f11e842]
+            - cell "5.8" [ref=f11e843]
+            - cell "6.4" [ref=f11e844]
+            - cell "8.8" [ref=f11e845]
+            - cell "93.5%" [ref=f11e846]
+          - row [ref=f11e847]:
+            - cell "Qdrant disk-vec" [ref=f11e848]
+            - cell "Warm" [ref=f11e849]
+            - cell "64" [ref=f11e850]
+            - cell "6.4" [ref=f11e851]
+            - cell "7.1" [ref=f11e852]
+            - cell "9.9" [ref=f11e853]
+            - cell "97.4%" [ref=f11e854]
+          - row [ref=f11e855]:
+            - cell "Qdrant disk-vec" [ref=f11e856]
+            - cell "Warm" [ref=f11e857]
+            - cell "128" [ref=f11e858]
+            - cell "7.1" [ref=f11e859]
+            - cell "7.8" [ref=f11e860]
+            - cell "10.4" [ref=f11e861]
+            - cell "98.8%" [ref=f11e862]
+          - row [ref=f11e863]:
+            - cell "Qdrant RAM" [ref=f11e864]
+            - cell "Always warm" [ref=f11e865]
+            - cell "128" [ref=f11e866]
+            - cell "6.9" [ref=f11e867]
+            - cell "7.5" [ref=f11e868]
+            - cell "9.4" [ref=f11e869]
+            - cell "98.4%" [ref=f11e870]
+          - row [ref=f11e871]:
+            - cell "turbopuffer" [ref=f11e872]
+            - cell "Cache-hot" [ref=f11e873]
+            - cell "—" [ref=f11e874]
+            - cell "15.2" [ref=f11e875]
+            - cell "17.7" [ref=f11e876]
+            - cell "40.8" [ref=f11e877]
+            - cell "98.5%" [ref=f11e878]
+      - generic [ref=f11e879]: "p99 Latency: Cold Start vs Warm (p=1, concurrency=1)"
+      - generic [ref=f11e882]: Warm Latency — p=8 Concurrency (recall annotated above bars)
+      - group [ref=f11e885]:
+        - generic "▸ Qdrant disk-mode cold start is a tail disaster (p99 1,457ms) until the page cache warms" [ref=f11e886] [cursor=pointer]
+      - group [ref=f11e887]:
+        - generic "▸ ef=64 is the warm-disk sweet spot; putting the graph on disk too adds no real overhead" [ref=f11e888] [cursor=pointer]
+    - generic [ref=f11e889]:
+      - generic [ref=f11e890]:
+        - generic [ref=f11e891]: §9
+        - 'heading "Pinned Mode: Billing Economics" [level=2] [ref=f11e892]'
+        - paragraph [ref=f11e893]: "Pinned mode keeps a turbopuffer namespace resident on dedicated hardware, eliminating serverless cold-start variance for any query type. The tradeoff is economic: pinned billing applies a 64 GB floor regardless of actual data size, making it prohibitively expensive for small datasets."
+      - heading "9.1 — Billing Model" [level=3] [ref=f11e894]
+      - paragraph [ref=f11e895]:
+        - text: Pinned namespace billing is documented at
+        - link "turbopuffer.com/docs/pinning" [ref=f11e896] [cursor=pointer]:
+          - /url: https://turbopuffer.com/docs/pinning
+        - text: ". Two key facts are stated explicitly:"
+      - list [ref=f11e897]:
+        - listitem [ref=f11e898]:
+          - strong [ref=f11e899]: "64 GB minimum:"
+          - text: “namespaces smaller than 64 GB are billed at 64 GB”
+        - listitem [ref=f11e900]:
+          - strong [ref=f11e901]: "Rate example:"
+          - text: a 256 GB namespace at 1 replica =
+          - strong [ref=f11e902]: $2,476/month
+          - text: (storage component)
+      - paragraph [ref=f11e903]: "From these two facts the per-GB-hr rate is derived:"
+      - generic [ref=f11e904]:
+        - text: rate = $2,476 ÷ (256 GB × 730 hr/mo) =
+        - strong [ref=f11e905]: $0.01325 / GB-hr
+        - text: "monthly cost = max(actual_gb, 64) × replicas × 730 × $0.01325 + actual_gb × $0.33 (storage, billed separately) floor check: 64 GB × 1r × 730 × $0.01325 ="
+        - strong [ref=f11e906]: $619 / replica / mo
+        - text: 64 GB × 4r × 730 × $0.01325 =
+        - strong [ref=f11e907]: $2,476 / mo
+        - text: ← matches published 4r example
+      - generic [ref=f11e908]:
+        - table [ref=f11e909]:
+          - rowgroup [ref=f11e910]:
+            - row [ref=f11e911]:
+              - columnheader "Dataset" [ref=f11e912]
+              - columnheader "Actual GB" [ref=f11e913]
+              - columnheader "Billed GB" [ref=f11e914]
+              - columnheader "1 replica / mo" [ref=f11e915]
+              - columnheader "4 replicas / mo" [ref=f11e916]
+              - columnheader "Qdrant Cloud" [ref=f11e917]
+              - columnheader "Ratio (4r)" [ref=f11e918]
+          - rowgroup [ref=f11e919]:
+            - row [ref=f11e920]:
+              - cell "H&M 105K×2048 (benchmark)" [ref=f11e921]
+              - cell "0.43 GB" [ref=f11e922]
+              - cell "64 GB floor" [ref=f11e923]
+              - cell "$619" [ref=f11e924]
+              - cell "$2,476" [ref=f11e925]
+              - cell "$26.10" [ref=f11e926]
+              - cell "95× more" [ref=f11e927]
+            - row [ref=f11e928]:
+              - cell "DBpedia 100K×1536 (benchmark)" [ref=f11e929]
+              - cell "0.31 GB" [ref=f11e930]
+              - cell "64 GB floor" [ref=f11e931]
+              - cell "$619" [ref=f11e932]
+              - cell "$2,476" [ref=f11e933]
+              - cell "$26.10" [ref=f11e934]
+              - cell "95× more" [ref=f11e935]
+            - row [ref=f11e936]:
+              - cell "1M×1536 (mid-scale)" [ref=f11e937]
+              - cell "3.07 GB" [ref=f11e938]
+              - cell "64 GB floor" [ref=f11e939]
+              - cell "$619" [ref=f11e940]
+              - cell "$2,476" [ref=f11e941]
+              - cell "~$80" [ref=f11e942]
+              - cell "31× more" [ref=f11e943]
+            - row [ref=f11e944]:
+              - cell "67M×1536 (large scale)" [ref=f11e945]
+              - cell "~200 GB" [ref=f11e946]
+              - cell "200 GB" [ref=f11e947]
+              - cell "$1,934" [ref=f11e948]
+              - cell "$7,738" [ref=f11e949]
+              - cell "~$700" [ref=f11e950]
+              - cell "11× more" [ref=f11e951]
+        - generic [ref=f11e952]:
+          - text: "Why three different GB figures appear in this report:"
+          - strong [ref=f11e953]: Actual GB
+          - text: above is f16 storage (2 bytes/dim), which storage and pinned billing use — e.g. DBpedia 0.31 GB. Writes and per-query scans are billed at f32 (4 bytes/dim) — the 0.615 GB “Stored” (§3) and “Billed GB/q” (§4–§6) figures. Same dataset, two precisions.
+      - group [ref=f11e954]:
+        - generic "▸ The 64 GB pinned billing floor makes sub-5 GB datasets ~95× costlier than Qdrant" [ref=f11e955] [cursor=pointer]
+      - heading "9.2 — Break-Even Analysis" [level=3] [ref=f11e956]
+      - paragraph [ref=f11e957]:
+        - text: For pinned 1-replica to match Qdrant's $26.10/month node cost, actual data must exceed
+        - strong [ref=f11e958]: 2.7 GB
+        - text: "(so billing escapes the 64 GB floor and the compute cost drops below $26.10). That is approximately:"
+      - list [ref=f11e959]:
+        - listitem [ref=f11e960]: ~900K vectors at 1536-dim
+        - listitem [ref=f11e961]: ~1.8M vectors at 768-dim
+        - listitem [ref=f11e962]: ~350K vectors at 2048-dim (e.g. OpenAI text-embedding-3-large)
+      - paragraph [ref=f11e963]:
+        - text: Below these sizes, Qdrant is cheaper even at zero QPS. At 4 replicas (required for reliable filtered search in production), there is
+        - strong [ref=f11e964]: no break-even at all
+        - text: — 4 replicas is the same data replicated, not 4× more data capacity. The minimum 4r cost ($2,476) always exceeds Qdrant's $26.10 regardless of dataset size.
+      - generic [ref=f11e965]:
+        - strong [ref=f11e966]: The "~8–13 QPS cost crossover" applies only to serverless mode.
+        - text: When filtered search or isolation requirements force pinning, that crossover disappears entirely. For pinned 1r, break-even requires >2.7 GB actual data. For pinned 4r, there is no break-even — $2,476/month minimum vs $26.10.
+    - generic [ref=f11e967]:
+      - generic [ref=f11e968]:
+        - generic [ref=f11e969]: §10
+        - heading "Summary Comparison" [level=2] [ref=f11e970]
+      - table [ref=f11e972]:
+        - rowgroup [ref=f11e973]:
+          - row [ref=f11e974]:
+            - columnheader "Dimension" [ref=f11e975]
+            - columnheader "turbopuffer" [ref=f11e976]
+            - columnheader "Qdrant Cloud" [ref=f11e977]
+        - rowgroup [ref=f11e978]:
+          - row [ref=f11e979]:
+            - cell "Latency floor" [ref=f11e980]
+            - cell "~10ms server (NVMe centroid)" [ref=f11e981]
+            - cell "~2ms server (HNSW in RAM)" [ref=f11e982]
+          - row [ref=f11e983]:
+            - cell "Filtered recall" [ref=f11e984]
+            - cell "89.14% (fixed)" [ref=f11e985]
+            - cell "95.85% (tunable)" [ref=f11e986]
+          - row [ref=f11e987]:
+            - cell "Cold-start p99" [ref=f11e988]
+            - cell "1,891ms" [ref=f11e989]
+            - cell "None" [ref=f11e990]
+          - row [ref=f11e991]:
+            - cell "Multi-tenant single-stream (p=1)" [ref=f11e992]
+            - cell "33.5 RPS" [ref=f11e993]
+            - cell "184.6 RPS" [ref=f11e994]
+          - row [ref=f11e995]:
+            - cell "Multi-tenant peak throughput (p=32)" [ref=f11e996]
+            - cell "~538 RPS (autoscales)" [ref=f11e997]
+            - cell "~304 RPS (2CPU node saturates)" [ref=f11e998]
+          - row [ref=f11e999]:
+            - cell "Idle cost" [ref=f11e1000]
+            - cell "~$0" [ref=f11e1001]
+            - cell "~$26/mo" [ref=f11e1002]
+          - row [ref=f11e1003]:
+            - cell "Break-even QPS" [ref=f11e1004]
+            - cell [ref=f11e1005]
+            - cell "~8–13 QPS (scale-dependent)" [ref=f11e1006]
+          - row [ref=f11e1007]:
+            - cell "Upload speed (total)" [ref=f11e1008]
+            - cell "Wins H&M; wins DBpedia when SPFresh fast (3.1 min)" [ref=f11e1009]
+            - cell "Wins DBpedia when SPFresh slow (up to 7.3 min)" [ref=f11e1010]
+          - row [ref=f11e1011]:
+            - cell "Recall tuning" [ref=f11e1012]
+            - cell "None" [ref=f11e1013]
+            - cell "Full (ef, quantization)" [ref=f11e1014]
+          - row [ref=f11e1015]:
+            - cell "Noisy-neighbor risk" [ref=f11e1016]
+            - cell "High (serverless)" [ref=f11e1017]
+            - cell "None" [ref=f11e1018]
+      - generic [ref=f11e1019]:
+        - generic [ref=f11e1020]:
+          - generic [ref=f11e1021]: Server Latency Floor
+          - generic [ref=f11e1022]:
+            - generic [ref=f11e1023]: "tpuf: ~10ms (NVMe)"
+            - generic [ref=f11e1025]: "Qdrant: ~2ms (RAM) ✓"
+        - generic [ref=f11e1027]:
+          - generic [ref=f11e1028]: Filtered Recall
+          - generic [ref=f11e1029]:
+            - generic [ref=f11e1030]: "tpuf: 89.14%"
+            - generic [ref=f11e1032]: "Qdrant: 95.85% ✓"
+        - generic [ref=f11e1034]:
+          - generic [ref=f11e1035]: Idle Cost
+          - generic [ref=f11e1036]:
+            - generic [ref=f11e1037]: "tpuf: ~$0 ✓"
+            - generic [ref=f11e1039]: "Qdrant: $26/mo"
+        - generic [ref=f11e1041]:
+          - generic [ref=f11e1042]: Cold-Start p99
+          - generic [ref=f11e1043]:
+            - generic [ref=f11e1044]: "tpuf: 1,891ms"
+            - generic [ref=f11e1046]: "Qdrant: None ✓"
+        - generic [ref=f11e1048]:
+          - generic [ref=f11e1049]: Upload Speed (total)
+          - generic [ref=f11e1050]:
+            - generic [ref=f11e1051]: "tpuf: wins H&M (4.1 vs 8.4); wins DBpedia fast (3.1 vs 3.9) ✓"
+            - generic [ref=f11e1053]: "Qdrant: wins DBpedia slow (3.9 vs up to 7.3) ✓"
+        - generic [ref=f11e1055]:
+          - generic [ref=f11e1056]: Break-Even
+          - generic [ref=f11e1057]:
+            - generic [ref=f11e1058]: tpuf cheaper below ~8–13 QPS
+            - generic [ref=f11e1060]: Qdrant cheaper above it
+    - generic [ref=f11e1062]:
+      - generic [ref=f11e1063]:
+        - generic [ref=f11e1064]: §11
+        - heading "Strategic Implications" [level=2] [ref=f11e1065]
+        - paragraph [ref=f11e1066]: These results point to specific architectural decisions rather than a simple winner. The right choice is a function of your QPS profile, filter selectivity, tenant concurrency pattern, dataset size, and tolerance for cold-start latency.
+      - list [ref=f11e1067]:
+        - listitem [ref=f11e1068]:
+          - strong [ref=f11e1069]: Below ~8–13 QPS/namespace (scale-dependent), serverless turbopuffer saves money.
+          - text: Above it, Qdrant is both cheaper and faster. The break-even is stable across dataset scales — plan around it.
+          - emphasis [ref=f11e1070]: This only applies to serverless mode.
+        - listitem [ref=f11e1071]:
+          - strong [ref=f11e1072]: Pinned mode has a billing floor that dominates small datasets.
+          - text: For any dataset under ~10 GB, pinned turbopuffer costs 10–95× more than Qdrant Cloud with no performance benefit. Workloads that need consistent low-latency (no cold-start variance) pay this premium regardless of query type.
+        - listitem [ref=f11e1073]:
+          - strong [ref=f11e1074]: Serverless noisy-neighbor is a real operational risk.
+          - text: A single bursty tenant in serverless mode triples all other tenants' p50 latency. Pinning eliminates this but removes scale-to-zero. Design your tenancy model before choosing serverless.
+        - listitem [ref=f11e1075]:
+          - strong [ref=f11e1076]: Filtered search recall is not tunable on turbopuffer.
+          - text: If your workload uses selective attribute filters and 89.14% recall is insufficient, Qdrant is the only option. This constraint is architectural, not a configuration gap.
+        - listitem [ref=f11e1077]:
+          - strong [ref=f11e1078]: Multi-tenant idle SaaS is turbopuffer's strongest case.
+          - text: If most tenants are mostly idle, scale-to-zero is worth real money. At active-tenant load, Qdrant is 5.5× faster per request (184.6 vs 33.5 RPS single-stream) — though under heavy concurrency (p=32) tpuf’s autoscaling out-delivers the saturated 2CPU Qdrant node in total throughput (~538 vs ~304 RPS). Size the Qdrant node to the concurrency you expect.
+        - listitem [ref=f11e1079]:
+          - strong [ref=f11e1080]: Cold-start latency must be part of your SLA calculation.
+          - text: The 1,891ms p99 cold-start is not a fringe edge case — it occurs after any restart, any scale-to-zero event in serverless mode. Plan pre-warm queries or accept the SLA window.

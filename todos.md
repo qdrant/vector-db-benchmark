@@ -57,6 +57,29 @@ Target architecture (inspired by edge bench):
       upload (WPS/latency over time) + per-query search (latency/server over run).
       Synced to tpuf-bench. NEXT: rerun benches → wire plot/table/timeseries
       toggle onto §4/§5/§6 search+upload experiments with the collected data.
+- [x] §4 dual-axis (latency+throughput vs concurrency) gained p90 metric option.
+- [x] §3.1 write-throughput-vs-concurrency sweep (DBpedia tpuf 430→1237 WPS vs
+      Qdrant flat ~90; batch-latency band metric). H&M tpuf (366→919) in callout.
+- [x] §4.2 interactive per-dataset cost break-even model (extendible COST model;
+      Qdrant $/mo = one swappable field). All 3 datasets break even ~8 QPS
+      (~9-11% of measured single-client peak). tpuf $16/mo floor surfaced.
+- [x] Qdrant write-ceiling experiment: pooled client + fresh scratch → ~92-95 WPS
+      (vs old 86-90). Ceiling is REAL & server-side (HNSW ingest backpressure),
+      not handshake/contamination. §3.1 "Qdrant flat ~90" validated. NOTE: driver
+      crashed at c=4 (httpx keepalive drop under multi-sec batch latency) — c=1/2
+      already conclusive; re-run robustly only if the full pooled curve is wanted.
+- [x] Dataset-selector MERGE of search sweeps: DONE. initDualAxis gained a dataset
+      selector; §4 frontier now spans DBpedia/H&M/MT with consistent measured
+      rps_measured+p50/p90/p99. Retired §5/§6 inflated per-section plots; replaced
+      with compact recall/billed-GB/internal-latency tables. Raw data preserved in
+      results/sweep-measurements.json (tracked; results/reproduce-* subdirs are gitignored).
+- [x] Unified §4 "Search" phase: section-level dataset picker (All·DBpedia·H&M·MT)
+      driving shared plots (frontier, cost) + show/hiding per-dataset .ds-group blocks.
+      §5/§6 merged in as subsections; §7–11 renumbered to §5–9 (ids/anchors kept).
+- [~] Collecting H&M/MT fixed-QPS data in background (run fqps-hmmt.log) so the
+      DBpedia-only plots (bar explorer, per-query TS, fixed-QPS sweep) can later
+      become picker-driven. NEXT: also need per-query TS for H&M/MT (search-run
+      timeseries; avoid tpuf_pinned_4r which needs a pinned ns). Then wire into §4.
 - [ ] fixed_qps_run per-query timeseries (follow-up).
 - [ ] Optional: §8.7 contention, §8.10 disk still on canvas (left per plan).
 - [ ] Reconsider hero: currently showcases pinned-4r warmup, a config §9 calls
@@ -87,3 +110,26 @@ Target architecture (inspired by edge bench):
 - [x] DBpedia tpuf range extended to 3.1–7.3 min / 5 trials (75f546d)
 - [x] Stale text, billing-floor misattribution, break-even inconsistency (512c647)
 - [x] Per-worker RPS vs wall-clock throughput split (2e9c731)
+
+## Cost calculator (done)
+- [x] Distilled Qdrant Cloud calculator → docs/qdrant-cost-calculator.html (standalone).
+      Model from qdrant-cloud-ui/src/components/Calculator: RAM=vec×dim×4B×1.5÷quant÷1e9,
+      lowest-CPU-per-RAM node selection, $/mo=price/hr÷1e5×24×30.5. AWS eu-central pkgs.
+- [x] Report §4.2 break-even now uses real per-dataset Qdrant node costs (DBpedia/H&M
+      gpx1 $31.18; MT mx2 $82.45) → differentiated break-even (9.4 QPS/~12% util for
+      DBpedia&H&M; 24.7 QPS/~29% for MT). COST.ds.qdrant + qdNode fields; calculator link.
+
+## Report-quality pass (2026-07-15)
+- [x] Tier 1 — consistency: synced §7/§8/§9 to corrected data (measured RPS ~94/57/24,
+      $16 tpuf floor, per-dataset Qdrant $31–$82, break-even 9/25 QPS, 79× pinned ratio);
+      fixed §9.2 pinned break-even logic error (64 GB floor → $619 min, no sub-64 GB break-even).
+- [x] Tier 2 — TL;DR verdict block under hero (choose-tpuf/choose-Qdrant) + links 3 calculators.
+- [x] Tier 3 — rigor: §2 environment + trial counts (n=1 unless noted; SPFresh n=5) +
+      fixed stale "~Total RPS = p×worker" def → rps_measured; consolidated cold-start matrix.
+- [x] Tier 5 — cross-report "Related" sidebar nav (report ↔ companion ↔ 3 calculators).
+- [x] Tier 4 — per-query timeseries for H&M/MT: COLLECTED (searchts_hmmt driver, p=1/8/32,
+      no pinned) + wired into §4 picker (initTimeSeries dataset-aware). All §4 plots now
+      cross-dataset — no DBpedia-only plots left. Raw: results/searchts-hmmt.json.
+- [~] Tier 4 — p90 network latency: server_p90_ms ADDED to op_fixed_qps (not run, per user).
+      Needs a fixed_qps re-run for all datasets to populate; then wire net p90 into §4.1.
+- [ ] Optional: three-way cost comparison view (tpuf/Qdrant/raw) across datasets.

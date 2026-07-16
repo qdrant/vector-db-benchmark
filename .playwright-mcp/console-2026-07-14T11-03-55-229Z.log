@@ -1,0 +1,7 @@
+[   11051ms] TypeError: Cannot read properties of undefined (reading 'lab')
+    at draw (http://localhost:8898/tpuf-detailed-report.html:1688:125)
+    at HTMLSelectElement.<anonymous> (http://localhost:8898/tpuf-detailed-report.html:1705:67)
+    at eval (eval at <anonymous> (eval at evaluate (:303:30)), <anonymous>:5:20)
+    at eval (eval at evaluate (:303:30), <anonymous>:4:50)
+    at UtilityScript.evaluate (<anonymous>:305:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)

@@ -1,0 +1,70 @@
+- generic [ref=f27e2]:
+  - banner [ref=f27e3]:
+    - generic [ref=f27e4]: Distilled cost model · unofficial
+    - heading "Qdrant Cloud — Cost Estimator" [level=1] [ref=f27e5]
+    - paragraph [ref=f27e6]:
+      - text: "A simplified reimplementation of Qdrant Cloud's capacity-planning calculator: it sizes the RAM a collection needs, picks the cheapest node package that fits (× replicas), and prices it. Model & pricing distilled from the"
+      - code [ref=f27e7]: qdrant-cloud-ui
+      - text: Calculator source (AWS eu-central packages). Estimate only — confirm against the official calculator.
+  - generic [ref=f27e8]:
+    - generic [ref=f27e9]:
+      - heading "Collection" [level=2] [ref=f27e10]
+      - generic [ref=f27e11]:
+        - button "DBpedia 100K×1536" [ref=f27e12] [cursor=pointer]
+        - button "H&M 105K×2048" [ref=f27e13] [cursor=pointer]
+        - button "Multi-tenant 1M×768" [ref=f27e14] [cursor=pointer]
+        - button "10M×768 large" [ref=f27e15] [cursor=pointer]
+      - generic [ref=f27e16]:
+        - generic [ref=f27e17]: Vectors (points in the collection)
+        - spinbutton [ref=f27e18]: "100000"
+      - generic [ref=f27e19]:
+        - generic [ref=f27e20]: Dimensions
+        - spinbutton [ref=f27e21]: "1536"
+      - generic [ref=f27e22]:
+        - generic [ref=f27e23]:
+          - generic [ref=f27e24]: Quantization
+          - combobox [ref=f27e25]:
+            - option "None (f32)" [selected]
+            - option "Scalar (÷4)"
+            - option "Product (÷64)"
+            - option "Binary (÷32)"
+        - generic [ref=f27e26]:
+          - generic [ref=f27e27]: Replicas (copies)
+          - spinbutton [ref=f27e28]: "1"
+      - generic [ref=f27e30] [cursor=pointer]:
+        - checkbox "Storage-optimized (vectors on disk)" [ref=f27e31]
+        - text: Storage-optimized (vectors on disk)
+    - generic [ref=f27e32]:
+      - heading "Estimated monthly cost" [level=2] [ref=f27e33]
+      - generic [ref=f27e34]: $31.18 /month
+      - generic [ref=f27e36]: ≈ $0.043/hr · $1.02/day
+      - generic [ref=f27e37]:
+        - generic [ref=f27e38]: gpx1 · 2 GB / 0.5 vCPU
+        - generic [ref=f27e39]: × 1 node
+      - generic [ref=f27e40]:
+        - generic [ref=f27e41]:
+          - generic [ref=f27e42]: Required RAM (index in memory)
+          - generic [ref=f27e43]: 1 GB (× 1 = 1 GB)
+        - generic [ref=f27e44]:
+          - generic [ref=f27e45]: Required disk
+          - generic [ref=f27e46]: 1 GB
+        - generic [ref=f27e47]:
+          - generic [ref=f27e48]: Node package × nodes
+          - generic [ref=f27e49]: gpx1 (2 GB) × 1
+        - generic [ref=f27e50]:
+          - generic [ref=f27e51]: Compute
+          - generic [ref=f27e52]: $31.18/mo
+        - generic [ref=f27e53]:
+          - generic [ref=f27e54]: Extra disk
+          - generic [ref=f27e55]: included
+      - generic [ref=f27e56]: Node RAM total 2 GB vs 1 GB needed — 1 GB headroom.
+  - group [ref=f27e57]:
+    - generic "Node packages (AWS eu-central) · lowest-CPU tier per RAM used for selection" [ref=f27e58] [cursor=pointer]
+  - generic [ref=f27e59]:
+    - strong [ref=f27e60]:
+      - text: Model (from
+      - code [ref=f27e61]: qdrant-cloud-ui
+      - text: "):"
+    - text: "base RAM = vectors × dim × 4 B × 1.5 (metadata/optimization overhead) ÷ 10⁹, then ÷ quantization divider, then × replicas. Required disk = base RAM (+ quantized copy when quantization is on). The cheapest package whose RAM × nodes ≥ required RAM is chosen (min 3 nodes when replicas > 1, preferring fewer nodes within 1.15× of the cheapest price). Pricing:"
+    - code [ref=f27e62]: $/mo = unitPricePerHour ÷ 100000 × 24 × 30.5
+    - text: ; extra disk at $72 (millicents)/GB-hr. Constants and package prices are AWS eu-central-1 as of the source snapshot — other regions/providers differ.

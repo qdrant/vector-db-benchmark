@@ -1,0 +1,878 @@
+[
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-bq-rps-m-16-ef-128",
+    "dataset_name": "dbpedia-openai-1M-1536-angular",
+    "search_idx": "0",
+    "upload_time": 283.630660326,
+    "total_upload_time": 1211.3577954079992,
+    "p95_time": 0.006759035850245711,
+    "rps": 185.45844716887606,
+    "parallel": 1,
+    "p99_time": 0.008025867981305059,
+    "mean_time": 0.004921612016184372,
+    "mean_precisions": 0.9019800000000001,
+    "engine_params": {
+      "batch_size": 1024,
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "memmap_threshold": 10000000,
+        "default_segment_number": 2
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "quantization_config": {
+        "binary": {
+          "always_ram": true
+        }
+      },
+      "hnsw_ef": 64,
+      "quantization": {
+        "rescore": true,
+        "oversampling": 1.0
+      }
+    }
+  },
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-bq-rps-m-16-ef-128",
+    "dataset_name": "dbpedia-openai-1M-1536-angular",
+    "search_idx": "1",
+    "upload_time": 283.630660326,
+    "total_upload_time": 1211.3577954079992,
+    "p95_time": 0.006804938100322034,
+    "rps": 180.7926366910272,
+    "parallel": 1,
+    "p99_time": 0.007820104420843564,
+    "mean_time": 0.005059932690810092,
+    "mean_precisions": 0.9495,
+    "engine_params": {
+      "batch_size": 1024,
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "memmap_threshold": 10000000,
+        "default_segment_number": 2
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "quantization_config": {
+        "binary": {
+          "always_ram": true
+        }
+      },
+      "hnsw_ef": 64,
+      "quantization": {
+        "rescore": true,
+        "oversampling": 2.0
+      }
+    }
+  },
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-bq-rps-m-16-ef-128",
+    "dataset_name": "dbpedia-openai-1M-1536-angular",
+    "search_idx": "10",
+    "upload_time": 283.630660326,
+    "total_upload_time": 1211.3577954079992,
+    "p95_time": 0.017587009650742405,
+    "rps": 77.16453665109324,
+    "parallel": 1,
+    "p99_time": 0.022049550589526918,
+    "mean_time": 0.012182809405191074,
+    "mean_precisions": 0.9861,
+    "engine_params": {
+      "batch_size": 1024,
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "memmap_threshold": 10000000,
+        "default_segment_number": 2
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "quantization_config": {
+        "binary": {
+          "always_ram": true
+        }
+      },
+      "hnsw_ef": 256,
+      "quantization": {
+        "rescore": true,
+        "oversampling": 4.0
+      }
+    }
+  },
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-bq-rps-m-16-ef-128",
+    "dataset_name": "dbpedia-openai-1M-1536-angular",
+    "search_idx": "11",
+    "upload_time": 283.630660326,
+    "total_upload_time": 1211.3577954079992,
+    "p95_time": 0.019978218498818024,
+    "rps": 71.05470365362751,
+    "parallel": 1,
+    "p99_time": 0.025027332019908533,
+    "mean_time": 0.013271312418200978,
+    "mean_precisions": 0.9912799999999999,
+    "engine_params": {
+      "batch_size": 1024,
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "memmap_threshold": 10000000,
+        "default_segment_number": 2
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "quantization_config": {
+        "binary": {
+          "always_ram": true
+        }
+      },
+      "hnsw_ef": 256,
+      "quantization": {
+        "rescore": true,
+        "oversampling": 8.0
+      }
+    }
+  },
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-bq-rps-m-16-ef-128",
+    "dataset_name": "dbpedia-openai-1M-1536-angular",
+    "search_idx": "12",
+    "upload_time": 283.630660326,
+    "total_upload_time": 1211.3577954079992,
+    "p95_time": 0.03477628189939424,
+    "rps": 47.56009025910653,
+    "parallel": 1,
+    "p99_time": 0.05333990858889594,
+    "mean_time": 0.02011234524738393,
+    "mean_precisions": 0.92166,
+    "engine_params": {
+      "batch_size": 1024,
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "memmap_threshold": 10000000,
+        "default_segment_number": 2
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "quantization_config": {
+        "binary": {
+          "always_ram": true
+        }
+      },
+      "hnsw_ef": 512,
+      "quantization": {
+        "rescore": true,
+        "oversampling": 1.0
+      }
+    }
+  },
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-bq-rps-m-16-ef-128",
+    "dataset_name": "dbpedia-openai-1M-1536-angular",
+    "search_idx": "13",
+    "upload_time": 283.630660326,
+    "total_upload_time": 1211.3577954079992,
+    "p95_time": 0.030644287550148877,
+    "rps": 50.519555513982255,
+    "parallel": 1,
+    "p99_time": 0.04009265496935772,
+    "mean_time": 0.01894972505338992,
+    "mean_precisions": 0.9728600000000001,
+    "engine_params": {
+      "batch_size": 1024,
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "memmap_threshold": 10000000,
+        "default_segment_number": 2
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "quantization_config": {
+        "binary": {
+          "always_ram": true
+        }
+      },
+      "hnsw_ef": 512,
+      "quantization": {
+        "rescore": true,
+        "oversampling": 2.0
+      }
+    }
+  },
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-bq-rps-m-16-ef-128",
+    "dataset_name": "dbpedia-openai-1M-1536-angular",
+    "search_idx": "14",
+    "upload_time": 283.630660326,
+    "total_upload_time": 1211.3577954079992,
+    "p95_time": 0.03627908115049651,
+    "rps": 46.01198560603302,
+    "parallel": 1,
+    "p99_time": 0.051788649389691285,
+    "mean_time": 0.020831956164399163,
+    "mean_precisions": 0.98946,
+    "engine_params": {
+      "batch_size": 1024,
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "memmap_threshold": 10000000,
+        "default_segment_number": 2
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "quantization_config": {
+        "binary": {
+          "always_ram": true
+        }
+      },
+      "hnsw_ef": 512,
+      "quantization": {
+        "rescore": true,
+        "oversampling": 4.0
+      }
+    }
+  },
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-bq-rps-m-16-ef-128",
+    "dataset_name": "dbpedia-openai-1M-1536-angular",
+    "search_idx": "15",
+    "upload_time": 283.630660326,
+    "total_upload_time": 1211.3577954079992,
+    "p95_time": 0.04095033284975216,
+    "rps": 41.64498329200824,
+    "parallel": 1,
+    "p99_time": 0.05883902060089898,
+    "mean_time": 0.023022976283818206,
+    "mean_precisions": 0.99498,
+    "engine_params": {
+      "batch_size": 1024,
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "memmap_threshold": 10000000,
+        "default_segment_number": 2
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "quantization_config": {
+        "binary": {
+          "always_ram": true
+        }
+      },
+      "hnsw_ef": 512,
+      "quantization": {
+        "rescore": true,
+        "oversampling": 8.0
+      }
+    }
+  },
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-bq-rps-m-16-ef-128",
+    "dataset_name": "dbpedia-openai-1M-1536-angular",
+    "search_idx": "16",
+    "upload_time": 283.630660326,
+    "total_upload_time": 1211.3577954079992,
+    "p95_time": 0.060048948949406634,
+    "rps": 329.33003449464394,
+    "parallel": 100,
+    "p99_time": 0.24096022029907546,
+    "mean_time": 0.02522137566460224,
+    "mean_precisions": 0.9019799999999999,
+    "engine_params": {
+      "batch_size": 1024,
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "memmap_threshold": 10000000,
+        "default_segment_number": 2
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "quantization_config": {
+        "binary": {
+          "always_ram": true
+        }
+      },
+      "hnsw_ef": 64,
+      "quantization": {
+        "rescore": true,
+        "oversampling": 1.0
+      }
+    }
+  },
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-bq-rps-m-16-ef-128",
+    "dataset_name": "dbpedia-openai-1M-1536-angular",
+    "search_idx": "17",
+    "upload_time": 283.630660326,
+    "total_upload_time": 1211.3577954079992,
+    "p95_time": 0.022688916399511073,
+    "rps": 355.88516474110213,
+    "parallel": 100,
+    "p99_time": 0.034944076650863284,
+    "mean_time": 0.01637462475839966,
+    "mean_precisions": 0.9495,
+    "engine_params": {
+      "batch_size": 1024,
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "memmap_threshold": 10000000,
+        "default_segment_number": 2
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "quantization_config": {
+        "binary": {
+          "always_ram": true
+        }
+      },
+      "hnsw_ef": 64,
+      "quantization": {
+        "rescore": true,
+        "oversampling": 2.0
+      }
+    }
+  },
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-bq-rps-m-16-ef-128",
+    "dataset_name": "dbpedia-openai-1M-1536-angular",
+    "search_idx": "18",
+    "upload_time": 283.630660326,
+    "total_upload_time": 1211.3577954079992,
+    "p95_time": 0.052760957299233274,
+    "rps": 281.120734803659,
+    "parallel": 100,
+    "p99_time": 0.08264504599910659,
+    "mean_time": 0.027256527995201396,
+    "mean_precisions": 0.9634799999999999,
+    "engine_params": {
+      "batch_size": 1024,
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "memmap_threshold": 10000000,
+        "default_segment_number": 2
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "quantization_config": {
+        "binary": {
+          "always_ram": true
+        }
+      },
+      "hnsw_ef": 64,
+      "quantization": {
+        "rescore": true,
+        "oversampling": 4.0
+      }
+    }
+  },
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-bq-rps-m-16-ef-128",
+    "dataset_name": "dbpedia-openai-1M-1536-angular",
+    "search_idx": "19",
+    "upload_time": 283.630660326,
+    "total_upload_time": 1211.3577954079992,
+    "p95_time": 0.08498055010104509,
+    "rps": 232.52009626223344,
+    "parallel": 100,
+    "p99_time": 0.10926692506165636,
+    "mean_time": 0.04355793358560004,
+    "mean_precisions": 0.9739,
+    "engine_params": {
+      "batch_size": 1024,
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "memmap_threshold": 10000000,
+        "default_segment_number": 2
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "quantization_config": {
+        "binary": {
+          "always_ram": true
+        }
+      },
+      "hnsw_ef": 64,
+      "quantization": {
+        "rescore": true,
+        "oversampling": 8.0
+      }
+    }
+  },
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-bq-rps-m-16-ef-128",
+    "dataset_name": "dbpedia-openai-1M-1536-angular",
+    "search_idx": "2",
+    "upload_time": 283.630660326,
+    "total_upload_time": 1211.3577954079992,
+    "p95_time": 0.007437170999401133,
+    "rps": 170.7444749242612,
+    "parallel": 1,
+    "p99_time": 0.009041572641490352,
+    "mean_time": 0.00535776035961062,
+    "mean_precisions": 0.9634800000000001,
+    "engine_params": {
+      "batch_size": 1024,
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "memmap_threshold": 10000000,
+        "default_segment_number": 2
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "quantization_config": {
+        "binary": {
+          "always_ram": true
+        }
+      },
+      "hnsw_ef": 64,
+      "quantization": {
+        "rescore": true,
+        "oversampling": 4.0
+      }
+    }
+  },
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-bq-rps-m-16-ef-128",
+    "dataset_name": "dbpedia-openai-1M-1536-angular",
+    "search_idx": "3",
+    "upload_time": 283.630660326,
+    "total_upload_time": 1211.3577954079992,
+    "p95_time": 0.009185017299569156,
+    "rps": 132.41375749192716,
+    "parallel": 1,
+    "p99_time": 0.010543005898962293,
+    "mean_time": 0.0069056615569967105,
+    "mean_precisions": 0.9739,
+    "engine_params": {
+      "batch_size": 1024,
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "memmap_threshold": 10000000,
+        "default_segment_number": 2
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "quantization_config": {
+        "binary": {
+          "always_ram": true
+        }
+      },
+      "hnsw_ef": 64,
+      "quantization": {
+        "rescore": true,
+        "oversampling": 8.0
+      }
+    }
+  },
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-bq-rps-m-16-ef-128",
+    "dataset_name": "dbpedia-openai-1M-1536-angular",
+    "search_idx": "4",
+    "upload_time": 283.630660326,
+    "total_upload_time": 1211.3577954079992,
+    "p95_time": 0.009893063301024086,
+    "rps": 124.20729999707643,
+    "parallel": 1,
+    "p99_time": 0.011573075450523908,
+    "mean_time": 0.0073765148566195425,
+    "mean_precisions": 0.91448,
+    "engine_params": {
+      "batch_size": 1024,
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "memmap_threshold": 10000000,
+        "default_segment_number": 2
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "quantization_config": {
+        "binary": {
+          "always_ram": true
+        }
+      },
+      "hnsw_ef": 128,
+      "quantization": {
+        "rescore": true,
+        "oversampling": 1.0
+      }
+    }
+  },
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-bq-rps-m-16-ef-128",
+    "dataset_name": "dbpedia-openai-1M-1536-angular",
+    "search_idx": "5",
+    "upload_time": 283.630660326,
+    "total_upload_time": 1211.3577954079992,
+    "p95_time": 0.010298237599999994,
+    "rps": 121.35100472464882,
+    "parallel": 1,
+    "p99_time": 0.012138458571262173,
+    "mean_time": 0.00757148148420456,
+    "mean_precisions": 0.9641,
+    "engine_params": {
+      "batch_size": 1024,
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "memmap_threshold": 10000000,
+        "default_segment_number": 2
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "quantization_config": {
+        "binary": {
+          "always_ram": true
+        }
+      },
+      "hnsw_ef": 128,
+      "quantization": {
+        "rescore": true,
+        "oversampling": 2.0
+      }
+    }
+  },
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-bq-rps-m-16-ef-128",
+    "dataset_name": "dbpedia-openai-1M-1536-angular",
+    "search_idx": "6",
+    "upload_time": 283.630660326,
+    "total_upload_time": 1211.3577954079992,
+    "p95_time": 0.010556651850583876,
+    "rps": 116.44879831604234,
+    "parallel": 1,
+    "p99_time": 0.012194351499783807,
+    "mean_time": 0.007902762371587596,
+    "mean_precisions": 0.9797400000000002,
+    "engine_params": {
+      "batch_size": 1024,
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "memmap_threshold": 10000000,
+        "default_segment_number": 2
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "quantization_config": {
+        "binary": {
+          "always_ram": true
+        }
+      },
+      "hnsw_ef": 128,
+      "quantization": {
+        "rescore": true,
+        "oversampling": 4.0
+      }
+    }
+  },
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-bq-rps-m-16-ef-128",
+    "dataset_name": "dbpedia-openai-1M-1536-angular",
+    "search_idx": "7",
+    "upload_time": 283.630660326,
+    "total_upload_time": 1211.3577954079992,
+    "p95_time": 0.011671471999852657,
+    "rps": 106.85643177400976,
+    "parallel": 1,
+    "p99_time": 0.013440779189877504,
+    "mean_time": 0.008665322937597374,
+    "mean_precisions": 0.98472,
+    "engine_params": {
+      "batch_size": 1024,
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "memmap_threshold": 10000000,
+        "default_segment_number": 2
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "quantization_config": {
+        "binary": {
+          "always_ram": true
+        }
+      },
+      "hnsw_ef": 128,
+      "quantization": {
+        "rescore": true,
+        "oversampling": 8.0
+      }
+    }
+  },
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-bq-rps-m-16-ef-128",
+    "dataset_name": "dbpedia-openai-1M-1536-angular",
+    "search_idx": "8",
+    "upload_time": 283.630660326,
+    "total_upload_time": 1211.3577954079992,
+    "p95_time": 0.014740569949753991,
+    "rps": 87.22332570851022,
+    "parallel": 1,
+    "p99_time": 0.017184190160660376,
+    "mean_time": 0.010754274151209029,
+    "mean_precisions": 0.9185,
+    "engine_params": {
+      "batch_size": 1024,
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "memmap_threshold": 10000000,
+        "default_segment_number": 2
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "quantization_config": {
+        "binary": {
+          "always_ram": true
+        }
+      },
+      "hnsw_ef": 256,
+      "quantization": {
+        "rescore": true,
+        "oversampling": 1.0
+      }
+    }
+  },
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-bq-rps-m-16-ef-128",
+    "dataset_name": "dbpedia-openai-1M-1536-angular",
+    "search_idx": "9",
+    "upload_time": 283.630660326,
+    "total_upload_time": 1211.3577954079992,
+    "p95_time": 0.01620878359935887,
+    "rps": 82.20905734631593,
+    "parallel": 1,
+    "p99_time": 0.019461338209548578,
+    "mean_time": 0.011415785529184723,
+    "mean_precisions": 0.9696400000000002,
+    "engine_params": {
+      "batch_size": 1024,
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "memmap_threshold": 10000000,
+        "default_segment_number": 2
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "quantization_config": {
+        "binary": {
+          "always_ram": true
+        }
+      },
+      "hnsw_ef": 256,
+      "quantization": {
+        "rescore": true,
+        "oversampling": 2.0
+      }
+    }
+  },
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-rps-m-16-ef-128",
+    "dataset_name": "random-100-euclidean",
+    "search_idx": "0",
+    "upload_time": 0.11493111299932934,
+    "total_upload_time": 10.135881812999287,
+    "p95_time": 0.0024743781512370304,
+    "rps": 986.4421421701917,
+    "parallel": 1,
+    "p99_time": 0.0034428404318168765,
+    "mean_time": 0.0009104742002818966,
+    "mean_precisions": 1.0,
+    "engine_params": {
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "memmap_threshold": 10000000,
+        "default_segment_number": 2
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "hnsw_ef": 64
+    }
+  },
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-rps-m-16-ef-128",
+    "dataset_name": "random-100-euclidean",
+    "search_idx": "1",
+    "upload_time": 0.11493111299932934,
+    "total_upload_time": 10.135881812999287,
+    "p95_time": 0.0016422749515186282,
+    "rps": 1226.2972074624356,
+    "parallel": 1,
+    "p99_time": 0.0021703909917414423,
+    "mean_time": 0.0006965992000914411,
+    "mean_precisions": 1.0,
+    "engine_params": {
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "memmap_threshold": 10000000,
+        "default_segment_number": 2
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "hnsw_ef": 128
+    }
+  },
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-rps-m-16-ef-128",
+    "dataset_name": "random-100-euclidean",
+    "search_idx": "2",
+    "upload_time": 0.11493111299932934,
+    "total_upload_time": 10.135881812999287,
+    "p95_time": 0.0016334100508174723,
+    "rps": 1258.5434644522877,
+    "parallel": 1,
+    "p99_time": 0.00235615000998223,
+    "mean_time": 0.0006527878002088982,
+    "mean_precisions": 1.0,
+    "engine_params": {
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "memmap_threshold": 10000000,
+        "default_segment_number": 2
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "hnsw_ef": 256
+    }
+  },
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-rps-m-16-ef-128",
+    "dataset_name": "random-100-euclidean",
+    "search_idx": "3",
+    "upload_time": 0.11493111299932934,
+    "total_upload_time": 10.135881812999287,
+    "p95_time": 0.0013346224493943723,
+    "rps": 1449.0412054920723,
+    "parallel": 1,
+    "p99_time": 0.0017915484884360924,
+    "mean_time": 0.0006053346001863247,
+    "mean_precisions": 1.0,
+    "engine_params": {
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "memmap_threshold": 10000000,
+        "default_segment_number": 2
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "hnsw_ef": 512
+    }
+  },
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-rps-m-16-ef-128",
+    "dataset_name": "random-100-euclidean",
+    "search_idx": "4",
+    "upload_time": 0.11493111299932934,
+    "total_upload_time": 10.135881812999287,
+    "p95_time": 0.010775190200911304,
+    "rps": 173.695205532843,
+    "parallel": 100,
+    "p99_time": 0.01327069003989891,
+    "mean_time": 0.006568689200503286,
+    "mean_precisions": 1.0,
+    "engine_params": {
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "memmap_threshold": 10000000,
+        "default_segment_number": 2
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "hnsw_ef": 64
+    }
+  },
+  {
+    "engine_name": "qdrant",
+    "setup_name": "qdrant-rps-m-16-ef-128",
+    "dataset_name": "random-100-euclidean",
+    "search_idx": "5",
+    "upload_time": 0.11493111299932934,
+    "total_upload_time": 10.135881812999287,
+    "p95_time": 0.007514261301184888,
+    "rps": 180.4853825875078,
+    "parallel": 100,
+    "p99_time": 0.0075253370615973834,
+    "mean_time": 0.0058198368009470865,
+    "mean_precisions": 1.0,
+    "engine_params": {
+      "optimizers_config": {
+        "max_segment_size": 1000000,
+        "memmap_threshold": 10000000,
+        "default_segment_number": 2
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 128
+      },
+      "hnsw_ef": 128
+    }
+  }
+]

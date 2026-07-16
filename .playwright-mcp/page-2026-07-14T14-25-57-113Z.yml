@@ -1,0 +1,82 @@
+- generic [ref=f29e2]:
+  - banner [ref=f29e3]:
+    - generic [ref=f29e4]: First-principles · raw resource cost
+    - heading "Raw Cost Estimator — napkin-math" [level=1] [ref=f29e5]
+    - paragraph [ref=f29e6]:
+      - text: "A hardware-floor estimate: size RAM & disk the same way Qdrant does, then price the raw resources at"
+      - link "napkin-math" [ref=f29e7] [cursor=pointer]:
+        - /url: https://github.com/sirupsen/napkin-math#cost-numbers
+      - text: unit rates (CPU $15, RAM $2/GB, SSD $0.2/GB per month). No vendor margin, no fixed node tiers — just
+      - code [ref=f29e8]: CPU + RAM + disk
+      - text: .
+      - strong [ref=f29e9]: CPU is the rough input
+      - text: ": it dominates the total and depends on your query load, so treat the default as a placeholder."
+  - generic [ref=f29e10]:
+    - generic [ref=f29e11]:
+      - heading "Workload" [level=2] [ref=f29e12]
+      - generic [ref=f29e13]:
+        - button "DBpedia 100K×1536" [ref=f29e14] [cursor=pointer]
+        - button "H&M 105K×2048" [ref=f29e15] [cursor=pointer]
+        - button "Multi-tenant 1M×768" [ref=f29e16] [cursor=pointer]
+        - button "10M×768 large" [ref=f29e17] [cursor=pointer]
+      - generic [ref=f29e18]:
+        - generic [ref=f29e19]: Vectors
+        - spinbutton [ref=f29e20]: "100000"
+      - generic [ref=f29e21]:
+        - generic [ref=f29e22]: Dimensions
+        - spinbutton [ref=f29e23]: "1536"
+      - generic [ref=f29e24]:
+        - generic [ref=f29e25]:
+          - generic [ref=f29e26]: Quantization
+          - combobox [ref=f29e27]:
+            - option "None (f32)" [selected]
+            - option "Scalar (÷4)"
+            - option "Product (÷64)"
+            - option "Binary (÷32)"
+        - generic [ref=f29e28]:
+          - generic [ref=f29e29]: Replicas
+          - spinbutton [ref=f29e30]: "1"
+      - generic [ref=f29e31]:
+        - generic [ref=f29e32]: vCPU per replica ← estimate (≈1 per 4 GB); override me
+        - spinbutton [ref=f29e33]: "1"
+        - button "↺ reset to heuristic" [ref=f29e34] [cursor=pointer]
+      - generic [ref=f29e35]:
+        - generic [ref=f29e36]:
+          - generic [ref=f29e37]: Pricing mode
+          - combobox [ref=f29e38]:
+            - option "On-demand" [selected]
+            - option "1-yr commit"
+            - option "Spot"
+        - generic [ref=f29e39]:
+          - generic [ref=f29e40]: Disk tier
+          - combobox [ref=f29e41]:
+            - option "Zonal SSD ($0.20)" [selected]
+            - option "Ephemeral SSD ($0.08)"
+            - option "Regional SSD ($0.35)"
+            - option "Zonal HDD ($0.05)"
+    - generic [ref=f29e42]:
+      - heading "Estimated monthly cost (raw)" [level=2] [ref=f29e43]
+      - generic [ref=f29e44]: $17.20 /month
+      - generic [ref=f29e46]: on-demand ·
+      - generic [ref=f29e51]:
+        - generic [ref=f29e52]:
+          - generic [ref=f29e53]: CPU
+          - generic [ref=f29e55]: $15.00 (87% · 1 vCPU × $15)
+        - generic [ref=f29e56]:
+          - generic [ref=f29e57]: Memory
+          - generic [ref=f29e59]: $2.00 (1 GB × $2)
+        - generic [ref=f29e60]:
+          - generic [ref=f29e61]: Disk
+          - generic [ref=f29e63]: $0.20 (1 GB × $0.2)
+        - generic [ref=f29e64]:
+          - generic [ref=f29e65]: Required RAM / disk
+          - generic [ref=f29e66]: 1 GB / 1 GB per replica
+      - generic [ref=f29e67]: CPU is 87% of the raw cost here — the dominant, least-certain input. Using the ≈1-vCPU-per-4-GB heuristic (1 vCPU).
+  - group [ref=f29e68]:
+    - generic "napkin-math unit rates ($/month)" [ref=f29e69] [cursor=pointer]
+  - generic [ref=f29e70]:
+    - strong [ref=f29e71]: "Model:"
+    - text: RAM = vectors × dim × 4 B × 1.5 ÷ quantization ÷ 10⁹ (same as the Qdrant capacity planner); disk = RAM (+ quantized copy). Cost = replicas × (vCPU × CPU-rate + RAM × mem-rate + disk × disk-rate). Rates from
+    - link "sirupsen/napkin-math" [ref=f29e72] [cursor=pointer]:
+      - /url: https://github.com/sirupsen/napkin-math#cost-numbers
+    - text: "\"Cost Numbers\" (rounded, cross-provider). This is a margin-free hardware floor — a managed service (Qdrant Cloud) charges more for the same shape. The vCPU figure is a rough provisioning placeholder (default ≈1 vCPU per 4 GB RAM, min 1); real vector-search CPU tracks query load (QPS × per-query work) and recall/ef, so refine it for your workload."
