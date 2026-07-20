@@ -60,15 +60,14 @@ class QdrantNativeConfigurator(BaseConfigurator):
                 }
             }
         else:
-            is_vectors_on_disk = self.collection_params.get("vectors_config", {}).get(
-                "on_disk", False
-            )
-            self.collection_params.pop("vectors_config", None)
+            custom_vectors_config = self.collection_params.pop("vectors_config", {})
 
             vectors_config = {
                 "size": dataset.config.vector_size,
                 "distance": self.DISTANCE_MAPPING.get(dataset.config.distance),
-                "on_disk": is_vectors_on_disk,
+                "on_disk": False,
+                # Forward extra params (e.g. "datatype") to the REST API as-is
+                **custom_vectors_config,
             }
             sparse_vectors_config = None
 
