@@ -2181,7 +2181,7 @@ files = [
 
 [[package]]
 name = "qdrant-client"
-version = "1.16.3.dev0"
+version = "1.19.1.dev0"
 description = "Client library for the Qdrant vector search engine"
 optional = false
 python-versions = ">=3.10"
@@ -2203,14 +2203,14 @@ pydantic = ">=1.10.8,!=2.0.*,!=2.1.*,!=2.2.0"
 urllib3 = ">=1.26.14,<3"
 
 [package.extras]
-fastembed = ["fastembed (>=0.7,<0.8)"]
-fastembed-gpu = ["fastembed-gpu (>=0.7,<0.8)"]
+fastembed = ["fastembed (>=0.8,<0.9)"]
+fastembed-gpu = ["fastembed-gpu (>=0.8,<0.9)"]
 
 [package.source]
 type = "git"
 url = "https://github.com/qdrant/qdrant-client.git"
 reference = "dev"
-resolved_reference = "286ae82b065c125fdbb2d74fab106d6746721c99"
+resolved_reference = "f003e6c525f60afa883a712c24dc32c0c3782ce0"
 
 [[package]]
 name = "redis"
