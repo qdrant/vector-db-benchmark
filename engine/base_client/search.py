@@ -7,6 +7,7 @@ import numpy as np
 import tqdm
 
 from dataset_reader.base_reader import Query
+from engine.base_client.utils import picklable_errors
 
 DEFAULT_TOP = 10
 
@@ -34,6 +35,7 @@ class BaseSearcher:
         raise NotImplementedError()
 
     @classmethod
+    @picklable_errors
     def _search_one(cls, query: Query, top: Optional[int] = None):
         if top is None:
             top = (
