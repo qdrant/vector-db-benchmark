@@ -4,12 +4,26 @@
     "engine": "qdrant",
     "connection_params": { "timeout": 30 },
     "collection_params": {
-      "optimizers_config": { "memmap_threshold": 10000000 }
+      "optimizers_config": { "memmap_threshold": 10000000 },
+      "hnsw_config": { "m": 16, "ef_construct": 128 }
     },
     "search_params": [
       { "parallel": 8, "config": { "hnsw_ef": 128 } }
     ],
     "upload_params": { "parallel": 16, "batch_size": 1024 }
+  },
+  {
+    "name": "qdrant-debug",
+    "engine": "qdrant",
+    "connection_params": { "timeout": 30 },
+    "collection_params": {
+      "optimizers_config": { "memmap_threshold": 10000000 },
+      "hnsw_config": { "m": 16, "ef_construct": 128 }
+    },
+    "search_params": [
+      { "parallel": 1, "config": { "hnsw_ef": 128 } }
+    ],
+    "upload_params": { "parallel": 1, "batch_size": 1024 }
   },
   {
     "name": "qdrant-continuous-benchmark",
