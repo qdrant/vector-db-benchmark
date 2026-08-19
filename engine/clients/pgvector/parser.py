@@ -1,24 +1,52 @@
-import json
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
+
+from psycopg.types.json import Jsonb
 
 from engine.base_client import IncompatibilityError
 from engine.base_client.parser import BaseConditionParser, FieldValue
 
+# (sql_clause, params) — clause references payload fields only through bound
+# parameters, never string-interpolated, so values never need manual SQL quoting.
+ParsedCondition = Tuple[str, Dict[str, Any]]
+
 
 class PgVectorConditionParser(BaseConditionParser):
+    def __init__(self) -> None:
+        super().__init__()
+        self._counter = 0
+
+    def _next_param(self) -> str:
+        self._counter += 1
+        return f"p{self._counter}"
+
     def build_condition(
-        self, and_subfilters: Optional[List[Any]], or_subfilters: Optional[List[Any]]
-    ) -> Optional[Any]:
+        self,
+        and_subfilters: Optional[List[ParsedCondition]],
+        or_subfilters: Optional[List[ParsedCondition]],
+    ) -> Optional[ParsedCondition]:
         clauses = []
-        if or_subfilters is not None and len(or_subfilters) > 0:
-            clauses.append(f"( {' OR '.join(or_subfilters)} )")
-        if and_subfilters is not None and len(and_subfilters) > 0:
-            clauses.append(f"( {' AND '.join(and_subfilters)} )")
+        params: Dict[str, Any] = {}
 
-        return " AND ".join(clauses)
+        if or_subfilters:
+            sub_clauses, sub_params = zip(*or_subfilters)
+            clauses.append("( " + " OR ".join(sub_clauses) + " )")
+            for p in sub_params:
+                params.update(p)
+        if and_subfilters:
+            sub_clauses, sub_params = zip(*and_subfilters)
+            clauses.append("( " + " AND ".join(sub_clauses) + " )")
+            for p in sub_params:
+                params.update(p)
 
-    def build_exact_match_filter(self, field_name: str, value: FieldValue) -> Any:
-        return f"{field_name} = {json.dumps(value)}"
+        return " AND ".join(clauses), params
+
+    def build_exact_match_filter(self, field_name: str, value: FieldValue) -> ParsedCondition:
+        key_param = self._next_param()
+        value_param = self._next_param()
+        return (
+            f"payload -> %({key_param})s = %({value_param})s",
+            {key_param: field_name, value_param: Jsonb(value)},
+        )
 
     def build_range_filter(
         self,
@@ -27,20 +55,41 @@ class PgVectorConditionParser(BaseConditionParser):
         gt: Optional[FieldValue],
         lte: Optional[FieldValue],
         gte: Optional[FieldValue],
-    ) -> Any:
+    ) -> ParsedCondition:
         clauses = []
-        if lt is not None:
-            clauses.append(f"{field_name} < {lt}")
-        if gt is not None:
-            clauses.append(f"{field_name} > {gt}")
-        if lte is not None:
-            clauses.append(f"{field_name} <= {lte}")
-        if gte is not None:
-            clauses.append(f"{field_name} >= {gte}")
-        return f"( {' AND '.join(clauses)} )"
+        params: Dict[str, Any] = {}
+        for op, bound in (("<", lt), (">", gt), ("<=", lte), (">=", gte)):
+            if bound is None:
+                continue
+            key_param = self._next_param()
+            value_param = self._next_param()
+            clauses.append(f"payload -> %({key_param})s {op} %({value_param})s")
+            params[key_param] = field_name
+            params[value_param] = Jsonb(bound)
+        return "( " + " AND ".join(clauses) + " )", params
 
     def build_geo_filter(
         self, field_name: str, lat: float, lon: float, radius: float
     ) -> Any:
-        # TODO: Implement this
+        # payload is a flat JSONB blob, no geo type/indexing support
         raise IncompatibilityError
+
+
+if __name__ == "__main__":
+    # sanity check for the clause-building logic, no DB needed
+    parser = PgVectorConditionParser()
+
+    clause, params = parser.parse(
+        {"and": [{"category": {"match": {"value": "Shoes"}}}]}
+    )
+    assert clause == "( payload -> %(p1)s = %(p2)s )", clause
+    assert params["p1"] == "category"
+    assert isinstance(params["p2"], Jsonb)
+
+    parser2 = PgVectorConditionParser()
+    clause2, params2 = parser2.parse({"and": [{"price": {"range": {"gte": 10, "lt": 20}}}]})
+    # build_range_filter checks bounds in (lt, gt, lte, gte) order
+    assert clause2 == "( ( payload -> %(p1)s < %(p2)s AND payload -> %(p3)s >= %(p4)s ) )", clause2
+    assert params2["p1"] == params2["p3"] == "price"
+
+    print("parser self-check ok:", clause, params, clause2, params2)
