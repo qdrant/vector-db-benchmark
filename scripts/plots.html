@@ -1,85 +1,397 @@
 <!--
-This HTML file is designed to visualize vector database benchmark results using Chart.js and Tailwind CSS.
+Vector database benchmark plots.
+
+Standalone page: drop one or more `results-*.json` files on it and compare
+engines/setups interactively (Chart.js).
+
+Styling follows the Benchmark Platform design system (bench-platform's
+frontend/src/index.css): Mona Sans, #6047FF accent, 8px radius, CSS-variable
+tokens with a light/dark theme reflected on <html data-theme>.
 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vector Database Benchmark Visualization</title>
+    <title>Benchmark Plots</title>
+
+    <!-- Mona Sans: the brand typeface shared with the Benchmark Platform. -->
+    <link rel="preconnect" href="https://fonts.cdnfonts.com" crossorigin>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+
+    <script>
+        // Set the theme before first paint to avoid a flash of the wrong one.
+        (function () {
+            try {
+                var pref = localStorage.getItem('bench-theme') || 'system';
+                var dark = pref === 'dark' ||
+                    (pref !== 'light' && window.matchMedia &&
+                        window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            } catch (e) {}
+        })();
+    </script>
+
     <style>
-        .chart-container {
-            position: relative;
-            height: 500px;
-            width: 100%;
+        @font-face {
+            font-family: 'Mona Sans';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: local('Mona Sans'), url('https://fonts.cdnfonts.com/s/91271/Mona-Sans-Regular.woff') format('woff');
+        }
+        @font-face {
+            font-family: 'Mona Sans';
+            font-style: normal;
+            font-weight: 500;
+            font-display: swap;
+            src: local('Mona Sans'), url('https://fonts.cdnfonts.com/s/91271/Mona-Sans-Medium.woff') format('woff');
+        }
+        @font-face {
+            font-family: 'Mona Sans';
+            font-style: normal;
+            font-weight: 600;
+            font-display: swap;
+            src: local('Mona Sans'), url('https://fonts.cdnfonts.com/s/91271/Mona-Sans-SemiBold.woff') format('woff');
         }
 
+        /* ---- Design tokens (mirrors bench-platform/frontend/src/index.css) ---- */
+        :root {
+            --bg: #f7f8fa;
+            --fg: #111824;
+            --muted: #656b7f;
+            --border: rgba(17, 24, 36, 0.12);
+            --accent: #6047ff;
+            --accent-hover: #5f36f5;
+            --accent-fg: #fcfdff;
+            --panel: #ffffff;
+            --ok: #00897b;
+            --warn: #ef6c00;
+            --err: #d32f2f;
+            --th-bg: #f7f8fa;
+            --input-bg: #ffffff;
+            --hover: rgba(17, 24, 36, 0.04);
+            --pre-bg: #0b0f19;
+            --pre-fg: #e2e8f0;
+            --err-bg: #fdeded;
+            --err-border: rgba(211, 47, 47, 0.5);
+            --shadow: rgba(0, 0, 0, 0.12);
+            --radius: 8px;
+            color-scheme: light;
+            font-family: "Mona Sans", Helvetica, Arial, sans-serif;
+        }
+
+        :root[data-theme="dark"] {
+            --bg: #0b0f19;
+            --fg: #fcfdff;
+            --muted: #abb1c7;
+            --border: rgba(252, 253, 255, 0.12);
+            --accent: #9494ff;
+            --accent-hover: #c2c5ff;
+            --accent-fg: #0b0f19;
+            --panel: #111824;
+            --ok: #26a69a;
+            --warn: #ffa726;
+            --err: #f44336;
+            --th-bg: #141a2a;
+            --input-bg: #141a2a;
+            --hover: rgba(252, 253, 255, 0.08);
+            --pre-bg: #060912;
+            --pre-fg: #e2e8f0;
+            --err-bg: #291414;
+            --err-border: rgba(244, 67, 54, 0.5);
+            --shadow: rgba(0, 0, 0, 0.5);
+            color-scheme: dark;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--fg);
+            font-size: 14px;
+            font-feature-settings: "ss01" on, "ss05" on, "ss08" on;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 0 18px;
+            min-height: 56px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav .brand { font-weight: 600; font-size: 15px; }
+        .spacer { flex: 1; }
+
+        .content {
+            max-width: 1360px;
+            margin: 0 auto;
+            padding: 18px 18px 60px;
+        }
+
+        h1 { font-size: 20px; font-weight: 600; margin: 0 0 16px; }
+        h2 { font-size: 15px; font-weight: 600; margin: 0; }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            margin-bottom: 14px;
+        }
+
+        pre {
+            background: var(--pre-bg);
+            color: var(--pre-fg);
+            padding: 12px;
+            border-radius: var(--radius);
+            overflow: auto;
+            max-height: 260px;
+            font-size: 12px;
+            line-height: 1.45;
+            margin: 8px 0 0;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 12px;
+        }
+
+        input, select, textarea {
+            font: inherit;
+            padding: 7px 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--input-bg);
+            color: var(--fg);
+            width: 100%;
+            outline: none;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px var(--accent);
+        }
+        textarea { resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+        input[type="checkbox"] { width: auto; }
+
+        button {
+            font: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 6px 16px;
+            border: 1px solid var(--accent);
+            background: var(--accent);
+            color: var(--accent-fg);
+            border-radius: var(--radius);
+        }
+        button:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        button.secondary { background: var(--input-bg); color: var(--fg); border-color: var(--border); }
+        button.secondary:hover { background: var(--hover); border-color: var(--border); }
+        button.small { padding: 3px 10px; font-size: 12.5px; }
+        button.linklike { background: none; border: none; color: var(--accent); padding: 0; }
+        button.linklike:hover { background: none; color: var(--accent-hover); text-decoration: underline; }
+
+        .theme-toggle {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--fg);
+            padding: 4px 9px;
+            line-height: 1;
+            font-size: 14px;
+        }
+        .theme-toggle:hover { background: var(--hover); border-color: var(--border); }
+
+        .muted { color: var(--muted); }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; }
+        .hidden { display: none !important; }
+
+        .head-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+        .filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 10px 12px;
+            align-items: end;
+        }
+
+        /* ---- Data section: heading is the collapse toggle ---- */
+        .section-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            min-width: 0;
+            background: none;
+            border: none;
+            padding: 0;
+            color: inherit;
+            text-align: left;
+        }
+        .section-toggle:hover { background: none; border: none; }
+        .section-chevron { color: var(--muted); font-size: 0.85em; width: 1em; flex: none; }
+        .section-body { margin-top: 12px; }
+
+        .dropzone {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 16px;
+            border: 1px dashed var(--border);
+            border-radius: var(--radius);
+            color: var(--muted);
+            font-size: 13px;
+            cursor: pointer;
+            margin: 0;
+            font-weight: 400;
+        }
+        .dropzone:hover, .dropzone.drag {
+            border-color: var(--accent);
+            background: var(--hover);
+            color: var(--fg);
+        }
+        .dropzone .link { color: var(--accent); }
+
+        .file-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+        .file-row + .file-row { margin-top: 6px; }
+        .file-list { margin-top: 10px; }
+        .sw { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+        .file-name {
+            font-weight: 600;
+            font-size: 13px;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .file-meta { color: var(--muted); font-size: 12px; white-space: nowrap; }
+
+        details.disclose { margin-top: 10px; }
+        details.disclose > summary {
+            cursor: pointer;
+            color: var(--muted);
+            font-size: 12.5px;
+            list-style: none;
+            width: fit-content;
+        }
+        details.disclose > summary::-webkit-details-marker { display: none; }
+        details.disclose > summary::before { content: '▸ '; }
+        details.disclose[open] > summary::before { content: '▾ '; }
+        details.disclose > summary:hover { color: var(--fg); }
+
+        /* ---- Toolbar: chart controls, then data filters, then options ---- */
+        .toolbar-block + .toolbar-block {
+            border-top: 1px solid var(--border);
+            margin-top: 12px;
+            padding-top: 12px;
+        }
+        .block-title {
+            font-size: 11px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+        .opts { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; }
+        .check {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            margin: 0;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .hint { color: var(--muted); font-size: 12px; }
+
+        /* ---- Charts ---- */
+        .chart-container { position: relative; height: 520px; width: 100%; }
+        .charts { display: grid; gap: 14px; }
+        .empty {
+            padding: 60px 20px;
+            text-align: center;
+            color: var(--muted);
+            border: 1px dashed var(--border);
+            border-radius: var(--radius);
+        }
+
+        /* ---- Toast ---- */
+        .toast {
+            position: fixed;
+            right: 16px;
+            bottom: 16px;
+            z-index: 50;
+            max-width: 380px;
+            padding: 9px 12px;
+            border-radius: var(--radius);
+            box-shadow: 0 6px 18px var(--shadow);
+            font-size: 13px;
+            background: var(--panel);
+            border: 1px solid var(--ok);
+        }
+        .toast.err { background: var(--err-bg); border-color: var(--err-border); color: var(--err); }
     </style>
 </head>
-<body class="bg-gray-50">
-<div class="max-w-7xl mx-auto p-6 bg-white min-h-screen">
-    <!-- Header -->
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">Vector Database Benchmark Visualization</h1>
-        <p class="text-gray-600">Upload your JSON benchmark data to create interactive performance charts comparing different engines and configurations.</p>
+<body>
 
-        <!-- Info about Pareto filtering -->
-        <div class="mt-4 p-3 bg-green-100 border-2 border-green-400 rounded">
-            <div style="font-size: 16px; font-weight: bold; color: #059669;">
-                🎯 Pareto Frontier Filter Applied
-            </div>
-            <div style="font-size: 14px; margin-top: 6px; color: #047857;">
-                Shows only datapoints that improve performance within each dataset and parallel thread group
-            </div>
-        </div>
-    </div>
+<nav class="nav">
+    <span class="brand">Benchmark Plots</span>
+    <span class="spacer"></span>
+    <button id="themeToggle" class="theme-toggle" title="Theme">◐</button>
+</nav>
 
-    <!-- Data Input Section -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div class="space-y-4">
-            <div class="flex justify-between items-center">
-                <h2 class="text-xl font-semibold text-gray-800">Data Input</h2>
-                <div class="flex items-center gap-2">
-                    <button
-                            id="addDatasetBtn"
-                            class="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 focus:ring-2 focus:ring-green-500 transition-colors duration-200"
-                    >
-                        + Add Dataset
-                    </button>
-                    <button
-                            id="loadSampleBtn"
-                            class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
-                    >
-                        Load Sample
-                    </button>
-                    <button
-                            id="clearAllBtn"
-                            class="px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700 focus:ring-2 focus:ring-red-500 transition-colors duration-200"
-                    >
-                        Clear All
-                    </button>
-                </div>
-            </div>
+<div class="content">
 
-            <!-- Dynamic Dataset Inputs Container -->
-            <div id="datasetInputsContainer" class="space-y-4">
-                <!-- Dataset inputs will be dynamically added here -->
-            </div>
-
-            <div id="errorMessage" class="hidden p-3 bg-red-50 border border-red-200 rounded-lg text-red-700"></div>
-            <div id="successMessage" class="hidden p-3 bg-green-50 border border-green-200 rounded-lg text-green-700"></div>
+    <!-- Data ------------------------------------------------------------- -->
+    <section class="panel">
+        <div class="head-row">
+            <button class="section-toggle" id="dataToggle">
+                <span class="section-chevron" id="dataChevron">▾</span>
+                <h2>Data</h2>
+                <span class="muted" id="dataSummary">no files loaded</span>
+            </button>
+            <button class="secondary small" id="loadSampleBtn">Sample</button>
+            <button class="secondary small" id="clearAllBtn">Clear</button>
         </div>
 
-        <div class="space-y-4">
-            <h2 class="text-xl font-semibold text-gray-800">Expected Data Format</h2>
-            <div class="p-4 bg-gray-50 rounded-lg text-sm border">
-                    <pre class="whitespace-pre-wrap text-gray-700 text-xs">[
+        <div class="section-body" id="dataBody">
+            <label class="dropzone" id="dropzone">
+                <input type="file" id="fileInput" accept=".json" multiple hidden>
+                <span>Drop <span class="mono">results-*.json</span> files here, or <span class="link">browse</span></span>
+            </label>
+
+            <div class="file-list" id="fileList"></div>
+
+            <details class="disclose">
+                <summary>Paste JSON instead</summary>
+                <textarea id="pasteArea" rows="6" placeholder="[ { &quot;engine_name&quot;: ..., &quot;rps&quot;: ... }, ... ]" style="margin-top:8px"></textarea>
+                <button class="secondary small" id="pasteBtn" style="margin-top:8px">Add</button>
+            </details>
+
+            <details class="disclose">
+                <summary>Expected format</summary>
+                <pre>[
   {
     "engine_name": "qdrant",
     "setup_name": "qdrant-rps-m-16-ef-128",
@@ -91,323 +403,324 @@ This HTML file is designed to visualize vector database benchmark results using 
     "mean_precisions": 0.9975,
     "parallel": 100,
     "upload_time": 110.66,
-    "engine_params": {
-      "hnsw_config": {
-        "m": 16,
-        "ef_construct": 128
-      },
-      "hnsw_ef": 512
-    }
-  },
-  ...
+    "total_upload_time": 318.64,
+    "engine_params": { "hnsw_config": { "m": 16, "ef_construct": 128 }, "hnsw_ef": 512 }
+  }
 ]</pre>
-            </div>
-            <p class="text-sm text-gray-600">
-                Array of benchmark result objects with engine names, performance metrics, and precision values.
-            </p>
+            </details>
         </div>
-    </div>
+    </section>
 
-    <!-- Data Summary -->
-    <div id="dataSummary" class="hidden mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-        <h3 class="font-semibold text-blue-800 mb-2">Data Summary:</h3>
-        <div id="datasetSummariesContainer" class="space-y-3">
-            <!-- Dataset summaries will be dynamically added here -->
-        </div>
-    </div>
-
-    <!-- Chart Controls -->
-    <div class="mb-6 p-4 bg-gray-50 rounded-lg border">
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Y-Axis Metric</label>
-                <select
-                        id="yMetricSelect"
-                        class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                    <option value="rps">RPS (Requests Per Second)</option>
-                    <option value="mean_time">Mean Latency (ms)</option>
-                    <option value="p95_time">P95 Latency (ms)</option>
-                    <option value="p99_time">P99 Latency (ms)</option>
-                    <option value="upload_time">Upload Time (s)</option>
-                    <option value="total_upload_time">Index Time (s)</option>
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">X-Axis</label>
-                <select
-                        id="xAxisSelect"
-                        class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                    <option value="mean_precisions">Precision</option>
-                    <option value="parallel">Parallel Threads</option>
-                    <option value="setup_name">Setup Name</option>
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Group By</label>
-                <select
-                        id="groupBySelect"
-                        class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                    <option value="engine_name">Engine</option>
-                    <option value="dataset_name">Dataset</option>
-                    <option value="setup_name">Setup</option>
-                    <option value="none">No Grouping</option>
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Chart Type</label>
-                <select
-                        id="chartTypeSelect"
-                        class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                    <option value="line">Line Chart</option>
-                    <option value="scatter">Scatter Plot</option>
-                    <option value="bar">Bar Chart</option>
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Split By</label>
-                <select
-                        id="splitBySelect"
-                        class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                    <option value="none">No Split (Single Chart)</option>
-                    <option value="dataset_name">Dataset (one chart per dataset)</option>
-                    <option value="quant_group">Quantization Group (one chart per group per dataset)</option>
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Quantization Group</label>
-                <select
-                        id="quantGroupSelect"
-                        class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                    <option value="all">All</option>
-                    <option value="group1">4-bit+: orig, SQ, TQ4, TQ4+</option>
-                    <option value="group2">2-bit: BQ2, TQ2, TQ2+</option>
-                    <option value="group3">1-bit: BQ, BQ-asym, TQ1, TQ1+</option>
-                </select>
+    <!-- Toolbar ---------------------------------------------------------- -->
+    <section class="panel">
+        <div class="toolbar-block">
+            <div class="filters">
+                <div>
+                    <label for="yMetricSelect">Y axis</label>
+                    <select id="yMetricSelect">
+                        <option value="rps">RPS</option>
+                        <option value="mean_time">Mean latency</option>
+                        <option value="p95_time">p95 latency</option>
+                        <option value="p99_time">p99 latency</option>
+                        <option value="upload_time">Upload time</option>
+                        <option value="total_upload_time">Index time</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="xAxisSelect">X axis</label>
+                    <select id="xAxisSelect">
+                        <option value="mean_precisions">Precision</option>
+                        <option value="parallel">Parallel threads</option>
+                        <option value="setup_name">Setup</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="chartTypeSelect">Chart</label>
+                    <select id="chartTypeSelect">
+                        <option value="line">Line</option>
+                        <option value="scatter">Scatter</option>
+                        <option value="bar">Bar</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="splitBySelect">Split into</label>
+                    <select id="splitBySelect">
+                        <option value="none">One chart</option>
+                        <option value="dataset_name">Chart per dataset</option>
+                        <option value="quant_group">Chart per quant group</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="groupBySelect">Series</label>
+                    <select id="groupBySelect">
+                        <option value="engine_name">Per engine</option>
+                        <option value="dataset_name">Per dataset</option>
+                        <option value="setup_name">Per setup</option>
+                        <option value="none">Per file only</option>
+                    </select>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Filters -->
-    <div id="filtersSection" class="hidden mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-        <h3 class="font-semibold text-yellow-800 mb-3">Filters</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="filterControls">
-            <!-- Dynamic filter controls will be added here -->
+        <div class="toolbar-block hidden" id="filterBlock">
+            <div class="block-title">Filters</div>
+            <div class="filters" id="filterControls"></div>
         </div>
-    </div>
 
-    <!-- Single Chart (shown when split is off) -->
-    <div id="singleChartSection" class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-        <div class="flex justify-between items-center mb-4">
-            <h2 id="chartTitle" class="text-xl font-semibold text-gray-800">
-                Performance Chart
-            </h2>
-            <div class="flex items-center gap-4">
-                <span class="text-sm text-gray-600">Scroll to zoom | Drag to select area | Alt+Drag to pan</span>
-                <button
-                        id="resetZoomBtn"
-                        class="px-3 py-1 bg-gray-500 text-white rounded text-xs hover:bg-gray-600 focus:ring-2 focus:ring-gray-400 transition-colors duration-200"
-                >
-                    Reset Zoom
-                </button>
+        <div class="toolbar-block">
+            <div class="opts">
+                <label class="check" title="Within each dataset and parallel-thread group, keep only the points that beat every higher-precision point (the frontier). Points that are worse on both axes are hidden.">
+                    <input type="checkbox" id="paretoToggle" checked> Pareto frontier only
+                </label>
+                <label class="check" title="Name each point in the split charts; labels that would overlap are dropped">
+                    <input type="checkbox" id="labelsToggle"> Point labels
+                </label>
+                <label class="check" title="Dashed guides from each point to both axes, for reading values off the scales">
+                    <input type="checkbox" id="dropLinesToggle"> Guides
+                </label>
+                <span class="muted" id="pointStat"></span>
+                <span class="spacer"></span>
+                <span class="hint">scroll = zoom · drag = box · alt+drag = pan</span>
+                <button class="secondary small" id="resetZoomBtn">Reset zoom</button>
             </div>
         </div>
-        <div class="chart-container">
-            <canvas id="benchmarkChart"></canvas>
+    </section>
+
+    <!-- Charts ----------------------------------------------------------- -->
+    <div class="empty" id="emptyState">Load a results file to plot it.</div>
+
+    <section class="panel hidden" id="singleChartSection">
+        <div class="head-row" style="margin-bottom:10px">
+            <h2 id="chartTitle">Performance</h2>
         </div>
-    </div>
+        <div class="chart-container"><canvas id="benchmarkChart"></canvas></div>
+    </section>
 
-    <!-- Multi-Chart Container (shown when split is on) -->
-    <div id="multiChartSection" class="hidden space-y-6">
-    </div>
-
+    <div class="charts hidden" id="multiChartSection"></div>
 </div>
 
+<div id="toast" class="toast hidden"></div>
+
 <script>
-    // Sample data matching the user's format
-    const sampleData = [
-        {
-            "engine_name": "qdrant",
-            "setup_name": "qdrant-rps-m-16-ef-128",
-            "dataset_name": "dbpedia-openai-1M-1536-angular",
-            "search_idx": "0",
-            "upload_time": 118.20,
-            "total_upload_time": 318.64,
-            "p95_time": 0.007691,
-            "rps": 130.26,
-            "parallel": 1,
-            "p99_time": 0.008957,
-            "mean_time": 0.006716,
-            "mean_precisions": 0.9784,
-            "engine_params": {
-                "hnsw_config": {
-                    "m": 16,
-                    "ef_construct": 128
-                },
-                "hnsw_ef": 64
-            }
-        },
-        {
-            "engine_name": "qdrant",
-            "setup_name": "qdrant-rps-m-16-ef-128",
-            "dataset_name": "dbpedia-openai-1M-1536-angular",
-            "search_idx": "1",
-            "upload_time": 118.20,
-            "total_upload_time": 318.64,
-            "p95_time": 0.009744,
-            "rps": 112.17,
-            "parallel": 1,
-            "p99_time": 0.011519,
-            "mean_time": 0.007994,
-            "mean_precisions": 0.9901,
-            "engine_params": {
-                "hnsw_config": {
-                    "m": 16,
-                    "ef_construct": 128
-                },
-                "hnsw_ef": 128
-            }
-        },
-        {
-            "engine_name": "qdrant",
-            "setup_name": "qdrant-rps-m-16-ef-128",
-            "dataset_name": "dbpedia-openai-1M-1536-angular",
-            "search_idx": "2",
-            "upload_time": 118.20,
-            "total_upload_time": 318.64,
-            "p95_time": 0.012000,
-            "rps": 92.79,
-            "parallel": 1,
-            "p99_time": 0.015120,
-            "mean_time": 0.009842,
-            "mean_precisions": 0.9950,
-            "engine_params": {
-                "hnsw_config": {
-                    "m": 16,
-                    "ef_construct": 128
-                },
-                "hnsw_ef": 256
-            }
-        },
-        {
-            "engine_name": "qdrant",
-            "setup_name": "qdrant-rps-m-16-ef-128",
-            "dataset_name": "dbpedia-openai-1M-1536-angular",
-            "search_idx": "4",
-            "upload_time": 118.20,
-            "total_upload_time": 318.64,
-            "p95_time": 0.016229,
-            "rps": 808.74,
-            "parallel": 100,
-            "p99_time": 0.026924,
-            "mean_time": 0.009566,
-            "mean_precisions": 0.9784,
-            "engine_params": {
-                "hnsw_config": {
-                    "m": 16,
-                    "ef_construct": 128
-                },
-                "hnsw_ef": 64
-            }
-        },
-        {
-            "engine_name": "qdrant",
-            "setup_name": "qdrant-rps-m-16-ef-128",
-            "dataset_name": "dbpedia-openai-1M-1536-angular",
-            "search_idx": "5",
-            "upload_time": 118.20,
-            "total_upload_time": 318.64,
-            "p95_time": 0.079736,
-            "rps": 823.07,
-            "parallel": 100,
-            "p99_time": 0.114752,
-            "mean_time": 0.033456,
-            "mean_precisions": 0.9901,
-            "engine_params": {
-                "hnsw_config": {
-                    "m": 16,
-                    "ef_construct": 128
-                },
-                "hnsw_ef": 128
-            }
-        }
-    ];
+    // ---------------------------------------------------------------- theme
 
-    // Color palettes for different datasets (up to 10 distinct colors)
-    const datasetColors = [
-        '#1E40AF', // Blue
-        '#EA580C', // Orange
-        '#059669', // Green
-        '#7C3AED', // Purple
-        '#DC2626', // Red
-        '#0891B2', // Cyan
-        '#D97706', // Amber
-        '#DB2777', // Pink
-        '#4B5563', // Gray
-        '#84CC16'  // Lime
-    ];
+    const THEME_KEY = 'bench-theme';
 
-    // Utility function to get filename without extension and 'results-' prefix
-    function parseFilename(filename) {
-        if (!filename) return { version: '', commit: '' };
-        // Remove extension
-        const lastDotIndex = filename.lastIndexOf('.');
-        let name = lastDotIndex === -1 ? filename : filename.substring(0, lastDotIndex);
-        // Remove 'results-' prefix if present
-        if (name.startsWith('results-')) {
-            name = name.substring(8); // 'results-' is 8 characters
-        }
-        // Remove 'ghcr-' prefix if present
-        if (name.startsWith('ghcr-')) {
-            name = name.substring(5);
-        }
-        // Extract commit hash (40-char hex at end) and version (everything before it)
-        const match = name.match(/^(.+?)-([0-9a-f]{40})$/);
-        if (match) {
-            return { version: match[1], commit: match[2].substring(0, 10) };
-        }
-        return { version: name, commit: '' };
+    function storedPref() {
+        try {
+            const v = localStorage.getItem(THEME_KEY);
+            if (v === 'light' || v === 'dark' || v === 'system') return v;
+        } catch (e) { /* private mode */ }
+        return 'system';
     }
 
-    // State
-    let datasets = []; // Array of dataset objects: {id, data, filename, label, color}
+    function resolvePref(pref) {
+        if (pref === 'system') {
+            return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        return pref;
+    }
+
+    let themePref = storedPref();
+
+    function isDark() {
+        return document.documentElement.getAttribute('data-theme') === 'dark';
+    }
+
+    function applyTheme() {
+        document.documentElement.setAttribute('data-theme', resolvePref(themePref));
+        const icons = { light: '☀', dark: '☾', system: '◐' };
+        const btn = document.getElementById('themeToggle');
+        btn.textContent = icons[themePref];
+        btn.title = 'Theme: ' + themePref;
+        applyChartTheme();
+        refreshSeriesColors();
+        renderFileList();
+        updateChart();
+    }
+
+    document.getElementById('themeToggle').addEventListener('click', () => {
+        themePref = themePref === 'light' ? 'dark' : themePref === 'dark' ? 'system' : 'light';
+        try { localStorage.setItem(THEME_KEY, themePref); } catch (e) { /* ignore */ }
+        applyTheme();
+    });
+
+    if (window.matchMedia) {
+        window.matchMedia('(prefers-color-scheme: dark)')
+            .addEventListener('change', () => { if (themePref === 'system') applyTheme(); });
+    }
+
+    function cssVar(name) {
+        return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+
+    // Categorical series palette (validated per the data-viz color checks against
+    // both chart surfaces: #ffffff light / #111824 dark). Beyond 8 series the
+    // hues repeat, so point style and dash pattern carry the identity as well.
+    const SERIES_COLORS = {
+        light: ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#4a3aa7', '#e34948'],
+        dark:  ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9', '#e66767']
+    };
+
+    function palette() {
+        return isDark() ? SERIES_COLORS.dark : SERIES_COLORS.light;
+    }
+
+    function seriesColor(index) {
+        const p = palette();
+        return p[index % p.length];
+    }
+
+    const setupPointStyles = [
+        'circle', 'rectRot', 'triangle', 'rect', 'star',
+        'crossRot', 'rectRounded', 'cross', 'dash', 'line'
+    ];
+
+    function getSetupPointStyle(index) {
+        return setupPointStyles[index % setupPointStyles.length];
+    }
+
+    // Chart.js global colors, refreshed whenever the theme flips.
+    let chartTheme = {};
+
+    function applyChartTheme() {
+        chartTheme = {
+            fg: cssVar('--fg'),
+            muted: cssVar('--muted'),
+            border: cssVar('--border'),
+            panel: cssVar('--panel'),
+            accent: cssVar('--accent')
+        };
+        Chart.defaults.color = chartTheme.muted;
+        Chart.defaults.borderColor = chartTheme.border;
+        Chart.defaults.font.family = '"Mona Sans", Helvetica, Arial, sans-serif';
+        Chart.defaults.font.size = 12;
+    }
+
+    // ----------------------------------------------------------- sample data
+
+    const sampleData = [
+        {
+            "engine_name": "qdrant", "setup_name": "qdrant-rps-m-16-ef-128",
+            "dataset_name": "dbpedia-openai-1M-1536-angular", "search_idx": "0",
+            "upload_time": 118.20, "total_upload_time": 318.64, "p95_time": 0.007691,
+            "rps": 130.26, "parallel": 1, "p99_time": 0.008957, "mean_time": 0.006716,
+            "mean_precisions": 0.9784,
+            "engine_params": { "hnsw_config": { "m": 16, "ef_construct": 128 }, "hnsw_ef": 64 }
+        },
+        {
+            "engine_name": "qdrant", "setup_name": "qdrant-rps-m-16-ef-128",
+            "dataset_name": "dbpedia-openai-1M-1536-angular", "search_idx": "1",
+            "upload_time": 118.20, "total_upload_time": 318.64, "p95_time": 0.009744,
+            "rps": 112.17, "parallel": 1, "p99_time": 0.011519, "mean_time": 0.007994,
+            "mean_precisions": 0.9901,
+            "engine_params": { "hnsw_config": { "m": 16, "ef_construct": 128 }, "hnsw_ef": 128 }
+        },
+        {
+            "engine_name": "qdrant", "setup_name": "qdrant-rps-m-16-ef-128",
+            "dataset_name": "dbpedia-openai-1M-1536-angular", "search_idx": "2",
+            "upload_time": 118.20, "total_upload_time": 318.64, "p95_time": 0.012000,
+            "rps": 92.79, "parallel": 1, "p99_time": 0.015120, "mean_time": 0.009842,
+            "mean_precisions": 0.9950,
+            "engine_params": { "hnsw_config": { "m": 16, "ef_construct": 128 }, "hnsw_ef": 256 }
+        },
+        {
+            "engine_name": "qdrant", "setup_name": "qdrant-rps-m-16-ef-128",
+            "dataset_name": "dbpedia-openai-1M-1536-angular", "search_idx": "4",
+            "upload_time": 118.20, "total_upload_time": 318.64, "p95_time": 0.016229,
+            "rps": 808.74, "parallel": 100, "p99_time": 0.026924, "mean_time": 0.009566,
+            "mean_precisions": 0.9784,
+            "engine_params": { "hnsw_config": { "m": 16, "ef_construct": 128 }, "hnsw_ef": 64 }
+        },
+        {
+            "engine_name": "qdrant", "setup_name": "qdrant-rps-m-16-ef-128",
+            "dataset_name": "dbpedia-openai-1M-1536-angular", "search_idx": "5",
+            "upload_time": 118.20, "total_upload_time": 318.64, "p95_time": 0.079736,
+            "rps": 823.07, "parallel": 100, "p99_time": 0.114752, "mean_time": 0.033456,
+            "mean_precisions": 0.9901,
+            "engine_params": { "hnsw_config": { "m": 16, "ef_construct": 128 }, "hnsw_ef": 128 }
+        }
+    ];
+
+    // ----------------------------------------------------------------- state
+
+    let datasets = [];        // {id, colorIndex, color, data, filename, label, commit}
     let currentData = [];
     let filteredData = [];
     let chart = null;
+    let multiCharts = [];
     let filters = {};
     let datasetIdCounter = 0;
+    let colorCursor = 0;      // monotonic, so removing a file never repaints the others
+    let paretoStats = { kept: 0, total: 0 };
 
-    // DOM elements
-    const datasetInputsContainer = document.getElementById('datasetInputsContainer');
-    const addDatasetBtn = document.getElementById('addDatasetBtn');
-    const clearAllBtn = document.getElementById('clearAllBtn');
+    // DOM
+    const dataToggle = document.getElementById('dataToggle');
+    const dataChevron = document.getElementById('dataChevron');
+    const dataBody = document.getElementById('dataBody');
+    const dataSummary = document.getElementById('dataSummary');
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const fileList = document.getElementById('fileList');
+    const pasteArea = document.getElementById('pasteArea');
+    const pasteBtn = document.getElementById('pasteBtn');
     const loadSampleBtn = document.getElementById('loadSampleBtn');
-    const errorMessage = document.getElementById('errorMessage');
-    const successMessage = document.getElementById('successMessage');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    const toastEl = document.getElementById('toast');
+
     const yMetricSelect = document.getElementById('yMetricSelect');
     const xAxisSelect = document.getElementById('xAxisSelect');
     const groupBySelect = document.getElementById('groupBySelect');
     const chartTypeSelect = document.getElementById('chartTypeSelect');
-    const chartTitle = document.getElementById('chartTitle');
-    const dataSummary = document.getElementById('dataSummary');
-    const datasetSummariesContainer = document.getElementById('datasetSummariesContainer');
-    const filtersSection = document.getElementById('filtersSection');
-    const filterControls = document.getElementById('filterControls');
     const splitBySelect = document.getElementById('splitBySelect');
-    const quantGroupSelect = document.getElementById('quantGroupSelect');
+    const paretoToggle = document.getElementById('paretoToggle');
+    const labelsToggle = document.getElementById('labelsToggle');
+    const dropLinesToggle = document.getElementById('dropLinesToggle');
+    const pointStat = document.getElementById('pointStat');
+    const resetZoomBtn = document.getElementById('resetZoomBtn');
+    const PARETO_TITLE = paretoToggle.parentElement.title;
+
+    const filterBlock = document.getElementById('filterBlock');
+    const filterControls = document.getElementById('filterControls');
+    const emptyState = document.getElementById('emptyState');
+    const chartTitle = document.getElementById('chartTitle');
     const singleChartSection = document.getElementById('singleChartSection');
     const multiChartSection = document.getElementById('multiChartSection');
-    const resetZoomBtn = document.getElementById('resetZoomBtn');
+
+    // ------------------------------------------------------------- utilities
+
+    let toastTimer = null;
+
+    function toast(message, isError = false) {
+        toastEl.textContent = message;
+        toastEl.className = 'toast' + (isError ? ' err' : '');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toastEl.classList.add('hidden'), 4000);
+    }
+
+    // "results-ghcr-v1.15.0-<sha>.json" → { version: "v1.15.0", commit: "<sha10>" }
+    function parseFilename(filename) {
+        if (!filename) return { version: '', commit: '' };
+        const lastDotIndex = filename.lastIndexOf('.');
+        let name = lastDotIndex === -1 ? filename : filename.substring(0, lastDotIndex);
+        if (name.startsWith('results-')) name = name.substring(8);
+        if (name.startsWith('ghcr-')) name = name.substring(5);
+        const match = name.match(/^(.+?)-([0-9a-f]{40})$/);
+        if (match) return { version: match[1], commit: match[2].substring(0, 10) };
+        return { version: name, commit: '' };
+    }
+
+    // Drop the parts every setup shares, keep what tells them apart:
+    //   "qdrant-tq1-plus-m-16-ef-128" → "tq1-plus"
+    //   "qdrant-rps-m-16-ef-128"      → "m-16-ef-128"  (nothing but the index params varies)
+    function getShortSetupLabel(setupName) {
+        if (!setupName) return '';
+        const stem = setupName
+            .replace(/^qdrant-/, '')
+            .replace(/^rps-/, '')
+            .replace(/-rps$/, '');
+        return stem.replace(/-?m-\d+-ef-\d+$/, '') || stem || setupName;
+    }
 
     // Quantization group definitions: patterns matched against setup_name
     const quantGroups = {
@@ -416,58 +729,275 @@ This HTML file is designed to visualize vector database benchmark results using 
         group3: ['-bq-', '-bq-asym-', '-tq1-', '-tq1-plus-']
     };
 
+    const quantGroupLabels = {
+        group1: '4-bit+: orig, SQ, TQ4, TQ4+',
+        group2: '2-bit: BQ2, TQ2, TQ2+',
+        group3: '1-bit: BQ, BQ-asym, TQ1, TQ1+'
+    };
+
     function matchesQuantGroup(setupName, group) {
         if (group === 'all') return true;
         const patterns = quantGroups[group];
         if (!patterns) return true;
-        // Pad with dashes so patterns match reliably
         const padded = '-' + setupName + '-';
         return patterns.some(p => padded.includes(p));
     }
-    let multiCharts = []; // Track chart instances for split view
 
-    // Initialize with one empty dataset input
-    addDatasetInput();
+    function getOversamplingLabel(row) {
+        const q = row.engine_params?.quantization;
+        if (!q || q.rescore === false || q.rescore === undefined) return 'no rescore';
+        if (q.oversampling) return `oversample ${q.oversampling}x`;
+        return 'rescore only';
+    }
 
-    // Event listeners for new buttons
-    addDatasetBtn.addEventListener('click', () => {
-        if (datasets.length < 10) {
-            addDatasetInput();
-        } else {
-            showMessage(errorMessage, 'Maximum 10 datasets allowed', true);
+    // Numeric sort key so a line runs: no rescore → oversample 2 → oversample 4
+    function getOversamplingSort(row) {
+        const q = row.engine_params?.quantization;
+        if (!q || q.rescore === false || q.rescore === undefined) return 0;
+        return q.oversampling || 0.5;
+    }
+
+    // ------------------------------------------------------- data management
+
+    function setDataOpen(open) {
+        dataBody.classList.toggle('hidden', !open);
+        dataChevron.textContent = open ? '▾' : '▸';
+    }
+
+    dataToggle.addEventListener('click', () => setDataOpen(dataBody.classList.contains('hidden')));
+
+    function refreshSeriesColors() {
+        datasets.forEach(ds => { ds.color = seriesColor(ds.colorIndex); });
+        currentData.forEach(row => {
+            const ds = datasets.find(d => d.id === row.datasetId);
+            if (ds) row.datasetColor = ds.color;
+        });
+    }
+
+    function addDataset(data, filename) {
+        if (datasets.length >= 10) {
+            toast('Maximum 10 files', true);
+            return;
+        }
+        const parsed = parseFilename(filename);
+        const ds = {
+            id: datasetIdCounter++,
+            colorIndex: colorCursor++,
+            color: seriesColor(colorCursor - 1),
+            filename: filename,
+            label: parsed.version,
+            commit: parsed.commit,
+            data: []
+        };
+        ds.data = data.map(row => ({
+            ...row,
+            datasetId: ds.id,
+            datasetLabel: ds.label,
+            datasetColor: ds.color,
+            filename: filename,
+            _oversamplingLabel: getOversamplingLabel(row)
+        }));
+        datasets.push(ds);
+        renderFileList();
+        combineDatasets();
+    }
+
+    function removeDataset(datasetId) {
+        datasets = datasets.filter(d => d.id !== datasetId);
+        renderFileList();
+        combineDatasets();
+    }
+
+    function renderFileList() {
+        fileList.innerHTML = '';
+        datasets.forEach(ds => {
+            const row = document.createElement('div');
+            row.className = 'file-row';
+
+            const sw = document.createElement('span');
+            sw.className = 'sw';
+            sw.style.background = ds.color;
+
+            const name = document.createElement('span');
+            name.className = 'file-name';
+            name.textContent = ds.label || ds.filename;
+            name.title = ds.filename;
+
+            const meta = document.createElement('span');
+            meta.className = 'file-meta';
+            const engines = new Set(ds.data.map(d => d.engine_name)).size;
+            const dsNames = new Set(ds.data.map(d => d.dataset_name)).size;
+            const bits = [`${ds.data.length} points`, `${engines} engine${engines === 1 ? '' : 's'}`, `${dsNames} dataset${dsNames === 1 ? '' : 's'}`];
+            if (ds.commit) bits.push(ds.commit);
+            meta.textContent = bits.join(' · ');
+
+            const spacer = document.createElement('span');
+            spacer.className = 'spacer';
+
+            const remove = document.createElement('button');
+            remove.className = 'linklike';
+            remove.textContent = 'Remove';
+            remove.addEventListener('click', () => removeDataset(ds.id));
+
+            row.append(sw, name, spacer, meta, remove);
+            fileList.appendChild(row);
+        });
+
+        const points = datasets.reduce((n, d) => n + d.data.length, 0);
+        dataSummary.textContent = datasets.length
+            ? `${datasets.length} file${datasets.length === 1 ? '' : 's'} · ${points} points`
+            : 'no files loaded';
+    }
+
+    async function addFiles(files) {
+        for (const file of files) {
+            try {
+                const parsed = JSON.parse(await file.text());
+                if (!Array.isArray(parsed)) throw new Error('not an array');
+                addDataset(parsed, file.name);
+                toast(`${file.name}: ${parsed.length} records loaded`);
+            } catch (err) {
+                toast(`${file.name}: expected a JSON array of result objects`, true);
+            }
+        }
+    }
+
+    dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+    dropzone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropzone.classList.remove('drag');
+        addFiles(e.dataTransfer.files);
+    });
+    fileInput.addEventListener('change', () => {
+        addFiles(fileInput.files);
+        fileInput.value = '';
+    });
+
+    pasteBtn.addEventListener('click', () => {
+        try {
+            const parsed = JSON.parse(pasteArea.value);
+            if (!Array.isArray(parsed)) throw new Error('not an array');
+            addDataset(parsed, 'pasted-data.json');
+            pasteArea.value = '';
+            toast(`${parsed.length} records loaded`);
+        } catch (err) {
+            toast('Expected a JSON array of result objects', true);
         }
     });
+
+    loadSampleBtn.addEventListener('click', () => addDataset(sampleData, 'results-sample.json'));
 
     clearAllBtn.addEventListener('click', () => {
         datasets = [];
-        datasetInputsContainer.innerHTML = '';
         datasetIdCounter = 0;
+        colorCursor = 0;
+        renderFileList();
+        combineDatasets();
+        setDataOpen(true);
+    });
+
+    function combineDatasets() {
         currentData = [];
-        filteredData = [];
-        updateDataSummary();
+        datasets.forEach(ds => currentData.push(...ds.data));
+        filteredData = [...currentData];
+        createFilterControls();
+    }
+
+    // --------------------------------------------------------------- filters
+
+    const FILTER_LABELS = {
+        engine_name: 'Engine',
+        dataset_name: 'Dataset',
+        setup_name: 'Setup',
+        parallel: 'Parallel threads'
+    };
+
+    function createFilterControls() {
+        const filterFields = ['engine_name', 'dataset_name', 'setup_name', 'parallel'];
+        const previous = { ...filters };
+        filterControls.innerHTML = '';
+        filters = {};
+
+        // Quantization group is a filter over setups, so it lives with the rest.
+        const quantDiv = document.createElement('div');
+        quantDiv.innerHTML = `
+            <label for="filter_quant">Quantization</label>
+            <select id="filter_quant">
+                <option value="all">All</option>
+                <option value="group1">${quantGroupLabels.group1}</option>
+                <option value="group2">${quantGroupLabels.group2}</option>
+                <option value="group3">${quantGroupLabels.group3}</option>
+            </select>`;
+        filterControls.appendChild(quantDiv);
+        const quantSelect = document.getElementById('filter_quant');
+        quantSelect.value = previous._quant || 'all';
+        filters._quant = quantSelect.value;
+        quantSelect.addEventListener('change', e => {
+            filters._quant = e.target.value;
+            applyFilters();
+        });
+
+        filterFields.forEach(field => {
+            const values = [...new Set(currentData.map(d => d[field]))].sort((a, b) => (
+                field === 'parallel' ? Number(a) - Number(b) : String(a).localeCompare(String(b))
+            ));
+            if (values.length <= 1) return;
+
+            const label = FILTER_LABELS[field] || field.replace('_', ' ');
+            // Default to the 100-thread slice when present: the single most-read cut.
+            let value = previous[field] !== undefined ? previous[field] : '';
+            if (previous[field] === undefined && field === 'parallel' && values.includes(100)) value = '100';
+            if (value && !values.some(v => String(v) === String(value))) value = '';
+
+            const div = document.createElement('div');
+            div.innerHTML = `
+                <label for="filter_${field}">${label}</label>
+                <select id="filter_${field}">
+                    <option value="">All</option>
+                    ${values.map(v => `<option value="${v}">${field === 'parallel' ? v + ' threads' : v}</option>`).join('')}
+                </select>`;
+            filterControls.appendChild(div);
+
+            const select = document.getElementById(`filter_${field}`);
+            select.value = value;
+            if (value) filters[field] = value;
+
+            select.addEventListener('change', e => {
+                filters[field] = e.target.value;
+                applyFilters();
+            });
+        });
+
+        filterBlock.classList.toggle('hidden', currentData.length === 0);
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const quant = filters._quant || 'all';
+        filteredData = currentData.filter(row => {
+            if (!matchesQuantGroup(row.setup_name || '', quant)) return false;
+            return Object.entries(filters).every(([field, value]) => {
+                if (field.startsWith('_') || !value) return true;
+                if (field === 'parallel') return Number(row[field]) === Number(value);
+                return row[field] === value;
+            });
+        });
         updateChart();
-        addDatasetInput();
-        showMessage(successMessage, 'All datasets cleared!');
-    });
+    }
 
-    loadSampleBtn.addEventListener('click', () => {
-        // Load sample data into the first available empty dataset slot
-        const emptyDataset = datasets.find(d => d.data.length === 0);
-        if (emptyDataset) {
-            loadDatasetData(emptyDataset.id, sampleData, 'sample-data.json');
-        } else if (datasets.length < 10) {
-            // Add new dataset slot and load sample
-            const newId = addDatasetInput();
-            loadDatasetData(newId, sampleData, 'sample-data.json');
-        } else {
-            showMessage(errorMessage, 'No empty dataset slots available', true);
-        }
-    });
+    // ------------------------------------------------------- chart utilities
 
+    // Keep only the points that improve on every higher-precision point, within
+    // each (dataset, parallel) group. Counts feed the "showing N of M" readout,
+    // so the frontier never silently swallows data.
     function applyParetoFilter(data, yMetric) {
-        if (data.length === 0) return data;
+        paretoStats.total += data.length;
+        if (!paretoToggle.checked || data.length === 0) {
+            paretoStats.kept += data.length;
+            return data;
+        }
 
-        // Group by dataset + parallel thread count
         const groups = {};
         data.forEach(point => {
             const key = `${point.dataset_name || 'Unknown'}__${point.parallel || 1}`;
@@ -478,7 +1008,6 @@ This HTML file is designed to visualize vector database benchmark results using 
         const isHigherBetter = yMetric === 'rps';
 
         Object.values(groups).forEach(groupData => {
-            // Sort by precision descending, deduplicate
             const sorted = [...groupData].sort((a, b) => b.mean_precisions - a.mean_precisions);
             const seen = new Set();
             const unique = sorted.filter(p => {
@@ -506,330 +1035,8 @@ This HTML file is designed to visualize vector database benchmark results using 
             allFiltered.push(...filtered);
         });
 
+        paretoStats.kept += allFiltered.length;
         return allFiltered;
-    }
-
-    // New functions for multiple datasets
-    function addDatasetInput() {
-        const datasetId = datasetIdCounter++;
-        const colorIndex = datasets.length % datasetColors.length;
-        const color = datasetColors[colorIndex];
-
-        // Create dataset object
-        const dataset = {
-            id: datasetId,
-            data: [],
-            filename: '',
-            label: '',
-            commit: '',
-            color: color
-        };
-        datasets.push(dataset);
-
-        // Create HTML for dataset input
-        const datasetDiv = document.createElement('div');
-        datasetDiv.id = `dataset-${datasetId}`;
-        datasetDiv.className = 'p-4 border rounded-lg';
-        datasetDiv.style.borderColor = color;
-        datasetDiv.style.backgroundColor = color + '10';
-
-        datasetDiv.innerHTML = `
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="text-sm font-semibold" style="color: ${color}" id="dataset-title-${datasetId}">Dataset ${datasets.length}</h3>
-                    <button
-                        onclick="removeDataset(${datasetId})"
-                        class="text-red-600 hover:text-red-800 text-xs font-medium"
-                    >
-                        Remove
-                    </button>
-                </div>
-                <div class="space-y-3">
-                    <div class="hidden">
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Dataset Label</label>
-                        <input
-                            type="text"
-                            id="label-${datasetId}"
-                            placeholder="e.g., v1.0, Production, Test"
-                            class="w-full p-2 border border-gray-300 rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            value=""
-                            onchange="updateDatasetLabel(${datasetId}, this.value)"
-                        />
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Upload JSON File</label>
-                        <input
-                            type="file"
-                            id="file-${datasetId}"
-                            accept=".json"
-                            class="block w-full text-xs text-gray-500 file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
-                            onchange="handleFileUpload(${datasetId}, this)"
-                        />
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Or Paste JSON Data</label>
-                        <textarea
-                            id="json-${datasetId}"
-                            placeholder="Paste your JSON benchmark data here..."
-                            class="w-full h-20 p-2 border border-gray-300 rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                        ></textarea>
-                    </div>
-                    <button
-                        onclick="handleJsonInput(${datasetId})"
-                        class="px-3 py-1 bg-gray-600 text-white rounded text-xs hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 transition-colors duration-200"
-                    >
-                        Load Data
-                    </button>
-                    <span id="status-${datasetId}" class="text-xs text-gray-600 ml-2"></span>
-                </div>
-            `;
-
-        datasetInputsContainer.appendChild(datasetDiv);
-        return datasetId;
-    }
-
-    function removeDataset(datasetId) {
-        datasets = datasets.filter(d => d.id !== datasetId);
-        document.getElementById(`dataset-${datasetId}`).remove();
-        combineDatasets();
-        showMessage(successMessage, 'Dataset removed!');
-    }
-
-    function updateDatasetLabel(datasetId, label) {
-        const dataset = datasets.find(d => d.id === datasetId);
-        if (dataset) {
-            dataset.label = label;
-            updateChart();
-        }
-    }
-
-    async function handleFileUpload(datasetId, fileInput) {
-        const file = fileInput.files[0];
-        if (file) {
-            try {
-                const text = await file.text();
-                const parsedData = JSON.parse(text);
-                if (Array.isArray(parsedData)) {
-                    loadDatasetData(datasetId, parsedData, file.name);
-                    document.getElementById(`json-${datasetId}`).value = JSON.stringify(parsedData, null, 2);
-                    showMessage(successMessage, `File "${file.name}" loaded successfully!`);
-                } else {
-                    throw new Error('Data should be an array of objects');
-                }
-            } catch (err) {
-                showMessage(errorMessage, 'Error reading file or invalid JSON format.', true);
-            }
-        }
-    }
-
-    function handleJsonInput(datasetId) {
-        try {
-            const jsonTextarea = document.getElementById(`json-${datasetId}`);
-            const parsedData = JSON.parse(jsonTextarea.value);
-            if (Array.isArray(parsedData)) {
-                loadDatasetData(datasetId, parsedData, 'pasted-data.json');
-                showMessage(successMessage, 'JSON data loaded successfully!');
-            } else {
-                throw new Error('Data should be an array of objects');
-            }
-        } catch (err) {
-            showMessage(errorMessage, 'Invalid JSON format. Please check your data structure.', true);
-        }
-    }
-
-    function loadDatasetData(datasetId, data, filename) {
-        const dataset = datasets.find(d => d.id === datasetId);
-        if (dataset) {
-            dataset.filename = filename;
-            // Parse filename into version (for legend) and commit (for summary)
-            const parsed = parseFilename(filename);
-            dataset.label = parsed.version;
-            dataset.commit = parsed.commit;
-
-            dataset.data = data.map(row => {
-                const q = row.engine_params?.quantization;
-                let oversamplingLabel;
-                if (!q || q.rescore === false || q.rescore === undefined) {
-                    oversamplingLabel = 'no rescore';
-                } else if (q.oversampling) {
-                    oversamplingLabel = `oversample ${q.oversampling}x`;
-                } else {
-                    oversamplingLabel = 'rescore only';
-                }
-                return {
-                    ...row,
-                    datasetId: datasetId,
-                    datasetLabel: dataset.label,
-                    datasetColor: dataset.color,
-                    filename: filename,
-                    _oversamplingLabel: oversamplingLabel
-                };
-            });
-
-            // Update the dataset title and label input
-            const titleElement = document.getElementById(`dataset-title-${datasetId}`);
-            if (titleElement) {
-                titleElement.textContent = dataset.label;
-            }
-            const labelInput = document.getElementById(`label-${datasetId}`);
-            if (labelInput) {
-                labelInput.value = dataset.label;
-            }
-
-            document.getElementById(`status-${datasetId}`).textContent = `✓ ${data.length} records loaded`;
-            combineDatasets();
-        }
-    }
-
-    // Make functions globally accessible
-    window.removeDataset = removeDataset;
-    window.updateDatasetLabel = updateDatasetLabel;
-    window.handleFileUpload = handleFileUpload;
-    window.handleJsonInput = handleJsonInput;
-
-    // Event listeners
-    yMetricSelect.addEventListener('change', updateChart);
-    xAxisSelect.addEventListener('change', updateChart);
-    groupBySelect.addEventListener('change', updateChart);
-    chartTypeSelect.addEventListener('change', updateChart);
-    splitBySelect.addEventListener('change', updateChart);
-    quantGroupSelect.addEventListener('change', applyFilters);
-    resetZoomBtn.addEventListener('click', () => {
-        if (chart) {
-            chart.resetZoom();
-        }
-    });
-
-    function showMessage(element, message, isError = false) {
-        element.textContent = message;
-        element.className = `p-3 border rounded-lg ${isError ? 'bg-red-50 border-red-200 text-red-700' : 'bg-green-50 border-green-200 text-green-700'}`;
-        element.classList.remove('hidden');
-
-        const otherMessage = isError ? successMessage : errorMessage;
-        otherMessage.classList.add('hidden');
-
-        setTimeout(() => {
-            element.classList.add('hidden');
-        }, 5000);
-    }
-
-
-    function combineDatasets() {
-        currentData = [];
-        datasets.forEach(dataset => {
-            currentData.push(...dataset.data);
-        });
-        filteredData = [...currentData];
-        updateDataSummary();
-        createFilterControls();
-        updateChart();
-    }
-
-    function updateDataSummary() {
-        datasetSummariesContainer.innerHTML = '';
-
-        let hasData = false;
-        datasets.forEach((dataset, index) => {
-            if (dataset.data.length > 0) {
-                hasData = true;
-                const engines = new Set(dataset.data.map(d => d.engine_name));
-                const datasetNames = new Set(dataset.data.map(d => d.dataset_name));
-
-                const summaryDiv = document.createElement('div');
-                summaryDiv.className = 'mb-2';
-                const commitInfo = dataset.commit ? `<div><strong>Commit:</strong> ${dataset.commit}</div>` : '';
-                summaryDiv.innerHTML = `
-                        <h4 class="font-medium text-sm" style="color: ${dataset.color}">${dataset.label}:</h4>
-                        <div class="text-xs text-gray-600 ml-4 mb-1">
-                            <strong>File:</strong> ${dataset.filename || 'No file'}
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs text-gray-600 ml-4">
-                            <div><strong>Engines:</strong> ${engines.size}</div>
-                            <div><strong>Datasets:</strong> ${datasetNames.size}</div>
-                            <div><strong>Records:</strong> ${dataset.data.length}</div>
-                            ${commitInfo}
-                        </div>
-                    `;
-                datasetSummariesContainer.appendChild(summaryDiv);
-            }
-        });
-
-        if (hasData) {
-            dataSummary.classList.remove('hidden');
-        } else {
-            dataSummary.classList.add('hidden');
-        }
-    }
-
-    function createFilterControls() {
-        const filterFields = ['engine_name', 'dataset_name', 'setup_name', 'parallel'];
-        filterControls.innerHTML = '';
-        filters = {};
-
-        filterFields.forEach(field => {
-            const values = [...new Set(currentData.map(d => d[field]))].sort((a, b) => {
-                // Sort numerically for parallel field
-                if (field === 'parallel') {
-                    return Number(a) - Number(b);
-                }
-                return String(a).localeCompare(String(b));
-            });
-            if (values.length > 1) {
-                const div = document.createElement('div');
-                const fieldLabel = field === 'parallel' ? 'PARALLEL THREADS' : field.replace('_', ' ').toUpperCase();
-
-                // Set default value for parallel field to 100
-                const defaultValue = field === 'parallel' && values.includes(100) ? '100' : '';
-
-                div.innerHTML = `
-                        <label class="block text-sm font-medium text-yellow-700 mb-2">${fieldLabel}</label>
-                        <select id="filter_${field}" class="w-full p-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-sm">
-                            <option value="">All</option>
-                            ${values.map(v => `<option value="${v}" ${v == defaultValue ? 'selected' : ''}>${field === 'parallel' ? v + ' threads' : v}</option>`).join('')}
-                        </select>
-                    `;
-                filterControls.appendChild(div);
-
-                // Set initial filter value
-                if (defaultValue) {
-                    filters[field] = defaultValue;
-                }
-
-                document.getElementById(`filter_${field}`).addEventListener('change', (e) => {
-                    filters[field] = e.target.value;
-                    applyFilters();
-                });
-            }
-        });
-
-        if (filterControls.children.length > 0 || currentData.length > 0) {
-            filtersSection.classList.remove('hidden');
-        }
-
-        // Apply initial filters
-        applyFilters();
-    }
-
-    function applyFilters() {
-        const selectedGroup = quantGroupSelect.value;
-        filteredData = currentData.filter(row => {
-            // Apply quantization group filter
-            if (!matchesQuantGroup(row.setup_name || '', selectedGroup)) {
-                return false;
-            }
-
-            return Object.entries(filters).every(([field, value]) => {
-                if (!value) return true;
-
-                // Handle numeric comparison for parallel field
-                if (field === 'parallel') {
-                    return Number(row[field]) === Number(value);
-                }
-
-                // String comparison for other fields
-                return row[field] === value;
-            });
-        });
-        updateChart();
     }
 
     function sortDataByXAxis(data, xAxis) {
@@ -843,12 +1050,27 @@ This HTML file is designed to visualize vector database benchmark results using 
 
     function getAxisLabels(yMetric, xAxis) {
         const isTimeMetric = yMetric.includes('time');
-        const yLabel = yMetric === 'total_upload_time' ? 'Index Time (s)' :
-            isTimeMetric ? yMetric.replace('_', ' ').toUpperCase() + ' (ms)' :
-                yMetric.replace('_', ' ').toUpperCase();
+        const yLabel = yMetric === 'total_upload_time' ? 'Index time (s)' :
+            yMetric === 'upload_time' ? 'Upload time (s)' :
+                isTimeMetric ? yMetric.replace('_time', '').replace('_', ' ') + ' latency (ms)' :
+                    yMetric === 'rps' ? 'RPS' : yMetric.replace('_', ' ');
         const xLabel = xAxis === 'mean_precisions' ? 'Precision (%)' :
-            xAxis.replace('_', ' ').toUpperCase();
+            xAxis === 'parallel' ? 'Parallel threads' : xAxis.replace('_', ' ');
         return { yLabel, xLabel, isTimeMetric };
+    }
+
+    function yValue(row, yMetric) {
+        // Latency metrics are recorded in seconds; index/upload time already in seconds.
+        const isLatency = yMetric.includes('time') && yMetric !== 'total_upload_time' && yMetric !== 'upload_time';
+        return isLatency ? row[yMetric] * 1000 : row[yMetric];
+    }
+
+    function toPoint(row, xAxis, yMetric) {
+        return {
+            x: xAxis === 'mean_precisions' ? row[xAxis] * 100 : row[xAxis],
+            y: yValue(row, yMetric),
+            originalData: row
+        };
     }
 
     function baseZoomOptions() {
@@ -859,8 +1081,8 @@ This HTML file is designed to visualize vector database benchmark results using 
                 pinch: { enabled: true },
                 drag: {
                     enabled: true,
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    borderColor: 'rgba(59, 130, 246, 0.5)',
+                    backgroundColor: chartTheme.accent + '1f',
+                    borderColor: chartTheme.accent,
                     borderWidth: 1
                 },
                 mode: 'xy'
@@ -871,83 +1093,104 @@ This HTML file is designed to visualize vector database benchmark results using 
     function baseScales(xLabel, yLabel, xAxis) {
         return {
             x: {
-                title: { display: true, text: xLabel },
-                grid: { color: '#E5E7EB' },
+                title: { display: true, text: xLabel, color: chartTheme.muted },
+                grid: { color: chartTheme.border },
+                ticks: { color: chartTheme.muted },
                 type: xAxis === 'setup_name' ? 'category' : 'linear'
             },
             y: {
-                title: { display: true, text: yLabel },
-                grid: { color: '#E5E7EB' }
+                title: { display: true, text: yLabel, color: chartTheme.muted },
+                grid: { color: chartTheme.border },
+                ticks: { color: chartTheme.muted }
             }
         };
     }
+
+    function baseLegend() {
+        return {
+            position: 'top',
+            labels: { usePointStyle: true, padding: 14, color: chartTheme.fg, boxWidth: 8 }
+        };
+    }
+
+    function baseTooltipStyle() {
+        return {
+            padding: 10,
+            cornerRadius: 8,
+            backgroundColor: chartTheme.panel,
+            borderColor: chartTheme.border,
+            borderWidth: 1,
+            titleColor: chartTheme.fg,
+            bodyColor: chartTheme.fg,
+            footerColor: chartTheme.muted,
+            titleFont: { weight: '600', size: 13 },
+            bodyFont: { size: 12 },
+            footerFont: { size: 11 }
+        };
+    }
+
+    // ---------------------------------------------------------- chart config
 
     function getChartConfig() {
         const yMetric = yMetricSelect.value;
         const xAxis = xAxisSelect.value;
         const groupBy = groupBySelect.value;
         const chartType = chartTypeSelect.value;
+        const { yLabel, xLabel } = getAxisLabels(yMetric, xAxis);
 
-        let chartDatasets = [];
+        const chartDatasets = [];
+        const activeFiles = datasets.filter(ds => filteredData.some(row => row.datasetId === ds.id));
+        const multipleFiles = activeFiles.length > 1;
+        // Group values are collected across all files so one group keeps one style
+        // everywhere, even if a file is missing it.
+        const groupValues = groupBy === 'none' ? [] : [...new Set(filteredData.map(d => d[groupBy]))].sort();
 
-        // Process each dataset
-        datasets.forEach((dataset) => {
-            if (dataset.data.length === 0) return;
-
+        activeFiles.forEach((dataset, fileIdx) => {
             const datasetData = filteredData.filter(row => row.datasetId === dataset.id);
-            if (datasetData.length === 0) return;
+
+            const series = (label, rows, style) => {
+                const points = sortDataByXAxis(applyParetoFilter(rows, yMetric), xAxis);
+                if (points.length === 0) return;
+                chartDatasets.push({
+                    label: label,
+                    data: points.map(row => toPoint(row, xAxis, yMetric)),
+                    borderColor: style.color,
+                    backgroundColor: style.color + '33',
+                    borderWidth: chartType === 'line' ? 2 : 1,
+                    fill: false,
+                    tension: 0.3,
+                    pointRadius: chartType === 'scatter' ? 5 : 4,
+                    pointHoverRadius: 8,
+                    pointStyle: style.pointStyle,
+                    borderDash: style.borderDash
+                });
+            };
 
             if (groupBy === 'none') {
-                // No grouping - one line per dataset
-                let dataToPlot = [...datasetData];
-                dataToPlot = applyParetoFilter(dataToPlot, yMetric);
-                const sortedData = sortDataByXAxis(dataToPlot, xAxis);
-
-                chartDatasets.push({
-                    label: dataset.label,
-                    data: sortedData.map(row => ({
-                        x: xAxis === 'mean_precisions' ? row[xAxis] * 100 : row[xAxis],
-                        y: yMetric.includes('time') && yMetric !== 'total_upload_time' ? row[yMetric] * 1000 : row[yMetric],
-                        originalData: row
-                    })),
-                    borderColor: dataset.color,
-                    backgroundColor: dataset.color + '20',
-                    borderWidth: chartType === 'line' ? 3 : 1,
-                    fill: false,
-                    tension: 0.4,
-                    pointRadius: chartType === 'scatter' ? 6 : 4,
-                    pointStyle: 'circle'
-                });
-            } else {
-                // Group by the selected field within each dataset
-                const groups = [...new Set(datasetData.map(d => d[groupBy]))];
-
-                groups.forEach((group, groupIndex) => {
-                    let groupData = datasetData.filter(d => d[groupBy] === group);
-                    groupData = applyParetoFilter(groupData, yMetric);
-                    groupData = sortDataByXAxis(groupData, xAxis);
-
-                    chartDatasets.push({
-                        label: `${dataset.label}: ${group}`,
-                        data: groupData.map(row => ({
-                            x: xAxis === 'mean_precisions' ? row[xAxis] * 100 : row[xAxis],
-                            y: yMetric.includes('time') && yMetric !== 'total_upload_time' ? row[yMetric] * 1000 : row[yMetric],
-                            originalData: row
-                        })),
-                        borderColor: dataset.color,
-                        backgroundColor: dataset.color + '20',
-                        borderWidth: chartType === 'line' ? 3 : 1,
-                        fill: false,
-                        tension: 0.4,
-                        pointRadius: chartType === 'scatter' ? 6 : 4,
-                        pointStyle: 'circle',
-                        borderDash: groupIndex > 0 ? [5, 5] : undefined // Dashed lines for additional groups
-                    });
-                });
+                series(dataset.label, [...datasetData], { color: dataset.color, pointStyle: 'circle' });
+                return;
             }
-        });
 
-        const { yLabel, xLabel } = getAxisLabels(yMetric, xAxis);
+            // With several files loaded the colour identifies the file — that is the
+            // comparison being made — so the group is carried by point style and
+            // dash. With a single file the group takes the colour instead.
+            groupValues.forEach((group, groupIdx) => {
+                const rows = datasetData.filter(d => d[groupBy] === group);
+                if (rows.length === 0) return;
+                const groupLabel = groupBy === 'setup_name' ? getShortSetupLabel(group) : group;
+                series(
+                    multipleFiles ? `${dataset.label}: ${groupLabel}` : groupLabel,
+                    rows,
+                    multipleFiles
+                        ? {
+                            color: dataset.color,
+                            pointStyle: getSetupPointStyle(groupIdx),
+                            borderDash: fileIdx > 0 ? [5, 5] : undefined
+                        }
+                        : { color: seriesColor(groupIdx), pointStyle: getSetupPointStyle(groupIdx) }
+                );
+            });
+        });
 
         return {
             type: chartType === 'scatter' ? 'scatter' : chartType,
@@ -957,105 +1200,75 @@ This HTML file is designed to visualize vector database benchmark results using 
                 maintainAspectRatio: false,
                 plugins: {
                     zoom: baseZoomOptions(),
-                    legend: {
-                        position: 'top',
-                        labels: {
-                            usePointStyle: true,
-                            padding: 20
-                        }
-                    },
-                    tooltip: {
+                    legend: baseLegend(),
+                    tooltip: Object.assign(baseTooltipStyle(), {
+                        displayColors: false,
                         callbacks: {
-                            title: function(tooltipItems) {
-                                const item = tooltipItems[0];
-                                const originalData = item.raw.originalData;
-                                return originalData.setup_name || 'Unknown Setup';
-                            },
-                            label: function(context) {
-                                const originalData = context.raw.originalData;
-                                const yUnit = yMetric === 'total_upload_time' ? 's' :
-                                    yMetric.includes('time') ? 'ms' :
-                                        (yMetric === 'rps' ? 'RPS' : '');
-                                const xUnit = xAxis === 'mean_precisions' ? '%' : '';
-
-                                let labels = [];
-                                labels.push(`${xLabel}: ${context.parsed.x}${xUnit}`);
-                                labels.push(`${yLabel}: ${context.parsed.y.toFixed(2)}${yUnit}`);
-
-                                // Add parallel threads info
-                                if (originalData.parallel !== undefined) {
-                                    labels.push(`Parallel: ${originalData.parallel} threads`);
+                            title: items => items[0].raw.originalData.setup_name || 'Unknown setup',
+                            label: context => {
+                                const od = context.raw.originalData;
+                                const yUnit = yMetric === 'rps' ? ' RPS' :
+                                    yMetric === 'total_upload_time' || yMetric === 'upload_time' ? ' s' : ' ms';
+                                const labels = [
+                                    `${xLabel}: ${context.parsed.x}${xAxis === 'mean_precisions' ? '%' : ''}`,
+                                    `${yLabel}: ${context.parsed.y.toFixed(2)}${yUnit}`
+                                ];
+                                if (od.parallel !== undefined) labels.push(`Parallel: ${od.parallel} threads`);
+                                const hnsw = od.engine_params?.hnsw_config;
+                                if (hnsw) {
+                                    if (hnsw.m) labels.push(`m: ${hnsw.m}`);
+                                    if (hnsw.ef_construct) labels.push(`ef_construct: ${hnsw.ef_construct}`);
+                                    if (hnsw.ef) labels.push(`ef: ${hnsw.ef}`);
                                 }
-
-                                if (originalData.engine_params && originalData.engine_params.hnsw_config) {
-                                    const hnsw = originalData.engine_params.hnsw_config;
-                                    labels.push(`HNSW Config:`);
-                                    if (hnsw.m) labels.push(`  • m: ${hnsw.m}`);
-                                    if (hnsw.ef_construct) labels.push(`  • ef_construct: ${hnsw.ef_construct}`);
-                                    if (hnsw.ef) labels.push(`  • ef: ${hnsw.ef}`);
-                                    if (originalData.engine_params.hnsw_ef) labels.push(`  • hnsw_ef: ${originalData.engine_params.hnsw_ef}`);
-                                }
-
+                                if (od.engine_params?.hnsw_ef) labels.push(`hnsw_ef: ${od.engine_params.hnsw_ef}`);
                                 return labels;
                             },
-                            footer: function(tooltipItems) {
-                                const item = tooltipItems[0];
-                                const originalData = item.raw.originalData;
-                                let footerLines = [];
-
-                                if (originalData.engine_name) {
-                                    footerLines.push(`Engine: ${originalData.engine_name}`);
-                                }
-                                if (originalData.dataset_name) {
-                                    footerLines.push(`Dataset: ${originalData.dataset_name}`);
-                                }
-
-                                // Show dataset label and filename
-                                if (originalData.datasetLabel) {
-                                    footerLines.push(`Dataset: ${originalData.datasetLabel}`);
-                                }
-                                if (originalData.filename) {
-                                    footerLines.push(`File: ${originalData.filename}`);
-                                }
-
-                                return footerLines;
+                            footer: items => {
+                                const od = items[0].raw.originalData;
+                                const lines = [];
+                                if (od.engine_name) lines.push(`${od.engine_name} · ${od.dataset_name || ''}`);
+                                if (od.datasetLabel) lines.push(od.datasetLabel);
+                                return lines;
                             }
-                        },
-                        displayColors: false,
-                        titleAlign: 'center',
-                        bodyAlign: 'left',
-                        footerAlign: 'center',
-                        titleFont: { weight: 'bold', size: 14 },
-                        bodyFont: { size: 12 },
-                        footerFont: { size: 10, style: 'italic' },
-                        padding: 12,
-                        cornerRadius: 8,
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleColor: '#fff',
-                        bodyColor: '#fff',
-                        footerColor: '#ccc'
-                    }
+                        }
+                    })
                 },
                 scales: baseScales(xLabel, yLabel, xAxis)
             }
         };
     }
 
-    // Register and disable datalabels globally; enable per-chart in split view
+    function splitTooltip(xLabel, yLabel, xAxis) {
+        return Object.assign(baseTooltipStyle(), {
+            displayColors: true,
+            callbacks: {
+                title: items => items[0].raw.originalData?.setup_name || 'Unknown setup',
+                label: context => {
+                    const od = context.raw.originalData;
+                    const labels = [
+                        `${xLabel}: ${context.parsed.x.toFixed(2)}${xAxis === 'mean_precisions' ? '%' : ''}`,
+                        `${yLabel}: ${context.parsed.y.toFixed(2)}`
+                    ];
+                    if (od?.parallel !== undefined) labels.push(`Parallel: ${od.parallel} threads`);
+                    if (od?.engine_params?.quantization_config) {
+                        labels.push(`Quantization: ${JSON.stringify(od.engine_params.quantization_config)}`);
+                    }
+                    if (od?.engine_params?.quantization) {
+                        labels.push(`Search quantization: ${JSON.stringify(od.engine_params.quantization)}`);
+                    }
+                    return labels;
+                }
+            }
+        });
+    }
+
+    // Chart.js plugins ------------------------------------------------------
+
     Chart.register(ChartDataLabels);
     Chart.defaults.plugins.datalabels = { display: false };
 
-    // Extract short label from setup_name, e.g. "qdrant-tq1-plus-m-16-ef-128" → "tq1-plus"
-    function getShortSetupLabel(setupName) {
-        if (!setupName) return '';
-        let short = setupName
-            .replace(/^qdrant-/, '')
-            .replace(/-m-\d+-ef-\d+$/, '')
-            .replace(/-rps$/, '');
-        return short || setupName;
-    }
-
-    // Custom plugin: draw lines connecting matching setup_name across files
+    // Connect matching setup_name across files, so a version-over-version move
+    // reads as one segment instead of two unrelated points.
     const connectorLinesPlugin = {
         id: 'connectorLines',
         afterDatasetsDraw(chart) {
@@ -1063,37 +1276,31 @@ This HTML file is designed to visualize vector database benchmark results using 
             if (!meta || !meta.enabled) return;
 
             const ctx = chart.ctx;
-            const datasetsData = chart.data.datasets;
-
-            // Group points by setup_name
             const pointsBySetup = {};
-            datasetsData.forEach((ds, dsIndex) => {
+
+            chart.data.datasets.forEach((ds, dsIndex) => {
                 const metaDs = chart.getDatasetMeta(dsIndex);
                 if (metaDs.hidden) return;
                 ds.data.forEach((pt, ptIndex) => {
                     const setup = pt.originalData?.setup_name;
                     if (!setup) return;
-                    if (!pointsBySetup[setup]) pointsBySetup[setup] = [];
                     const element = metaDs.data[ptIndex];
-                    if (element) {
-                        pointsBySetup[setup].push({ x: element.x, y: element.y });
-                    }
+                    if (!element) return;
+                    (pointsBySetup[setup] = pointsBySetup[setup] || []).push({ x: element.x, y: element.y });
                 });
             });
 
-            // Draw lines for setups that appear in multiple series (i.e. across files)
             ctx.save();
             ctx.setLineDash([4, 4]);
             ctx.lineWidth = 1;
-            ctx.strokeStyle = 'rgba(150, 150, 150, 0.5)';
+            ctx.strokeStyle = chartTheme.muted;
+            ctx.globalAlpha = 0.45;
 
             Object.values(pointsBySetup).forEach(points => {
                 if (points.length < 2) return;
                 ctx.beginPath();
                 ctx.moveTo(points[0].x, points[0].y);
-                for (let i = 1; i < points.length; i++) {
-                    ctx.lineTo(points[i].x, points[i].y);
-                }
+                for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
                 ctx.stroke();
             });
 
@@ -1102,15 +1309,15 @@ This HTML file is designed to visualize vector database benchmark results using 
     };
     Chart.register(connectorLinesPlugin);
 
-    // Custom plugin: draw drop lines from each point to both axes
+    // Dashed guides from each point to both axes.
     const dropLinesPlugin = {
         id: 'dropLines',
         afterDatasetsDraw(chart) {
             if (!chart.config._config._dropLinesEnabled) return;
 
             const ctx = chart.ctx;
-            const xAxis = chart.scales.x;
-            const yAxis = chart.scales.y;
+            const xScale = chart.scales.x;
+            const yScale = chart.scales.y;
 
             ctx.save();
             ctx.setLineDash([2, 3]);
@@ -1119,25 +1326,18 @@ This HTML file is designed to visualize vector database benchmark results using 
             chart.data.datasets.forEach((ds, dsIndex) => {
                 const metaDs = chart.getDatasetMeta(dsIndex);
                 if (metaDs.hidden) return;
-                const color = ds.borderColor || 'rgba(150,150,150,0.3)';
+                ctx.strokeStyle = ds.borderColor || chartTheme.muted;
+                ctx.globalAlpha = 0.32;
 
-                metaDs.data.forEach((element) => {
-                    const px = element.x;
-                    const py = element.y;
-
-                    ctx.strokeStyle = color;
-                    ctx.globalAlpha = 0.36;
-
-                    // Vertical line: point → x-axis
+                metaDs.data.forEach(element => {
                     ctx.beginPath();
-                    ctx.moveTo(px, py);
-                    ctx.lineTo(px, yAxis.bottom);
+                    ctx.moveTo(element.x, element.y);
+                    ctx.lineTo(element.x, yScale.bottom);
                     ctx.stroke();
 
-                    // Horizontal line: point → y-axis
                     ctx.beginPath();
-                    ctx.moveTo(px, py);
-                    ctx.lineTo(xAxis.left, py);
+                    ctx.moveTo(element.x, element.y);
+                    ctx.lineTo(xScale.left, element.y);
                     ctx.stroke();
                 });
             });
@@ -1147,72 +1347,41 @@ This HTML file is designed to visualize vector database benchmark results using 
     };
     Chart.register(dropLinesPlugin);
 
-    // Distinct colors for setup names in split view
-    const setupColors = [
-        '#1E40AF', '#EA580C', '#059669', '#7C3AED', '#DC2626',
-        '#0891B2', '#D97706', '#DB2777', '#4B5563', '#84CC16',
-        '#6366F1', '#F59E0B', '#10B981', '#EF4444', '#8B5CF6',
-        '#14B8A6', '#F97316', '#EC4899', '#6B7280', '#A3E635'
-    ];
+    // One chart per dataset ------------------------------------------------
 
-    const setupPointStyles = [
-        'circle', 'rectRot', 'triangle', 'rect', 'star',
-        'crossRot', 'rectRounded', 'cross', 'dash', 'line'
-    ];
-
-    function getSetupColor(index) {
-        return setupColors[index % setupColors.length];
-    }
-
-    function getSetupPointStyle(index) {
-        return setupPointStyles[index % setupPointStyles.length];
-    }
-
-    function buildSplitChartConfig(dataForDataset, datasetName, seriesColorMap, yMetric, xAxis, chartType) {
-        let chartDatasets = [];
+    function buildSplitChartConfig(dataForDataset, datasetName, seriesStyleMap, yMetric, xAxis, chartType) {
+        const chartDatasets = [];
         const multipleFiles = new Set(dataForDataset.map(d => d.datasetLabel)).size > 1;
-
-        // Group by (file label, setup_name) so same setup from different files are separate series
         const seriesKeys = [...new Set(dataForDataset.map(d => `${d.datasetLabel}\0${d.setup_name}`))].sort();
 
-        seriesKeys.forEach((key) => {
+        seriesKeys.forEach(key => {
             const [fileLabel, setupName] = key.split('\0');
             let groupData = dataForDataset.filter(d => d.datasetLabel === fileLabel && d.setup_name === setupName);
-            groupData = applyParetoFilter(groupData, yMetric);
-            groupData = sortDataByXAxis(groupData, xAxis);
-
+            groupData = sortDataByXAxis(applyParetoFilter(groupData, yMetric), xAxis);
             if (groupData.length === 0) return;
 
-            const colorInfo = seriesColorMap[key];
-            const label = multipleFiles ? `${fileLabel}: ${setupName}` : setupName;
-
+            const style = seriesStyleMap[key];
             chartDatasets.push({
-                label: label,
-                data: groupData.map(row => ({
-                    x: xAxis === 'mean_precisions' ? row[xAxis] * 100 : row[xAxis],
-                    y: yMetric.includes('time') && yMetric !== 'total_upload_time' ? row[yMetric] * 1000 : row[yMetric],
-                    originalData: row
-                })),
-                borderColor: colorInfo.color,
-                backgroundColor: colorInfo.color + '40',
-                borderWidth: chartType === 'line' ? 3 : 1,
+                label: multipleFiles ? `${fileLabel}: ${getShortSetupLabel(setupName)}` : getShortSetupLabel(setupName),
+                data: groupData.map(row => toPoint(row, xAxis, yMetric)),
+                borderColor: style.color,
+                backgroundColor: style.color + '40',
+                borderWidth: chartType === 'line' ? 2 : 1,
                 fill: false,
-                tension: 0.4,
-                pointRadius: 7,
-                pointHoverRadius: 10,
-                pointStyle: colorInfo.pointStyle,
-                borderDash: colorInfo.borderDash,
+                tension: 0.3,
+                pointRadius: 6,
+                pointHoverRadius: 9,
+                pointStyle: style.pointStyle,
+                borderDash: style.borderDash,
                 datalabels: {
-                    display: true,
-                    color: colorInfo.color,
-                    font: { size: 10, weight: 'bold' },
+                    display: labelsToggle.checked ? 'auto' : false,
+                    color: chartTheme.fg,
+                    font: { size: 10, weight: '600' },
                     anchor: 'end',
                     align: 'top',
                     offset: 4,
-                    formatter: function(value, context) {
-                        const row = context.dataset.data[context.dataIndex];
-                        return getShortSetupLabel(row.originalData?.setup_name);
-                    }
+                    formatter: (value, context) => getShortSetupLabel(
+                        context.dataset.data[context.dataIndex].originalData?.setup_name)
                 }
             });
         });
@@ -1223,14 +1392,20 @@ This HTML file is designed to visualize vector database benchmark results using 
             type: chartType === 'scatter' ? 'scatter' : chartType,
             data: { datasets: chartDatasets },
             _connectorMeta: { enabled: multipleFiles },
-            _dropLinesEnabled: true,
+            _dropLinesEnabled: dropLinesToggle.checked,
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
                     zoom: baseZoomOptions(),
-                    legend: { position: 'top', labels: { usePointStyle: true, padding: 15, font: { size: 11 } } },
-                    title: { display: true, text: datasetName, font: { size: 16, weight: 'bold' }, padding: { bottom: 10 } },
+                    legend: baseLegend(),
+                    title: {
+                        display: true,
+                        text: datasetName,
+                        color: chartTheme.fg,
+                        font: { size: 14, weight: '600' },
+                        padding: { bottom: 10 }
+                    },
                     tooltip: splitTooltip(xLabel, yLabel, xAxis)
                 },
                 scales: baseScales(xLabel, yLabel, xAxis)
@@ -1238,118 +1413,54 @@ This HTML file is designed to visualize vector database benchmark results using 
         };
     }
 
-    function splitTooltip(xLabel, yLabel, xAxis) {
-        return {
-            callbacks: {
-                title: function(tooltipItems) {
-                    return tooltipItems[0].raw.originalData?.setup_name || 'Unknown Setup';
-                },
-                label: function(context) {
-                    const od = context.raw.originalData;
-                    let labels = [];
-                    labels.push(`${xLabel}: ${context.parsed.x.toFixed(2)}${xAxis === 'mean_precisions' ? '%' : ''}`);
-                    labels.push(`${yLabel}: ${context.parsed.y.toFixed(2)}`);
-                    if (od?.parallel !== undefined) labels.push(`Parallel: ${od.parallel} threads`);
-                    if (od?.engine_params?.quantization_config) {
-                        labels.push(`Quantization: ${JSON.stringify(od.engine_params.quantization_config)}`);
-                    }
-                    if (od?.engine_params?.quantization) {
-                        labels.push(`Search quantization: ${JSON.stringify(od.engine_params.quantization)}`);
-                    }
-                    return labels;
-                }
-            },
-            displayColors: true,
-            titleFont: { weight: 'bold', size: 13 },
-            bodyFont: { size: 11 },
-            padding: 10,
-            cornerRadius: 6,
-            backgroundColor: 'rgba(0, 0, 0, 0.85)',
-            titleColor: '#fff',
-            bodyColor: '#fff'
-        };
-    }
-
-    // Get oversampling label for a data point
-    function getOversamplingLabel(row) {
-        const q = row.engine_params?.quantization;
-        if (!q || q.rescore === false || q.rescore === undefined) return 'no rescore';
-        if (q.oversampling) return `oversample ${q.oversampling}x`;
-        return 'rescore only';
-    }
-
-    // Get numeric sort key for oversampling (for ordering points on the line)
-    function getOversamplingSort(row) {
-        const q = row.engine_params?.quantization;
-        if (!q || q.rescore === false || q.rescore === undefined) return 0;
-        return q.oversampling || 0.5;
-    }
-
-    // Quantization group labels
-    const quantGroupLabels = {
-        group1: '4-bit+: orig, SQ, TQ4, TQ4+',
-        group2: '2-bit: BQ2, TQ2, TQ2+',
-        group3: '1-bit: BQ, BQ-asym, TQ1, TQ1+'
-    };
+    // One chart per quantization group -------------------------------------
 
     function buildQuantGroupChartConfig(data, title, yMetric, xAxis, chartType) {
-        const { yLabel, xLabel, isTimeMetric } = getAxisLabels(yMetric, xAxis);
+        const { yLabel, xLabel } = getAxisLabels(yMetric, xAxis);
 
-        // Group by (fileLabel, setup_name) — each becomes a line
         const fileLabels = [...new Set(data.map(d => d.datasetLabel))].sort();
         const multipleFiles = fileLabels.length > 1;
         const allSetups = [...new Set(data.map(d => d.setup_name))].sort();
 
-        let chartDatasets = [];
+        const chartDatasets = [];
         let setupIdx = 0;
 
         fileLabels.forEach((fileLabel, fileIdx) => {
-            allSetups.forEach((setup) => {
-                let points = data.filter(d => d.datasetLabel === fileLabel && d.setup_name === setup);
+            allSetups.forEach(setup => {
+                const points = data.filter(d => d.datasetLabel === fileLabel && d.setup_name === setup);
                 if (points.length === 0) return;
 
-                // Sort by oversampling value so the line goes: no rescore → oversample 2 → oversample 4
                 points.sort((a, b) => getOversamplingSort(a) - getOversamplingSort(b));
+                paretoStats.total += points.length;
+                paretoStats.kept += points.length;
 
                 const color = multipleFiles
-                    ? (datasets.find(d => d.label === fileLabel)?.color || getSetupColor(setupIdx))
-                    : getSetupColor(setupIdx);
-                const pointStyle = getSetupPointStyle(setupIdx);
+                    ? (datasets.find(d => d.label === fileLabel)?.color || seriesColor(setupIdx))
+                    : seriesColor(setupIdx);
                 const shortName = getShortSetupLabel(setup);
-                const label = multipleFiles ? `${fileLabel}: ${shortName}` : shortName;
-
-                const oversamplingLabels = points.map(row => {
-                    const short = getShortSetupLabel(row.setup_name);
-                    return `${short} (${row._oversamplingLabel})`;
-                });
 
                 chartDatasets.push({
-                    label: label,
-                    data: points.map(row => ({
-                        x: xAxis === 'mean_precisions' ? row[xAxis] * 100 : row[xAxis],
-                        y: isTimeMetric && yMetric !== 'total_upload_time' ? row[yMetric] * 1000 : row[yMetric],
-                        originalData: row
-                    })),
-                    _oversamplingLabels: oversamplingLabels,
+                    label: multipleFiles ? `${fileLabel}: ${shortName}` : shortName,
+                    data: points.map(row => toPoint(row, xAxis, yMetric)),
+                    _oversamplingLabels: points.map(row =>
+                        `${getShortSetupLabel(row.setup_name)} (${row._oversamplingLabel})`),
                     borderColor: color,
                     backgroundColor: color + '40',
                     borderWidth: 2,
                     fill: false,
                     tension: 0,
-                    pointRadius: 7,
-                    pointHoverRadius: 10,
-                    pointStyle: pointStyle,
+                    pointRadius: 6,
+                    pointHoverRadius: 9,
+                    pointStyle: getSetupPointStyle(setupIdx),
                     borderDash: multipleFiles && fileIdx > 0 ? [5, 5] : undefined,
                     datalabels: {
-                        display: true,
-                        color: color,
-                        font: { size: 9, weight: 'bold' },
+                        display: labelsToggle.checked ? 'auto' : false,
+                        color: chartTheme.fg,
+                        font: { size: 9, weight: '600' },
                         anchor: 'end',
                         align: 'top',
                         offset: 4,
-                        formatter: function(value, context) {
-                            return context.dataset._oversamplingLabels?.[context.dataIndex] || '';
-                        }
+                        formatter: (value, context) => context.dataset._oversamplingLabels?.[context.dataIndex] || ''
                     }
                 });
 
@@ -1357,10 +1468,9 @@ This HTML file is designed to visualize vector database benchmark results using 
             });
         });
 
-        const baseTooltip = splitTooltip(xLabel, yLabel, xAxis);
-        // Override title to include oversampling info
-        baseTooltip.callbacks.title = function(tooltipItems) {
-            const od = tooltipItems[0].raw.originalData;
+        const tooltip = splitTooltip(xLabel, yLabel, xAxis);
+        tooltip.callbacks.title = items => {
+            const od = items[0].raw.originalData;
             return `${od?.setup_name} — ${getOversamplingLabel(od)}`;
         };
 
@@ -1368,144 +1478,160 @@ This HTML file is designed to visualize vector database benchmark results using 
             type: chartType === 'scatter' ? 'scatter' : chartType,
             data: { datasets: chartDatasets },
             _connectorMeta: { enabled: false },
-            _dropLinesEnabled: true,
+            _dropLinesEnabled: dropLinesToggle.checked,
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
                     zoom: baseZoomOptions(),
-                    legend: { position: 'top', labels: { usePointStyle: true, padding: 15, font: { size: 11 } } },
-                    title: { display: true, text: title, font: { size: 16, weight: 'bold' }, padding: { bottom: 10 } },
-                    tooltip: baseTooltip
+                    legend: baseLegend(),
+                    title: {
+                        display: true,
+                        text: title,
+                        color: chartTheme.fg,
+                        font: { size: 14, weight: '600' },
+                        padding: { bottom: 10 }
+                    },
+                    tooltip: tooltip
                 },
                 scales: baseScales(xLabel, yLabel, xAxis)
             }
         };
     }
 
+    // ---------------------------------------------------------------- render
+
+    function chartPanel() {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'panel';
+        wrapper.style.marginBottom = '0';
+
+        const container = document.createElement('div');
+        container.className = 'chart-container';
+
+        const canvas = document.createElement('canvas');
+        container.appendChild(canvas);
+        wrapper.appendChild(container);
+        multiChartSection.appendChild(wrapper);
+        return canvas;
+    }
+
+    function updatePointStat() {
+        if (paretoStats.total === 0) {
+            pointStat.textContent = '';
+            return;
+        }
+        pointStat.textContent = paretoToggle.checked && paretoStats.kept < paretoStats.total
+            ? `showing ${paretoStats.kept} of ${paretoStats.total} points`
+            : `${paretoStats.total} points`;
+    }
+
     function updateChart() {
         const yMetric = yMetricSelect.value;
         const xAxis = xAxisSelect.value;
         const splitBy = splitBySelect.value;
+        const chartType = chartTypeSelect.value;
+        const { yLabel, xLabel } = getAxisLabels(yMetric, xAxis);
 
-        const yMetricDisplay = yMetric === 'total_upload_time' ? 'Index Time' :
-            yMetric.replace('_', ' ').toUpperCase();
-        chartTitle.textContent = `${yMetricDisplay} vs ${xAxis.replace('_', ' ').toUpperCase()}`;
+        paretoStats = { kept: 0, total: 0 };
 
-        // Destroy existing charts
-        if (chart) {
-            chart.destroy();
-            chart = null;
-        }
+        if (chart) { chart.destroy(); chart = null; }
         multiCharts.forEach(c => c.destroy());
         multiCharts = [];
+        multiChartSection.innerHTML = '';
+
+        // The quantization-group split orders its lines by oversampling rather than
+        // by the frontier, so the toggle would silently do nothing there.
+        const paretoApplies = splitBy !== 'quant_group';
+        paretoToggle.disabled = !paretoApplies;
+        paretoToggle.parentElement.title = paretoApplies ? PARETO_TITLE
+            : 'Not applied when charts are split by quantization group: those lines are ordered by oversampling.';
+        paretoToggle.parentElement.style.opacity = paretoApplies ? '' : '0.5';
+
+        const hasData = filteredData.length > 0;
+        emptyState.classList.toggle('hidden', hasData);
+        emptyState.textContent = currentData.length === 0
+            ? 'Load a results file to plot it.'
+            : 'No points match the current filters.';
+        singleChartSection.classList.toggle('hidden', !hasData || splitBy !== 'none');
+        multiChartSection.classList.toggle('hidden', !hasData || splitBy === 'none');
+
+        if (!hasData) {
+            updatePointStat();
+            return;
+        }
 
         if (splitBy === 'none') {
-            // Single chart mode
-            singleChartSection.classList.remove('hidden');
-            multiChartSection.classList.add('hidden');
-            multiChartSection.innerHTML = '';
-
-            if (filteredData.length > 0) {
-                const ctx = document.getElementById('benchmarkChart').getContext('2d');
-                chart = new Chart(ctx, getChartConfig());
-            }
+            chartTitle.textContent = `${yLabel} vs ${xLabel}`;
+            chart = new Chart(document.getElementById('benchmarkChart').getContext('2d'), getChartConfig());
         } else if (splitBy === 'quant_group') {
-            // Split by quantization group per dataset
-            singleChartSection.classList.add('hidden');
-            multiChartSection.classList.remove('hidden');
-            multiChartSection.innerHTML = '';
-
-            if (filteredData.length === 0) return;
-
             const datasetNames = [...new Set(filteredData.map(d => d.dataset_name))].sort();
-            const chartType = chartTypeSelect.value;
-            const groupKeys = ['group1', 'group2', 'group3'];
-
-            datasetNames.forEach((dsName) => {
+            datasetNames.forEach(dsName => {
                 const dataForDs = filteredData.filter(d => d.dataset_name === dsName);
-                if (dataForDs.length === 0) return;
-
-                groupKeys.forEach((groupKey) => {
+                ['group1', 'group2', 'group3'].forEach(groupKey => {
                     const groupData = dataForDs.filter(d => matchesQuantGroup(d.setup_name || '', groupKey));
                     if (groupData.length === 0) return;
-
                     const title = `${dsName} — ${quantGroupLabels[groupKey]}`;
-
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'bg-white border border-gray-200 rounded-lg p-6 shadow-sm';
-
-                    const canvasContainer = document.createElement('div');
-                    canvasContainer.className = 'chart-container';
-
-                    const canvas = document.createElement('canvas');
-                    canvasContainer.appendChild(canvas);
-                    wrapper.appendChild(canvasContainer);
-                    multiChartSection.appendChild(wrapper);
-
-                    const config = buildQuantGroupChartConfig(groupData, title, yMetric, xAxis, chartType);
-                    const chartInstance = new Chart(canvas.getContext('2d'), config);
-                    multiCharts.push(chartInstance);
+                    const canvas = chartPanel();
+                    multiCharts.push(new Chart(canvas.getContext('2d'),
+                        buildQuantGroupChartConfig(groupData, title, yMetric, xAxis, chartType)));
                 });
             });
         } else {
-            // Split by dataset mode
-            singleChartSection.classList.add('hidden');
-            multiChartSection.classList.remove('hidden');
-            multiChartSection.innerHTML = '';
-
-            if (filteredData.length === 0) return;
-
-            // Build a consistent color map keyed by (fileLabel, setup_name)
-            // Use file color for each file's series, different point styles per setup
+            // Per (file, setup) style map: color identifies the file when several
+            // are loaded, point style always identifies the setup.
             const allSetups = [...new Set(filteredData.map(d => d.setup_name))].sort();
             const fileLabels = [...new Set(filteredData.map(d => d.datasetLabel))].sort();
             const multipleFiles = fileLabels.length > 1;
-            const seriesColorMap = {};
-
-            // Map each file to its dataset color, each setup to a point style
-            const fileLabelToColor = {};
-            fileLabels.forEach((label, i) => {
-                const ds = datasets.find(d => d.label === label);
-                fileLabelToColor[label] = ds ? ds.color : getSetupColor(i);
-            });
+            const seriesStyleMap = {};
 
             fileLabels.forEach((fileLabel, fileIdx) => {
+                const fileColor = datasets.find(d => d.label === fileLabel)?.color || seriesColor(fileIdx);
                 allSetups.forEach((setup, setupIdx) => {
-                    const key = `${fileLabel}\0${setup}`;
-                    seriesColorMap[key] = multipleFiles
-                        ? { color: fileLabelToColor[fileLabel], pointStyle: getSetupPointStyle(setupIdx), borderDash: fileIdx > 0 ? [5, 5] : undefined }
-                        : { color: getSetupColor(setupIdx), pointStyle: getSetupPointStyle(setupIdx), borderDash: undefined };
+                    seriesStyleMap[`${fileLabel}\0${setup}`] = multipleFiles
+                        ? { color: fileColor, pointStyle: getSetupPointStyle(setupIdx), borderDash: fileIdx > 0 ? [5, 5] : undefined }
+                        : { color: seriesColor(setupIdx), pointStyle: getSetupPointStyle(setupIdx), borderDash: undefined };
                 });
             });
 
-            // Get unique dataset names
             const datasetNames = [...new Set(filteredData.map(d => d.dataset_name))].sort();
-            const chartType = chartTypeSelect.value;
-
-            // Create a chart for each dataset
-            datasetNames.forEach((dsName) => {
+            datasetNames.forEach(dsName => {
                 const dataForDs = filteredData.filter(d => d.dataset_name === dsName);
                 if (dataForDs.length === 0) return;
-
-                // Create container
-                const wrapper = document.createElement('div');
-                wrapper.className = 'bg-white border border-gray-200 rounded-lg p-6 shadow-sm';
-
-                const canvasContainer = document.createElement('div');
-                canvasContainer.className = 'chart-container';
-
-                const canvas = document.createElement('canvas');
-                canvasContainer.appendChild(canvas);
-                wrapper.appendChild(canvasContainer);
-                multiChartSection.appendChild(wrapper);
-
-                const config = buildSplitChartConfig(dataForDs, dsName, seriesColorMap, yMetric, xAxis, chartType);
-                const chartInstance = new Chart(canvas.getContext('2d'), config);
-                multiCharts.push(chartInstance);
+                const canvas = chartPanel();
+                multiCharts.push(new Chart(canvas.getContext('2d'),
+                    buildSplitChartConfig(dataForDs, dsName, seriesStyleMap, yMetric, xAxis, chartType)));
             });
         }
+
+        // A split can legitimately yield no charts at all (e.g. no setup belongs to
+        // a quantization group) — say so instead of leaving a blank strip.
+        if (splitBy !== 'none' && multiCharts.length === 0) {
+            multiChartSection.classList.add('hidden');
+            emptyState.textContent = splitBy === 'quant_group'
+                ? 'No setup in the loaded data belongs to a quantization group.'
+                : 'No points match the current filters.';
+            emptyState.classList.remove('hidden');
+        }
+
+        updatePointStat();
     }
+
+    // ------------------------------------------------------------- listeners
+
+    [yMetricSelect, xAxisSelect, groupBySelect, chartTypeSelect, splitBySelect,
+        paretoToggle, labelsToggle, dropLinesToggle]
+        .forEach(el => el.addEventListener('change', updateChart));
+
+    resetZoomBtn.addEventListener('click', () => {
+        if (chart) chart.resetZoom();
+        multiCharts.forEach(c => c.resetZoom());
+    });
+
+    applyChartTheme();
+    applyTheme();
+    renderFileList();
+    updateChart();
 </script>
 </body>
 </html>
