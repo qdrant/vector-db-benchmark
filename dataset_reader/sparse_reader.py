@@ -8,7 +8,7 @@ from dataset_reader.base_reader import BaseReader, Query, Record, SparseVector
 
 
 def read_sparse_matrix_fields(
-    filename: Union[Path, str]
+    filename: Union[Path, str],
 ) -> Tuple[np.array, np.array, np.array]:
     """Read the fields of a CSR matrix without instantiating it"""
 
@@ -68,7 +68,7 @@ def read_csr_matrix(filename: Union[Path, str], do_mmap=True) -> Iterator[Sparse
 
 
 def knn_result_read(
-    filename: Union[Path, str]
+    filename: Union[Path, str],
 ) -> Tuple[List[List[int]], List[List[float]]]:
     n, d = map(int, np.fromfile(filename, dtype="uint32", count=2))
     assert os.stat(filename).st_size == 8 + n * d * (4 + 4)

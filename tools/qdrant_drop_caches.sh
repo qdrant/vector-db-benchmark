@@ -1,0 +1,20 @@
+#!/bin/bash
+
+PS4='ts=$(date "+%Y-%m-%dT%H:%M:%SZ") level=DEBUG line=$LINENO file=$BASH_SOURCE '
+set -euo pipefail
+
+CLOUD_NAME=${CLOUD_NAME:-"hetzner"}
+SERVER_USERNAME=${SERVER_USERNAME:-"root"}
+
+SCRIPT=$(realpath "$0")
+SCRIPT_PATH=$(dirname "$SCRIPT")
+
+source "$SCRIPT_PATH/ssh.sh"
+
+BENCH_SERVER_NAME=${SERVER_NAME:-"benchmark-server-1"}
+
+IP_OF_THE_SERVER=$(bash "${SCRIPT_PATH}/${CLOUD_NAME}/get_public_ip.sh" "$BENCH_SERVER_NAME")
+
+ssh_with_retry -tt -o ServerAliveInterval=10 -o ServerAliveCountMax=10 \
+  "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" \
+  "sudo bash -c 'sync; echo 3 > /proc/sys/vm/drop_caches'"

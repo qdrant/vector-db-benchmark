@@ -51,6 +51,10 @@ if [[ ${QDRANT_VERSION} == docker/* ]] || [[ ${QDRANT_VERSION} == ghcr/* ]]; the
     fi
 
     ssh_with_retry -t -o ServerAliveInterval=60 -o ServerAliveCountMax=3 "${SERVER_USERNAME}@${IP_OF_THE_SERVER}" "cd ./projects/vector-db-benchmark/engine/servers/${CONTAINER_NAME} ; $DOCKER_COMPOSE"
+
+    # docker compose returns as soon as the container *process* exists; qdrant
+    # may still be initialising.
+    bash -x "${SCRIPT_PATH}/qdrant_wait_ready.sh"
 else
     echo "Error: unknown version ${QDRANT_VERSION}. Version name should start with 'docker/' or 'ghcr/'"
     exit 1

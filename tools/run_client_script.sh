@@ -34,6 +34,7 @@ GHCR_PASSWORD=${GHCR_PASSWORD:-""}
 GHCR_USERNAME=${GHCR_USERNAME:-""}
 
 if [[ "$EXPERIMENT_MODE" == "snapshot" ]]; then
+  ssh_with_retry -o ServerAliveInterval=10 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "rm -rf ~/configurations ~/datasets.json"
   scp_with_retry "${SCRIPT_PATH}/run_experiment.sh" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/run_experiment_snapshot.sh"
   scp_with_retry "${SCRIPT_PATH}/../datasets/datasets.json" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/datasets.json"
   scp_with_retry -r "${SCRIPT_PATH}/../experiments/configurations" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/configurations"
@@ -51,6 +52,7 @@ if [[ "$EXPERIMENT_MODE" == "snapshot" ]]; then
   ssh_with_retry -tt -o ServerAliveInterval=120 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "${RUN_EXPERIMENT}"
 
 else
+  ssh_with_retry -o ServerAliveInterval=10 -o ServerAliveCountMax=10 "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}" "rm -rf ~/configurations ~/datasets.json"
   scp_with_retry "${SCRIPT_PATH}/run_experiment.sh" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/run_experiment.sh"
   scp_with_retry "${SCRIPT_PATH}/../datasets/datasets.json" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/datasets.json"
   scp_with_retry -r "${SCRIPT_PATH}/../experiments/configurations" "${SERVER_USERNAME}@${IP_OF_THE_CLIENT}:~/configurations"

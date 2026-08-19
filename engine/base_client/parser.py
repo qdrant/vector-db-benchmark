@@ -4,6 +4,8 @@ from typing import Any, Dict, List, Optional, Union
 
 class FilterType(str, Enum):
     FULL_MATCH = "match"
+    MATCH_ANY = "match_any"
+    MATCH_TEXT = "match_text"
     RANGE = "range"
     GEO = "geo"
 
@@ -65,6 +67,10 @@ class BaseConditionParser:
             return self.build_exact_match_filter(
                 field_name, value=criteria.get("value")
             )
+        if FilterType.MATCH_ANY == filter_type:
+            return self.build_match_any_filter(field_name, values=criteria.get("any"))
+        if FilterType.MATCH_TEXT == filter_type:
+            return self.build_match_text_filter(field_name, text=criteria.get("text"))
         if FilterType.RANGE == filter_type:
             return self.build_range_filter(
                 field_name,
@@ -83,6 +89,12 @@ class BaseConditionParser:
         raise NotImplementedError
 
     def build_exact_match_filter(self, field_name: str, value: FieldValue) -> Any:
+        raise NotImplementedError
+
+    def build_match_any_filter(self, field_name: str, values: List[FieldValue]) -> Any:
+        raise NotImplementedError
+
+    def build_match_text_filter(self, field_name: str, text: str) -> Any:
         raise NotImplementedError
 
     def build_range_filter(

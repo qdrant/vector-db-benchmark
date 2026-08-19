@@ -12,7 +12,11 @@ if [[ -n "${GHCR_PASSWORD}" ]] || [[ "${VECTOR_DB_BENCHMARK_IMAGE}" == ghcr.io/*
     echo "GHCR_PASSWORD and GHCR_USERNAME is required to pull images from ghcr.io"
     exit 1
   fi
-  echo "${GHCR_PASSWORD}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
+  for i in 1 2 3; do
+    echo "${GHCR_PASSWORD}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin && break
+    echo "docker login attempt ${i} failed, retrying in $((i * 10))s..."
+    sleep $((i * 10))
+  done
 fi
 
 ENGINE_NAME=${ENGINE_NAME:-"qdrant-continuous-benchmark"}
@@ -144,15 +148,38 @@ fi
 
 if [[ "$EXPERIMENT_MODE" == "snapshot" ]]; then
   echo "EXPERIMENT_MODE=$EXPERIMENT_MODE"
-  echo "Recovering collection from snapshot"
-  curl  -X PUT \
-    "http://${PRIVATE_IP_OF_THE_SERVER}:6333/collections/benchmark/snapshots/recover" \
+  # wait=false: outer wall-clock kills fire before huge snapshots finish syncing.
+  echo "Kicking off async snapshot recovery (wait=false)"
+  curl -X PUT \
+    "http://${PRIVATE_IP_OF_THE_SERVER}:6333/collections/benchmark/snapshots/recover?wait=false" \
     --data-raw "{\"location\": \"${SNAPSHOT_URL}\"}"
   echo ""
-  echo "Done recovering collection from snapshot"
+  echo "Recovery dispatched; polling for green status"
 
   collection_url="http://${PRIVATE_IP_OF_THE_SERVER}:6333/collections/benchmark"
   collection_status=$(curl -s "$collection_url" | jq -r '.result.status')
   echo "Experiment stage: collection status is ${collection_status} after recovery"
+
+  WAIT_TIMEOUT_S=5400
+  WAIT_INTERVAL_S=5
+  HEARTBEAT_S=60
+  elapsed=0
+  last_logged_status=""
+  last_log_at=0
+  while [[ "$collection_status" != "green" ]]; do
+    if (( elapsed >= WAIT_TIMEOUT_S )); then
+      echo "Timeout: collection still '${collection_status}' after ${WAIT_TIMEOUT_S}s"
+      exit 1
+    fi
+    sleep "$WAIT_INTERVAL_S"
+    elapsed=$((elapsed + WAIT_INTERVAL_S))
+    collection_status=$(curl -s "$collection_url" | jq -r '.result.status')
+    if [[ "$collection_status" != "$last_logged_status" ]] || (( elapsed - last_log_at >= HEARTBEAT_S )); then
+      echo "  ... status=${collection_status} (waited ${elapsed}s)"
+      last_logged_status=$collection_status
+      last_log_at=$elapsed
+    fi
+  done
+  echo "Collection is green after ${elapsed}s"
 
 fi

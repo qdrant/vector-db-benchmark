@@ -60,6 +60,15 @@ export VM_RSS_MEMORY_USAGE_FILE=$(ls -t results/vm-rss-memory-usage-*.txt | head
 export RSS_ANON_MEMORY_USAGE_FILE=$(ls -t results/rss-anon-memory-usage-*.txt | head -n 1)
 export ROOT_API_RESPONSE_FILE=$(ls -t results/root-api-*.json | head -n 1)
 
+if [[ "$BENCHMARK_STRATEGY" == "search-on-disk-search" ]]; then
+  export METRICS_BEFORE_FILE=$(ls -t results/qdrant-metrics-before-*.txt 2>/dev/null | head -n 1)
+  export METRICS_AFTER_FILE=$(ls -t results/qdrant-metrics-after-*.txt 2>/dev/null | head -n 1)
+  export MEMORY_BEFORE_FILE=$(ls -t results/qdrant-memory-before-*.json 2>/dev/null | head -n 1)
+  export MEMORY_AFTER_FILE=$(ls -t results/qdrant-memory-after-*.json 2>/dev/null | head -n 1)
+  export CGROUP_BEFORE_FILE=$(ls -t results/qdrant-cgroup-current-before-*.txt 2>/dev/null | head -n 1)
+  export CGROUP_AFTER_FILE=$(ls -t results/qdrant-cgroup-current-after-*.txt 2>/dev/null | head -n 1)
+fi
+
 export IS_CI_RUN="true"
 
 if [[ "$BENCHMARK_STRATEGY" == "parallel" ]]; then
@@ -67,4 +76,3 @@ if [[ "$BENCHMARK_STRATEGY" == "parallel" ]]; then
 else
   bash -x "${SCRIPT_PATH}/upload_results_postgres.sh"
 fi
-

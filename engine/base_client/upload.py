@@ -5,7 +5,7 @@ from typing import Iterable, List
 import tqdm
 
 from dataset_reader.base_reader import Record
-from engine.base_client.utils import iter_batches
+from engine.base_client.utils import iter_batches, picklable_errors
 
 
 class BaseUploader:
@@ -84,6 +84,7 @@ class BaseUploader:
         }
 
     @classmethod
+    @picklable_errors
     def _upload_batch(cls, batch: List[Record]) -> float:
         start = time.perf_counter()
         cls.upload_batch(batch)

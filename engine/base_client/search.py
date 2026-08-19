@@ -7,6 +7,7 @@ import numpy as np
 import tqdm
 
 from dataset_reader.base_reader import Query
+from engine.base_client.utils import picklable_errors
 
 DEFAULT_TOP = 10
 
@@ -34,6 +35,7 @@ class BaseSearcher:
         raise NotImplementedError()
 
     @classmethod
+    @picklable_errors
     def _search_one(cls, query: Query, top: Optional[int] = None):
         if top is None:
             top = (
@@ -60,6 +62,7 @@ class BaseSearcher:
     ):
         parallel = self.search_params.get("parallel", 1)
         top = self.search_params.get("top", None)
+        queries = [q for q in queries]  # Preload query vectors into memory
 
         # setup_search may require initialized client
         self.init_client(
@@ -87,8 +90,7 @@ class BaseSearcher:
                     self.search_params,
                 ),
             ) as pool:
-                if parallel > 10:
-                    time.sleep(15)  # Wait for all processes to start
+                time.sleep(15)  # Wait for all processes to start
                 start = time.perf_counter()
                 precisions, latencies = list(
                     zip(*pool.imap_unordered(search_one, iterable=tqdm.tqdm(queries)))

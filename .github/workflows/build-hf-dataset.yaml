@@ -1,0 +1,24 @@
+name: Build HF Dataset
+
+# Stub on master.
+
+on:
+  workflow_dispatch:
+    inputs:
+      hf_dataset:
+        description: "HF dataset id, e.g. Qdrant/dbpedia-entities-openai3-text-embedding-3-large-1536-100K"
+        required: true
+      output_name:
+        description: "Output tarball basename"
+        required: true
+      vector_column:
+        description: "Embedding column name"
+        default: "embedding"
+
+jobs:
+  stub:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "This is the master stub for the Build HF Dataset workflow."
+          exit 0

@@ -25,13 +25,11 @@ class PgVectorConfigurator(BaseConfigurator):
         if dataset.config.distance == Distance.DOT:
             raise IncompatibilityError
 
-        self.conn.execute(
-            f"""CREATE TABLE items (
+        self.conn.execute(f"""CREATE TABLE items (
                 id SERIAL PRIMARY KEY,
                 embedding vector({dataset.config.vector_size}) NOT NULL,
                 payload JSONB
-            );"""
-        )
+            );""")
         self.conn.execute("ALTER TABLE items ALTER COLUMN embedding SET STORAGE PLAIN")
         if dataset.config.schema:
             self.conn.execute("CREATE INDEX ON items USING GIN (payload)")
