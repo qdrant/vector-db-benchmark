@@ -27,9 +27,12 @@ class PgVectorConfigurator(BaseConfigurator):
 
         self.conn.execute(f"""CREATE TABLE items (
                 id SERIAL PRIMARY KEY,
-                embedding vector({dataset.config.vector_size}) NOT NULL
+                embedding vector({dataset.config.vector_size}) NOT NULL,
+                payload JSONB
             );""")
         self.conn.execute("ALTER TABLE items ALTER COLUMN embedding SET STORAGE PLAIN")
+        if dataset.config.schema:
+            self.conn.execute("CREATE INDEX ON items USING GIN (payload)")
 
     def delete_client(self):
         if self.conn:

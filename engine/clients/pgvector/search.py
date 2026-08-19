@@ -25,17 +25,25 @@ class PgVectorSearcher(BaseSearcher):
         cls.cur = cls.conn.cursor()
         cls.cur.execute(f"SET hnsw.ef_search = {search_params['config']['hnsw_ef']}")
         if distance == Distance.COSINE:
-            cls.query = "SELECT id, embedding <=> %s AS _score FROM items ORDER BY _score LIMIT %s"
+            cls.query_template = "SELECT id, embedding <=> %(vector)s AS _score FROM items{where} ORDER BY _score LIMIT %(top)s"
         elif distance == Distance.L2:
-            cls.query = "SELECT id, embedding <-> %s AS _score FROM items ORDER BY _score LIMIT %s"
+            cls.query_template = "SELECT id, embedding <-> %(vector)s AS _score FROM items{where} ORDER BY _score LIMIT %(top)s"
         else:
             raise NotImplementedError(f"Unsupported distance metric {cls.distance}")
 
     @classmethod
     def search_one(cls, query: Query, top) -> List[Tuple[int, float]]:
-        # TODO: Use query.metaconditions for datasets with filtering
+        params = {"vector": np.array(query.vector), "top": top}
+        condition = cls.parser.parse(query.meta_conditions)
+        where = ""
+        if condition is not None:
+            clause, filter_params = condition
+            if clause:
+                where = f" WHERE {clause}"
+                params.update(filter_params)
+
         cls.cur.execute(
-            cls.query, (np.array(query.vector), top), binary=True, prepare=True
+            cls.query_template.format(where=where), params, binary=True, prepare=True
         )
         return cls.cur.fetchall()
 
