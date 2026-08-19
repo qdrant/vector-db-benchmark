@@ -40,7 +40,9 @@ class PgVectorConditionParser(BaseConditionParser):
 
         return " AND ".join(clauses), params
 
-    def build_exact_match_filter(self, field_name: str, value: FieldValue) -> ParsedCondition:
+    def build_exact_match_filter(
+        self, field_name: str, value: FieldValue
+    ) -> ParsedCondition:
         key_param = self._next_param()
         value_param = self._next_param()
         return (
@@ -87,9 +89,13 @@ if __name__ == "__main__":
     assert isinstance(params["p2"], Jsonb)
 
     parser2 = PgVectorConditionParser()
-    clause2, params2 = parser2.parse({"and": [{"price": {"range": {"gte": 10, "lt": 20}}}]})
+    clause2, params2 = parser2.parse(
+        {"and": [{"price": {"range": {"gte": 10, "lt": 20}}}]}
+    )
     # build_range_filter checks bounds in (lt, gt, lte, gte) order
-    assert clause2 == "( ( payload -> %(p1)s < %(p2)s AND payload -> %(p3)s >= %(p4)s ) )", clause2
+    assert (
+        clause2 == "( ( payload -> %(p1)s < %(p2)s AND payload -> %(p3)s >= %(p4)s ) )"
+    ), clause2
     assert params2["p1"] == params2["p3"] == "price"
 
     print("parser self-check ok:", clause, params, clause2, params2)
