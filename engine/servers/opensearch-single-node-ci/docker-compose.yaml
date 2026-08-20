@@ -2,10 +2,12 @@ version: '3.5'
 
 services:
   opensearch:
-    image: opensearchproject/opensearch:2.10.0
+    image: opensearchproject/opensearch:2.17.1
     environment:
       discovery.type: "single-node"
-      plugins.security.disabled: true
+      DISABLE_SECURITY_PLUGIN: true
+      DISABLE_INSTALL_DEMO_CONFIG: true
+      bootstrap.memory_lock: true
       OPENSEARCH_JAVA_OPTS: "-Xms2g -Xmx2g"
     ports:
       - "9200:9200"
