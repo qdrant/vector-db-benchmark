@@ -2511,14 +2511,14 @@ files = [
 
 [[package]]
 name = "weaviate-client"
-version = "4.22.0"
+version = "4.23.0"
 description = "A python native Weaviate client"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "weaviate_client-4.22.0-py3-none-any.whl", hash = "sha256:ff2dbc8d1fc25739942402c22d1aba2350a16ba4a6b6ed0ba140689c70adf1d9"},
-    {file = "weaviate_client-4.22.0.tar.gz", hash = "sha256:0c50fbef546a522262a87d1138cde0509c7a8a48e702e967be33472e9f7fbae3"},
+    {file = "weaviate_client-4.23.0-py3-none-any.whl", hash = "sha256:f17c645d22e1787e8fa4640e20fcfccdee39c81327af410c544a24c21d419e59"},
+    {file = "weaviate_client-4.23.0.tar.gz", hash = "sha256:19cc336b4c9e58f06cf01cb9aff8f6d8c0fe747f2e80192a9871c63823e8b18d"},
 ]
 
 [package.dependencies]
@@ -2536,4 +2536,4 @@ agents = ["weaviate-agents (>=1.0.0,<2.0.0)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.13"
-content-hash = "e9ad5fd7fb663e2f63fdd2b6ed607e141d2ec38022719244c371ccdf2b564e8c"
+content-hash = "bd7c54f333c78badd1d401288c2e41056447537bb51acbdd62412ac5877e2e14"
