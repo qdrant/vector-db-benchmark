@@ -3,6 +3,7 @@ from typing import List
 import numpy as np
 import psycopg
 from pgvector.psycopg import register_vector
+from psycopg.types.json import Jsonb
 
 from dataset_reader.base_reader import Record
 from engine.base_client import IncompatibilityError
@@ -29,19 +30,20 @@ class PgVectorUploader(BaseUploader):
 
     @classmethod
     def upload_batch(cls, batch: List[Record]):
-        ids, vectors = [], []
+        ids, vectors, payloads = [], [], []
         for record in batch:
             ids.append(record.id)
             vectors.append(record.vector)
+            payloads.append(Jsonb(record.metadata))
 
         vectors = np.array(vectors)
         # Copy is faster than insert
         with cls.cur.copy(
-            "COPY items (id, embedding) FROM STDIN WITH (FORMAT BINARY)"
+            "COPY items (id, embedding, payload) FROM STDIN WITH (FORMAT BINARY)"
         ) as copy:
-            copy.set_types(["integer", "vector"])
-            for i, embedding in zip(ids, vectors):
-                copy.write_row((i, embedding))
+            copy.set_types(["integer", "vector", "jsonb"])
+            for i, embedding, payload in zip(ids, vectors, payloads):
+                copy.write_row((i, embedding, payload))
 
     @classmethod
     def post_upload(cls, distance):
