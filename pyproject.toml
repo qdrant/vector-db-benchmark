@@ -8,10 +8,10 @@ package-mode = false
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
 qdrant-client = { git = "https://github.com/qdrant/qdrant-client.git", branch = "dev" }
-typer = "^0.27.1"
+typer = "^0.27.2"
 jsons = "^1.6.3"
 h5py = "^3.7.0"
-weaviate-client = ">=4.22.0,<4.23"
+weaviate-client = ">=4.23.0,<4.24"
 elasticsearch = "^9.5.0"
 pymilvus = "^2.5.0"
 redis = "^5.0.1"
