@@ -5,12 +5,24 @@
     "connection_params": {
       "request_timeout": 10000
     },
-    "collection_params": { "index_options": { "m": 16, "ef_construction": 100 } },
+    "collection_params": { "index_options": { "m": 16, "ef_construction": 128 } },
     "search_params": [
       { "parallel": 1, "config": { "num_candidates": 128 } }, { "parallel": 1, "config": { "num_candidates": 256 } }, { "parallel": 1, "config": { "num_candidates": 512 } },
       { "parallel": 100, "config": { "num_candidates": 128 } }, { "parallel": 100, "config": { "num_candidates": 256 } }, { "parallel": 100, "config": { "num_candidates": 512 } }
     ],
     "upload_params": { "parallel": 16 }
+  },
+  {
+    "name": "elasticsearch-debug",
+    "engine": "elasticsearch",
+    "connection_params": {
+      "request_timeout": 10000
+    },
+    "collection_params": { "index_options": { "m": 16, "ef_construction": 128 } },
+    "search_params": [
+      { "parallel": 1, "config": { "num_candidates": 128 } }, { "parallel": 1, "config": { "num_candidates": 256 } }, { "parallel": 1, "config": { "num_candidates": 512 } }
+    ],
+    "upload_params": { "parallel": 1 }
   },
   {
     "name": "elasticsearch-m-16-ef-128",
