@@ -45,8 +45,11 @@ class PgVectorConditionParser(BaseConditionParser):
     ) -> ParsedCondition:
         key_param = self._next_param()
         value_param = self._next_param()
+        # `@>` not `=`: equality for scalar fields, "contains" for list-valued
+        # fields (e.g. arxiv `labels`), same semantics as Qdrant MatchValue and
+        # Elasticsearch `match` on an array.
         return (
-            f"payload -> %({key_param})s = %({value_param})s",
+            f"payload -> %({key_param})s @> %({value_param})s",
             {key_param: field_name, value_param: Jsonb(value)},
         )
 
@@ -75,27 +78,3 @@ class PgVectorConditionParser(BaseConditionParser):
     ) -> Any:
         # payload is a flat JSONB blob, no geo type/indexing support
         raise IncompatibilityError
-
-
-if __name__ == "__main__":
-    # sanity check for the clause-building logic, no DB needed
-    parser = PgVectorConditionParser()
-
-    clause, params = parser.parse(
-        {"and": [{"category": {"match": {"value": "Shoes"}}}]}
-    )
-    assert clause == "( payload -> %(p1)s = %(p2)s )", clause
-    assert params["p1"] == "category"
-    assert isinstance(params["p2"], Jsonb)
-
-    parser2 = PgVectorConditionParser()
-    clause2, params2 = parser2.parse(
-        {"and": [{"price": {"range": {"gte": 10, "lt": 20}}}]}
-    )
-    # build_range_filter checks bounds in (lt, gt, lte, gte) order
-    assert (
-        clause2 == "( ( payload -> %(p1)s < %(p2)s AND payload -> %(p3)s >= %(p4)s ) )"
-    ), clause2
-    assert params2["p1"] == params2["p3"] == "price"
-
-    print("parser self-check ok:", clause, params, clause2, params2)

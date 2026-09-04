@@ -24,6 +24,9 @@ class PgVectorConfigurator(BaseConfigurator):
     def recreate(self, dataset: Dataset, collection_params):
         if dataset.config.distance == Distance.DOT:
             raise IncompatibilityError
+        if "geo" in dataset.config.schema.values():
+            # payload is a flat JSONB blob, no geo radius search; skip before upload
+            raise IncompatibilityError
 
         self.conn.execute(f"""CREATE TABLE items (
                 id SERIAL PRIMARY KEY,
@@ -31,8 +34,6 @@ class PgVectorConfigurator(BaseConfigurator):
                 payload JSONB
             );""")
         self.conn.execute("ALTER TABLE items ALTER COLUMN embedding SET STORAGE PLAIN")
-        if dataset.config.schema:
-            self.conn.execute("CREATE INDEX ON items USING GIN (payload)")
 
     def delete_client(self):
         if self.conn:
