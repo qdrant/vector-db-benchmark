@@ -1,0 +1,20 @@
+services:
+  infino_bench:
+    build:
+      context: .
+      args:
+        INFINO_VERSION: ${INFINO_VERSION:-0.8.0}
+    ports:
+      - "50100:50100"
+    logging:
+      driver: "json-file"
+      options:
+        max-file: 1
+        max-size: 10m
+    environment:
+      # Block-cache budget in bytes (default 16 GiB).
+      - INFINO_CACHE_BYTES=${INFINO_CACHE_BYTES:-17179869184}
+    deploy:
+      resources:
+        limits:
+          memory: 25Gb
