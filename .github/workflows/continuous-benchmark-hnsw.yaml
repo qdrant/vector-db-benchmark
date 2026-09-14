@@ -17,9 +17,10 @@ on:
         options:
           - 'cohere-wiki-100k-no-filters-2'
           - 'laion-small-clip-no-filters-2'
-  schedule:
-    # Run every day at 3am
-    - cron: "0 3 * * *"
+# Disable
+#  schedule:
+#    # Run every day at 3am
+#    - cron: "0 3 * * *"
 
 # Restrict to only running this workflow one at a time.
 # Any new runs will be queued until the previous run is complete.

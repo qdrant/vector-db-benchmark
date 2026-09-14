@@ -7,9 +7,9 @@ on:
           type: boolean
           description: "Enable all feature flags (true by default)"
           default: true
-  schedule:
-    # Run every day at midnight
-    - cron: "0 0 * * *"
+#  schedule:
+#    # Run every day at midnight
+#    - cron: "0 0 * * *"
 
 # Restrict to only running this workflow one at a time.
 # Any new runs will be queued until the previous run is complete.
