@@ -27,8 +27,9 @@ on:
         description: 'Hetzner client type'
         default: 'cx33'
         type: string
-  schedule:
-    - cron: "0 4 * * *"  # Daily at 4am UTC
+# Disable
+#  schedule:
+#    - cron: "0 4 * * *"  # Daily at 4am UTC
 
 concurrency:
   group: hetzner-machines
