@@ -13,8 +13,9 @@ ssh_with_retry() {
     local i
 
     for ((i=1; i<=max_retries; i++)); do
-        ssh -o ConnectTimeout=10 "$@"
-        exit_code=$?
+        # `|| exit_code=$?` keeps callers' `set -e` from aborting before the retry
+        exit_code=0
+        ssh -o ConnectTimeout=10 "$@" || exit_code=$?
         if [[ $exit_code -eq 0 ]]; then
             return 0
         fi
@@ -42,8 +43,8 @@ scp_with_retry() {
     local i
 
     for ((i=1; i<=max_retries; i++)); do
-        scp -o ConnectTimeout=10 "$@"
-        exit_code=$?
+        exit_code=0
+        scp -o ConnectTimeout=10 "$@" || exit_code=$?
         if [[ $exit_code -eq 0 ]]; then
             return 0
         fi
@@ -73,8 +74,8 @@ rsync_with_retry() {
     local rsync_rsh="${RSYNC_RSH:-ssh -o ConnectTimeout=30 -o ServerAliveInterval=10 -o ServerAliveCountMax=10}"
 
     for ((i=1; i<=max_retries; i++)); do
-        RSYNC_RSH="$rsync_rsh" rsync "$@"
-        exit_code=$?
+        exit_code=0
+        RSYNC_RSH="$rsync_rsh" rsync "$@" || exit_code=$?
         if [[ $exit_code -eq 0 ]]; then
             return 0
         fi
