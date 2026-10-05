@@ -1,6 +1,5 @@
 import multiprocessing as mp
 import uuid
-from typing import List, Tuple
 
 from opensearchpy import OpenSearch
 
@@ -32,11 +31,11 @@ class OpenSearchSearcher(BaseSearcher):
     @classmethod
     def init_client(cls, host, distance, connection_params: dict, search_params: dict):
         init_params = {
-            **{
+            
                 "verify_certs": False,
                 "request_timeout": 90,
-                "retry_on_timeout": True,
-            },
+                "retry_on_timeout": True
+            ,
             **connection_params,
         }
         cls.client: OpenSearch = OpenSearch(
@@ -47,7 +46,7 @@ class OpenSearchSearcher(BaseSearcher):
         cls.search_params = search_params
 
     @classmethod
-    def search_one(cls, query: Query, top: int) -> List[Tuple[int, float]]:
+    def search_one(cls, query: Query, top: int) -> list[tuple[int, float]]:
         opensearch_query = {
             "knn": {
                 "vector": {

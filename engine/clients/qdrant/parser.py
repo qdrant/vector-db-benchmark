@@ -1,4 +1,4 @@
-from typing import Any, List, Optional
+from typing import Any
 
 from qdrant_client.http import models as rest
 
@@ -7,8 +7,8 @@ from engine.base_client.parser import BaseConditionParser, FieldValue
 
 class QdrantConditionParser(BaseConditionParser):
     def build_condition(
-        self, and_subfilters: Optional[List[Any]], or_subfilters: Optional[List[Any]]
-    ) -> Optional[Any]:
+        self, and_subfilters: list[Any] | None, or_subfilters: list[Any] | None
+    ) -> Any | None:
         return rest.Filter(
             should=or_subfilters,
             must=and_subfilters,
@@ -20,7 +20,7 @@ class QdrantConditionParser(BaseConditionParser):
             match=rest.MatchValue(value=value),
         )
 
-    def build_match_any_filter(self, field_name: str, values: List[FieldValue]) -> Any:
+    def build_match_any_filter(self, field_name: str, values: list[FieldValue]) -> Any:
         return rest.FieldCondition(
             key=field_name,
             match=rest.MatchAny(any=values),
@@ -35,10 +35,10 @@ class QdrantConditionParser(BaseConditionParser):
     def build_range_filter(
         self,
         field_name: str,
-        lt: Optional[FieldValue],
-        gt: Optional[FieldValue],
-        lte: Optional[FieldValue],
-        gte: Optional[FieldValue],
+        lt: FieldValue | None,
+        gt: FieldValue | None,
+        lte: FieldValue | None,
+        gte: FieldValue | None,
     ) -> Any:
         # Any string bound → ISO datetime range; coerce mixed bounds to str.
         if any(isinstance(v, str) for v in (lt, gt, lte, gte) if v is not None):

@@ -2,8 +2,8 @@ import os
 import shutil
 import tarfile
 import urllib.request
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable, Dict, Optional
 from urllib.request import build_opener, install_opener
 
 import tqdm
@@ -28,11 +28,11 @@ class DatasetConfig:
     type: str
     path: str
 
-    link: Optional[str] = None
-    schema: Optional[Dict[str, str]] = field(default_factory=dict)
+    link: str | None = None
+    schema: dict[str, str] | None = field(default_factory=dict)
     # None in case of sparse vectors:
-    vector_size: Optional[int] = None
-    distance: Optional[str] = None
+    vector_size: int | None = None
+    distance: str | None = None
 
 
 READER_TYPE = {

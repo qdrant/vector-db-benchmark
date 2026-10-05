@@ -8,6 +8,6 @@ from engine.clients.qdrant_native.upload import (
 
 __all__ = [
     "QdrantHybridConfigurator",
-    "QdrantHybridUploader",
     "QdrantHybridSearcher",
+    "QdrantHybridUploader",
 ]

@@ -1,5 +1,4 @@
 import os
-from typing import List, Tuple
 
 import httpx
 from qdrant_client import QdrantClient, models
@@ -35,7 +34,7 @@ class QdrantSearcher(BaseSearcher):
     #     return "forkserver" if "forkserver" in mp.get_all_start_methods() else "spawn"
 
     @classmethod
-    def search_one(cls, query: Query, top: int) -> List[Tuple[int, float]]:
+    def search_one(cls, query: Query, top: int) -> list[tuple[int, float]]:
 
         # Can query only one till we introduce re-ranking in the benchmarks
         if query.sparse_vector is None:

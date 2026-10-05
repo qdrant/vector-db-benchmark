@@ -1,7 +1,7 @@
 import functools
 import time
+from collections.abc import Iterable
 from multiprocessing import get_context
-from typing import Iterable, List, Optional, Tuple
 
 import numpy as np
 import tqdm
@@ -31,12 +31,12 @@ class BaseSearcher:
         return None
 
     @classmethod
-    def search_one(cls, query: Query, top: Optional[int]) -> List[Tuple[int, float]]:
+    def search_one(cls, query: Query, top: int | None) -> list[tuple[int, float]]:
         raise NotImplementedError()
 
     @classmethod
     @picklable_errors
-    def _search_one(cls, query: Query, top: Optional[int] = None):
+    def _search_one(cls, query: Query, top: int | None = None):
         if top is None:
             top = (
                 len(query.expected_result)

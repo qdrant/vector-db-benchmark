@@ -1,4 +1,3 @@
-from typing import List
 
 import numpy as np
 from redis import Redis, RedisCluster
@@ -27,7 +26,7 @@ class RedisUploader(BaseUploader):
         cls.upload_params = upload_params
 
     @classmethod
-    def upload_batch(cls, batch: List[Record]):
+    def upload_batch(cls, batch: list[Record]):
         p = cls.client.pipeline(transaction=False)
         for record in batch:
             idx = record.id

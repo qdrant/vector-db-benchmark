@@ -1,4 +1,3 @@
-from typing import List, Tuple
 
 import httpx
 
@@ -40,7 +39,7 @@ class QdrantNativeSearcher(BaseSearcher):
         )
 
     @classmethod
-    def search_one(cls, query: Query, top: int) -> List[Tuple[int, float]]:
+    def search_one(cls, query: Query, top: int) -> list[tuple[int, float]]:
         """Execute a single search query using REST API"""
         url = f"{cls.host}/collections/{QDRANT_COLLECTION_NAME}/points/query"
 

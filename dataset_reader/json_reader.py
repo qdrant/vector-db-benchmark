@@ -1,6 +1,6 @@
 import json
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator, List, Optional
 
 import numpy as np
 
@@ -26,7 +26,7 @@ class JSONReader(BaseReader):
                 line = json.loads(json_line)
                 yield line
 
-    def read_vectors(self) -> Iterator[List[float]]:
+    def read_vectors(self) -> Iterator[list[float]]:
         with open(self.path / self.VECTORS_FILE, "r") as json_fp:
             for json_line in json_fp:
                 vector = json.loads(json_line)
@@ -34,7 +34,7 @@ class JSONReader(BaseReader):
                     vector = vector / np.linalg.norm(vector)
                 yield vector
 
-    def read_neighbours(self) -> Iterator[Optional[List[int]]]:
+    def read_neighbours(self) -> Iterator[list[int] | None]:
         if not (self.path / self.NEIGHBOURS_FILE).exists():
             while True:
                 yield None
@@ -44,7 +44,7 @@ class JSONReader(BaseReader):
                 line = json.loads(json_line)
                 yield line
 
-    def read_query_vectors(self) -> Iterator[List[float]]:
+    def read_query_vectors(self) -> Iterator[list[float]]:
         with open(self.path / self.QUERIES_FILE, "r") as json_fp:
             for json_line in json_fp:
                 vector = json.loads(json_line)

@@ -1,7 +1,6 @@
 import json
 import os
 from datetime import datetime
-from typing import List, Optional
 
 from benchmark import ROOT_DIR
 from benchmark.dataset import Dataset
@@ -22,7 +21,7 @@ class BaseClient:
         engine: str,  # name of the engine
         configurator: BaseConfigurator,
         uploader: BaseUploader,
-        searchers: List[BaseSearcher],
+        searchers: list[BaseSearcher],
     ):
         self.name = name
         self.configurator = configurator
@@ -84,7 +83,7 @@ class BaseClient:
         skip_upload: bool = False,
         skip_search: bool = False,
         skip_if_exists: bool = True,
-        skip_configure: Optional[bool] = False,
+        skip_configure: bool | None = False,
     ):
         execution_params = self.configurator.execution_params(
             distance=dataset.config.distance, vector_size=dataset.config.vector_size

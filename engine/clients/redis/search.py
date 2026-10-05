@@ -1,5 +1,4 @@
 import random
-from typing import List, Tuple, Union
 
 import numpy as np
 from redis import Redis, RedisCluster
@@ -20,12 +19,12 @@ from engine.clients.redis.parser import RedisConditionParser
 
 class RedisSearcher(BaseSearcher):
     search_params = {}
-    client: Union[RedisCluster, Redis] = None
+    client: RedisCluster | Redis = None
     parser = RedisConditionParser()
     knn_conditions = "EF_RUNTIME $EF"
 
     is_cluster: bool
-    conns: List[Union[RedisCluster, Redis]]
+    conns: list[RedisCluster | Redis]
     search_namespace: RedisSearchIndex
 
     @classmethod
@@ -50,7 +49,7 @@ class RedisSearcher(BaseSearcher):
         cls.search_namespace = random.choice(cls.conns).ft()
 
     @classmethod
-    def search_one(cls, query: DatasetQuery, top: int) -> List[Tuple[int, float]]:
+    def search_one(cls, query: DatasetQuery, top: int) -> list[tuple[int, float]]:
         conditions = cls.parser.parse(query.meta_conditions)
         if conditions is None:
             prefilter_condition = "*"

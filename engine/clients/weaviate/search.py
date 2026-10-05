@@ -1,4 +1,3 @@
-from typing import List, Tuple
 
 from weaviate import WeaviateClient
 from weaviate.classes.config import Reconfigure
@@ -32,7 +31,7 @@ class WeaviateSearcher(BaseSearcher):
         cls.client = client
 
     @classmethod
-    def search_one(cls, query: Query, top: int) -> List[Tuple[int, float]]:
+    def search_one(cls, query: Query, top: int) -> list[tuple[int, float]]:
         res = cls.collection.query.near_vector(
             near_vector=query.vector,
             filters=cls.parser.parse(query.meta_conditions),

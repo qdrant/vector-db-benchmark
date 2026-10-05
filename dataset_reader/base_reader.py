@@ -1,28 +1,28 @@
+from collections.abc import Iterator
 from dataclasses import dataclass
-from typing import Iterator, List, Optional
 
 
 @dataclass
 class SparseVector:
-    indices: List[int]
-    values: List[float]
+    indices: list[int]
+    values: list[float]
 
 
 @dataclass
 class Record:
     id: int
-    vector: Optional[List[float]]
-    sparse_vector: Optional[SparseVector]
-    metadata: Optional[dict]
+    vector: list[float] | None
+    sparse_vector: SparseVector | None
+    metadata: dict | None
 
 
 @dataclass
 class Query:
-    vector: Optional[List[float]]
-    sparse_vector: Optional[SparseVector]
-    meta_conditions: Optional[dict]
-    expected_result: Optional[List[int]]
-    expected_scores: Optional[List[float]] = None
+    vector: list[float] | None
+    sparse_vector: SparseVector | None
+    meta_conditions: dict | None
+    expected_result: list[int] | None
+    expected_scores: list[float] | None = None
 
 
 class BaseReader:
@@ -32,5 +32,5 @@ class BaseReader:
     def read_queries(self) -> Iterator[Query]:
         raise NotImplementedError()
 
-    def prefetch(self, vector, *items) -> List:
+    def prefetch(self, vector, *items) -> list:
         raise NotImplementedError()

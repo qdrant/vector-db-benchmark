@@ -1,6 +1,5 @@
 import multiprocessing as mp
 import uuid
-from typing import List, Tuple
 
 from elasticsearch import Elasticsearch
 
@@ -30,7 +29,7 @@ class ElasticSearcher(BaseSearcher):
         cls.search_params = search_params
 
     @classmethod
-    def search_one(cls, query: Query, top: int) -> List[Tuple[int, float]]:
+    def search_one(cls, query: Query, top: int) -> list[tuple[int, float]]:
         knn = {
             "field": "vector",
             "query_vector": query.vector,

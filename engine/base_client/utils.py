@@ -1,13 +1,13 @@
 import functools
 import io
 import traceback
+from collections.abc import Callable, Iterable
 from multiprocessing.reduction import ForkingPickler
-from typing import Callable, Iterable, List
 
 from dataset_reader.base_reader import Record
 
 
-def iter_batches(records: Iterable[Record], n: int) -> Iterable[List[Record]]:
+def iter_batches(records: Iterable[Record], n: int) -> Iterable[list[Record]]:
     batch = []
 
     for record in records:

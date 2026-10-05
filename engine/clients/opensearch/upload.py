@@ -1,6 +1,5 @@
 import multiprocessing as mp
 import uuid
-from typing import List
 
 from opensearchpy import OpenSearch
 
@@ -30,11 +29,11 @@ class OpenSearchUploader(BaseUploader):
     @classmethod
     def init_client(cls, host, distance, connection_params, upload_params):
         init_params = {
-            **{
+            
                 "verify_certs": False,
                 "request_timeout": 90,
-                "retry_on_timeout": True,
-            },
+                "retry_on_timeout": True
+            ,
             **connection_params,
         }
         cls.client = OpenSearch(
@@ -45,7 +44,7 @@ class OpenSearchUploader(BaseUploader):
         cls.upload_params = upload_params
 
     @classmethod
-    def upload_batch(cls, batch: List[Record]):
+    def upload_batch(cls, batch: list[Record]):
         operations = []
         for record in batch:
             vector_id = uuid.UUID(int=record.id).hex

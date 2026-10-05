@@ -1,5 +1,4 @@
 import time
-from typing import List
 
 import httpx
 
@@ -39,7 +38,7 @@ class QdrantNativeUploader(BaseUploader):
         )
 
     @classmethod
-    def upload_batch(cls, batch: List[Record]):
+    def upload_batch(cls, batch: list[Record]):
         """Upload a batch of records using REST API"""
         # Qdrant has a 32MB JSON payload limit
         # For large batches with dense high-dim vectors, split into smaller sub-batches

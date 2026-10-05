@@ -1,5 +1,4 @@
 from abc import ABC
-from typing import List, Type
 
 from engine.base_client.client import (
     BaseClient,
@@ -102,8 +101,8 @@ class ClientFactory(ABC):
         )
         return engine_uploader
 
-    def _create_searchers(self, experiment) -> List[BaseSearcher]:
-        engine_searcher_class: Type[BaseSearcher] = ENGINE_SEARCHERS[
+    def _create_searchers(self, experiment) -> list[BaseSearcher]:
+        engine_searcher_class: type[BaseSearcher] = ENGINE_SEARCHERS[
             experiment["engine"]
         ]
 

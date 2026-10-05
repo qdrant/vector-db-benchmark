@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import weaviate.classes as wvc
 from weaviate.collections.classes.filters import _Filters
@@ -7,16 +7,16 @@ from engine.base_client.parser import BaseConditionParser, FieldValue
 
 
 class WeaviateConditionParser(BaseConditionParser):
-    def parse(self, meta_conditions: Dict[str, Any]) -> Optional[_Filters]:
+    def parse(self, meta_conditions: dict[str, Any]) -> _Filters | None:
         if meta_conditions is None or len(meta_conditions) == 0:
             return None
         return super().parse(meta_conditions)
 
     def build_condition(
         self,
-        and_subfilters: Optional[List[_Filters]],
-        or_subfilters: Optional[List[_Filters]],
-    ) -> Optional[_Filters]:
+        and_subfilters: list[_Filters] | None,
+        or_subfilters: list[_Filters] | None,
+    ) -> _Filters | None:
         weaviate_filter = None
         if or_subfilters is not None and len(or_subfilters) > 0:
             weaviate_filter = or_subfilters[0]
@@ -38,10 +38,10 @@ class WeaviateConditionParser(BaseConditionParser):
     def build_range_filter(
         self,
         field_name: str,
-        lt: Optional[FieldValue],
-        gt: Optional[FieldValue],
-        lte: Optional[FieldValue],
-        gte: Optional[FieldValue],
+        lt: FieldValue | None,
+        gt: FieldValue | None,
+        lte: FieldValue | None,
+        gte: FieldValue | None,
     ) -> Any:
         prop = wvc.query.Filter.by_property(field_name)
         ltf = prop.less_than(lt) if lt is not None else None

@@ -1,4 +1,3 @@
-from typing import List
 
 import numpy as np
 import psycopg
@@ -28,7 +27,7 @@ class PgVectorUploader(BaseUploader):
         cls.upload_params = upload_params
 
     @classmethod
-    def upload_batch(cls, batch: List[Record]):
+    def upload_batch(cls, batch: list[Record]):
         ids, vectors = [], []
         for record in batch:
             ids.append(record.id)
