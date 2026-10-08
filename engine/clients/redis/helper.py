@@ -1,9 +1,8 @@
-from typing import Tuple
 
 MIN_LAT, MAX_LAT = -85.05112878, 85.05112878
 
 
-def convert_to_redis_coords(lon: float, lat: float) -> Tuple[float, float]:
+def convert_to_redis_coords(lon: float, lat: float) -> tuple[float, float]:
     """
     Redis uses a different coordinate system for storing the geocoordinates
     (EPSG:900913 / EPSG:3785 / OSGEO:41001) which is a subset of the WSG84 used

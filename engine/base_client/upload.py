@@ -1,6 +1,6 @@
 import time
+from collections.abc import Iterable
 from multiprocessing import get_context
-from typing import Iterable, List
 
 import tqdm
 
@@ -66,7 +66,7 @@ class BaseUploader:
 
         upload_time = time.perf_counter() - start
 
-        print("Upload time: {}".format(upload_time))
+        print(f"Upload time: {upload_time}")
 
         post_upload_stats = self.post_upload(distance)
 
@@ -85,7 +85,7 @@ class BaseUploader:
 
     @classmethod
     @picklable_errors
-    def _upload_batch(cls, batch: List[Record]) -> float:
+    def _upload_batch(cls, batch: list[Record]) -> float:
         start = time.perf_counter()
         cls.upload_batch(batch)
         return time.perf_counter() - start
@@ -95,7 +95,7 @@ class BaseUploader:
         return {}
 
     @classmethod
-    def upload_batch(cls, batch: List[Record]):
+    def upload_batch(cls, batch: list[Record]):
         raise NotImplementedError()
 
     @classmethod

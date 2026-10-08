@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Union
 
 
 class FilterType(str, Enum):
@@ -11,11 +11,11 @@ class FilterType(str, Enum):
 
 
 FieldValue = Union[str, int, float]
-MetaConditions = Dict[str, List[Any]]
+MetaConditions = dict[str, list[Any]]
 
 
 class BaseConditionParser:
-    def parse(self, meta_conditions: Optional[MetaConditions]) -> Optional[Any]:
+    def parse(self, meta_conditions: MetaConditions | None) -> Any | None:
         """
         The parse method accepts the meta conditions stored in a dict-like
         internal benchmark structure and converts it into the representation
@@ -42,11 +42,11 @@ class BaseConditionParser:
         )
 
     def build_condition(
-        self, and_subfilters: Optional[List[Any]], or_subfilters: Optional[List[Any]]
-    ) -> Optional[Any]:
+        self, and_subfilters: list[Any] | None, or_subfilters: list[Any] | None
+    ) -> Any | None:
         raise NotImplementedError
 
-    def create_condition_subfilters(self, entries) -> Optional[List[Any]]:
+    def create_condition_subfilters(self, entries) -> list[Any] | None:
         if entries is None:
             return None
 
@@ -61,7 +61,7 @@ class BaseConditionParser:
         return output_filters
 
     def build_filter(
-        self, field_name: str, filter_type: FilterType, criteria: Dict[str, Any]
+        self, field_name: str, filter_type: FilterType, criteria: dict[str, Any]
     ):
         if FilterType.FULL_MATCH == filter_type:
             return self.build_exact_match_filter(
@@ -91,7 +91,7 @@ class BaseConditionParser:
     def build_exact_match_filter(self, field_name: str, value: FieldValue) -> Any:
         raise NotImplementedError
 
-    def build_match_any_filter(self, field_name: str, values: List[FieldValue]) -> Any:
+    def build_match_any_filter(self, field_name: str, values: list[FieldValue]) -> Any:
         raise NotImplementedError
 
     def build_match_text_filter(self, field_name: str, text: str) -> Any:
@@ -100,10 +100,10 @@ class BaseConditionParser:
     def build_range_filter(
         self,
         field_name: str,
-        lt: Optional[FieldValue],
-        gt: Optional[FieldValue],
-        lte: Optional[FieldValue],
-        gte: Optional[FieldValue],
+        lt: FieldValue | None,
+        gt: FieldValue | None,
+        lte: FieldValue | None,
+        gte: FieldValue | None,
     ) -> Any:
         raise NotImplementedError
 

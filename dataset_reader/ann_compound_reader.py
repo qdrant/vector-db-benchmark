@@ -1,5 +1,5 @@
 import json
-from typing import Iterator, List
+from collections.abc import Iterator
 
 import numpy as np
 
@@ -17,7 +17,7 @@ class AnnCompoundReader(JSONReader):
     VECTORS_FILE = "vectors.npy"
     QUERIES_FILE = "tests.jsonl"
 
-    def read_vectors(self) -> Iterator[List[float]]:
+    def read_vectors(self) -> Iterator[list[float]]:
         vectors = np.load(self.path / self.VECTORS_FILE)
         for vector in vectors:
             if self.normalize:

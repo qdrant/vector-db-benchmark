@@ -1,4 +1,3 @@
-from typing import Optional
 
 from benchmark.dataset import Dataset
 
@@ -18,7 +17,7 @@ class BaseConfigurator:
     def recreate(self, dataset: Dataset, collection_params):
         raise NotImplementedError()
 
-    def configure(self, dataset: Dataset) -> Optional[dict]:
+    def configure(self, dataset: Dataset) -> dict | None:
         self.clean()
         return self.recreate(dataset, self.collection_params) or {}
 

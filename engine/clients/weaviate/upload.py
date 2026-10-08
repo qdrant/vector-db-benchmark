@@ -1,5 +1,4 @@
 import uuid
-from typing import List
 
 from weaviate import WeaviateClient
 from weaviate.classes.data import DataObject
@@ -29,7 +28,7 @@ class WeaviateUploader(BaseUploader):
         )
 
     @classmethod
-    def upload_batch(cls, batch: List[Record]):
+    def upload_batch(cls, batch: list[Record]):
         objects = []
         for record in batch:
             _id = uuid.UUID(int=record.id)

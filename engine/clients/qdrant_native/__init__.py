@@ -4,6 +4,6 @@ from .upload import QdrantNativeUploader
 
 __all__ = [
     "QdrantNativeConfigurator",
-    "QdrantNativeUploader",
     "QdrantNativeSearcher",
+    "QdrantNativeUploader",
 ]

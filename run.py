@@ -2,7 +2,6 @@ import fnmatch
 import traceback
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FuturesTimeoutError
-from typing import List
 
 import typer
 
@@ -16,8 +15,8 @@ app = typer.Typer()
 
 @app.command()
 def run(
-    engines: List[str] = typer.Option(["*"]),
-    datasets: List[str] = typer.Option(["*"]),
+    engines: list[str] = typer.Option(["*"]),
+    datasets: list[str] = typer.Option(["*"]),
     host: str = typer.Option("localhost"),
     skip_upload: bool = typer.Option(False),
     skip_search: bool = typer.Option(False),

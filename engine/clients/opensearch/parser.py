@@ -1,12 +1,12 @@
-from typing import Any, List, Optional
+from typing import Any
 
 from engine.base_client.parser import BaseConditionParser, FieldValue
 
 
 class OpenSearchConditionParser(BaseConditionParser):
     def build_condition(
-        self, and_subfilters: Optional[List[Any]], or_subfilters: Optional[List[Any]]
-    ) -> Optional[Any]:
+        self, and_subfilters: list[Any] | None, or_subfilters: list[Any] | None
+    ) -> Any | None:
         return {
             "bool": {
                 "must": and_subfilters,
@@ -20,10 +20,10 @@ class OpenSearchConditionParser(BaseConditionParser):
     def build_range_filter(
         self,
         field_name: str,
-        lt: Optional[FieldValue],
-        gt: Optional[FieldValue],
-        lte: Optional[FieldValue],
-        gte: Optional[FieldValue],
+        lt: FieldValue | None,
+        gt: FieldValue | None,
+        lte: FieldValue | None,
+        gte: FieldValue | None,
     ) -> Any:
         field_filters = {
             k: v

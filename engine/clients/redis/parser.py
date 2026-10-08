@@ -1,10 +1,10 @@
 from collections import ChainMap
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from engine.base_client.parser import BaseConditionParser, FieldValue
 from engine.clients.redis.helper import convert_to_redis_coords
 
-QueryParamsTuple = Tuple[str, Dict[str, Any]]
+QueryParamsTuple = tuple[str, dict[str, Any]]
 
 
 class RedisConditionParser(BaseConditionParser):
@@ -14,9 +14,9 @@ class RedisConditionParser(BaseConditionParser):
 
     def build_condition(
         self,
-        and_subfilters: Optional[List[QueryParamsTuple]],
-        or_subfilters: Optional[List[QueryParamsTuple]],
-    ) -> Tuple[str, Dict[str, Any]]:
+        and_subfilters: list[QueryParamsTuple] | None,
+        or_subfilters: list[QueryParamsTuple] | None,
+    ) -> tuple[str, dict[str, Any]]:
         and_clauses, and_params = (
             list(zip(*and_subfilters)) if and_subfilters else ([], [])
         )
@@ -41,10 +41,10 @@ class RedisConditionParser(BaseConditionParser):
     def build_range_filter(
         self,
         field_name: str,
-        lt: Optional[FieldValue],
-        gt: Optional[FieldValue],
-        lte: Optional[FieldValue],
-        gte: Optional[FieldValue],
+        lt: FieldValue | None,
+        gt: FieldValue | None,
+        lte: FieldValue | None,
+        gte: FieldValue | None,
     ) -> Any:
         param_prefix = f"{field_name}_{self.counter}"
         self.counter += 1

@@ -1,6 +1,6 @@
 import os
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator, List, Tuple, Union
 
 import numpy as np
 
@@ -8,8 +8,8 @@ from dataset_reader.base_reader import BaseReader, Query, Record, SparseVector
 
 
 def read_sparse_matrix_fields(
-    filename: Union[Path, str],
-) -> Tuple[np.array, np.array, np.array]:
+    filename: Path | str,
+) -> tuple[np.array, np.array, np.array]:
     """Read the fields of a CSR matrix without instantiating it"""
 
     with open(filename, "rb") as f:
@@ -42,7 +42,7 @@ def mmap_sparse_matrix_fields(fname):
 
 
 def csr_to_sparse_vectors(
-    values: List[float], columns: List[int], index_pointer: List[int]
+    values: list[float], columns: list[int], index_pointer: list[int]
 ) -> Iterator[SparseVector]:
     """Convert a CSR matrix to a list of SparseVectors"""
     num_rows = len(index_pointer) - 1
@@ -57,7 +57,7 @@ def csr_to_sparse_vectors(
         yield SparseVector(indices=row_indices, values=row_values)
 
 
-def read_csr_matrix(filename: Union[Path, str], do_mmap=True) -> Iterator[SparseVector]:
+def read_csr_matrix(filename: Path | str, do_mmap=True) -> Iterator[SparseVector]:
     """Read a CSR matrix in spmat format"""
     if do_mmap:
         values, columns, index_pointer = mmap_sparse_matrix_fields(filename)
@@ -68,8 +68,8 @@ def read_csr_matrix(filename: Union[Path, str], do_mmap=True) -> Iterator[Sparse
 
 
 def knn_result_read(
-    filename: Union[Path, str],
-) -> Tuple[List[List[int]], List[List[float]]]:
+    filename: Path | str,
+) -> tuple[list[list[int]], list[list[float]]]:
     n, d = map(int, np.fromfile(filename, dtype="uint32", count=2))
     assert os.stat(filename).st_size == 8 + n * d * (4 + 4)
     with open(filename, "rb") as f:

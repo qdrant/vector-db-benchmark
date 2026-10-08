@@ -1,6 +1,5 @@
 import os
 import time
-from typing import List
 
 from qdrant_client import QdrantClient
 from qdrant_client._pydantic_compat import construct
@@ -30,7 +29,7 @@ class QdrantUploader(BaseUploader):
         cls.upload_params = upload_params
 
     @classmethod
-    def upload_batch(cls, batch: List[Record]):
+    def upload_batch(cls, batch: list[Record]):
         ids, vectors, payloads = [], [], []
         for point in batch:
             if point.sparse_vector is None:

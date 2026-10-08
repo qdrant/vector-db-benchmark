@@ -26,11 +26,11 @@ class OpenSearchConfigurator(BaseConfigurator):
     def __init__(self, host, collection_params: dict, connection_params: dict):
         super().__init__(host, collection_params, connection_params)
         init_params = {
-            **{
+            
                 "verify_certs": False,
                 "request_timeout": 90,
-                "retry_on_timeout": True,
-            },
+                "retry_on_timeout": True
+            ,
             **connection_params,
         }
         self.client = OpenSearch(
@@ -70,7 +70,7 @@ class OpenSearchConfigurator(BaseConfigurator):
                             "type": "knn_vector",
                             "dimension": dataset.config.vector_size,
                             "method": {
-                                **{
+                                
                                     "name": "hnsw",
                                     "engine": "lucene",
                                     "space_type": self.DISTANCE_MAPPING[
@@ -79,8 +79,8 @@ class OpenSearchConfigurator(BaseConfigurator):
                                     "parameters": {
                                         "m": 16,
                                         "ef_construction": 100,
-                                    },
-                                },
+                                    }
+                                ,
                                 **collection_params.get("method"),
                             },
                         },

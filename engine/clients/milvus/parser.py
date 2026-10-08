@@ -1,5 +1,5 @@
 import json
-from typing import Any, List, Optional
+from typing import Any
 
 from engine.base_client import IncompatibilityError
 from engine.base_client.parser import BaseConditionParser, FieldValue
@@ -7,8 +7,8 @@ from engine.base_client.parser import BaseConditionParser, FieldValue
 
 class MilvusConditionParser(BaseConditionParser):
     def build_condition(
-        self, and_subfilters: Optional[List[Any]], or_subfilters: Optional[List[Any]]
-    ) -> Optional[Any]:
+        self, and_subfilters: list[Any] | None, or_subfilters: list[Any] | None
+    ) -> Any | None:
         clauses = []
         if or_subfilters is not None and len(or_subfilters) > 0:
             clauses.append("(" + " || ".join(or_subfilters) + ")")
@@ -23,10 +23,10 @@ class MilvusConditionParser(BaseConditionParser):
     def build_range_filter(
         self,
         field_name: str,
-        lt: Optional[FieldValue],
-        gt: Optional[FieldValue],
-        lte: Optional[FieldValue],
-        gte: Optional[FieldValue],
+        lt: FieldValue | None,
+        gt: FieldValue | None,
+        lte: FieldValue | None,
+        gte: FieldValue | None,
     ) -> Any:
         clauses = []
         if lt is not None:

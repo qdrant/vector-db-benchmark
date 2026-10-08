@@ -1,5 +1,4 @@
 import multiprocessing as mp
-from typing import List, Tuple
 
 from pymilvus import Collection, connections
 
@@ -38,7 +37,7 @@ class MilvusSearcher(BaseSearcher):
         return "forkserver" if "forkserver" in mp.get_all_start_methods() else "spawn"
 
     @classmethod
-    def search_one(cls, query: Query, top: int) -> List[Tuple[int, float]]:
+    def search_one(cls, query: Query, top: int) -> list[tuple[int, float]]:
         param = {"metric_type": cls.distance, "params": cls.search_params["config"]}
         try:
             res = cls.collection.search(

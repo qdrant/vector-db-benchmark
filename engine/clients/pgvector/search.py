@@ -1,4 +1,3 @@
-from typing import List, Tuple
 
 import numpy as np
 import psycopg
@@ -32,7 +31,7 @@ class PgVectorSearcher(BaseSearcher):
             raise NotImplementedError(f"Unsupported distance metric {cls.distance}")
 
     @classmethod
-    def search_one(cls, query: Query, top) -> List[Tuple[int, float]]:
+    def search_one(cls, query: Query, top) -> list[tuple[int, float]]:
         # TODO: Use query.metaconditions for datasets with filtering
         cls.cur.execute(
             cls.query, (np.array(query.vector), top), binary=True, prepare=True

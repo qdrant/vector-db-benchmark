@@ -1,5 +1,4 @@
 import multiprocessing as mp
-from typing import List
 
 from pymilvus import (
     Collection,
@@ -42,7 +41,7 @@ class MilvusUploader(BaseUploader):
         cls.distance = DISTANCE_MAPPING[distance]
 
     @classmethod
-    def upload_batch(cls, batch: List[Record]):
+    def upload_batch(cls, batch: list[Record]):
         has_metadata = any(record.metadata for record in batch)
         if has_metadata:
             field_values = [
