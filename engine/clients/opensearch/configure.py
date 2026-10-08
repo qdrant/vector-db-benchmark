@@ -1,14 +1,13 @@
-from opensearchpy import NotFoundError, OpenSearch
+from opensearchpy import NotFoundError
 
 from benchmark.dataset import Dataset
 from engine.base_client import IncompatibilityError
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
 from engine.clients.opensearch.config import (
+    OPENSEARCH_DELETE_INDEX_TIMEOUT,
     OPENSEARCH_INDEX,
-    OPENSEARCH_PASSWORD,
-    OPENSEARCH_PORT,
-    OPENSEARCH_USER,
+    get_opensearch_client,
 )
 
 
@@ -16,6 +15,7 @@ class OpenSearchConfigurator(BaseConfigurator):
     DISTANCE_MAPPING = {
         Distance.L2: "l2",
         Distance.COSINE: "cosinesimil",
+        # innerproduct (supported for Lucene in OpenSearch version 2.13 and later)
         Distance.DOT: "innerproduct",
     }
     INDEX_TYPE_MAPPING = {
@@ -25,44 +25,45 @@ class OpenSearchConfigurator(BaseConfigurator):
 
     def __init__(self, host, collection_params: dict, connection_params: dict):
         super().__init__(host, collection_params, connection_params)
-        init_params = {
-            **{
-                "verify_certs": False,
-                "request_timeout": 90,
-                "retry_on_timeout": True,
-            },
-            **connection_params,
-        }
-        self.client = OpenSearch(
-            f"http://{host}:{OPENSEARCH_PORT}",
-            basic_auth=(OPENSEARCH_USER, OPENSEARCH_PASSWORD),
-            **init_params,
-        )
+        self.client = get_opensearch_client(host, connection_params)
 
     def clean(self):
         try:
             self.client.indices.delete(
                 index=OPENSEARCH_INDEX,
                 params={
-                    "timeout": 300,
+                    "timeout": OPENSEARCH_DELETE_INDEX_TIMEOUT,
                 },
             )
         except NotFoundError:
             pass
 
     def recreate(self, dataset: Dataset, collection_params):
-        if dataset.config.distance == Distance.DOT:
-            raise IncompatibilityError
-        if dataset.config.vector_size > 1024:
+        # The knn_vector data type supports a vector of floats that can have a dimension count of up to 16,000 for the NMSLIB, Faiss, and Lucene engines, as set by the dimension mapping parameter.
+        # Source: https://opensearch.org/docs/latest/search-plugins/knn/approximate-knn/
+        if dataset.config.vector_size > 16000:
             raise IncompatibilityError
 
+        index_settings = (
+            {
+                "knn": True,
+                "number_of_replicas": 0,
+                "refresh_interval": -1,  # no refresh is required because we index all the data at once
+            },
+        )
+        index_config = collection_params.get("index")
+
+        # if we specify the number_of_shards on the config, enforce it. otherwise use the default
+        if "number_of_shards" in index_config:
+            index_settings["number_of_shards"] = 1
+
+        # Followed the bellow link for tuning for ingestion and querying
+        # https://opensearch.org/docs/1.1/search-plugins/knn/performance-tuning/#indexing-performance-tuning
         self.client.indices.create(
             index=OPENSEARCH_INDEX,
             body={
                 "settings": {
-                    "index": {
-                        "knn": True,
-                    }
+                    "index": index_settings,
                 },
                 "mappings": {
                     "properties": {

@@ -2,15 +2,16 @@ import multiprocessing as mp
 import uuid
 from typing import List, Tuple
 
+import backoff
 from opensearchpy import OpenSearch
+from opensearchpy.exceptions import TransportError
 
 from dataset_reader.base_reader import Query
 from engine.base_client.search import BaseSearcher
 from engine.clients.opensearch.config import (
     OPENSEARCH_INDEX,
-    OPENSEARCH_PASSWORD,
-    OPENSEARCH_PORT,
-    OPENSEARCH_USER,
+    OPENSEARCH_TIMEOUT,
+    get_opensearch_client,
 )
 from engine.clients.opensearch.parser import OpenSearchConditionParser
 
@@ -31,22 +32,21 @@ class OpenSearchSearcher(BaseSearcher):
 
     @classmethod
     def init_client(cls, host, distance, connection_params: dict, search_params: dict):
-        init_params = {
-            **{
-                "verify_certs": False,
-                "request_timeout": 90,
-                "retry_on_timeout": True,
-            },
-            **connection_params,
-        }
-        cls.client: OpenSearch = OpenSearch(
-            f"http://{host}:{OPENSEARCH_PORT}",
-            basic_auth=(OPENSEARCH_USER, OPENSEARCH_PASSWORD),
-            **init_params,
-        )
+        cls.client = get_opensearch_client(host, connection_params)
         cls.search_params = search_params
 
+    def _search_backoff_handler(details):
+        print(
+            f"Backing off OpenSearch query for {details['wait']} seconds after {details['tries']} tries due to {details['exception']}"
+        )
+
     @classmethod
+    @backoff.on_exception(
+        backoff.expo,
+        TransportError,
+        max_time=OPENSEARCH_TIMEOUT,
+        on_backoff=_search_backoff_handler,
+    )
     def search_one(cls, query: Query, top: int) -> List[Tuple[int, float]]:
         opensearch_query = {
             "knn": {
@@ -68,7 +68,7 @@ class OpenSearchSearcher(BaseSearcher):
                 "size": top,
             },
             params={
-                "timeout": 60,
+                "timeout": OPENSEARCH_TIMEOUT,
             },
         )
         return [
