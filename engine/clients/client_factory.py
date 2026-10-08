@@ -12,6 +12,7 @@ from engine.clients.elasticsearch import (
     ElasticSearcher,
     ElasticUploader,
 )
+from engine.clients.infino import InfinoConfigurator, InfinoSearcher, InfinoUploader
 from engine.clients.milvus import MilvusConfigurator, MilvusSearcher, MilvusUploader
 from engine.clients.opensearch import (
     OpenSearchConfigurator,
@@ -47,6 +48,7 @@ ENGINE_CONFIGURATORS = {
     "qdrant_hybrid": QdrantHybridConfigurator,
     "weaviate": WeaviateConfigurator,
     "milvus": MilvusConfigurator,
+    "infino": InfinoConfigurator,
     "elasticsearch": ElasticConfigurator,
     "opensearch": OpenSearchConfigurator,
     "redis": RedisConfigurator,
@@ -59,6 +61,7 @@ ENGINE_UPLOADERS = {
     "qdrant_hybrid": QdrantHybridUploader,
     "weaviate": WeaviateUploader,
     "milvus": MilvusUploader,
+    "infino": InfinoUploader,
     "elasticsearch": ElasticUploader,
     "opensearch": OpenSearchUploader,
     "redis": RedisUploader,
@@ -71,6 +74,7 @@ ENGINE_SEARCHERS = {
     "qdrant_hybrid": QdrantHybridSearcher,
     "weaviate": WeaviateSearcher,
     "milvus": MilvusSearcher,
+    "infino": InfinoSearcher,
     "elasticsearch": ElasticSearcher,
     "opensearch": OpenSearchSearcher,
     "redis": RedisSearcher,

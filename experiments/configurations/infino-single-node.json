@@ -1,0 +1,70 @@
+[
+  {
+    "name": "infino-hnsw-ivf",
+    "engine": "infino",
+    "connection_params": {
+      "port": 50100
+    },
+    "collection_params": {},
+    "upload_params": {
+      "parallel": 1,
+      "batch_size": 100000
+    },
+    "search_params": [
+      {
+        "parallel": 8,
+        "config": {
+          "ef": 2048
+        }
+      },
+      {
+        "parallel": 8,
+        "config": {
+          "ef": 1536
+        }
+      },
+      {
+        "parallel": 8,
+        "config": {
+          "ef": 1024
+        }
+      },
+      {
+        "parallel": 8,
+        "config": {
+          "ef": 768
+        }
+      },
+      {
+        "parallel": 8,
+        "config": {
+          "ef": 512
+        }
+      },
+      {
+        "parallel": 8,
+        "config": {
+          "ef": 384
+        }
+      },
+      {
+        "parallel": 8,
+        "config": {
+          "ef": 256
+        }
+      },
+      {
+        "parallel": 8,
+        "config": {
+          "ef": 192
+        }
+      },
+      {
+        "parallel": 8,
+        "config": {
+          "ef": 128
+        }
+      }
+    ]
+  }
+]
