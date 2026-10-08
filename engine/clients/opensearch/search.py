@@ -44,6 +44,7 @@ class OpenSearchSearcher(BaseSearcher):
             basic_auth=(OPENSEARCH_USER, OPENSEARCH_PASSWORD),
             **init_params,
         )
+        cls.distance = distance
         cls.search_params = search_params
 
     @classmethod
@@ -53,6 +54,11 @@ class OpenSearchSearcher(BaseSearcher):
                 "vector": {
                     "vector": query.vector,
                     "k": top,
+                    "method_parameters": {
+                        "ef_search": cls.search_params["config"][
+                            "ef_search"
+                        ]  # ef_search parameter is added in the query time
+                    },
                 }
             }
         }
@@ -70,15 +76,18 @@ class OpenSearchSearcher(BaseSearcher):
             params={
                 "timeout": 60,
             },
+            _source=False,
+            docvalue_fields=["_id"],
+            stored_fields="_none_",
         )
+
         return [
-            (uuid.UUID(hex=hit["_id"]).int, hit["_score"])
+            (uuid.UUID(hex=hit["fields"]["_id"][0]).int, hit["_score"])
             for hit in res["hits"]["hits"]
         ]
 
     @classmethod
     def setup_search(cls):
-        if cls.search_params:
-            cls.client.indices.put_settings(
-                body=cls.search_params["config"], index=OPENSEARCH_INDEX
-            )
+        # Load the graphs in memory
+        warmup_endpoint = f"/_plugins/_knn/warmup/{OPENSEARCH_INDEX}"
+        cls.client.transport.perform_request("GET", warmup_endpoint)
