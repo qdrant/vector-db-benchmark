@@ -17,6 +17,12 @@ class ElasticConditionParser(BaseConditionParser):
     def build_exact_match_filter(self, field_name: str, value: FieldValue) -> Any:
         return {"match": {field_name: value}}
 
+    def build_match_any_filter(self, field_name: str, values: List[FieldValue]) -> Any:
+        return {"terms": {field_name: values}}
+
+    def build_match_text_filter(self, field_name: str, text: str) -> Any:
+        return {"match_phrase": {field_name: text}}
+
     def build_range_filter(
         self,
         field_name: str,

@@ -38,6 +38,24 @@ class RedisConditionParser(BaseConditionParser):
         # field is numeric, value is an integer
         return f"@{field_name}:[${param_name} ${param_name}]", {param_name: value}
 
+    def build_match_any_filter(self, field_name: str, values: List[FieldValue]) -> Any:
+        clauses = []
+        params = {}
+        for value in values:
+            param_name = f"{field_name}_{self.counter}"
+            self.counter += 1
+            if isinstance(value, str):
+                clauses.append(f"@{field_name}:{{${param_name}}}")
+            else:
+                clauses.append(f"@{field_name}:[${param_name} ${param_name}]")
+            params[param_name] = value
+        return "(" + " | ".join(clauses) + ")", params
+
+    def build_match_text_filter(self, field_name: str, text: str) -> Any:
+        param_name = f"{field_name}_{self.counter}"
+        self.counter += 1
+        return f"@{field_name}:${param_name}", {param_name: text}
+
     def build_range_filter(
         self,
         field_name: str,

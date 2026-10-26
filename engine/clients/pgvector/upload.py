@@ -8,7 +8,7 @@ from dataset_reader.base_reader import Record
 from engine.base_client import IncompatibilityError
 from engine.base_client.distances import Distance
 from engine.base_client.upload import BaseUploader
-from engine.clients.pgvector.config import get_db_config
+from engine.clients.pgvector.config import COPY_TYPE_NAMES, get_db_config, quote_ident
 
 
 class PgVectorUploader(BaseUploader):
@@ -19,6 +19,8 @@ class PgVectorUploader(BaseUploader):
     conn = None
     cur = None
     upload_params = {}
+    payload_columns = []
+    id_copy_type = "integer"
 
     @classmethod
     def init_client(cls, host, distance, connection_params, upload_params):
@@ -26,22 +28,58 @@ class PgVectorUploader(BaseUploader):
         register_vector(cls.conn)
         cls.cur = cls.conn.cursor()
         cls.upload_params = upload_params
+        cls.payload_columns = list(
+            cls.cur.execute(
+                """
+                SELECT column_name, udt_name
+                FROM information_schema.columns
+                WHERE table_name = 'items'
+                  AND column_name NOT IN ('id', 'embedding')
+                ORDER BY ordinal_position
+                """
+            )
+        )
+        id_udt = cls.cur.execute(
+            """
+            SELECT udt_name
+            FROM information_schema.columns
+            WHERE table_name = 'items' AND column_name = 'id'
+            """
+        ).fetchone()
+        cls.id_copy_type = "text" if id_udt and id_udt[0] == "text" else "integer"
 
     @classmethod
     def upload_batch(cls, batch: List[Record]):
-        ids, vectors = [], []
+        ids, vectors, payload_rows = [], [], []
         for record in batch:
-            ids.append(record.id)
+            ids.append(
+                str(record.id) if cls.id_copy_type == "text" else record.id
+            )
             vectors.append(record.vector)
+            meta = record.metadata or {}
+            values = []
+            for column_name, _udt_name in cls.payload_columns:
+                value = meta.get(column_name)
+                if isinstance(value, list):
+                    value = ";".join(str(item) for item in value)
+                values.append(value)
+            payload_rows.append(values)
 
         vectors = np.array(vectors)
-        # Copy is faster than insert
+        column_sql = ", ".join(
+            ["id", "embedding"]
+            + [quote_ident(name) for name, _ in cls.payload_columns]
+        )
+        copy_types = [cls.id_copy_type, "vector"] + [
+            COPY_TYPE_NAMES.get(udt_name, "text")
+            for _name, udt_name in cls.payload_columns
+        ]
         with cls.cur.copy(
-            "COPY items (id, embedding) FROM STDIN WITH (FORMAT BINARY)"
+            f"COPY items ({column_sql}) FROM STDIN WITH (FORMAT BINARY)"
         ) as copy:
-            copy.set_types(["integer", "vector"])
-            for i, embedding in zip(ids, vectors):
-                copy.write_row((i, embedding))
+            copy.set_types(copy_types)
+            for i, embedding, payload in zip(ids, vectors, payload_rows):
+                copy.write_row((i, embedding, *payload))
 
     @classmethod
     def post_upload(cls, distance):

@@ -4,6 +4,7 @@ import httpx
 
 from dataset_reader.base_reader import Query
 from engine.base_client.search import BaseSearcher
+from engine.clients.qdrant.ids import qdrant_hit_id
 from engine.clients.qdrant_native.config import QDRANT_API_KEY, QDRANT_COLLECTION_NAME
 from engine.clients.qdrant_native.parser import QdrantNativeConditionParser
 
@@ -86,7 +87,7 @@ class QdrantNativeSearcher(BaseSearcher):
             result = response.json()
 
             points = result["result"]["points"]
-            return [(point["id"], point["score"]) for point in points]
+            return [(qdrant_hit_id(point["id"]), point["score"]) for point in points]
 
         except Exception as ex:
             print(f"Something went wrong during search: {ex}")

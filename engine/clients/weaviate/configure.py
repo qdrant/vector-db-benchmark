@@ -4,7 +4,11 @@ from weaviate.connect import ConnectionParams
 from benchmark.dataset import Dataset
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
-from engine.clients.weaviate.config import WEAVIATE_CLASS_NAME, WEAVIATE_DEFAULT_PORT
+from engine.clients.weaviate.config import (
+    WEAVIATE_CLASS_NAME,
+    WEAVIATE_DEFAULT_PORT,
+    WEAVIATE_RESERVED_PROPERTIES,
+)
 
 
 class WeaviateConfigurator(BaseConfigurator):
@@ -15,10 +19,11 @@ class WeaviateConfigurator(BaseConfigurator):
     }
     FIELD_TYPE_MAPPING = {
         "int": "int",
-        "keyword": "string",
-        "text": "string",
+        "keyword": "text",
+        "text": "text",
         "float": "number",
         "geo": "geoCoordinates",
+        "datetime": "date",
     }
 
     def __init__(self, host, collection_params: dict, connection_params: dict):
@@ -44,9 +49,16 @@ class WeaviateConfigurator(BaseConfigurator):
                         "dataType": [
                             self.FIELD_TYPE_MAPPING[field_type],
                         ],
-                        "indexInverted": True,
+                        "indexFilterable": True,
+                        "indexSearchable": field_type == "text",
+                        **(
+                            {"tokenization": "field"}
+                            if field_type == "keyword"
+                            else {}
+                        ),
                     }
                     for field_name, field_type in dataset.config.schema.items()
+                    if field_name not in WEAVIATE_RESERVED_PROPERTIES
                 ],
                 "vectorIndexConfig": {
                     **{

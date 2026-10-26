@@ -20,6 +20,13 @@ class MilvusConditionParser(BaseConditionParser):
         # json.dumps is called so the string value gets additional quotation marks
         return f"{field_name} == {json.dumps(value)}"
 
+    def build_match_any_filter(self, field_name: str, values: List[FieldValue]) -> Any:
+        encoded = ", ".join(json.dumps(value) for value in values)
+        return f"{field_name} in [{encoded}]"
+
+    def build_match_text_filter(self, field_name: str, text: str) -> Any:
+        return f"{field_name} like {json.dumps('%' + text + '%')}"
+
     def build_range_filter(
         self,
         field_name: str,

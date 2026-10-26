@@ -35,6 +35,18 @@ class WeaviateConditionParser(BaseConditionParser):
     def build_exact_match_filter(self, field_name: str, value: FieldValue) -> _Filters:
         return wvc.query.Filter.by_property(field_name).equal(value)
 
+    def build_match_any_filter(self, field_name: str, values: List[FieldValue]) -> _Filters:
+        filters = [
+            wvc.query.Filter.by_property(field_name).equal(value) for value in values
+        ]
+        combined = filters[0]
+        for filt in filters[1:]:
+            combined = combined | filt
+        return combined
+
+    def build_match_text_filter(self, field_name: str, text: str) -> _Filters:
+        return wvc.query.Filter.by_property(field_name).like(f"*{text}*")
+
     def build_range_filter(
         self,
         field_name: str,

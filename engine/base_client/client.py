@@ -3,14 +3,13 @@ import os
 from datetime import datetime
 from typing import List, Optional
 
-from benchmark import ROOT_DIR
+from benchmark import RESULTS_DIR
 from benchmark.dataset import Dataset
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.search import BaseSearcher
 from engine.base_client.upload import BaseUploader
 
-RESULTS_DIR = ROOT_DIR / "results"
-RESULTS_DIR.mkdir(exist_ok=True)
+RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 DETAILED_RESULTS = bool(int(os.getenv("DETAILED_RESULTS", False)))
 

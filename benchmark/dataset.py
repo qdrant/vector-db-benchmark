@@ -12,6 +12,11 @@ from benchmark import DATASETS_DIR
 from dataset_reader.ann_compound_reader import AnnCompoundReader
 from dataset_reader.ann_h5_reader import AnnH5Reader
 from dataset_reader.base_reader import BaseReader
+from dataset_reader.fineweb_reader import (
+    FineWebParquetReader,
+    fineweb_present,
+    resolve_fineweb_root,
+)
 from dataset_reader.json_reader import JSONReader
 from dataset_reader.sparse_reader import SparseReader
 
@@ -33,6 +38,12 @@ class DatasetConfig:
     # None in case of sparse vectors:
     vector_size: Optional[int] = None
     distance: Optional[str] = None
+    query_file: Optional[str] = None
+    query_vectors: Optional[str] = None
+    max_vectors: Optional[int] = None
+    vector_kind: Optional[str] = None
+    point_id: Optional[str] = None
+    skip_ground_truth: bool = False
 
 
 READER_TYPE = {
@@ -40,6 +51,7 @@ READER_TYPE = {
     "jsonl": JSONReader,
     "tar": AnnCompoundReader,
     "sparse": SparseReader,
+    "fineweb": FineWebParquetReader,
 }
 
 
@@ -47,8 +59,23 @@ class Dataset:
     def __init__(self, config: dict):
         self.config = DatasetConfig(**config)
 
+    def dataset_path(self):
+        if self.config.type == "fineweb":
+            return resolve_fineweb_root(DATASETS_DIR / self.config.path)
+        return DATASETS_DIR / self.config.path
+
     def download(self):
-        target_path = DATASETS_DIR / self.config.path
+        target_path = self.dataset_path()
+
+        if self.config.type == "fineweb":
+            if fineweb_present(target_path):
+                print(f"{target_path} already exists")
+                return
+            raise FileNotFoundError(
+                f"FineWeb parquet not found at {target_path}. Place the original "
+                "parquet file or the FineWeb-10B tree there, or set FINEWEB_10B_DIR. "
+                "The Hugging Face corpus is 46.5 TB and is not downloaded automatically."
+            )
 
         if target_path.exists():
             print(f"{target_path} already exists")
@@ -80,7 +107,11 @@ class Dataset:
 
     def get_reader(self, normalize: bool) -> BaseReader:
         reader_class = READER_TYPE[self.config.type]
-        return reader_class(DATASETS_DIR / self.config.path, normalize=normalize)
+        if reader_class is FineWebParquetReader:
+            return FineWebParquetReader.from_config(
+                self.config, normalize=normalize, path=self.dataset_path()
+            )
+        return reader_class(self.dataset_path(), normalize=normalize)
 
 
 def _tqdm_reporthook(t: tqdm.tqdm) -> Callable[[int, int, int], None]:

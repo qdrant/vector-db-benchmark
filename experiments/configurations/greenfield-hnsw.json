@@ -1,0 +1,5522 @@
+[
+  {
+    "name": "qdrant-m-16-ef-100",
+    "engine": "qdrant",
+    "connection_params": {
+      "timeout": 30
+    },
+    "collection_params": {
+      "optimizers_config": {
+        "memmap_threshold": 10000000
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 100
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "weaviate-m-16-ef-100",
+    "engine": "weaviate",
+    "connection_params": {
+      "timeout_config": 1000
+    },
+    "collection_params": {
+      "vectorIndexConfig": {
+        "efConstruction": 100,
+        "maxConnections": 16
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "batch_size": 1024,
+      "parallel": 8
+    }
+  },
+  {
+    "name": "milvus-m-16-ef-100",
+    "engine": "milvus",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "index_params": {
+        "efConstruction": 100,
+        "M": 16
+      }
+    }
+  },
+  {
+    "name": "elasticsearch-m-16-ef-100",
+    "engine": "elasticsearch",
+    "connection_params": {
+      "request_timeout": 10000
+    },
+    "collection_params": {
+      "index_options": {
+        "m": 16,
+        "ef_construction": 100
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "opensearch-m-16-ef-100",
+    "engine": "opensearch",
+    "connection_params": {
+      "request_timeout": 10000
+    },
+    "collection_params": {
+      "method": {
+        "parameters": {
+          "m": 16,
+          "ef_construction": 100
+        }
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "redis-m-16-ef-100",
+    "engine": "redis",
+    "connection_params": {},
+    "collection_params": {
+      "hnsw_config": {
+        "M": 16,
+        "EF_CONSTRUCTION": 100
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "pgvector-m-16-ef-100",
+    "engine": "pgvector",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 100
+      }
+    }
+  },
+  {
+    "name": "qdrant-m-16-ef-200",
+    "engine": "qdrant",
+    "connection_params": {
+      "timeout": 30
+    },
+    "collection_params": {
+      "optimizers_config": {
+        "memmap_threshold": 10000000
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 200
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "weaviate-m-16-ef-200",
+    "engine": "weaviate",
+    "connection_params": {
+      "timeout_config": 1000
+    },
+    "collection_params": {
+      "vectorIndexConfig": {
+        "efConstruction": 200,
+        "maxConnections": 16
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "batch_size": 1024,
+      "parallel": 8
+    }
+  },
+  {
+    "name": "milvus-m-16-ef-200",
+    "engine": "milvus",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "index_params": {
+        "efConstruction": 200,
+        "M": 16
+      }
+    }
+  },
+  {
+    "name": "elasticsearch-m-16-ef-200",
+    "engine": "elasticsearch",
+    "connection_params": {
+      "request_timeout": 10000
+    },
+    "collection_params": {
+      "index_options": {
+        "m": 16,
+        "ef_construction": 200
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "opensearch-m-16-ef-200",
+    "engine": "opensearch",
+    "connection_params": {
+      "request_timeout": 10000
+    },
+    "collection_params": {
+      "method": {
+        "parameters": {
+          "m": 16,
+          "ef_construction": 200
+        }
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "redis-m-16-ef-200",
+    "engine": "redis",
+    "connection_params": {},
+    "collection_params": {
+      "hnsw_config": {
+        "M": 16,
+        "EF_CONSTRUCTION": 200
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "pgvector-m-16-ef-200",
+    "engine": "pgvector",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 200
+      }
+    }
+  },
+  {
+    "name": "qdrant-m-16-ef-500",
+    "engine": "qdrant",
+    "connection_params": {
+      "timeout": 30
+    },
+    "collection_params": {
+      "optimizers_config": {
+        "memmap_threshold": 10000000
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 500
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "weaviate-m-16-ef-500",
+    "engine": "weaviate",
+    "connection_params": {
+      "timeout_config": 1000
+    },
+    "collection_params": {
+      "vectorIndexConfig": {
+        "efConstruction": 500,
+        "maxConnections": 16
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "batch_size": 1024,
+      "parallel": 8
+    }
+  },
+  {
+    "name": "milvus-m-16-ef-500",
+    "engine": "milvus",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "index_params": {
+        "efConstruction": 500,
+        "M": 16
+      }
+    }
+  },
+  {
+    "name": "elasticsearch-m-16-ef-500",
+    "engine": "elasticsearch",
+    "connection_params": {
+      "request_timeout": 10000
+    },
+    "collection_params": {
+      "index_options": {
+        "m": 16,
+        "ef_construction": 500
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "opensearch-m-16-ef-500",
+    "engine": "opensearch",
+    "connection_params": {
+      "request_timeout": 10000
+    },
+    "collection_params": {
+      "method": {
+        "parameters": {
+          "m": 16,
+          "ef_construction": 500
+        }
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "redis-m-16-ef-500",
+    "engine": "redis",
+    "connection_params": {},
+    "collection_params": {
+      "hnsw_config": {
+        "M": 16,
+        "EF_CONSTRUCTION": 500
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "pgvector-m-16-ef-500",
+    "engine": "pgvector",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 500
+      }
+    }
+  },
+  {
+    "name": "qdrant-m-16-ef-1000",
+    "engine": "qdrant",
+    "connection_params": {
+      "timeout": 30
+    },
+    "collection_params": {
+      "optimizers_config": {
+        "memmap_threshold": 10000000
+      },
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 1000
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "weaviate-m-16-ef-1000",
+    "engine": "weaviate",
+    "connection_params": {
+      "timeout_config": 1000
+    },
+    "collection_params": {
+      "vectorIndexConfig": {
+        "efConstruction": 1000,
+        "maxConnections": 16
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "batch_size": 1024,
+      "parallel": 8
+    }
+  },
+  {
+    "name": "milvus-m-16-ef-1000",
+    "engine": "milvus",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "index_params": {
+        "efConstruction": 1000,
+        "M": 16
+      }
+    }
+  },
+  {
+    "name": "elasticsearch-m-16-ef-1000",
+    "engine": "elasticsearch",
+    "connection_params": {
+      "request_timeout": 10000
+    },
+    "collection_params": {
+      "index_options": {
+        "m": 16,
+        "ef_construction": 1000
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "opensearch-m-16-ef-1000",
+    "engine": "opensearch",
+    "connection_params": {
+      "request_timeout": 10000
+    },
+    "collection_params": {
+      "method": {
+        "parameters": {
+          "m": 16,
+          "ef_construction": 1000
+        }
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "redis-m-16-ef-1000",
+    "engine": "redis",
+    "connection_params": {},
+    "collection_params": {
+      "hnsw_config": {
+        "M": 16,
+        "EF_CONSTRUCTION": 1000
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "pgvector-m-16-ef-1000",
+    "engine": "pgvector",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "hnsw_config": {
+        "m": 16,
+        "ef_construct": 1000
+      }
+    }
+  },
+  {
+    "name": "qdrant-m-32-ef-100",
+    "engine": "qdrant",
+    "connection_params": {
+      "timeout": 30
+    },
+    "collection_params": {
+      "optimizers_config": {
+        "memmap_threshold": 10000000
+      },
+      "hnsw_config": {
+        "m": 32,
+        "ef_construct": 100
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "weaviate-m-32-ef-100",
+    "engine": "weaviate",
+    "connection_params": {
+      "timeout_config": 1000
+    },
+    "collection_params": {
+      "vectorIndexConfig": {
+        "efConstruction": 100,
+        "maxConnections": 32
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "batch_size": 1024,
+      "parallel": 8
+    }
+  },
+  {
+    "name": "milvus-m-32-ef-100",
+    "engine": "milvus",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "index_params": {
+        "efConstruction": 100,
+        "M": 32
+      }
+    }
+  },
+  {
+    "name": "elasticsearch-m-32-ef-100",
+    "engine": "elasticsearch",
+    "connection_params": {
+      "request_timeout": 10000
+    },
+    "collection_params": {
+      "index_options": {
+        "m": 32,
+        "ef_construction": 100
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "opensearch-m-32-ef-100",
+    "engine": "opensearch",
+    "connection_params": {
+      "request_timeout": 10000
+    },
+    "collection_params": {
+      "method": {
+        "parameters": {
+          "m": 32,
+          "ef_construction": 100
+        }
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "redis-m-32-ef-100",
+    "engine": "redis",
+    "connection_params": {},
+    "collection_params": {
+      "hnsw_config": {
+        "M": 32,
+        "EF_CONSTRUCTION": 100
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "pgvector-m-32-ef-100",
+    "engine": "pgvector",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "hnsw_config": {
+        "m": 32,
+        "ef_construct": 100
+      }
+    }
+  },
+  {
+    "name": "qdrant-m-32-ef-200",
+    "engine": "qdrant",
+    "connection_params": {
+      "timeout": 30
+    },
+    "collection_params": {
+      "optimizers_config": {
+        "memmap_threshold": 10000000
+      },
+      "hnsw_config": {
+        "m": 32,
+        "ef_construct": 200
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "weaviate-m-32-ef-200",
+    "engine": "weaviate",
+    "connection_params": {
+      "timeout_config": 1000
+    },
+    "collection_params": {
+      "vectorIndexConfig": {
+        "efConstruction": 200,
+        "maxConnections": 32
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "batch_size": 1024,
+      "parallel": 8
+    }
+  },
+  {
+    "name": "milvus-m-32-ef-200",
+    "engine": "milvus",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "index_params": {
+        "efConstruction": 200,
+        "M": 32
+      }
+    }
+  },
+  {
+    "name": "elasticsearch-m-32-ef-200",
+    "engine": "elasticsearch",
+    "connection_params": {
+      "request_timeout": 10000
+    },
+    "collection_params": {
+      "index_options": {
+        "m": 32,
+        "ef_construction": 200
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "opensearch-m-32-ef-200",
+    "engine": "opensearch",
+    "connection_params": {
+      "request_timeout": 10000
+    },
+    "collection_params": {
+      "method": {
+        "parameters": {
+          "m": 32,
+          "ef_construction": 200
+        }
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "redis-m-32-ef-200",
+    "engine": "redis",
+    "connection_params": {},
+    "collection_params": {
+      "hnsw_config": {
+        "M": 32,
+        "EF_CONSTRUCTION": 200
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "pgvector-m-32-ef-200",
+    "engine": "pgvector",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "hnsw_config": {
+        "m": 32,
+        "ef_construct": 200
+      }
+    }
+  },
+  {
+    "name": "qdrant-m-32-ef-500",
+    "engine": "qdrant",
+    "connection_params": {
+      "timeout": 30
+    },
+    "collection_params": {
+      "optimizers_config": {
+        "memmap_threshold": 10000000
+      },
+      "hnsw_config": {
+        "m": 32,
+        "ef_construct": 500
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "weaviate-m-32-ef-500",
+    "engine": "weaviate",
+    "connection_params": {
+      "timeout_config": 1000
+    },
+    "collection_params": {
+      "vectorIndexConfig": {
+        "efConstruction": 500,
+        "maxConnections": 32
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "batch_size": 1024,
+      "parallel": 8
+    }
+  },
+  {
+    "name": "milvus-m-32-ef-500",
+    "engine": "milvus",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "index_params": {
+        "efConstruction": 500,
+        "M": 32
+      }
+    }
+  },
+  {
+    "name": "elasticsearch-m-32-ef-500",
+    "engine": "elasticsearch",
+    "connection_params": {
+      "request_timeout": 10000
+    },
+    "collection_params": {
+      "index_options": {
+        "m": 32,
+        "ef_construction": 500
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "opensearch-m-32-ef-500",
+    "engine": "opensearch",
+    "connection_params": {
+      "request_timeout": 10000
+    },
+    "collection_params": {
+      "method": {
+        "parameters": {
+          "m": 32,
+          "ef_construction": 500
+        }
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "redis-m-32-ef-500",
+    "engine": "redis",
+    "connection_params": {},
+    "collection_params": {
+      "hnsw_config": {
+        "M": 32,
+        "EF_CONSTRUCTION": 500
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "pgvector-m-32-ef-500",
+    "engine": "pgvector",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "hnsw_config": {
+        "m": 32,
+        "ef_construct": 500
+      }
+    }
+  },
+  {
+    "name": "qdrant-m-32-ef-1000",
+    "engine": "qdrant",
+    "connection_params": {
+      "timeout": 30
+    },
+    "collection_params": {
+      "optimizers_config": {
+        "memmap_threshold": 10000000
+      },
+      "hnsw_config": {
+        "m": 32,
+        "ef_construct": 1000
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "weaviate-m-32-ef-1000",
+    "engine": "weaviate",
+    "connection_params": {
+      "timeout_config": 1000
+    },
+    "collection_params": {
+      "vectorIndexConfig": {
+        "efConstruction": 1000,
+        "maxConnections": 32
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "batch_size": 1024,
+      "parallel": 8
+    }
+  },
+  {
+    "name": "milvus-m-32-ef-1000",
+    "engine": "milvus",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "index_params": {
+        "efConstruction": 1000,
+        "M": 32
+      }
+    }
+  },
+  {
+    "name": "elasticsearch-m-32-ef-1000",
+    "engine": "elasticsearch",
+    "connection_params": {
+      "request_timeout": 10000
+    },
+    "collection_params": {
+      "index_options": {
+        "m": 32,
+        "ef_construction": 1000
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "opensearch-m-32-ef-1000",
+    "engine": "opensearch",
+    "connection_params": {
+      "request_timeout": 10000
+    },
+    "collection_params": {
+      "method": {
+        "parameters": {
+          "m": 32,
+          "ef_construction": 1000
+        }
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "redis-m-32-ef-1000",
+    "engine": "redis",
+    "connection_params": {},
+    "collection_params": {
+      "hnsw_config": {
+        "M": 32,
+        "EF_CONSTRUCTION": 1000
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "pgvector-m-32-ef-1000",
+    "engine": "pgvector",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "hnsw_config": {
+        "m": 32,
+        "ef_construct": 1000
+      }
+    }
+  },
+  {
+    "name": "qdrant-m-64-ef-100",
+    "engine": "qdrant",
+    "connection_params": {
+      "timeout": 30
+    },
+    "collection_params": {
+      "optimizers_config": {
+        "memmap_threshold": 10000000
+      },
+      "hnsw_config": {
+        "m": 64,
+        "ef_construct": 100
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "weaviate-m-64-ef-100",
+    "engine": "weaviate",
+    "connection_params": {
+      "timeout_config": 1000
+    },
+    "collection_params": {
+      "vectorIndexConfig": {
+        "efConstruction": 100,
+        "maxConnections": 64
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "batch_size": 1024,
+      "parallel": 8
+    }
+  },
+  {
+    "name": "milvus-m-64-ef-100",
+    "engine": "milvus",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "index_params": {
+        "efConstruction": 100,
+        "M": 64
+      }
+    }
+  },
+  {
+    "name": "elasticsearch-m-64-ef-100",
+    "engine": "elasticsearch",
+    "connection_params": {
+      "request_timeout": 10000
+    },
+    "collection_params": {
+      "index_options": {
+        "m": 64,
+        "ef_construction": 100
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "opensearch-m-64-ef-100",
+    "engine": "opensearch",
+    "connection_params": {
+      "request_timeout": 10000
+    },
+    "collection_params": {
+      "method": {
+        "parameters": {
+          "m": 64,
+          "ef_construction": 100
+        }
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "redis-m-64-ef-100",
+    "engine": "redis",
+    "connection_params": {},
+    "collection_params": {
+      "hnsw_config": {
+        "M": 64,
+        "EF_CONSTRUCTION": 100
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "pgvector-m-64-ef-100",
+    "engine": "pgvector",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "hnsw_config": {
+        "m": 64,
+        "ef_construct": 100
+      }
+    }
+  },
+  {
+    "name": "qdrant-m-64-ef-200",
+    "engine": "qdrant",
+    "connection_params": {
+      "timeout": 30
+    },
+    "collection_params": {
+      "optimizers_config": {
+        "memmap_threshold": 10000000
+      },
+      "hnsw_config": {
+        "m": 64,
+        "ef_construct": 200
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "weaviate-m-64-ef-200",
+    "engine": "weaviate",
+    "connection_params": {
+      "timeout_config": 1000
+    },
+    "collection_params": {
+      "vectorIndexConfig": {
+        "efConstruction": 200,
+        "maxConnections": 64
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "batch_size": 1024,
+      "parallel": 8
+    }
+  },
+  {
+    "name": "milvus-m-64-ef-200",
+    "engine": "milvus",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "index_params": {
+        "efConstruction": 200,
+        "M": 64
+      }
+    }
+  },
+  {
+    "name": "elasticsearch-m-64-ef-200",
+    "engine": "elasticsearch",
+    "connection_params": {
+      "request_timeout": 10000
+    },
+    "collection_params": {
+      "index_options": {
+        "m": 64,
+        "ef_construction": 200
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "opensearch-m-64-ef-200",
+    "engine": "opensearch",
+    "connection_params": {
+      "request_timeout": 10000
+    },
+    "collection_params": {
+      "method": {
+        "parameters": {
+          "m": 64,
+          "ef_construction": 200
+        }
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "redis-m-64-ef-200",
+    "engine": "redis",
+    "connection_params": {},
+    "collection_params": {
+      "hnsw_config": {
+        "M": 64,
+        "EF_CONSTRUCTION": 200
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "pgvector-m-64-ef-200",
+    "engine": "pgvector",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "hnsw_config": {
+        "m": 64,
+        "ef_construct": 200
+      }
+    }
+  },
+  {
+    "name": "qdrant-m-64-ef-500",
+    "engine": "qdrant",
+    "connection_params": {
+      "timeout": 30
+    },
+    "collection_params": {
+      "optimizers_config": {
+        "memmap_threshold": 10000000
+      },
+      "hnsw_config": {
+        "m": 64,
+        "ef_construct": 500
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "weaviate-m-64-ef-500",
+    "engine": "weaviate",
+    "connection_params": {
+      "timeout_config": 1000
+    },
+    "collection_params": {
+      "vectorIndexConfig": {
+        "efConstruction": 500,
+        "maxConnections": 64
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "batch_size": 1024,
+      "parallel": 8
+    }
+  },
+  {
+    "name": "milvus-m-64-ef-500",
+    "engine": "milvus",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "index_params": {
+        "efConstruction": 500,
+        "M": 64
+      }
+    }
+  },
+  {
+    "name": "elasticsearch-m-64-ef-500",
+    "engine": "elasticsearch",
+    "connection_params": {
+      "request_timeout": 10000
+    },
+    "collection_params": {
+      "index_options": {
+        "m": 64,
+        "ef_construction": 500
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "opensearch-m-64-ef-500",
+    "engine": "opensearch",
+    "connection_params": {
+      "request_timeout": 10000
+    },
+    "collection_params": {
+      "method": {
+        "parameters": {
+          "m": 64,
+          "ef_construction": 500
+        }
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "redis-m-64-ef-500",
+    "engine": "redis",
+    "connection_params": {},
+    "collection_params": {
+      "hnsw_config": {
+        "M": 64,
+        "EF_CONSTRUCTION": 500
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "pgvector-m-64-ef-500",
+    "engine": "pgvector",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "hnsw_config": {
+        "m": 64,
+        "ef_construct": 500
+      }
+    }
+  },
+  {
+    "name": "qdrant-m-64-ef-1000",
+    "engine": "qdrant",
+    "connection_params": {
+      "timeout": 30
+    },
+    "collection_params": {
+      "optimizers_config": {
+        "memmap_threshold": 10000000
+      },
+      "hnsw_config": {
+        "m": 64,
+        "ef_construct": 1000
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "weaviate-m-64-ef-1000",
+    "engine": "weaviate",
+    "connection_params": {
+      "timeout_config": 1000
+    },
+    "collection_params": {
+      "vectorIndexConfig": {
+        "efConstruction": 1000,
+        "maxConnections": 64
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "batch_size": 1024,
+      "parallel": 8
+    }
+  },
+  {
+    "name": "milvus-m-64-ef-1000",
+    "engine": "milvus",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "index_params": {
+        "efConstruction": 1000,
+        "M": 64
+      }
+    }
+  },
+  {
+    "name": "elasticsearch-m-64-ef-1000",
+    "engine": "elasticsearch",
+    "connection_params": {
+      "request_timeout": 10000
+    },
+    "collection_params": {
+      "index_options": {
+        "m": 64,
+        "ef_construction": 1000
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "num_candidates": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "num_candidates": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "opensearch-m-64-ef-1000",
+    "engine": "opensearch",
+    "connection_params": {
+      "request_timeout": 10000
+    },
+    "collection_params": {
+      "method": {
+        "parameters": {
+          "m": 64,
+          "ef_construction": 1000
+        }
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "knn.algo_param.ef_search": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "knn.algo_param.ef_search": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "redis-m-64-ef-1000",
+    "engine": "redis",
+    "connection_params": {},
+    "collection_params": {
+      "hnsw_config": {
+        "M": 64,
+        "EF_CONSTRUCTION": 1000
+      }
+    },
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "EF": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "EF": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16
+    }
+  },
+  {
+    "name": "pgvector-m-64-ef-1000",
+    "engine": "pgvector",
+    "connection_params": {},
+    "collection_params": {},
+    "search_params": [
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 1,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 100
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 200
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 500
+        }
+      },
+      {
+        "parallel": 100,
+        "config": {
+          "hnsw_ef": 1000
+        }
+      }
+    ],
+    "upload_params": {
+      "parallel": 16,
+      "hnsw_config": {
+        "m": 64,
+        "ef_construct": 1000
+      }
+    }
+  }
+]

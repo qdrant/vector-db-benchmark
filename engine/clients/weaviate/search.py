@@ -16,7 +16,7 @@ class WeaviateSearcher(BaseSearcher):
     search_params = {}
     parser = WeaviateConditionParser()
     collection: Collection
-    client: WeaviateClient
+    client: WeaviateClient = None
 
     @classmethod
     def init_client(cls, host, distance, connection_params: dict, search_params: dict):
@@ -51,5 +51,6 @@ class WeaviateSearcher(BaseSearcher):
 
     @classmethod
     def delete_client(cls):
-        if cls.client is not None:
-            cls.client.close()
+        client = getattr(cls, "client", None)
+        if client is not None:
+            client.close()

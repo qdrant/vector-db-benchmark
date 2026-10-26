@@ -9,6 +9,7 @@ from redis.commands.search.field import (
 )
 
 from benchmark.dataset import Dataset
+from engine.base_client import IncompatibilityError
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
 from engine.clients.redis.config import (
@@ -59,6 +60,15 @@ class RedisConfigurator(BaseConfigurator):
     def recreate(self, dataset: Dataset, collection_params):
         self.clean()
 
+        unsupported = [
+            field_type
+            for field_type in dataset.config.schema.values()
+            if field_type not in self.FIELD_MAPPING
+        ]
+        if unsupported:
+            raise IncompatibilityError(
+                f"Redis does not support payload types {sorted(set(unsupported))}"
+            )
         payload_fields = [
             self.FIELD_MAPPING[field_type](
                 name=field_name,

@@ -21,6 +21,8 @@ def read_engine_configs() -> dict:
 def read_dataset_config():
     all_configs = {}
     datasets_config_path = DATASETS_DIR / "datasets.json"
+    if not datasets_config_path.exists():
+        datasets_config_path = ROOT_DIR / "datasets" / "datasets.json"
     with open(datasets_config_path, "r") as fd:
         configs = json.load(fd)
         for config in configs:

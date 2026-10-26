@@ -50,7 +50,9 @@ class QdrantNativeConfigurator(BaseConfigurator):
         url = f"{self.host}/collections/{QDRANT_COLLECTION_NAME}"
 
         # Build vectors configuration
-        if dataset.config.type == "sparse":
+        if dataset.config.type == "sparse" or getattr(
+            dataset.config, "vector_kind", None
+        ) == "sparse":
             vectors_config = {}
             sparse_vectors_config = {
                 "sparse": {

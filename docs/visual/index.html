@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Green-field rematch — internal preview</title>
+    <link rel="preconnect" href="https://fonts.cdnfonts.com" crossorigin>
+    <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+    <script>
+        (function () {
+            try {
+                var pref = localStorage.getItem('bench-theme') || 'system';
+                var dark = pref === 'dark' ||
+                    (pref !== 'light' && window.matchMedia &&
+                        window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+            } catch (e) {}
+        })();
+    </script>
+    <style>
+        @font-face {
+            font-family: 'Mona Sans';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: local('Mona Sans'), url('https://fonts.cdnfonts.com/s/91271/Mona-Sans-Regular.woff') format('woff');
+        }
+        @font-face {
+            font-family: 'Mona Sans';
+            font-style: normal;
+            font-weight: 500;
+            font-display: swap;
+            src: local('Mona Sans'), url('https://fonts.cdnfonts.com/s/91271/Mona-Sans-Medium.woff') format('woff');
+        }
+        @font-face {
+            font-family: 'Mona Sans';
+            font-style: normal;
+            font-weight: 600;
+            font-display: swap;
+            src: local('Mona Sans'), url('https://fonts.cdnfonts.com/s/91271/Mona-Sans-SemiBold.woff') format('woff');
+        }
+
+        :root {
+            --bg: #f7f8fa;
+            --fg: #111824;
+            --muted: #656b7f;
+            --border: rgba(17, 24, 36, 0.12);
+            --accent: #6047ff;
+            --accent-hover: #5f36f5;
+            --accent-fg: #fcfdff;
+            --panel: #ffffff;
+            --ok: #00897b;
+            --warn: #ef6c00;
+            --hover: rgba(17, 24, 36, 0.04);
+            --shadow: rgba(0, 0, 0, 0.12);
+            --radius: 8px;
+            --qdrant: #dc244c;
+            --weaviate: #0aa3a3;
+            --milvus: #1a73e8;
+            --elasticsearch: #c78a00;
+            --opensearch: #005eb8;
+            --redis: #d82c20;
+            --pgvector: #336791;
+            color-scheme: light;
+            font-family: "Mona Sans", Helvetica, Arial, sans-serif;
+        }
+        :root[data-theme="dark"] {
+            --bg: #0b0f19;
+            --fg: #fcfdff;
+            --muted: #abb1c7;
+            --border: rgba(252, 253, 255, 0.12);
+            --accent: #9494ff;
+            --accent-hover: #c2c5ff;
+            --accent-fg: #0b0f19;
+            --panel: #111824;
+            --ok: #26a69a;
+            --warn: #ffa726;
+            --hover: rgba(252, 253, 255, 0.08);
+            --shadow: rgba(0, 0, 0, 0.5);
+            --elasticsearch: #e0b13a;
+            color-scheme: dark;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--fg);
+            font-size: 14px;
+            -webkit-font-smoothing: antialiased;
+        }
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 0 18px;
+            min-height: 56px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+        }
+        .brand { font-weight: 600; font-size: 15px; }
+        .pill {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: var(--hover);
+            color: var(--muted);
+        }
+        .spacer { flex: 1; }
+        button {
+            font: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 6px 14px;
+            border: 1px solid var(--border);
+            background: var(--input-bg, var(--panel));
+            color: var(--fg);
+            border-radius: var(--radius);
+        }
+        button:hover { background: var(--hover); }
+        .theme-toggle { padding: 4px 9px; }
+        .content { max-width: 1280px; margin: 0 auto; padding: 20px 18px 72px; }
+        h1 { font-size: 22px; font-weight: 600; margin: 0 0 8px; }
+        h2 { font-size: 15px; font-weight: 600; margin: 0; }
+        .lede { color: var(--muted); max-width: 72ch; line-height: 1.5; margin: 0 0 16px; }
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            margin-bottom: 14px;
+        }
+        .coverage {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 0 0 16px;
+        }
+        .chip {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            color: var(--muted);
+        }
+        .chip.done { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, var(--border)); }
+        .chip.partial { color: var(--warn); }
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px 14px;
+            align-items: end;
+        }
+        label { display: block; font-weight: 600; font-size: 12px; margin-bottom: 4px; }
+        select, input[type="range"] {
+            font: inherit;
+            width: 100%;
+            padding: 7px 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--panel);
+            color: var(--fg);
+        }
+        input[type="range"] { padding: 0; accent-color: var(--accent); }
+        .precision-read { font-variant-numeric: tabular-nums; color: var(--accent); }
+        .hint { color: var(--muted); font-size: 12.5px; margin: 10px 0 0; line-height: 1.45; }
+        .head-row { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+        th, td { text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--border); }
+        th { font-size: 12px; color: var(--muted); font-weight: 600; }
+        td.num, th.num { text-align: right; }
+        tr.winner td { font-weight: 600; }
+        tr.below { color: var(--muted); }
+        .engine-dot {
+            display: inline-block;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+        .metric-col { box-shadow: inset 0 -2px 0 var(--accent); }
+        .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media (max-width: 880px) { .charts { grid-template-columns: 1fr; } }
+        .chart { min-height: 320px; width: 100%; }
+        .chart.wide { min-height: 380px; }
+        .subcontrols { display: flex; gap: 12px; flex-wrap: wrap; margin: 0 0 10px; }
+        .subcontrols > div { min-width: 120px; }
+        footer { color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+        footer code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 12px;
+        }
+        .article h3 { font-size: 14px; margin: 16px 0 6px; }
+        .article p, .article li { line-height: 1.5; }
+        .article ul { margin: 0 0 8px; padding-left: 1.2em; }
+        .article .lede { margin-bottom: 10px; }
+        .nav a { color: var(--muted); font-size: 13px; }
+        .nav a:hover { color: var(--fg); }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <span class="brand">Green-field rematch</span>
+        <span class="pill">Internal preview</span>
+        <a href="#comparison">Comparison</a>
+        <a href="qdrant-comparison.md">Write-up</a>
+        <a href="../methodology-matched-vs-tuned.md">Matched vs tuned</a>
+        <span class="spacer"></span>
+        <span class="pill" id="generatedAt"></span>
+        <button class="theme-toggle" id="themeBtn" type="button" aria-label="Toggle theme">Theme</button>
+    </nav>
+
+    <main class="content">
+        <h1>Compare engines at the same recall floor</h1>
+        <p class="lede" id="lede">
+            Move the precision slider. The table keeps only HNSW cells that clear
+            that floor, then ranks the surviving engine by the selected metric.
+            This is the fair ANN comparison — not unmatched RPS.
+        </p>
+        <p class="lede" id="statusNote"></p>
+        <div class="coverage" id="coverage"></div>
+
+        <section class="panel">
+            <div class="controls">
+                <div>
+                    <label for="dataset">Dataset</label>
+                    <select id="dataset"></select>
+                </div>
+                <div>
+                    <label for="parallel">Load</label>
+                    <select id="parallel">
+                        <option value="100">Saturated RPS (parallel=100)</option>
+                        <option value="1">Single-thread latency (parallel=1)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="metric">Rank by</label>
+                    <select id="metric">
+                        <option value="rps">RPS (higher is better)</option>
+                        <option value="p95_ms">p95 latency (lower is better)</option>
+                        <option value="index_s">Index time (lower is better)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="precision">Minimum precision <span class="precision-read" id="precisionRead">0.80</span></label>
+                    <input id="precision" type="range" min="0.50" max="0.99" step="0.01" value="0.80">
+                </div>
+            </div>
+            <p class="hint" id="controlHint"></p>
+        </section>
+
+        <section class="panel">
+            <div class="head-row">
+                <h2>1. Ranked at this precision floor</h2>
+                <span class="hint" id="tableHint"></span>
+            </div>
+            <div id="table"></div>
+        </section>
+
+        <section class="panel">
+            <div class="head-row">
+                <h2>2. Precision vs speed</h2>
+                <label class="hint" style="margin:0;font-weight:500">
+                    <input type="checkbox" id="frontier" checked> Pareto frontier only
+                </label>
+            </div>
+            <div class="chart wide" id="pareto"></div>
+        </section>
+
+        <section class="panel">
+            <div class="head-row">
+                <h2>3. Raise search ef on one index</h2>
+            </div>
+            <div class="subcontrols">
+                <div>
+                    <label for="m">m</label>
+                    <select id="m"></select>
+                </div>
+                <div>
+                    <label for="efc">ef_construct</label>
+                    <select id="efc"></select>
+                </div>
+            </div>
+            <p class="hint">Same HNSW graph, more search work. This is why unmatched RPS misleads: Weaviate’s cheap-cell throughput is lower recall.</p>
+            <div class="charts">
+                <div class="chart" id="efPrecision"></div>
+                <div class="chart" id="efSpeed"></div>
+            </div>
+        </section>
+
+        <section class="panel article" id="comparison">
+            <div class="head-row">
+                <h2>4. How Qdrant compares</h2>
+                <a href="qdrant-comparison.md">Full write-up</a>
+            </div>
+            <p class="lede">
+                Qdrant is the default-quality and single-thread latency engine.
+                It is not the throughput engine. Redis, Weaviate, and
+                Elasticsearch usually win saturated RPS once any HNSW cell that
+                clears a recall floor is allowed. pgvector is only the first
+                cheap cell on glove and gist. FineWeb is not in this ranking.
+            </p>
+
+            <h3>Same cheap cell</h3>
+            <p class="hint"><code>m=16</code>, <code>ef_construct=100</code>, search <code>ef=100</code>.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Dataset</th>
+                        <th>Qdrant prec / p95 (p=1) / RPS (p=100)</th>
+                        <th>Closest quality rival</th>
+                        <th>Closest RPS rival</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>glove-100</td>
+                        <td><strong>0.845</strong> / <strong>2.89 ms</strong> / 8,744</td>
+                        <td>OpenSearch 0.816, Milvus 0.811</td>
+                        <td>Redis 18,233 (prec 0.671)</td>
+                    </tr>
+                    <tr>
+                        <td>gist-960</td>
+                        <td>0.893 / <strong>3.32 ms</strong> / 2,174</td>
+                        <td>OpenSearch 0.875; <strong>Milvus 0.975</strong></td>
+                        <td>Redis 7,315 (prec 0.664)</td>
+                    </tr>
+                    <tr>
+                        <td>dbpedia-1M</td>
+                        <td>0.985 / 2.97 ms / 1,891</td>
+                        <td>OpenSearch 0.979; <strong>Milvus 0.997</strong></td>
+                        <td>Redis 8,552 (prec 0.958)</td>
+                    </tr>
+                    <tr>
+                        <td>cohere-1M</td>
+                        <td>0.983 / 3.18 ms / 3,069</td>
+                        <td>OpenSearch 0.970; <strong>Milvus 0.994</strong></td>
+                        <td>Redis 8,388 (prec 0.909)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Strengths</h3>
+            <ul>
+                <li><strong>Quality at a cheap index.</strong> Glove’s first cell is already 0.845. Weaviate, Redis, and Elasticsearch sit at ~0.66–0.67 and need search <code>ef=500–1000</code> to catch up. Elasticsearch never catches Qdrant’s gist 0.893 even at <code>ef=1000</code>.</li>
+                <li><strong>Single-thread latency.</strong> p95 is ~3 ms on every core dataset. Redis is the only peer (faster on dbpedia: 2.50 ms). Milvus and OpenSearch are much slower under the same cell.</li>
+                <li><strong>Recall ceiling.</strong> Best glove cell at search <code>ef=100</code> is <strong>0.957</strong> (<code>m=64</code>, <code>ef_construct=1000</code>). Raising search <code>ef</code> on the cheap glove index reaches <strong>0.981</strong>; nobody else breaks 0.93 on that index.</li>
+                <li><strong>Stable under load.</strong> Saturated p95 stays usable. OpenSearch and Milvus cliff (OpenSearch dbpedia 220 ms; Milvus cohere 345 ms at <code>p=100</code>).</li>
+                <li><strong>Index time is fine.</strong> Glove 42 s, with Redis / Milvus / OpenSearch. Elasticsearch is the outlier (glove 304 s, dbpedia 1,181 s).</li>
+            </ul>
+
+            <h3>Weaknesses</h3>
+            <ul>
+                <li><strong>Saturated RPS</strong> is the consistent loss. Cheap-cell Redis is 2.1–4.5× Qdrant at lower recall. At a 0.80–0.90 floor Qdrant is typically 3rd–5th. On dbpedia / cohere at 0.98–0.99, Redis / Weaviate / Elasticsearch still deliver 2–4× Qdrant’s RPS.</li>
+                <li><strong>No sloppy-fast config.</strong> At a 0.70 glove floor Qdrant is 6th of 7 on RPS because its cheapest cell is already 0.845.</li>
+                <li><strong>Milvus wins raw recall on high-dim</strong> (gist 0.975, dbpedia 0.997, cohere 0.994) and pays for it with collapsed RPS (800 / 460 on gist / cohere).</li>
+                <li><strong>Not the fastest to index.</strong> Redis and Weaviate finish sooner on gist / dbpedia / cohere (Redis cohere 52 s vs 131 s).</li>
+            </ul>
+
+            <h3>How to say it</h3>
+            <p>
+                Qdrant if you want high recall from a cheap HNSW graph and low
+                single-thread latency. Redis or Weaviate if you want max RPS and
+                will take a lower default recall or a higher search <code>ef</code>.
+                Milvus if you want max recall on 768–1536-d and can live with the
+                load latency. Elasticsearch is competitive on high-floor RPS and
+                weak on index time and cheap-cell recall. OpenSearch tracks
+                Qdrant’s recall more closely than Weaviate does, but is the slow
+                engine under load.
+            </p>
+            <p class="hint">
+                The slider above is the demo: at 0.80 Qdrant looks mid-pack on
+                RPS; at 0.98 on glove it is in the top two.
+                These cells are a matched HNSW grid, not a max-RPS Qdrant tune —
+                <a href="../methodology-matched-vs-tuned.md">methodology note</a>.
+            </p>
+        </section>
+
+        <footer>
+            Not the customer-facing website — that updates after the Wednesday
+            deadline. Refresh the numbers after new cells finish:
+            <code>python tools/export_report_data.py</code>
+            then reload this page. FineWeb is excluded from the slider
+            (no official GT on the 1M slice).
+        </footer>
+    </main>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

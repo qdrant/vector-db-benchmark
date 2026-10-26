@@ -14,6 +14,7 @@ from qdrant_client.http.models import (
 from dataset_reader.base_reader import Record
 from engine.base_client.upload import BaseUploader
 from engine.clients.qdrant.config import QDRANT_API_KEY, QDRANT_COLLECTION_NAME
+from engine.clients.qdrant.ids import qdrant_point_id
 
 
 class QdrantUploader(BaseUploader):
@@ -44,7 +45,7 @@ class QdrantUploader(BaseUploader):
                     )
                 }
 
-            ids.append(point.id)
+            ids.append(qdrant_point_id(point.id))
             vectors.append(vector)
             payloads.append(point.metadata or {})
 

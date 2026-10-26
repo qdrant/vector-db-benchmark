@@ -156,7 +156,7 @@ jobs:
               - 'poetry.lock'
               - 'pyproject.toml'
       - uses: ./.github/workflows/actions/run-engine-benchmark
-        if: ${{ steps.changes.outputs.weaviate == 'true' || github.event_name == 'workflow_dispatch' }}
+        if: ${{ steps.changes.outputs.redis == 'true' || github.event_name == 'workflow_dispatch' }}
         with:
           engine: "redis-default"
           dataset: "random-100"
