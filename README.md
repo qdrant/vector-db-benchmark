@@ -91,6 +91,25 @@ Exact values of the parameters are individual for each engine.
 Datasets are configured in the [datasets/datasets.json](./datasets/datasets.json) file.
 Framework will automatically download the dataset and store it in the [datasets](./datasets/) directory.
 
+### FineWeb-10B (local parquet)
+
+[Qdrant/FineWeb-10B](https://huggingface.co/datasets/Qdrant/FineWeb-10B) is registered as `fineweb-10b-*` datasets. The Hugging Face corpus is ~46.5 TB and is **not** downloaded by this repo. Point the reader at the parquet you already have:
+
+```bash
+export FINEWEB_10B_DIR=/path/to/fineweb-10b   # directory or a single .parquet file
+# query embeddings + GT (combined parquet is accepted):
+export FINEWEB_QUERY_DIR=/mnt/benchmark/fineweb
+export FINEWEB_QUERY_VECTORS=/mnt/benchmark/fineweb/bf_k1000_parsed_ids.parquet
+```
+
+Accepted layouts:
+
+* a single corpus parquet file
+* the official tree: `data/**/*.parquet` plus `queries/gt_*.parquet`
+* query/GT parquet outside the corpus tree (`FINEWEB_QUERY_DIR`, `$BENCHMARK_HOME/fineweb`, or `bf_k1000_parsed_ids.parquet`)
+
+Official top-1000 ground truth is for the full 10B UUID corpus. The `fineweb-10b-dense-1m` / `10m` slices skip precision unless you set `FINEWEB_USE_OFFICIAL_GT=1`. FineWeb is optional: `run_all_engines.sh` adds `fineweb-10b-dense-1m` only when `RUN_FINEWEB=1` and `FINEWEB_10B_DIR` is set. The first published report is glove / gist / dbpedia / cohere; FineWeb appends after that. `run_filter_recall.sh` still adds the filtered FineWeb sets when `FINEWEB_10B_DIR` is set.
+
 ## How to implement a new engine?
 
 There are a few base classes that you can use to implement a new engine.

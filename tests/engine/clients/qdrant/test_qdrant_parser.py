@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 import pytest
 from qdrant_client.http import models as rest
 
@@ -58,6 +60,33 @@ def test_parse_converts_multiple_or_statements(qdrant_condition_parser):
     assert (
         rest.FieldCondition(key="a", match=rest.MatchValue(value=2)) == second_condition
     )
+
+
+def test_parse_converts_fineweb_text_and_structured_filters(qdrant_condition_parser):
+    conditions = {
+        "and": [
+            {"text": {"match_text": {"text": "climate change"}}},
+            {"domain": {"match_any": {"any": ["example.com", "news.org"]}}},
+            {"language_score": {"range": {"gte": 0.9}}},
+            {
+                "date": {
+                    "range": {
+                        "gte": "2018-01-01T00:00:00Z",
+                        "lt": "2019-01-01T00:00:00Z",
+                    }
+                }
+            },
+        ]
+    }
+    qdrant_filter = qdrant_condition_parser.parse(conditions)
+    assert qdrant_filter is not None
+    assert 4 == len(qdrant_filter.must)
+    text, domain, score, date = qdrant_filter.must
+    assert text.match.text == "climate change"
+    assert domain.match.any == ["example.com", "news.org"]
+    assert score.range.gte == 0.9
+    assert date.range.gte == datetime(2018, 1, 1, tzinfo=timezone.utc)
+    assert date.range.lt == datetime(2019, 1, 1, tzinfo=timezone.utc)
 
 
 def test_parse_converts_geo_statement(qdrant_condition_parser):

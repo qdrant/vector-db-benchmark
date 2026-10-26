@@ -8,6 +8,7 @@ from qdrant_client._pydantic_compat import construct
 from dataset_reader.base_reader import Query
 from engine.base_client.search import BaseSearcher
 from engine.clients.qdrant.config import QDRANT_API_KEY, QDRANT_COLLECTION_NAME
+from engine.clients.qdrant.ids import qdrant_hit_id
 from engine.clients.qdrant.parser import QdrantConditionParser
 
 
@@ -74,4 +75,4 @@ class QdrantSearcher(BaseSearcher):
             # pickling — re-raise as a plain RuntimeError so the pool can
             # surface the real reason instead of MaybeEncodingError.
             raise RuntimeError(f"{type(ex).__name__}: {ex}") from None
-        return [(hit.id, hit.score) for hit in res.points]
+        return [(qdrant_hit_id(hit.id), hit.score) for hit in res.points]

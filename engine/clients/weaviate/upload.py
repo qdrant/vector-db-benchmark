@@ -7,13 +7,18 @@ from weaviate.connect import ConnectionParams
 
 from dataset_reader.base_reader import Record
 from engine.base_client.upload import BaseUploader
-from engine.clients.weaviate.config import WEAVIATE_CLASS_NAME, WEAVIATE_DEFAULT_PORT
+from engine.clients.weaviate.config import (
+    WEAVIATE_CLASS_NAME,
+    WEAVIATE_DEFAULT_PORT,
+    weaviate_payload_properties,
+)
 
 
 class WeaviateUploader(BaseUploader):
     client: WeaviateClient = None
     upload_params = {}
     collection = None
+    allowed_properties = frozenset()
 
     @classmethod
     def init_client(cls, host, distance, connection_params, upload_params):
@@ -27,13 +32,20 @@ class WeaviateUploader(BaseUploader):
         cls.collection = cls.client.collections.get(
             WEAVIATE_CLASS_NAME, skip_argument_validation=True
         )
+        try:
+            cfg = cls.collection.config.get()
+            cls.allowed_properties = frozenset(prop.name for prop in cfg.properties)
+        except Exception:
+            cls.allowed_properties = frozenset()
 
     @classmethod
     def upload_batch(cls, batch: List[Record]):
         objects = []
         for record in batch:
             _id = uuid.UUID(int=record.id)
-            _property = record.metadata or {}
+            _property = weaviate_payload_properties(
+                record.metadata, cls.allowed_properties
+            )
             objects.append(
                 DataObject(properties=_property, vector=record.vector, uuid=_id)
             )

@@ -21,6 +21,7 @@ class OpenSearchConfigurator(BaseConfigurator):
     INDEX_TYPE_MAPPING = {
         "int": "long",
         "geo": "geo_point",
+        "datetime": "date",
     }
 
     def __init__(self, host, collection_params: dict, connection_params: dict):
@@ -53,7 +54,7 @@ class OpenSearchConfigurator(BaseConfigurator):
     def recreate(self, dataset: Dataset, collection_params):
         if dataset.config.distance == Distance.DOT:
             raise IncompatibilityError
-        if dataset.config.vector_size > 1024:
+        if dataset.config.vector_size > 4096:
             raise IncompatibilityError
 
         self.client.indices.create(

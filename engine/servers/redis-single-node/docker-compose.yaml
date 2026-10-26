@@ -2,7 +2,7 @@ version: "3.7"
 
 services:
   redis:
-    image: redislabs/redisearch:2.8.8
+    image: redis:8.10.2
     ports:
       - '6379:6379'
     logging:

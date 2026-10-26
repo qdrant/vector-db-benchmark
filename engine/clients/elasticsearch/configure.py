@@ -19,6 +19,7 @@ class ElasticConfigurator(BaseConfigurator):
         "text": "text",
         "float": "double",
         "geo": "geo_point",
+        "datetime": "date",
     }
 
     def __init__(self, host, collection_params: dict, connection_params: dict):
@@ -36,8 +37,8 @@ class ElasticConfigurator(BaseConfigurator):
     def recreate(self, dataset: Dataset, collection_params):
         if dataset.config.distance == Distance.DOT:
             raise IncompatibilityError
-        if dataset.config.vector_size > 2048:
-            # https://www.elastic.co/guide/en/elasticsearch/reference/8.10/dense-vector.html#dense-vector-params
+        if dataset.config.vector_size > 4096:
+            # ES 8.13+ allows 4096 dims for indexed dense_vector fields.
             raise IncompatibilityError
 
         self.client.indices.create(

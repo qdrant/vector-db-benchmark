@@ -5,6 +5,7 @@ import httpx
 
 from dataset_reader.base_reader import Record
 from engine.base_client.upload import BaseUploader
+from engine.clients.qdrant.ids import qdrant_point_id
 from engine.clients.qdrant_native.config import QDRANT_API_KEY, QDRANT_COLLECTION_NAME
 
 
@@ -54,7 +55,7 @@ class QdrantNativeUploader(BaseUploader):
         points = []
         for point in batch:
             point_data = {
-                "id": point.id,
+                "id": qdrant_point_id(point.id),
                 "payload": point.metadata or {},
             }
 

@@ -48,6 +48,8 @@ class MilvusConfigurator(BaseConfigurator):
             pass
 
     def recreate(self, dataset: Dataset, collection_params):
+        if getattr(dataset.config, "point_id", None) == "uuid":
+            raise IncompatibilityError("Milvus INT64 ids cannot store FineWeb UUIDs")
         idx = FieldSchema(
             name="id",
             dtype=DataType.INT64,
@@ -81,4 +83,4 @@ class MilvusConfigurator(BaseConfigurator):
             index.drop()
 
     def execution_params(self, distance, vector_size):
-        return {"normalize": distance == Distance.COSINE}
+        return {}

@@ -5,7 +5,7 @@ from benchmark.dataset import Dataset
 from engine.base_client import IncompatibilityError
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
-from engine.clients.pgvector.config import get_db_config
+from engine.clients.pgvector.config import PAYLOAD_SQL_TYPES, get_db_config, quote_ident
 
 
 class PgVectorConfigurator(BaseConfigurator):
@@ -24,12 +24,30 @@ class PgVectorConfigurator(BaseConfigurator):
     def recreate(self, dataset: Dataset, collection_params):
         if dataset.config.distance == Distance.DOT:
             raise IncompatibilityError
+        if any(field_type == "geo" for field_type in dataset.config.schema.values()):
+            raise IncompatibilityError
 
-        self.conn.execute(f"""CREATE TABLE items (
-                id SERIAL PRIMARY KEY,
-                embedding vector({dataset.config.vector_size}) NOT NULL
-            );""")
+        id_sql = (
+            "id TEXT PRIMARY KEY"
+            if getattr(dataset.config, "point_id", None) == "uuid"
+            else "id INTEGER PRIMARY KEY"
+        )
+        columns = [
+            id_sql,
+            f"embedding vector({dataset.config.vector_size}) NOT NULL",
+        ]
+        for field_name, field_type in dataset.config.schema.items():
+            sql_type = PAYLOAD_SQL_TYPES.get(field_type)
+            if sql_type is None:
+                raise IncompatibilityError
+            columns.append(f"{quote_ident(field_name)} {sql_type}")
+
+        self.conn.execute(f"CREATE TABLE items ({', '.join(columns)});")
         self.conn.execute("ALTER TABLE items ALTER COLUMN embedding SET STORAGE PLAIN")
+        for field_name in dataset.config.schema:
+            self.conn.execute(
+                f"CREATE INDEX ON items ({quote_ident(field_name)});"
+            )
 
     def delete_client(self):
         if self.conn:

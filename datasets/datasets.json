@@ -654,6 +654,78 @@
     }
   },
   {
+    "name": "fineweb-10b-dense",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "fineweb",
+    "path": "fineweb-10b",
+    "point_id": "uuid",
+    "vector_kind": "dense",
+    "query_file": "bf_k1000_parsed_ids.parquet"
+  },
+  {
+    "name": "fineweb-10b-dense-1m",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "fineweb",
+    "path": "fineweb-10b",
+    "point_id": "uuid",
+    "vector_kind": "dense",
+    "query_file": "bf_k1000_parsed_ids.parquet",
+    "max_vectors": 1000000,
+    "skip_ground_truth": true
+  },
+  {
+    "name": "fineweb-10b-dense-10m",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "fineweb",
+    "path": "fineweb-10b",
+    "point_id": "uuid",
+    "vector_kind": "dense",
+    "query_file": "bf_k1000_parsed_ids.parquet",
+    "max_vectors": 10000000,
+    "skip_ground_truth": true
+  },
+  {
+    "name": "fineweb-10b-sparse",
+    "distance": "dot",
+    "type": "fineweb",
+    "path": "fineweb-10b",
+    "point_id": "uuid",
+    "vector_kind": "sparse",
+    "query_file": "gt_sparse_k1000.parquet"
+  },
+  {
+    "name": "fineweb-10b-dense-text-filters",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "fineweb",
+    "path": "fineweb-10b",
+    "point_id": "uuid",
+    "vector_kind": "dense",
+    "query_file": "gt_text_filters_k1000.parquet",
+    "schema": {
+      "text": "text",
+      "domain": "keyword"
+    }
+  },
+  {
+    "name": "fineweb-10b-dense-structured-filters",
+    "vector_size": 768,
+    "distance": "cosine",
+    "type": "fineweb",
+    "path": "fineweb-10b",
+    "point_id": "uuid",
+    "vector_kind": "dense",
+    "query_file": "gt_structured_filters_k1000.parquet",
+    "schema": {
+      "language_score": "float",
+      "date": "datetime",
+      "dump": "keyword"
+    }
+  },
+  {
     "name": "random-768-2M-on-disk-bq-datetime-wide-filter",
     "vector_size": 768,
     "distance": "cosine",

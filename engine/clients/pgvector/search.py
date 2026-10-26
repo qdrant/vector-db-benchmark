@@ -17,6 +17,7 @@ class PgVectorSearcher(BaseSearcher):
     distance = None
     search_params = {}
     parser = PgVectorConditionParser()
+    score_sql = None
 
     @classmethod
     def init_client(cls, host, distance, connection_params: dict, search_params: dict):
@@ -25,19 +26,29 @@ class PgVectorSearcher(BaseSearcher):
         cls.cur = cls.conn.cursor()
         cls.cur.execute(f"SET hnsw.ef_search = {search_params['config']['hnsw_ef']}")
         if distance == Distance.COSINE:
-            cls.query = "SELECT id, embedding <=> %s AS _score FROM items ORDER BY _score LIMIT %s"
+            cls.score_sql = "embedding <=> %s"
         elif distance == Distance.L2:
-            cls.query = "SELECT id, embedding <-> %s AS _score FROM items ORDER BY _score LIMIT %s"
+            cls.score_sql = "embedding <-> %s"
         else:
-            raise NotImplementedError(f"Unsupported distance metric {cls.distance}")
+            raise NotImplementedError(f"Unsupported distance metric {distance}")
 
     @classmethod
     def search_one(cls, query: Query, top) -> List[Tuple[int, float]]:
-        # TODO: Use query.metaconditions for datasets with filtering
+        condition = cls.parser.parse(query.meta_conditions)
+        params = [np.array(query.vector)]
+        where_sql = ""
+        if condition:
+            where_sql, where_params = condition
+            where_sql = f" WHERE {where_sql}"
+            params.extend(where_params)
+        params.append(top)
         cls.cur.execute(
-            cls.query, (np.array(query.vector), top), binary=True, prepare=True
+            f"SELECT id, {cls.score_sql} AS _score FROM items{where_sql} ORDER BY _score LIMIT %s",
+            params,
+            binary=True,
+            prepare=True,
         )
-        return cls.cur.fetchall()
+        return [(int(row_id), score) for row_id, score in cls.cur.fetchall()]
 
     @classmethod
     def delete_client(cls):
