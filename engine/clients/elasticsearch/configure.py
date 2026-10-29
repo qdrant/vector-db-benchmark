@@ -6,6 +6,10 @@ from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
 from engine.clients.elasticsearch.config import ELASTIC_INDEX, get_es_client
 
+# Maximum `dims` of a `dense_vector` field (raised from 2048 in Elasticsearch 8.11).
+# https://www.elastic.co/docs/reference/elasticsearch/mapping-reference/dense-vector
+MAX_DENSE_VECTOR_DIMS = 4096
+
 
 class ElasticConfigurator(BaseConfigurator):
     DISTANCE_MAPPING = {
@@ -36,8 +40,7 @@ class ElasticConfigurator(BaseConfigurator):
     def recreate(self, dataset: Dataset, collection_params):
         if dataset.config.distance == Distance.DOT:
             raise IncompatibilityError
-        if dataset.config.vector_size > 2048:
-            # https://www.elastic.co/guide/en/elasticsearch/reference/8.10/dense-vector.html#dense-vector-params
+        if dataset.config.vector_size > MAX_DENSE_VECTOR_DIMS:
             raise IncompatibilityError
 
         self.client.indices.create(
