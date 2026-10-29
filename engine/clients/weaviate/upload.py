@@ -8,6 +8,7 @@ from weaviate.connect import ConnectionParams
 from dataset_reader.base_reader import Record
 from engine.base_client.upload import BaseUploader
 from engine.clients.weaviate.config import WEAVIATE_CLASS_NAME, WEAVIATE_DEFAULT_PORT
+from engine.clients.weaviate.properties import rename_properties
 
 
 class WeaviateUploader(BaseUploader):
@@ -33,7 +34,7 @@ class WeaviateUploader(BaseUploader):
         objects = []
         for record in batch:
             _id = uuid.UUID(int=record.id)
-            _property = record.metadata or {}
+            _property = rename_properties(record.metadata or {})
             objects.append(
                 DataObject(properties=_property, vector=record.vector, uuid=_id)
             )
