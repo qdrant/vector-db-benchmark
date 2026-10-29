@@ -5,6 +5,7 @@ from benchmark.dataset import Dataset
 from engine.base_client.configure import BaseConfigurator
 from engine.base_client.distances import Distance
 from engine.clients.weaviate.config import WEAVIATE_CLASS_NAME, WEAVIATE_DEFAULT_PORT
+from engine.clients.weaviate.properties import rename_properties
 
 
 class WeaviateConfigurator(BaseConfigurator):
@@ -46,7 +47,9 @@ class WeaviateConfigurator(BaseConfigurator):
                         ],
                         "indexInverted": True,
                     }
-                    for field_name, field_type in dataset.config.schema.items()
+                    for field_name, field_type in rename_properties(
+                        dataset.config.schema
+                    ).items()
                 ],
                 "vectorIndexConfig": {
                     **{

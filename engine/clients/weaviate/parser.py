@@ -4,6 +4,7 @@ import weaviate.classes as wvc
 from weaviate.collections.classes.filters import _Filters
 
 from engine.base_client.parser import BaseConditionParser, FieldValue
+from engine.clients.weaviate.properties import property_name
 
 
 class WeaviateConditionParser(BaseConditionParser):
@@ -33,7 +34,7 @@ class WeaviateConditionParser(BaseConditionParser):
         return weaviate_filter
 
     def build_exact_match_filter(self, field_name: str, value: FieldValue) -> _Filters:
-        return wvc.query.Filter.by_property(field_name).equal(value)
+        return wvc.query.Filter.by_property(property_name(field_name)).equal(value)
 
     def build_range_filter(
         self,
@@ -43,7 +44,7 @@ class WeaviateConditionParser(BaseConditionParser):
         lte: Optional[FieldValue],
         gte: Optional[FieldValue],
     ) -> Any:
-        prop = wvc.query.Filter.by_property(field_name)
+        prop = wvc.query.Filter.by_property(property_name(field_name))
         ltf = prop.less_than(lt) if lt is not None else None
         ltef = prop.less_or_equal(lte) if lte is not None else None
         gtf = prop.greater_than(gt) if gt is not None else None
@@ -60,7 +61,7 @@ class WeaviateConditionParser(BaseConditionParser):
     def build_geo_filter(
         self, field_name: str, lat: float, lon: float, radius: float
     ) -> _Filters:
-        return wvc.query.Filter.by_property(field_name).within_geo_range(
+        return wvc.query.Filter.by_property(property_name(field_name)).within_geo_range(
             distance=radius,
             coordinate=wvc.query.GeoCoordinate(latitude=lat, longitude=lon),
         )
